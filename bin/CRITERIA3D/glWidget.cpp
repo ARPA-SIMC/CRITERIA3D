@@ -67,10 +67,10 @@ Crit3DOpenGLWidget::Crit3DOpenGLWidget(Crit3DGeometry *geometry, QWidget *parent
     m_xTraslation(0),
     m_yTraslation(0),
     m_zoom(1.f),
-    m_program(nullptr),
-    m_geometry(geometry),
     m_vertexBuffer(QOpenGLBuffer::VertexBuffer),
-    m_colorBuffer(QOpenGLBuffer::VertexBuffer)
+    m_colorBuffer(QOpenGLBuffer::VertexBuffer),
+    m_program(nullptr),
+    m_geometry(geometry)
 { }
 
 Crit3DOpenGLWidget::~Crit3DOpenGLWidget()

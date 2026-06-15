@@ -910,8 +910,7 @@ void Crit3DProject::assignPrecipitation()
     {
         snowFallMap = snowMaps.getSnowFallMap();
         snowMeltMap = snowMaps.getSnowMeltMap();
-        if (snowFallMap != nullptr && snowMeltMap != nullptr)
-            isSnow = true;
+        isSnow = (snowFallMap != nullptr && snowMeltMap != nullptr);
     }
 
     // precipitation

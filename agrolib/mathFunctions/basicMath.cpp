@@ -389,8 +389,8 @@
                 std::sort(list.begin(), list.end());
             }
 
-            const int n = static_cast<int>(list.size());
-            const int lastIndex = n - 1;
+            const size_t n = list.size();
+            const size_t lastIndex = n - 1;
 
             // return rank
             if (value <= list[0])
