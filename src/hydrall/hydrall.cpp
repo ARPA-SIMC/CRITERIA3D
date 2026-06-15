@@ -139,14 +139,14 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
         {"PINUS_SYLVESTRIS_SCOTCH_PINE", 1.0, 4.0},
         {"PINUS_NIGRA", 1.0, 4.0},
         {"PINUS_PINEA", 1.0, 4.0},
-        {"CONIFER_FOREST_OTHERS", 1.0, 5.0},
+        {"CONIFER", 1.0, 5.0},
         {"BEECH", 0.1, 6.0},
         {"QUERCUS_PETREA_ROBUR_PUBESCENS", 0.1, 5.0},
         {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 0.1, 5},
         {"CASTINEA_SATIVA", 0.1, 5.0},
         {"CARPINUS_BETULUS_OTRYA_OXYCARPA", 0.1, 5.0},
         {"HYGROPHILOUS_FOREST", 0.1, 6.0},
-        {"BROADLEAF_FOREST_OTHERS", 0.1, 5.0},
+        {"BROADLEAF", 0.1, 5.0},
         {"QUERCUS_ILEX", 1.5, 4.0},
         {"QUERCUS_SUBER", 1.5, 4.0},
         {"MEDITERRANEAN_EVERGREEN_TREE", 1.5, 4.0},
@@ -165,14 +165,14 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
         {"PINUS_SYLVESTRIS_SCOTCH_PINE", 250, 1000, 2250}, // Intermedia
         {"PINUS_NIGRA", 250, 1000, 2250},           // Intermedia
         {"PINUS_PINEA", 200, 900, 2000},    // Precoce
-        {"CONIFER_FOREST_OTHERS", 250, 1000, 2250}, // Intermedia
+        {"CONIFER", 250, 1000, 2250}, // Intermedia
         {"BEECH", 300, 1100, 2500},                       // Tardiva
         {"QUERCUS_PETREA_ROBUR_PUBESCENS", 250, 1000, 2250}, // Intermedia
         {"QUERCUS_CERRIS_FRAINETTO_VALLONEAa", 300, 1100, 2500}, // Tardiva
         {"CASTINEA_SATIVA", 250, 1000, 2250},                    // Intermedia
         {"CARPINUS_BETULUS_OTRYA_OXYCARPA", 250, 1000, 2250},           // Intermedia
         {"HYGROPHILOUS_FOREST", 250, 1000, 2250},               // Intermedia
-        {"BROADLEAF_FOREST_OTHERS", 250, 1000, 2250},      // Intermedia
+        {"BROADLEAF", 250, 1000, 2250},      // Intermedia
         {"QUERCUS_ILEX", 200, 900, 2000},                        // Precoce
         {"QUERCUS_SUBER", 200, 900, 2000},                      // Precoce
         {"MEDITERRANEAN_EVERGREEN_TREE", 200, 900, 2000}, // Precoce
@@ -1716,7 +1716,8 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     statePlant.treeBiomassSapwood -= statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage;
 
     //woodland management
-    plant.management = 1; //DEBUG //0 is non managed, 1 is coppice, 2 is high forest, 3 is plantation, 4 is urban forest, 5 is arboricoltura policiclica
+    plant.management = 1; //DEBUG //0 is non managed, 1 is coppice, 2 is high forest, 3 is plantation, 4 is urban forest,
+                                // 5 is arboricoltura policiclica, 6 is castagneti e noccioleti da frutto, 7 is arbusteti
     double woodExtraction = 0;
 
     if (plant.management == 1) //coppice management produces mostly burning wood
@@ -1734,7 +1735,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     else if (plant.management == 3)
     {
         //plantation
-        woodExtraction =
+        //woodExtraction = ??
         carbonStock += statePlant.treeBiomassSapwood * woodExtraction * 1./35;
 
     }
