@@ -126,6 +126,23 @@ void sendEnterKey(void)
 }
 
 
+BOOL WINAPI ConsoleHandler(DWORD type)
+{
+#ifdef _WIN32
+    switch (type)
+    {
+    case CTRL_CLOSE_EVENT:
+    case CTRL_SHUTDOWN_EVENT:
+    case CTRL_LOGOFF_EVENT:
+        // NON terminare il processo Qt
+        return TRUE;
+    default:
+        return FALSE;
+    }
+#endif
+}
+
+
 void openWinConsole()
 {
 #ifdef _WIN32
@@ -137,11 +154,19 @@ void openWinConsole()
     // create a separate new console window
     AllocConsole();
 
+    SetConsoleCtrlHandler(ConsoleHandler, TRUE);
+
     // redirect STDIO
     FILE* fp;
-    freopen_s(&fp, "CONOUT$", "w", stdout);
-    freopen_s(&fp, "CONOUT$", "w", stderr);
-    freopen_s(&fp, "CONIN$", "r", stdin);
+
+    errno_t e1 = freopen_s(&fp, "CONIN$",  "r", stdin);
+    errno_t e2 = freopen_s(&fp, "CONOUT$", "w", stdout);
+    errno_t e3 = freopen_s(&fp, "CONOUT$", "w", stderr);
+
+    if (e1 != 0 || e2 != 0 || e3 != 0)
+    {
+        qDebug() << "Error in redirect STDIN/OUT";
+    }
 
     // syncronize C++ streams
     std::ios::sync_with_stdio(true);
@@ -212,8 +237,10 @@ QString getCommandLine(const QString &programName)
 {
     std::cout << programName.toStdString() << ">" << std::flush;
 
-    QTextStream in(stdin);
-    return in.readLine();
+    std::string s;
+    std::getline(std::cin, s);
+
+    return QString::fromStdString(s);
 }
 
 
