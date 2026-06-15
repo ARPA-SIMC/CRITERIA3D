@@ -753,10 +753,8 @@ using namespace std;
         {
             logLogisticCDF = std::exp(s) / (1. + std::exp(s));
         }
-        if (logLogisticCDF > 0.1)
-            return logLogisticCDF-0.00000001;
-        else
-            return logLogisticCDF;
+        double sigmoidFactor= 0.00000001 * std::pow(1 + exp(-5*(logLogisticCDF)),-1); // to avoid numerical problems in both tails of the ditribution
+        return logLogisticCDF - sigmoidFactor;
     }
 
     double weibullCDF(double x, double lambda, double kappa)

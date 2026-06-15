@@ -586,7 +586,18 @@ bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
 }
 
 
-bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string &id)
+bool Crit3DMeteoGrid::isMeteoPointActive(int row, int col) const
+{
+    if (row >= 0 && row < _gridStructure.header().nrRows && col >= 0 && col < _gridStructure.header().nrCols)
+    {
+        return _meteoPoints[row][col]->active;
+    }
+
+    return false;
+}
+
+
+bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string &id) const
 {
     if (row >= 0 && row < _gridStructure.header().nrRows && col >= 0 && col < _gridStructure.header().nrCols)
     {
@@ -603,7 +614,6 @@ bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string &id)
 
 bool Crit3DMeteoGrid::isActiveMeteoPointFromId(const std::string& id)
 {
-
     for (int row = 0; row < _gridStructure.header().nrRows; row++)
     {
         for (int col = 0; col < _gridStructure.header().nrCols; col++)
@@ -614,8 +624,10 @@ bool Crit3DMeteoGrid::isActiveMeteoPointFromId(const std::string& id)
             }
         }
     }
+
     return false;
 }
+
 
 bool Crit3DMeteoGrid::findFirstActiveMeteoPoint(std::string* id, int* row, int* col)
 {
