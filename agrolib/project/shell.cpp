@@ -126,9 +126,9 @@ void sendEnterKey(void)
 }
 
 
+#ifdef _WIN32
 BOOL WINAPI ConsoleHandler(DWORD type)
 {
-#ifdef _WIN32
     switch (type)
     {
     case CTRL_CLOSE_EVENT:
@@ -139,8 +139,8 @@ BOOL WINAPI ConsoleHandler(DWORD type)
     default:
         return FALSE;
     }
-#endif
 }
+#endif
 
 
 void openWinConsole()
