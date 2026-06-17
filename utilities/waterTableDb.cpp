@@ -5,6 +5,12 @@
 
 WaterTableParameters::WaterTableParameters()
 {
+    initialize();
+}
+
+
+void WaterTableParameters::initialize()
+{
     id = "";
     lat = NODATA;
     lon = NODATA;
