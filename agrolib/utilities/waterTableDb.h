@@ -16,6 +16,8 @@
         public:
         WaterTableParameters();
 
+        void initialize();
+
         QString id;
         double lat, lon;
 
@@ -26,6 +28,7 @@
 
         bool isLoaded;
     };
+
 
     class WaterTableDb
     {

@@ -319,7 +319,8 @@ namespace gis
 
     bool Crit3DRasterGrid::initializeGrid(float initValue)
     {
-        if (! initializeGrid()) return false;
+        if (! initializeGrid())
+            return false;
 
         setConstantValue(initValue);
         isLoaded = true;
@@ -1269,42 +1270,58 @@ namespace gis
     bool mapAlgebra(gis::Crit3DRasterGrid* map1, gis::Crit3DRasterGrid* map2,
                     gis::Crit3DRasterGrid* outputMap, operationType myOperation)
     {
-        if (outputMap == nullptr || map1 == nullptr || map2 == nullptr) return false;
-        if (! (*(map1->header) == *(map2->header))) return false;
-        if (! (*(outputMap->header) == *(map1->header))) return false;
+        if (! map1 || ! map2 || ! outputMap)
+            return false;
 
-        for (int row=0; row<outputMap->header->nrRows; row++)
-            for (int col=0; col<outputMap->header->nrCols; col++)
+        bool isSameHeader = false;
+        if ( *(map1->header) == *(map2->header) )
+            isSameHeader = true;
+
+        if (! outputMap->initializeGrid(*(map1->header)))
+            return false;
+
+        float x, y;
+        for (int row=0; row < outputMap->header->nrRows; ++row)
+            for (int col=0; col < outputMap->header->nrCols; ++col)
             {
-                if (!isEqual(map1->value[row][col], map1->header->flag)
-                    && !isEqual(map2->value[row][col], map2->header->flag))
+                x = map1->value[row][col];
+                if (! isEqual(x, map1->header->flag))
                 {
-                    if (myOperation == operationMin)
+                    if (isSameHeader)
                     {
-                        outputMap->value[row][col] = MINVALUE(map1->value[row][col], map2->value[row][col]);
+                        y = map2->value[row][col];
                     }
-                    else if (myOperation == operationMax)
+                    else
                     {
-                        outputMap->value[row][col] = MAXVALUE(map1->value[row][col], map2->value[row][col]);
+                        double utmx, utmy;
+                        map1->getXY(row, col, utmx, utmy);
+                        y = map2->getValueFromXY(utmx, utmy);
                     }
-                    else if (myOperation == operationSum)
-                        outputMap->value[row][col] = (map1->value[row][col] + map2->value[row][col]);
-                    else if (myOperation == operationSubtract)
-                        outputMap->value[row][col] = (map1->value[row][col] - map2->value[row][col]);
-                    else if (myOperation == operationProduct)
-                        outputMap->value[row][col] = (map1->value[row][col] * map2->value[row][col]);
-                    else if (myOperation == operationDivide)
+
+                    if (! isEqual(y, map2->header->flag))
                     {
-                        if (map2->value[row][col] != 0.f)
-                            outputMap->value[row][col] = (map1->value[row][col] / map2->value[row][col]);
-                        else
-                            return false;
+                        if (myOperation == operationMin)
+                            outputMap->value[row][col] = std::min(x, y);
+                        else if (myOperation == operationMax)
+                            outputMap->value[row][col] = std::max(x, y);
+                        else if (myOperation == operationSum)
+                            outputMap->value[row][col] = (x + y);
+                        else if (myOperation == operationSubtract)
+                            outputMap->value[row][col] = (x - y);
+                        else if (myOperation == operationProduct)
+                            outputMap->value[row][col] = (x * y);
+                        else if (myOperation == operationDivide)
+                        {
+                            if (map2->value[row][col] != 0.f)
+                                outputMap->value[row][col] = (x / y);
+                        }
                     }
                 }
             }
 
         return true;
     }
+
 
     bool mapAlgebra(gis::Crit3DRasterGrid* map1, float myValue,
                     gis::Crit3DRasterGrid* outputMap, operationType myOperation)
