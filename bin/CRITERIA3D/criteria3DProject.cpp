@@ -867,10 +867,16 @@ void Crit3DProject::assignETreal()
                     if (currentCrop.roots.rootDensity.empty())
                     {
                         // compute root lenght
-                        currentCrop.computeRootLength3D(degreeDaysMap.value[row][col], soilList[soilIndex].totalDepth);
+                        float depth = 0;
+                        if (soilIndex != NODATA)
+                        {
+                            depth = soilList[soilIndex].totalDepth; //clear strutture root density
+                            currentCrop.computeRootLength3D(degreeDaysMap.value[row][col], depth);
 
-                        // compute root density
-                        root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness);
+                            // compute root density
+                            root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness);
+                        }
+
                     }
 
                     myHydrallModel.soil.setRootDensity(currentCrop.roots.rootDensity);
@@ -878,7 +884,7 @@ void Crit3DProject::assignETreal()
                     myHydrallModel.plant.setLAICanopyMin(currentCrop.LAImin);
                     myHydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
 
-                    int soilIndex = int(soilIndexMap.value[row][col]);
+                    //int soilIndex = int(soilIndexMap.value[row][col]);
                     if (soilIndex != NODATA)
                         computeHydrallModel(myHydrallModel, row, col, forestIndex);
                 }
