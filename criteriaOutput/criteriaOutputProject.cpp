@@ -13,7 +13,7 @@
 #include "netcdfHandler.h"
 #include "utilities.h"
 
-#ifdef GDAL
+#ifdef USE_GDAL
     #include "gdalShapeFunctions.h"
 #endif
 
@@ -615,177 +615,180 @@ int CriteriaOutputProject::createShapeFile()
 }
 
 
-#ifdef GDAL
+#ifdef USE_GDAL
 
-int CriteriaOutputProject::createMaps()
-{
-    // check map list
-    if (! QFile(mapListFileName).exists())
+    int CriteriaOutputProject::createMaps()
     {
-        projectError = "Wrong map list: " + mapListFileName;
-        return ERROR_SETTINGS_MISSINGDATA;
-    }
-
-    // check cellsize
-    bool isOk;
-    mapCellSize.toInt(&isOk, 10);
-    if (! isOk)
-    {
-        projectError = "Invalid map cellsize: " + mapCellSize;
-        return ERROR_SETTINGS_MISSINGDATA;
-    }
-
-    // check map format
-    if (! mapExtensionShortName.contains(mapFormat))
-    {
-        projectError = "Unknown output format ";
-        return ERROR_SETTINGS_MISSINGDATA;
-    }
-
-    // check shapefile
-    if (! QFile(outputShapeFileName).exists())
-    {
-        int myResult = createShapeFile();
-        if (myResult != CRIT1D_OK)
+        // check map list
+        if (! QFile(mapListFileName).exists())
         {
-            return myResult;
-        }
-    }
-
-    logger.writeInfo("MAPS");
-
-    QList<QString> inputFieldName;
-    QList<QString> outputFileName;
-    QList<QString> paletteFileName;
-
-    // parse csv file mapListFileName
-    QFile mapList(mapListFileName);
-    if (! mapList.open(QFile::ReadOnly | QFile::Text) )
-    {
-        projectError = "Wrong map list file: " + mapListFileName;
-        return ERROR_SETTINGS_MISSINGDATA;
-    }
-
-    QTextStream in(&mapList);
-    // skip header
-    QString line = in.readLine();
-
-    while (! in.atEnd())
-    {
-        line = in.readLine();
-        QList<QString> items = line.split(",");
-
-        if (! mapPalettePath.isEmpty())
-        {
-            if (items.size() < 3)
-            {
-                projectError = "invalid line in map list:\n" + line + "\n"
-                               + "Required: input field name, output file name, palette file name.";
-                return ERROR_SETTINGS_MISSINGDATA;
-            }
-        }
-        else
-        {
-            if (items.size() < 2)
-            {
-                projectError = "invalid line in map list:\n" + line + "\n"
-                               + "Required: input field name, output file name.";
-                return ERROR_SETTINGS_MISSINGDATA;
-            }
-        }
-
-        // input field (remove whitespace)
-        inputFieldName.push_back(items[0].trimmed());
-        if ( inputFieldName.last().isEmpty() )
-        {
-            projectError = "missing shape input field in line:\n" + line;
+            projectError = "Wrong map list: " + mapListFileName;
             return ERROR_SETTINGS_MISSINGDATA;
         }
 
-        // output file (remove whitespace)
-        outputFileName.push_back(items[1].trimmed());
-        if ( outputFileName.last().isEmpty() )
+        // check cellsize
+        bool isOk;
+        mapCellSize.toInt(&isOk, 10);
+        if (! isOk)
         {
-            projectError = "missing output map name in line:\n" + line;
+            projectError = "Invalid map cellsize: " + mapCellSize;
             return ERROR_SETTINGS_MISSINGDATA;
         }
 
-        if (! mapPalettePath.isEmpty())
+        // check map format
+        if (! mapExtensionShortName.contains(mapFormat))
         {
-            // palette file name (remove whitespace)
-            paletteFileName.push_back(items[2].trimmed());
-            if ( paletteFileName.last().isEmpty() )
+            projectError = "Unknown output format ";
+            return ERROR_SETTINGS_MISSINGDATA;
+        }
+
+        // check shapefile
+        if (! QFile(outputShapeFileName).exists())
+        {
+            int myResult = createShapeFile();
+            if (myResult != CRIT1D_OK)
             {
-                projectError = "missing palette file name in line:\n" + line;
+                return myResult;
+            }
+        }
+
+        logger.writeInfo("MAPS");
+
+        QList<QString> inputFieldName;
+        QList<QString> outputFileName;
+        QList<QString> paletteFileName;
+
+        // parse csv file mapListFileName
+        QFile mapList(mapListFileName);
+        if (! mapList.open(QFile::ReadOnly | QFile::Text) )
+        {
+            projectError = "Wrong map list file: " + mapListFileName;
+            return ERROR_SETTINGS_MISSINGDATA;
+        }
+
+        QTextStream in(&mapList);
+        // skip header
+        QString line = in.readLine();
+
+        while (! in.atEnd())
+        {
+            line = in.readLine();
+            QList<QString> items = line.split(",");
+
+            if (! mapPalettePath.isEmpty())
+            {
+                if (items.size() < 3)
+                {
+                    projectError = "invalid line in map list:\n" + line + "\n"
+                                   + "Required: input field name, output file name, palette file name.";
+                    return ERROR_SETTINGS_MISSINGDATA;
+                }
+            }
+            else
+            {
+                if (items.size() < 2)
+                {
+                    projectError = "invalid line in map list:\n" + line + "\n"
+                                   + "Required: input field name, output file name.";
+                    return ERROR_SETTINGS_MISSINGDATA;
+                }
+            }
+
+            // input field (remove whitespace)
+            inputFieldName.push_back(items[0].trimmed());
+            if ( inputFieldName.last().isEmpty() )
+            {
+                projectError = "missing shape input field in line:\n" + line;
                 return ERROR_SETTINGS_MISSINGDATA;
             }
-        }
-    }
 
-    if (inputFieldName.isEmpty())
-    {
-        projectError = "Map list is void: " + mapListFileName;
-        return ERROR_SETTINGS_MISSINGDATA;
-    }
-
-    // create png directory
-    if (isPngCopy)
-    {
-        QString pngPath = outputShapeFilePath + "/png";
-        if (! QDir(pngPath).exists())
-        {
-            QDir().mkdir(pngPath);
-        }
-    }
-
-    // main cycle
-    int nrRasterOK= 0;
-    for (int i=0; i < inputFieldName.size(); i++)
-    {
-        QString mapFileName = outputShapeFilePath + "/" + outputFileName[i]+ "." + mapFormat;
-        QString pngFileName = outputShapeFilePath + "/png/" + outputFileName[i]+ ".png";
-
-        QString paletteCompleteFileName = "";
-        if (! mapPalettePath.isEmpty())
-        {
-            paletteCompleteFileName = mapPalettePath + "/" + paletteFileName[i];
-            if (! QFile(paletteCompleteFileName).exists())
+            // output file (remove whitespace)
+            outputFileName.push_back(items[1].trimmed());
+            if ( outputFileName.last().isEmpty() )
             {
-                logger.writeError("Missing palette file: " + paletteCompleteFileName);
-                // skip this map
-                continue;
+                projectError = "missing output map name in line:\n" + line;
+                return ERROR_SETTINGS_MISSINGDATA;
+            }
+
+            if (! mapPalettePath.isEmpty())
+            {
+                // palette file name (remove whitespace)
+                paletteFileName.push_back(items[2].trimmed());
+                if ( paletteFileName.last().isEmpty() )
+                {
+                    projectError = "missing palette file name in line:\n" + line;
+                    return ERROR_SETTINGS_MISSINGDATA;
+                }
             }
         }
 
-        logger.writeInfo("Write map: " + mapFileName);
-        if (gdalShapeToRaster(outputShapeFileName, inputFieldName[i], mapCellSize,
-                              mapProjection, mapFileName, paletteCompleteFileName,
-                              isPngCopy, pngFileName, pngProjection, projectError))
+        if (inputFieldName.isEmpty())
         {
-            nrRasterOK++;
+            projectError = "Map list is void: " + mapListFileName;
+            return ERROR_SETTINGS_MISSINGDATA;
+        }
+
+        // create png directory
+        if (isPngCopy)
+        {
+            QString pngPath = outputShapeFilePath + "/png";
+            if (! QDir(pngPath).exists())
+            {
+                QDir().mkdir(pngPath);
+            }
+        }
+
+        // main cycle
+        int nrRasterOK= 0;
+        for (int i=0; i < inputFieldName.size(); i++)
+        {
+            QString mapFileName = outputShapeFilePath + "/" + outputFileName[i]+ "." + mapFormat;
+            QString pngFileName = outputShapeFilePath + "/png/" + outputFileName[i]+ ".png";
+
+            QString paletteCompleteFileName = "";
+            if (! mapPalettePath.isEmpty())
+            {
+                paletteCompleteFileName = mapPalettePath + "/" + paletteFileName[i];
+                if (! QFile(paletteCompleteFileName).exists())
+                {
+                    logger.writeError("Missing palette file: " + paletteCompleteFileName);
+                    // skip this map
+                    continue;
+                }
+            }
+
+            logger.writeInfo("Write map: " + mapFileName);
+            if (gdalShapeToRaster(outputShapeFileName, inputFieldName[i], mapCellSize,
+                                  mapProjection, mapFileName, paletteCompleteFileName,
+                                  isPngCopy, pngFileName, pngProjection, projectError))
+            {
+                nrRasterOK++;
+            }
+            else
+            {
+                logger.writeError(projectError);
+            }
+        }
+
+        if (nrRasterOK == inputFieldName.size())
+        {
+            return CRIT1D_OK;
         }
         else
         {
-            logger.writeError(projectError);
+            int nRasterError = inputFieldName.size() - nrRasterOK;
+            projectError = QString::number(nRasterError) + " invalid raster.";
+            return ERROR_MAPS;
         }
     }
-
-    if (nrRasterOK == inputFieldName.size())
-    {
-        return CRIT1D_OK;
-    }
-    else
-    {
-        int nRasterError = inputFieldName.size() - nrRasterOK;
-        projectError = QString::number(nRasterError) + " invalid raster.";
-        return ERROR_MAPS;
-    }
-}
-
 #endif
 
 
-//  isReorder:  enable/disable csv reorder
+/*! \brief createAggregationFile
+ *  create aggregation (shapefile and .csv file)
+ *  \param isReorder: enable/disable csv reorder
+ *  \return CRIT1D_OK if aggregation is ok
+ */
 int CriteriaOutputProject::createAggregationFile(bool isReorder)
 {
     logger.writeInfo("AGGREGATION");

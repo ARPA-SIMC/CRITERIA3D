@@ -62,7 +62,7 @@ HEADERS += \
 CONFIG += GDAL
 
 GDAL:{
-    DEFINES += GDAL
+    DEFINES += USE_GDAL
     INCLUDEPATH += ../gdalHandler
     include(../gdal.pri)
     }
