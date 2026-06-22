@@ -894,7 +894,7 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
     // check utm zone
     if (shapeRef.getUtmZone() != shapeVal.getUtmZone())
     {
-        projectError = "utm zone: different utm zones" ;
+        projectError = "Different utm zones in the shapefiles" ;
         return ERROR_SHAPEFILE;
     }
 
@@ -909,17 +909,20 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
     logger.writeInfo("output csv file: " + outputAggrCsvFileName);
     logger.writeInfo("Compute aggregation...");
 
-    //shape to raster
+    logger.writeInfo("Reference shape to raster...");
     gis::Crit3DRasterGrid rasterRef;
-    gis::Crit3DRasterGrid rasterVal;
     initializeRasterFromShape(shapeRef, rasterRef, cellSize);
-    initializeRasterFromShape(shapeVal, rasterVal, cellSize);
-
     fillRasterWithShapeNumber(rasterRef, shapeRef);
+
+    logger.writeInfo("Values shape to raster...");
+    gis::Crit3DRasterGrid rasterVal;
+    initializeRasterFromShape(shapeVal, rasterVal, cellSize);
     fillRasterWithShapeNumber(rasterVal, shapeVal);
 
+    logger.writeInfo("Matrix Analysis...");
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(shapeRef, shapeVal, rasterRef, rasterVal, vectorNull);
+
     bool isOk = false;
     for(int i=0; i < aggregationVariable.outputVarName.size(); i++)
     {
