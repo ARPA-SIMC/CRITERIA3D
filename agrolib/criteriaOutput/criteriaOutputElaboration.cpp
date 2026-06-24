@@ -760,7 +760,8 @@ int computeDTX(const QSqlDatabase &db, const QString &idCase, int period, const 
 
 
 int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, const QString &csvFileName, const QDate &dateComputation,
-                          const QList<QString> &outputVarName, const QString &shapeField, QString &errorStr)
+                          const QList<QString> &shapeVarName, const QList<QString> &outputVarName,
+                          const QString &shapeField, QString &errorStr)
 {
     QList<QList<QString>> valuesFromShape;
     // write CSV
@@ -803,30 +804,31 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, const QString &csvFi
 
         // read outputVarName
         values.clear();
-        for (int field = 0; field < outputVarName.size(); field++)
+        for (int i = 0; i < outputVarName.size(); ++i)
         {
-            std::string valField = outputVarName[field].toStdString();
+            std::string valField = shapeVarName[i].toStdString();
             fieldIndex = refShapeFile.getDBFFieldIndex(valField.c_str());
             if (fieldIndex == -1)
             {
-                errorStr = QString::fromStdString(refShapeFile.getFilepath()) + " has not field called " + outputVarName[field];
+                errorStr = QString::fromStdString(refShapeFile.getFilepath()) + " has not field called " + shapeVarName[i];
                 return ERROR_SHAPEFILE;
             }
 
             DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
             if (fieldType == FTInteger)
             {
-                values.push_back(QString::number(refShapeFile.readIntAttribute(row,fieldIndex)));
+                values.push_back(QString::number(refShapeFile.readIntAttribute(row, fieldIndex)));
             }
             else if (fieldType == FTDouble)
             {
-                values.push_back(QString::number(refShapeFile.readDoubleAttribute(row,fieldIndex)));
+                values.push_back(QString::number(refShapeFile.readDoubleAttribute(row, fieldIndex)));
             }
             else if (fieldType == FTString)
             {
-                values.push_back(QString::fromStdString(refShapeFile.readStringAttribute(row,fieldIndex)));
+                values.push_back(QString::fromStdString(refShapeFile.readStringAttribute(row, fieldIndex)));
             }
         }
+
         valuesFromShape.push_back(values);
     }
 

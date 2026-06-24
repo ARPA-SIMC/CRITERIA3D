@@ -53,6 +53,7 @@
         QString operation;
         QString configFileName;
         QString projectError;
+
         // csv
         QString variableListFileName;
         // shape
