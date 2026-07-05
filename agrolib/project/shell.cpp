@@ -1,8 +1,14 @@
-#include "shell.h"
-#include "project.h"
 #include "commonConstants.h"
+#include "meteo.h"
+#include "project.h"
+#include "shell.h"
+#include "dbMeteoGrid.h"
+#include "utilities.h"
+
+#include <cstdio>
 #include <iostream>
 #include <sstream>
+
 #include <QString>
 #include <QList>
 #include <QFile>
@@ -13,6 +19,24 @@
     #pragma comment(lib, "User32.lib")
 #endif
 
+
+QList<QString> getSharedCommandList()
+{
+    QList<QString> cmdList;
+
+    cmdList.append("?               | ListCommands");
+    cmdList.append("Quit            | Exit");
+    cmdList.append("Log             | SetLogFile");
+    cmdList.append("DEM             | LoadDEM");
+    cmdList.append("Point           | LoadPoints");
+    cmdList.append("Grid            | LoadGrid");
+    cmdList.append("aggrDB          | LoadAggregationDB");
+    cmdList.append("Parallel        | SetParallelComputing");
+    cmdList.append("DailyCsv        | ExportDailyDataCsv");
+    cmdList.append("HourlyCsv       | ExportHourlyDataCsv");
+
+    return cmdList;
+}
 
 
 bool attachOutputToConsole()
@@ -69,12 +93,16 @@ bool attachOutputToConsole()
     return true;
 }
 
+
 bool isConsoleForeground()
 {
     #ifdef _WIN32
         return (GetConsoleWindow() == GetForegroundWindow());
     #endif
+
+    return true;
 }
+
 
 void sendEnterKey(void)
 {
@@ -97,29 +125,82 @@ void sendEnterKey(void)
     #endif
 }
 
-void openNewConsole()
+
+#ifdef _WIN32
+BOOL WINAPI ConsoleHandler(DWORD type)
 {
-    #ifdef _WIN32
-        // detach from the current console window
-        // if launched from a console window, that will still run waiting for the new console (below) to close
-        // it is useful to detach from Qt Creator's <Application output> panel
-        FreeConsole();
+    switch (type)
+    {
+    case CTRL_CLOSE_EVENT:
+    case CTRL_SHUTDOWN_EVENT:
+    case CTRL_LOGOFF_EVENT:
+        // NON terminare il processo Qt
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+#endif
 
-        // create a separate new console window
-        AllocConsole();
 
-        // attach the new console to this application's process
-        AttachConsole(GetCurrentProcessId());
+void openWinConsole()
+{
+#ifdef _WIN32
+    // detach from the current console window
+    // if launched from a console window, that will still run waiting for the new console (below) to close
+    // it is useful to detach from Qt Creator's <Application output> panel
+    FreeConsole();
 
-        // reopen the std I/O streams to redirect I/O to the new console
-        freopen("CON", "w", stdout);
-        freopen("CON", "w", stderr);
-        freopen("CON", "r", stdin);
-    #endif
+    // create a separate new console window
+    AllocConsole();
+
+    SetConsoleCtrlHandler(ConsoleHandler, TRUE);
+
+    // redirect STDIO
+    FILE* fp;
+
+    errno_t e1 = freopen_s(&fp, "CONIN$",  "r", stdin);
+    errno_t e2 = freopen_s(&fp, "CONOUT$", "w", stdout);
+    errno_t e3 = freopen_s(&fp, "CONOUT$", "w", stderr);
+
+    if (e1 != 0 || e2 != 0 || e3 != 0)
+    {
+        qDebug() << "Error in redirect STDIN/OUT";
+    }
+
+    // syncronize C++ streams
+    std::ios::sync_with_stdio(true);
+
+    // clear stream
+    std::cout.clear();
+    std::cin.clear();
+
+    // UTF-8 support (useful for Qt)
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
 }
 
 
-QString getTimeStamp(QList<QString> argumentList)
+void closeWinConsole()
+{
+#ifdef _WIN32
+    // stream flush
+    fflush(stdout);
+    fflush(stderr);
+
+    std::cout.flush();
+    std::cerr.flush();
+
+    // detach console
+    FreeConsole();
+
+    qDebug() << "Return to Qt output";
+#endif
+}
+
+
+QString getTimeStamp(const QList<QString> &argumentList)
 {
     QString myString = ">> ";
 
@@ -137,7 +218,7 @@ QString getTimeStamp(QList<QString> argumentList)
 }
 
 
-QList<QString> getArgumentList(QString commandLine)
+QList<QString> getArgumentList(const QString &commandLine)
 {
     std::string str;
     QList<QString> argumentList;
@@ -152,37 +233,44 @@ QList<QString> getArgumentList(QString commandLine)
 }
 
 
-QString getCommandLine(QString programName)
+QString getCommandLine(const QString &programName)
 {
-    std::string commandLine;
+    std::cout << programName.toStdString() << ">" << std::flush;
 
-    std::cout << programName.toStdString() << ">";
-    getline (std::cin, commandLine);
+    std::string s;
+    std::getline(std::cin, s);
 
-    return QString::fromStdString(commandLine);
-}
-
-
-QList<QString> getSharedCommandList()
-{
-    QList<QString> cmdList;
-
-    cmdList.append("DEM             | LoadDEM");
-    cmdList.append("Point           | LoadPoints");
-    cmdList.append("Grid            | LoadGrid");
-    cmdList.append("Log             | SetLogFile");
-    cmdList.append("Quit            | Exit");
-    cmdList.append("DailyCsv        | ExportDailyDataCsv");
-
-    return cmdList;
+    return QString::fromStdString(s);
 }
 
 
 int cmdExit(Project* myProject)
 {
-    myProject->requestedExit = true;
+    myProject->setRequestedExit(true);
+    return PRAGA_OK;
+}
 
-    // TODO: close project
+
+int cmdSetParallelComputing(Project* myProject, QList<QString> argumentList)
+{
+    if (argumentList.size() < 2)
+    {
+        // default: true
+        myProject->setParallelComputing(true);
+        myProject->logInfo("Parallel computing is enabled.");
+        return PRAGA_OK;
+    }
+
+    if (argumentList[1].toUpper() == "TRUE")
+    {
+        myProject->setParallelComputing(true);
+        myProject->logInfo("Parallel computing is enabled.");
+    }
+    else
+    {
+        myProject->setParallelComputing(false);
+        myProject->logInfo("Parallel computing is disabled.");
+    }
 
     return PRAGA_OK;
 }
@@ -192,7 +280,7 @@ int cmdLoadDEM(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing DEM file name.");
+        myProject->errorString = "Missing DEM file name.";
         // TODO: USAGE
         return PRAGA_MISSING_FILE;
     }
@@ -209,11 +297,12 @@ int cmdLoadDEM(Project* myProject, QList<QString> argumentList)
     }
 }
 
+
 int cmdOpenDbPoint(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing db point name");
+        myProject->errorString = "Missing DB point filename.";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -228,12 +317,31 @@ int cmdOpenDbPoint(Project* myProject, QList<QString> argumentList)
     return PRAGA_OK;
 }
 
+
+int cmdOpenAggregationDB(Project* myProject, QList<QString> argumentList)
+{
+    if (argumentList.size() < 2)
+    {
+        myProject->errorString = "Missing DB aggregation file name.";
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    QString filename = argumentList.at(1);
+
+    if (! myProject->loadAggregationDB(filename))
+    {
+        return ERROR_DBAGGREGATION;
+    }
+
+    return PRAGA_OK;
+}
+
+
 int cmdLoadMeteoGrid(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing Grid file name.");
-        // TODO: USAGE
+        myProject->errorString = "Missing Grid file name.";
         return PRAGA_MISSING_FILE;
     }
     else
@@ -255,8 +363,7 @@ int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing Log file name.");
-        // TODO: USAGE
+        myProject->errorString = "Missing Log file name.";
         return PRAGA_INVALID_COMMAND;
     }
     else
@@ -275,30 +382,57 @@ int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 
 int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 {
+    // GA questa funzione scrive degli errori ed esce, ma ritorna sempre PRAGA_OK. e' giusto?
     QString outputPath = myProject->getProjectPath() + PATH_OUTPUT;
 
     if (argumentList.size() < 2)
     {
         QString usage = "Usage:\n"
-                        "ExportDailyDataCsv [-TPREC] [-t:type] -d1:firstDate [-d2:lastDate] [-l:idList] [-p:outputPath]\n"
-                        "-TPREC     save only Tmin, Tmax, Tavg, Prec \n"
-                        "-t         Type: GRID|POINTS (default: GRID) \n"
-                        "-d1, -d2   Date format: YYYY-MM-DD (default lastDate: yesterday) \n"
-                        "-l         List of output points or cells filename  (default: ALL active cells/points) \n"
-                        "-p         output Path - default:" + outputPath + " \n";
+                        "ExportDailyDataCsv -v:variableList [-TPREC] [-t:type] -d1:firstDate [-d2:lastDate] [-l:idList] [-p:outputPath]\n"
+                        "-v         list of comma separated variables (varname: TMIN, TMAX, TAVG, PREC, RHMIN, RHMAX, RHAVG, RAD, ET0_HS, ET0_PM, LEAFW) \n"
+                        "-TPREC     export Tmin, Tmax, Tavg, Prec \n"
+                        "-t         type: GRID|POINTS (default: GRID) \n"
+                        "-d1, -d2   date format: YYYY-MM-DD (default: lastDate = yesterday) \n"
+                        "-l         list of output points or cells filename  (default: ALL active cells/points) \n"
+                        "-p         output Path (default: " + outputPath + ") \n";
         myProject->logInfo(usage);
         return PRAGA_OK;
     }
 
     QString typeStr = "GRID";
-    QString idListFileName = "";
     QDate firstDate, lastDate;
+    QList<meteoVariable> variableList;
     bool isTPrec = false;
+    QString idListFileName = "";
 
     for (int i = 1; i < argumentList.size(); i++)
     {
         if (argumentList.at(i).left(6).toUpper() == "-TPREC")
+        {
             isTPrec = true;
+            variableList = {dailyAirTemperatureMin, dailyAirTemperatureMax, dailyAirTemperatureAvg, dailyPrecipitation};
+        }
+
+        // variables list
+        if (argumentList.at(i).left(3) == "-v:")
+        {
+            QString variables = argumentList[i].right(argumentList[i].length()-3).toUpper();
+            QList<QString> varNameList = variables.split(",");
+            for (int i = 0; i < varNameList.size(); i++)
+            {
+                std::string varString = "DAILY_" + varNameList[i].toStdString();
+                meteoVariable var = getMeteoVar(varString);
+                if (var != noMeteoVar)
+                {
+                    variableList.append(var);
+                }
+                else
+                {
+                    myProject->logError("Wrong variable: " + varNameList[i]);
+                    return PRAGA_OK;
+                }
+            }
+        }
 
         if (argumentList.at(i).left(4) == "-d1:")
         {
@@ -351,6 +485,14 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
                     QString completeOutputPath = myProject->getProjectPath() + outputPath;
                     outputPath = QDir().cleanPath(completeOutputPath);
                 }
+                else
+                {
+                    if(getFileName(outputPath) == outputPath)
+                    {
+                        QString completeOutputPath = myProject->getProjectPath() + PATH_OUTPUT + outputPath;
+                        outputPath = QDir().cleanPath(completeOutputPath);
+                    }
+                }
             }
         }
     }
@@ -358,9 +500,10 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
     // check first date (mandatory)
     if (! firstDate.isValid())
     {
-        myProject->logError("Missing first date: use option -d1:firstDate");
+        myProject->logError("Missing first date: use -d1:firstDate");
         return PRAGA_OK;
     }
+
     // check last date (default: yesterday)
     if (! lastDate.isValid())
     {
@@ -369,10 +512,14 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 
     myProject->logInfo("... first date is: " + firstDate.toString());
     myProject->logInfo("... last date is: " + lastDate.toString());
-    if (isTPrec)
+
+
+    if (variableList.isEmpty())
     {
-        myProject->logInfo("... output format is: Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)");
+        myProject->logError("Missing variables.");
+        return PRAGA_OK;
     }
+
     if (idListFileName != "")
     {
         myProject->logInfo("... ID list file is: " + idListFileName);
@@ -384,6 +531,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
         else
             myProject->logInfo("... export ALL meteo points");
     }
+
     myProject->logInfo("... output path is: " + outputPath);
 
     if (typeStr == "GRID")
@@ -394,8 +542,8 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
             return PRAGA_ERROR;
         }
 
-        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(myProject->errorString, isTPrec,
-                                             firstDate, lastDate, idListFileName, outputPath))
+        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(variableList, firstDate, lastDate,
+                                                               idListFileName, outputPath, myProject->errorString))
         {
             myProject->logError();
             return PRAGA_ERROR;
@@ -404,6 +552,186 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
     else if (typeStr == "POINTS")
     {
         if (! myProject->exportMeteoPointsDailyDataCsv(isTPrec, firstDate, lastDate, idListFileName, outputPath))
+        {
+            myProject->logError();
+            return PRAGA_ERROR;
+        }
+    }
+
+    return PRAGA_OK;
+}
+
+
+int cmdExportHourlyDataCsv(Project* myProject, QList<QString> argumentList)
+{
+    QString outputPath = myProject->getProjectPath() + PATH_OUTPUT;
+    if (argumentList.size() < 2)
+    {
+        QString usage = "Usage:\n"
+                        "ExportHourlyDataCsv -v:variableList [-TPREC] [-t:type] -d1:firstDate [-d2:lastDate] [-l:idList] [-p:outputPath]\n"
+                        "-v         list of comma separated variables (varname: TAVG, PREC, RHAVG, RAD, ... TODO) \n"
+                        "-TPREC     export Tavg, Prec \n"
+                        "-t         type: GRID|POINTS (default: GRID) \n"
+                        "-d1, -d2   date format: YYYY-MM-DD-HH (default: lastDate = yesterday) \n"
+                        "-l         list of output points or cells filename  (default: ALL active cells/points) \n"
+                        "-p         output Path (default: " + outputPath + ") \n";
+        myProject->logInfo(usage);
+        return PRAGA_OK;
+    }
+
+    QString typeStr = "GRID";
+    QDate firstDate, lastDate;
+    QList<meteoVariable> variableList;
+    bool isTPrec = false;
+    QString idListFileName = "";
+
+    for (int i = 1; i < argumentList.size(); i++)
+    {
+        if (argumentList.at(i).left(6).toUpper() == "-TPREC")
+        {
+            isTPrec = true;
+            variableList = {airTemperature, precipitation};
+        }
+
+        // variables list
+        if (argumentList.at(i).left(3) == "-v:")
+        {
+            QString variables = argumentList[i].right(argumentList[i].length()-3).toUpper();
+            QList<QString> varNameList = variables.split(",");
+            for (int i = 0; i < varNameList.size(); i++)
+            {
+                std::string varString = varNameList[i].toStdString();
+                meteoVariable var = getMeteoVar(varString);
+                if (var != noMeteoVar)
+                {
+                    variableList.append(var);
+                }
+                else
+                {
+                    myProject->logError("Wrong variable: " + varNameList[i]);
+                    return PRAGA_OK;
+                }
+            }
+        }
+
+        if (argumentList.at(i).left(4) == "-d1:")
+        {
+            QString dateStr = argumentList[i].right(argumentList[i].length()-4);
+            firstDate = QDate::fromString(dateStr, "yyyy-MM-dd");
+
+            if (! firstDate.isValid())
+            {
+                myProject->logError("Wrong first date, required format is: YYYY-MM-DD");
+                return PRAGA_OK;
+            }
+        }
+
+        if (argumentList.at(i).left(4) == "-d2:")
+        {
+            QString dateStr = argumentList[i].right(argumentList[i].length()-4);
+            lastDate = QDate::fromString(dateStr, "yyyy-MM-dd");
+
+            if (! lastDate.isValid())
+            {
+                myProject->logError("Wrong last date, required format is: YYYY-MM-DD");
+                return PRAGA_OK;
+            }
+        }
+
+        if (argumentList.at(i).left(3) == "-t:")
+        {
+            typeStr = argumentList[i].right(argumentList[i].length()-3).toUpper();
+
+            if (typeStr != "GRID" && typeStr != "POINTS")
+            {
+                myProject->logError("Wrong type: available GRID or POINTS.");
+                return PRAGA_OK;
+            }
+        }
+
+        if (argumentList.at(i).left(3) == "-l:")
+        {
+            idListFileName = argumentList[i].right(argumentList[i].length()-3);
+            idListFileName = myProject->getCompleteFileName(idListFileName, PATH_OUTPUT);
+        }
+
+        if (argumentList.at(i).left(3) == "-p:" || argumentList.at(i).left(3) == "-o:")
+        {
+            outputPath = argumentList[i].right(argumentList[i].length()-3);
+            if (outputPath.size() > 0)
+            {
+                if (outputPath.at(0) == '.')
+                {
+                    QString completeOutputPath = myProject->getProjectPath() + outputPath;
+                    outputPath = QDir().cleanPath(completeOutputPath);
+                }
+                else
+                {
+                    if(getFileName(outputPath) == outputPath)
+                    {
+                        QString completeOutputPath = myProject->getProjectPath() + PATH_OUTPUT + outputPath;
+                        outputPath = QDir().cleanPath(completeOutputPath);
+                    }
+                }
+            }
+        }
+    }
+
+    // check first date (mandatory)
+    if (! firstDate.isValid())
+    {
+        myProject->logError("Missing first date: use -d1:firstDate");
+        return PRAGA_OK;
+    }
+
+    // check last date (default: yesterday)
+    if (! lastDate.isValid())
+    {
+        lastDate = QDateTime::currentDateTime().date().addDays(-1);
+    }
+
+    myProject->logInfo("... first date is: " + firstDate.toString());
+    myProject->logInfo("... last date is: " + lastDate.toString());
+
+
+    if (variableList.isEmpty())
+    {
+        myProject->logError("Missing variables.");
+        return PRAGA_OK;
+    }
+
+    if (idListFileName != "")
+    {
+        myProject->logInfo("... ID list file is: " + idListFileName);
+    }
+    else
+    {
+        if (typeStr == "GRID")
+            myProject->logInfo("... export ALL meteoGrid cells");
+        else
+            myProject->logInfo("... export ALL meteo points");
+    }
+
+    myProject->logInfo("... output path is: " + outputPath);
+
+    if (typeStr == "GRID")
+    {
+        if (! myProject->meteoGridLoaded)
+        {
+            myProject->logError("No meteo grid open.");
+            return PRAGA_ERROR;
+        }
+
+        if (! myProject->meteoGridDbHandler->exportHourlyDataCsv(variableList, firstDate, lastDate,
+                                                               idListFileName, outputPath, myProject->errorString))
+        {
+            myProject->logError();
+            return PRAGA_ERROR;
+        }
+    }
+    else if (typeStr == "POINTS")
+    {
+        if (! myProject->exportMeteoPointsHourlyDataCsv(isTPrec, firstDate, lastDate, idListFileName, outputPath))
         {
             myProject->logError();
             return PRAGA_ERROR;
@@ -436,6 +764,11 @@ int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* 
         *isCommandFound = true;
         return cmdOpenDbPoint(myProject, argumentList);
     }
+    else if (command == "AGGRDB" || command == "LOADAGGREGATIONDB")
+    {
+        *isCommandFound = true;
+        return cmdOpenAggregationDB(myProject, argumentList);
+    }
     else if (command == "GRID" || command == "LOADGRID")
     {
         *isCommandFound = true;
@@ -446,17 +779,22 @@ int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* 
         *isCommandFound = true;
         return cmdSetLogFile(myProject, argumentList);
     }
+    else if (command == "PARALLEL" || command == "SETPARALLELCOMPUTING")
+    {
+        *isCommandFound = true;
+        return cmdSetParallelComputing(myProject, argumentList);
+    }
     else if (command == "DAILYCSV" || command == "EXPORTDAILYDATACSV")
     {
         *isCommandFound = true;
         return cmdExportDailyDataCsv(myProject, argumentList);
     }
-    else
+    else if (command == "HOURLYCSV" || command == "EXPORTHOURLYDATACSV")
     {
-        // TODO:
-        // other shared commands
+        *isCommandFound = true;
+        return cmdExportHourlyDataCsv(myProject, argumentList);
     }
 
-    return PRAGA_INVALID_COMMAND;
+    return NOT_SHARED_COMMAND;
 }
 

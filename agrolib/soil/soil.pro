@@ -6,13 +6,14 @@
 #----------------------------------------------------
 
 QT -= gui
-QT += core sql
+QT += sql
 
 TARGET = soil
 TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
+CONFIG += c++11 c++14 c++17
 
 unix:{
     CONFIG(debug, debug|release) {

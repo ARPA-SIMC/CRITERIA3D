@@ -22,6 +22,7 @@
     ftomei@arpae.it
     gantolini@arpae.it
     avolta@arpae.it
+
 */
 
 #include <math.h>
@@ -32,6 +33,8 @@
 #include "gammaFunction.h"
 #include "basicMath.h"
 #include "furtherMathFunctions.h"
+
+using namespace std;
 
 
     double factorial(int n) {
@@ -716,11 +719,42 @@
 
     // Gives the cumulative distribution function of input "myValue",
     // following a LogLogistic distribution
-    float logLogisticCDF(float myValue, double alpha, double beta, double gamma)
+    double logLogisticCDF(float myValue, double alpha, double beta, double gamma)
     {
         double logLogisticCDF = 1. / (1. + (pow((alpha / (double(myValue) - beta)), gamma)));
 
-        return float(logLogisticCDF);
+        return logLogisticCDF;
+    }
+
+    double logLogisticCDFRobust(float myValue, double alpha, double beta, double gamma)
+    {
+        double logLogisticCDF;
+        double s;
+        if (alpha > 0 && (myValue - beta)> 0)
+            s = gamma * (log(myValue - beta) - log(alpha));
+        else if (alpha < 0 && (myValue - beta)< 0)
+            s = gamma * (log(-myValue + beta) - log(-alpha));
+        else if (alpha < 0 && (myValue - beta) >= 0)
+        {
+            s = gamma * (log(0.5) - log(-alpha));
+        }
+        else if (alpha > 0 && (myValue - beta) <= 0)
+        {
+            s = gamma * (log(0.5) - log(alpha));
+        }
+        else
+            return PARAMETER_ERROR;
+
+        if (s >= 0)
+        {
+            logLogisticCDF = 1. / (1. + std::exp(-s));
+        }
+        else
+        {
+            logLogisticCDF = std::exp(s) / (1. + std::exp(s));
+        }
+        double sigmoidFactor= 0.00000001 * std::pow(1 + exp(-5*(logLogisticCDF)),-1); // to avoid numerical problems in both tails of the ditribution
+        return logLogisticCDF - sigmoidFactor;
     }
 
     double weibullCDF(double x, double lambda, double kappa)

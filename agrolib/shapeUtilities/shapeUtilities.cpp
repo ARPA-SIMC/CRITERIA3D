@@ -1,4 +1,6 @@
+#include "commonConstants.h"
 #include "shapeUtilities.h"
+#include "shapeHandler.h"
 #include <QFile>
 #include <QFileInfo>
 
@@ -7,7 +9,7 @@
  * \brief make a copy of shapefile (delete old version)
  * and return filename of the cloned shapefile
  */
-QString cloneShapeFile(QString refFileName, QString newFileName)
+QString cloneShapeFile(const QString &refFileName, const QString &newFileName)
 {
     QFileInfo refFileInfo(refFileName);
     QFileInfo newFileInfo(newFileName);
@@ -15,11 +17,17 @@ QString cloneShapeFile(QString refFileName, QString newFileName)
     QString refFile = refFileInfo.absolutePath() + "/" + refFileInfo.baseName();
     QString newFile = newFileInfo.absolutePath() + "/" + newFileInfo.baseName();
 
-    QFile::remove(newFile + ".dbf");
-    QFile::copy(refFile +".dbf", newFile +".dbf");
-
-    QFile::remove(newFile +".shp");
+    if (QFile::exists(newFile + ".shp"))
+    {
+        if (! QFile::remove(newFile + ".shp"))
+        {
+            return "";
+        }
+    }
     QFile::copy(refFile +".shp", newFile +".shp");
+
+    QFile::remove(newFile +".dbf");
+    QFile::copy(refFile +".dbf", newFile +".dbf");
 
     QFile::remove(newFile +".shx");
     QFile::copy(refFile +".shx", newFile +".shx");
@@ -27,14 +35,15 @@ QString cloneShapeFile(QString refFileName, QString newFileName)
     QFile::remove(newFile +".prj");
     QFile::copy(refFile +".prj", newFile +".prj");
 
-    return(newFile + ".shp");
+    return newFile + ".shp";
 }
+
 
 /*! copyShapeFile
  * \brief make a copy of shapefile (keep original version)
  * and return filename of the cloned shapefile
  */
-QString copyShapeFile(QString refFileName, QString newFileName)
+QString copyShapeFile(const QString &refFileName, const QString &newFileName)
 {
     QFileInfo refFileInfo(refFileName);
     QFileInfo newFileInfo(newFileName);
@@ -53,7 +62,8 @@ QString copyShapeFile(QString refFileName, QString newFileName)
 
 bool cleanShapeFile(Crit3DShapeHandler &shapeHandler)
 {
-    if (! shapeHandler.existRecordDeleted()) return true;
+    if (! shapeHandler.existRecordDeleted())
+        return true;
 
     QFileInfo fileInfo(QString::fromStdString(shapeHandler.getFilepath()));
     QString refFile = fileInfo.absolutePath() + "/" + fileInfo.baseName();
@@ -75,5 +85,73 @@ bool cleanShapeFile(Crit3DShapeHandler &shapeHandler)
     QFile::copy(tmpFile + ".shx", refFile + ".shx");
     QFile::remove(tmpFile + ".shx");
 
-    return shapeHandler.open(shapeHandler.getFilepath());
+    return shapeHandler.open(shapeHandler.getFilepath(), false);
+}
+
+
+// shape1 and shape2 must have the same polygons and IDs
+bool computeAnomaly(Crit3DShapeHandler *shapeAnomaly, Crit3DShapeHandler *shape1, Crit3DShapeHandler *shape2,
+                    const std::string &idStr, const std::string &field1, const std::string &field2, const QString &fileName, QString &errorStr)
+{
+    QString newShapeFileName = cloneShapeFile(QString::fromStdString(shape1->getFilepath()), fileName);
+    if (newShapeFileName == "")
+    {
+        errorStr = "Error in create/open shapefile: " + newShapeFileName;
+        return false;
+    }
+
+    if (! shapeAnomaly->open(newShapeFileName.toStdString(), true))
+    {
+        errorStr = "Error in create/open shapefile: " + newShapeFileName;
+        return false;
+    }
+
+    // remove fields (not ID)
+    int nrFields = shape1->getFieldNumbers();
+    for (int i = 0; i < nrFields; i++)
+    {
+        std::string fieldName = shape1->getFieldName(i);
+        if (fieldName != idStr)
+        {
+            int fieldPos = shapeAnomaly->getFieldPos(fieldName);
+            if (fieldPos != -1)
+            {
+                if (! shapeAnomaly->removeField(fieldPos))
+                {
+                    errorStr = "Error in delete field: " + QString::fromStdString(fieldName);
+                    return false;
+                }
+            }
+        }
+    }
+
+    // add anomaly field
+    if (! shapeAnomaly->addField("anomaly", FTDouble, 10, 1))
+    {
+        errorStr = "Error in create field 'anomaly'.";
+        return false;
+    }
+    int anomalyPos = shapeAnomaly->getFieldPos("anomaly");
+
+    // check field position
+    int pos1 = shape1->getFieldPos(field1);
+    int pos2 = shape2->getFieldPos(field2);
+    if (pos1 == -1 || pos2 == -1)
+    {
+        errorStr = "Missing field.";
+        return false;
+    }
+
+    // compute values
+    for (int i = 0; i < shape1->getShapeCount(); i++)
+    {
+        double value1 = shape1->getNumericValue(i, pos1);
+        double value2 = shape2->getNumericValue(i, pos2);
+        if (value1 != NODATA && value2 != NODATA)
+        {
+            shapeAnomaly->writeDoubleAttribute(i, anomalyPos, value2 - value1);
+        }
+    }
+
+    return true;
 }

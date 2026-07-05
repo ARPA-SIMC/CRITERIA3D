@@ -1,388 +1,340 @@
-/*!
-    \name soilPhysics.cpp
-    \copyright (C) 2011 Fausto Tomei, Gabriele Antolini, Antonio Volta,
-                        Alberto Pistocchi, Marco Bittelli
+#include "soilPhysics.h"
+#include "solver.h"
+#include "otherFunctions.h"
+#include <cassert>
 
-    This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
+using namespace soilFluxes3D::v2;
+using namespace soilFluxes3D::v2::Math;
 
-    CRITERIA3D is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+//Temp
+#include "heat.h"
+using namespace soilFluxes3D::v2::Heat;
 
-    CRITERIA3D is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+namespace soilFluxes3D::v2
+{
+    extern __cudaMngd nodesData_t nodeGrid;
+    extern __cudaMngd Solver* solver;
+    extern __cudaMngd simulationFlags_t simulationFlags;
+}
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
-
-    contacts:
-    ftomei@arpae.it
-    gantolini@arpae.it
-*/
-
-#include <stdio.h>
-#include <math.h>
-
-#include "commonConstants.h"
-#include "physics.h"
-#include "header/types.h"
-#include "header/soilPhysics.h"
-#include "header/solver.h"
-#include "header/heat.h"
-#include "header/extra.h"
-
-     /*!
-     * \brief Computes volumetric water content from current degree of saturation
-     * \param myIndex
-     * \return result
-     */
-	double theta_from_Se (unsigned long myIndex)
-	{
-		return ((myNode[myIndex].Se * (myNode[myIndex].Soil->Theta_s - myNode[myIndex].Soil->Theta_r)) + myNode[myIndex].Soil->Theta_r);
-	}
-
+namespace soilFluxes3D::v2::Soil
+{
     /*!
-     * \brief Computes volumetric water content from degree of saturation
-     * \param Se
-     * \param myIndex
-     * \return result
+     * \brief Computes node volumetric water content as function of the node degree of saturation
+     * \return theta (volumetric water content)     [m3 m-3]
      */
-	double theta_from_Se (double Se, unsigned long myIndex)
-	{
-		return ((Se * (myNode[myIndex].Soil->Theta_s - myNode[myIndex].Soil->Theta_r)) + myNode[myIndex].Soil->Theta_r);
-	}
-
-    /*!
-     * \brief Computes volumetric water content from water potential (with sign)
-     * \param signPsi   water potential with sign [m]
-     * \param index
-     * \return volumetric water content [m3 m-3]
-     */
-    double theta_from_sign_Psi (double signPsi, unsigned long index)
-	{
-        if (myNode[index].isSurface) return 1.;
-
-        if (signPsi >= 0.0)
-        {
-            // saturated
-            return myNode[index].Soil->Theta_s;
-        }
-		else
-        {
-            double Se = computeSefromPsi_unsat(fabs(signPsi),myNode[index].Soil);
-            return theta_from_Se(Se, index);
-        }
-	}
-
-
-    /*!
-     * \brief Computes degree of saturation from volumetric water content
-     * \param myIndex
-     * \param theta
-     * \return result
-     */
-	double Se_from_theta (unsigned long myIndex, double theta)
-	{
-        /*! check range */
-		if (theta >= myNode[myIndex].Soil->Theta_s) return(1.);
-		else if (theta <= myNode[myIndex].Soil->Theta_r) return(0.);
-		else return ((theta - myNode[myIndex].Soil->Theta_r) / (myNode[myIndex].Soil->Theta_s - myNode[myIndex].Soil->Theta_r));
-	}
-
-    /*!
-     * \brief Computes degree of saturation from matric potential (Van Genutchen) Se = [1+(alfa*|h|)^n]^-m
-     * valid only for unsaturated soil
-     * \param myPsi  water potential (absolute value) [m]
-     * \param mySoil
-     * \return degree of saturation [-]
-     */
-    double computeSefromPsi_unsat(double myPsi, Tsoil *mySoil)
-	{
-		double Se = NODATA;
-
-        if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
-        {
-            if (myPsi <=  mySoil->VG_he)
-            {
-                Se = 1.;
-            }
-			else
-            {
-                Se = pow(1. + pow(mySoil->VG_alpha * myPsi, mySoil->VG_n), - mySoil->VG_m);
-                Se *= (1. / mySoil->VG_Sc);
-            }
-        }
-        else if (myParameters.waterRetentionCurve == VANGENUCHTEN)
-        {
-            Se = pow(1. + pow(mySoil->VG_alpha * myPsi, mySoil->VG_n), - mySoil->VG_m);
-        }
-
-		return Se;
-	}
-
-    /*!
-     * \brief Computes current degree of saturation
-     * \param myIndex
-     * \return result
-     */
-    double computeSe(unsigned long myIndex)
+    __cudaSpec double computeNodeTheta(SF3Duint_t nodeIndex)
     {
-        if (myNode[myIndex].H >= myNode[myIndex].z)
-        {
-            // saturated
+        if(nodeGrid.surfaceFlag[nodeIndex])
             return 1.;
-        }
-        else
+
+        return computeNodeTheta_fromSe(nodeIndex, nodeGrid.waterData.saturationDegree[nodeIndex]);
+    }
+
+    /*!
+     * \brief Computes node volumetric water content as function of degree of saturation
+     * \return theta (volumetric water content)     [m3 m-3]
+     */
+    __cudaSpec double computeNodeTheta_fromSe(SF3Duint_t nodeIndex, double Se)
+    {
+        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
+        return (Se * (nodeSoil.Theta_s - nodeSoil.Theta_r)) + nodeSoil.Theta_r;
+    }
+
+
+    /*!
+     * \brief Computes node volumetric water content as function of signed water potential
+     * \param signedPsi (signed water potential)    [m]
+     * \return theta (volumetric water content)     [m3 m-3]
+     */
+    __cudaSpec double computeNodeTheta_fromSignedPsi(SF3Duint_t nodeIndex, double signedPsi)
+    {
+        if(nodeGrid.surfaceFlag[nodeIndex])
+            return 1.;
+
+        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
+
+        if(signedPsi >= 0.)
+            return nodeSoil.Theta_s;
+
+        return computeNodeTheta_fromSe(nodeIndex, computeNodeSe_fromPsi(nodeIndex, std::fabs(signedPsi)));
+    }
+
+
+    /*!
+     * \brief Computes node degree of saturation as function of the node matric potential
+     * \return Se (degree of saturation)     [-]
+     */
+    __cudaSpec double computeNodeSe(SF3Duint_t nodeIndex)
+    {
+        bool isSaturated = nodeGrid.waterData.pressureHead[nodeIndex] >= nodeGrid.z[nodeIndex];
+        return isSaturated ? 1. : computeNodeSe_unsat(nodeIndex);
+    }
+
+
+    /*!
+     * \brief Computes unsaturated nodeIndex node degree of saturation as function of the node matric potential
+     * \return Se (degree of saturation)     [-]
+     */
+    __cudaSpec double computeNodeSe_unsat(SF3Duint_t nodeIndex)
+    {
+        double nodePsi = std::fabs(nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]);
+        return computeNodeSe_fromPsi(nodeIndex, nodePsi);
+    }
+
+
+    /*!
+     * \brief Computes unsaturated node degree of saturation as function of matric potential
+     * \param psi (matric potential)        [m] (positive values)
+     * \return Se (degree of saturation)    [-]
+     */
+    __cudaSpec double computeNodeSe_fromPsi(SF3Duint_t nodeIndex, double psi)
+    {
+        soilData_t& soil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
+        const WRCModel model = solver->getWRCModel();
+
+        // local cache
+        const double alpha = soil.VG_alpha;
+        const double n     = soil.VG_n;
+        const double m     = soil.VG_m;
+
+        switch (model)
         {
-            // unsaturated
-            double psi = fabs(myNode[myIndex].H - myNode[myIndex].z);   /*!< [m] */
-            return computeSefromPsi_unsat(psi, myNode[myIndex].Soil);
+        case WRCModel::VanGenuchten:
+            return std::pow(1.0 + std::pow(alpha * psi, n), -m);
+
+        case WRCModel::ModifiedVanGenuchten:
+            if (psi <= soil.VG_he)
+                return 1.0;
+            else
+                return std::pow(1.0 + std::pow(alpha * psi, n), -m) * (1.0 / soil.VG_Sc);
+
+        default:
+            return noDataD;
         }
     }
 
 
     /*!
-     * \brief Computes hydraulic conductivity [m/sec]  (Mualem)
-     * K(Se) = Ksat * Se^(L) * {1-[1-Se^(1/m)]^m}^2
-     * WARNING: very low values are possible (es: 10^12)
-     * \param Se
-     * \param mySoil Tsoil pointer
-     * \return result
+     * \brief Computes node degree of saturation as a function of input volumetric water content
+     * \param theta (volumetric water content)      [m3 m-3]
+     * \return Se (degree of saturation)     [-]
      */
-    double computeWaterConductivity(double Se, Tsoil *mySoil)
-	{
-		if (Se >= 1.) return(mySoil->K_sat );
-
-		double myTmp = NODATA;
-        if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
-		{
-			double myNumerator = 1. - pow(1. - pow(Se*mySoil->VG_Sc, 1./mySoil->VG_m), mySoil->VG_m);
-			myTmp = myNumerator / (1. - pow(1. - pow(mySoil->VG_Sc, 1./mySoil->VG_m), mySoil->VG_m));
-		}
-        else if (myParameters.waterRetentionCurve == VANGENUCHTEN)
-			myTmp = 1. - pow(1. - pow(Se, 1./mySoil->VG_m), mySoil->VG_m);
-
-		return (mySoil->K_sat * pow(Se, mySoil->Mualem_L) * pow(myTmp , 2.));
-	}
-
-
-    /*!
-     * \brief Computes hydraulic conductivity [m/sec]  (Mualem)
-     * K(Se) = Ksat * Se^(L) * {1-[1-Se^(1/m)]^m}^2
-     * WARNING: very low values are possible (es: 10^12)
-     * \param Ksat
-     * \param Se
-     * \param VG_Sc
-	 * \param VG_n
-     * \param VG_m
-     * \param Mualem_L
-     * \return result
-     */
-    double compute_K_Mualem(double Ksat, double Se, double VG_Sc, double VG_m, double Mualem_L)
-	{
-		if (Se >= 1.) return(Ksat);
-		double temp= NODATA;
-
-        if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
-        {
-            double num = 1. - pow(1. - pow(Se*VG_Sc, 1./VG_m), VG_m);
-            temp = num / (1. - pow(1. - pow(VG_Sc, 1./VG_m), VG_m));
-        }
-        else if (myParameters.waterRetentionCurve == VANGENUCHTEN)
-        {
-			temp = 1. - pow(1. - pow(Se, 1./VG_m), VG_m);
-        }
-
-		return (Ksat * pow(Se, Mualem_L) * pow(temp , 2.));
-	}
-
-
-    /*!
-     * \brief Computes current soil water total (liquid + vapor) conductivity [m sec^-1]
-     * \param myIndex
-     * \return result
-     */
-    double computeK(unsigned long myIndex)
+    __cudaSpec double computeNodeSe_fromTheta(SF3Duint_t nodeIndex, double theta)
     {
-        double k = compute_K_Mualem(myNode[myIndex].Soil->K_sat, myNode[myIndex].Se,
-                                myNode[myIndex].Soil->VG_Sc, myNode[myIndex].Soil->VG_m,
-                                myNode[myIndex].Soil->Mualem_L);
+        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
 
-        // vapor isothermal flow
-        if (myStructure.computeHeat && myStructure.computeHeatVapor)
+        if(theta >= nodeSoil.Theta_s)
+            return 1.;
+
+        if(theta < nodeSoil.Theta_r)
+            return 0.;
+
+        return (theta - nodeSoil.Theta_r) / (nodeSoil.Theta_s - nodeSoil.Theta_r);
+    }
+
+    /*!
+     * \brief Computes node water potential as a function of node degree of saturation
+     * \return psi (water potential)     [m]
+     */
+    __cudaSpec double computeNodePsi(SF3Duint_t nodeIndex)
+    {
+        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
+
+        double temp;
+        WRCModel model = solver->getWRCModel();
+        switch(model)
         {
-            double avgT = getTMean(myIndex);
-            double kv = IsothermalVaporConductivity(myIndex, myNode[myIndex].H - myNode[myIndex].z, avgT);
-            // from kg s m-3 to m s-1
-            kv *= (GRAVITY / WATER_DENSITY);
-
-            k += kv;
+            case WRCModel::VanGenuchten:
+                temp = std::pow(1. / nodeGrid.waterData.saturationDegree[nodeIndex], 1. / nodeSoil.VG_m) - 1.;
+                break;
+            case WRCModel::ModifiedVanGenuchten:
+                temp = std::pow(1. / (nodeGrid.waterData.saturationDegree[nodeIndex] * nodeSoil.VG_Sc), 1. / nodeSoil.VG_m) - 1;
+                break;
+            default:
+                return noDataD;
         }
+        return (1. / nodeSoil.VG_alpha) * std::pow(temp, 1. / nodeSoil.VG_n);
+    }
 
+    /*!
+     * \brief Computes node soil water total (liquid + vapor) conductivity
+     * \return K (water conductivity)   [m s-1]
+     */
+    __cudaSpec double computeNodeK(SF3Duint_t nodeIndex)
+    {
+        double k = computeMualemSoilConductivity(*(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr), nodeGrid.waterData.saturationDegree[nodeIndex]);
+
+        if(simulationFlags.computeHeat && simulationFlags.computeHeatVapor)
+            k += computeNodeIsothermalVaporConductivity(nodeIndex, getNodeMeanTemperature(nodeIndex), nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]) * (GRAVITY / WATER_DENSITY);
+    
         return k;
     }
 
 
     /*!
-     * \brief Computes Water Potential from degree of saturation
-     * \param myIndex
-     * \return result
+     * \brief Computes hydraulic conductivity as function of soil parameters and degree of saturation
+     * \details K(Se) = Ksat * Se^L * {1 - [1 - Se^(1/m)]^m}^2
+     * \warning very low values are possible (as e-12)
+     * \return K (hydraulic conductivity)   [m s-1]
      */
-    double psi_from_Se(unsigned long myIndex)
-	{
-		double m = myNode[myIndex].Soil->VG_m;
-		double temp = NODATA;
-
-        if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
-				temp = pow(1./ (myNode[myIndex].Se * myNode[myIndex].Soil->VG_Sc) , 1./ m ) - 1.;
-        else if (myParameters.waterRetentionCurve == VANGENUCHTEN)
-				temp = pow(1./ myNode[myIndex].Se, 1./ m ) - 1.;
-
-        return((1./ myNode[myIndex].Soil->VG_alpha) * pow(temp, 1./ myNode[myIndex].Soil->VG_n));
-	}
-
-    /*!
-     * \brief [m-1] dThetaV/dH
-     * \param myIndex
-     * \return derivative of vapor volumetric content with respect to H
-     */
-    double dThetav_dH(unsigned long i, double temperature, double dTheta_dH)
+    __cudaSpec double computeMualemSoilConductivity(const soilData_t &soil, double Se)
     {
-        double h = myNode[i].H - myNode[i].z;
-        double hr = SoilRelativeHumidity(h, temperature);
-        double satVapPressure = saturationVaporPressure(temperature - ZEROCELSIUS);
-        double satVapConc = vaporConcentrationFromPressure(satVapPressure, temperature);
-        double theta = theta_from_sign_Psi(h, i);
-        double dThetav_dPsi = (satVapConc * hr / WATER_DENSITY) *
-                ((myNode[i].Soil->Theta_s - theta) * MH2O / (R_GAS * temperature) - dTheta_dH / GRAVITY);
-        return dThetav_dPsi * GRAVITY;
+        if (Se >= 1.0)
+            return soil.K_sat;
+
+        double inv_m = 1.0 / soil.VG_m;
+        double temp;
+
+        WRCModel model = solver->getWRCModel();
+        switch (model)
+        {
+            case WRCModel::VanGenuchten:
+            {
+                double Se_pow = std::pow(Se, inv_m);
+                temp = 1.0 - std::pow(1.0 - Se_pow, soil.VG_m);
+                break;
+            }
+            case WRCModel::ModifiedVanGenuchten:
+            {
+                double SeSc_pow = std::pow(Se * soil.VG_Sc, inv_m);
+                double Sc_pow   = std::pow(soil.VG_Sc, inv_m);
+
+                double tNum = 1.0 - std::pow(1.0 - SeSc_pow, soil.VG_m);
+                double tDen = 1.0 - std::pow(1.0 - Sc_pow, soil.VG_m);
+
+                temp = tNum / tDen;
+                break;
+            }
+            default:
+                return noDataD;
+        }
+
+        return soil.K_sat * std::pow(Se, soil.Mualem_L) * (temp * temp);
     }
 
 
     /*!
-     * \brief [m-1] dTheta/dH  (Van Genutchen)
-     * dTheta/dH = dSe/dH (Theta_s-Theta_r)
-     * dSe/dH = -sgn(H-z) alfa n m [1+(alfa|(H-z)|)^n]^(-m-1) (alfa|(H-z)|)^n-1
-     * \param myIndex
-     * \return derivative of water volumetric content with respect to H
+     * \brief Compute the derivative of water volumetric content respect to the water potential
+     * \details dTheta/dH = dSe/dH * (Theta_S - Theta_R) where
+     *                      dSe/dH = -sgn(H-z) * alpha * n * m * [1 + (alpha * |H - z|)^n]^(-m-1) * (alpha * |H-z|)^(n-1)               if VanGenuchten
+     *                  and dSe/dH = -sgn(H-z) * alpha * n * m * (1 / Sc) * [1 + (alpha * |H - z|)^n]^(-m-1) * (alpha * |H-z|)^(n-1)    if Modified VanGenuchten
+     * \return dTheta/dH    [m-1]
      */
-	double dTheta_dH(unsigned long myIndex)
+    __cudaSpec double computeNode_dTheta_dH(SF3Duint_t nodeIndex)
     {
-        double alfa = myNode[myIndex].Soil->VG_alpha;
-        double n    = myNode[myIndex].Soil->VG_n;
-        double m    = myNode[myIndex].Soil->VG_m;
+        soilData_t& soil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
 
-        double psi_abs = fabs(MINVALUE(myNode[myIndex].H - myNode[myIndex].z, 0.));
-        double psiPrevious_abs = fabs(MINVALUE(myNode[myIndex].oldH - myNode[myIndex].z, 0.));
+        // local cache
+        const double pressure    = nodeGrid.waterData.pressureHead[nodeIndex];
+        const double oldPressure = nodeGrid.waterData.oldPressureHead[nodeIndex];
+        const double z           = nodeGrid.z[nodeIndex];
 
-        if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
+        // positive values of psi
+        const double psiCurr = std::fabs(SF3Dmin(0.0, pressure - z));
+        const double psiPrev = std::fabs(SF3Dmin(0.0, oldPressure - z));
+
+        const WRCModel model = solver->getWRCModel();
+
+        // saturated
+        if (model == WRCModel::VanGenuchten)
         {
-            // saturated
-            if ((psi_abs <= myNode[myIndex].Soil->VG_he) && (psiPrevious_abs <= myNode[myIndex].Soil->VG_he)) return 0.;
+            if (psiCurr == 0.0 && psiPrev == 0.0)
+                return 0.0;
         }
-
-        if (myParameters.waterRetentionCurve == VANGENUCHTEN)
+        else if (model == WRCModel::ModifiedVanGenuchten)
         {
-            if ((psi_abs == 0.) && (psiPrevious_abs == 0.)) return 0.;
+            if (psiCurr <= soil.VG_he && psiPrev <= soil.VG_he)
+                return 0.0;
         }
 
         double dSe_dH;
 
-        if (psi_abs == psiPrevious_abs)
+        // same value
+        if (std::fabs(psiCurr - psiPrev) < 1e-12)
         {
-            dSe_dH = alfa * n * m * pow(1. + pow(alfa * psi_abs, n), -(m + 1.)) * pow(alfa * psi_abs, n - 1.);
-            if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
-            {
-                dSe_dH *= (1. / myNode[myIndex].Soil->VG_Sc);
-            }
+            const double n = soil.VG_n;
+            const double x = soil.VG_alpha * psiCurr;
+
+            const double x_pow_n = std::pow(x, n);
+            const double one_plus = 1. + x_pow_n;
+
+            const double term1 = std::pow(one_plus, -(soil.VG_m + 1.));
+            const double term2 = std::pow(x, n - 1.);
+
+            dSe_dH = soil.VG_alpha * n * soil.VG_m * term1 * term2;
+
+            if (model == WRCModel::ModifiedVanGenuchten)
+                dSe_dH *= (1. / soil.VG_Sc);
         }
         else
         {
-            double theta = computeSefromPsi_unsat(psi_abs, myNode[myIndex].Soil);
-            double thetaPrevious = computeSefromPsi_unsat(psiPrevious_abs, myNode[myIndex].Soil);
-            double delta_H = myNode[myIndex].H - myNode[myIndex].oldH;
-            dSe_dH = fabs((theta - thetaPrevious) / delta_H);
+            const double thetaCurr = computeNodeSe_fromPsi(nodeIndex, psiCurr);
+            const double thetaPrev = computeNodeSe_fromPsi(nodeIndex, psiPrev);
+
+            dSe_dH = std::fabs((thetaCurr - thetaPrev) / (pressure - oldPressure));
         }
 
-        return dSe_dH * (myNode[myIndex].Soil->Theta_s - myNode[myIndex].Soil->Theta_r);
+        return dSe_dH * (soil.Theta_s - soil.Theta_r);
     }
 
-
-    double getThetaMean(long i)
-	{
-        double myHMean = getHMean(i);
-
-		if (myNode[i].isSurface)
-		{
-            double mySurfaceWater = MAXVALUE(myHMean - myNode[i].z, 0.);		//[m]
-            return (MINVALUE(mySurfaceWater / 0.01, 1.));
-		}
-		else
-		{
-            /*! sub-surface */
-            return (getTheta(i, myHMean));
-		}
-	}
-
-    double getTheta(long i, double H)
-    {
-        double psi = H - myNode[i].z;
-        return (theta_from_sign_Psi(psi, i));
-    }
-
-    double getTMean(long i)
-    {
-        if (myStructure.computeHeat && myNode[i].extra->Heat != nullptr)
-            return arithmeticMean(myNode[i].extra->Heat->oldT, myNode[i].extra->Heat->T);
-        else
-            return NODATA;
-    }
-
-    double getHMean(long i)
-    {
-        // is there any efficient way to compute a geometric mean of H?
-        return arithmeticMean(myNode[i].oldH, myNode[i].H);
-    }
-
-    double getPsiMean(long i)
-	{
-        double Psi;
-        double meanH = getHMean(i);
-        Psi = MINVALUE(0., (meanH - myNode[i].z));
-        return Psi;
-	}
 
     /*!
-     * \brief estimate particle density
-     * \param fractionOrganicMatter
-     * \return particle density (Mg m-3)
-     * [Driessen, 1986]
+     * \brief Compute the derivative of the vapor volumetric content respect to the water potential
+     * \details ...
+     * \return dThetaV/dH    [m-1]
      */
-    double ParticleDensity(double fractionOrganicMatter)
+    __cudaSpec double computeNodedThetaVdH(SF3Duint_t nodeIndex, double temperature, double dThetadH)
     {
-        if (fractionOrganicMatter == NODATA)
-            fractionOrganicMatter = 0.02;
+        double h = nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
+        double rH = computeSoilRelativeHumidity(h, temperature);
 
-        return 1.0 / ((1.0 - fractionOrganicMatter) / QUARTZ_DENSITY + fractionOrganicMatter / 1.43);
+        double saturationVP = computeSaturationVaporPressure(temperature - ZEROCELSIUS);
+        double saturationVC = computeVaporConcentration_fromPressure(saturationVP, temperature);
+
+        double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
+        double dThetaVdPsi = (saturationVC * rH / WATER_DENSITY) * ((nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_s - theta) * MH2O / (R_GAS * temperature) - dThetadH / GRAVITY);
+
+        return dThetaVdPsi * GRAVITY;
     }
 
     /*!
-     * \brief estimate bulk density
-     * \param i
-     * \return bulk density (Mg m-3)
+     * \brief Return the nodeIndex node mean temperature
+     * \return temperature    [K]
      */
-    double estimateBulkDensity(long i)
+    __cudaSpec double getNodeMeanTemperature(SF3Duint_t nodeIndex)
     {
-        double particleDensity;
-        double totalPorosity;
+        if(!simulationFlags.computeHeat)   //Add control over heat data
+            return noDataD;
 
-        particleDensity = ParticleDensity(myNode[i].Soil->organicMatter);
-
-        totalPorosity = myNode[i].Soil->Theta_s;
-
-        return (1. - totalPorosity) * particleDensity;
+        return computeMean(nodeGrid.heatData.temperature[nodeIndex], nodeGrid.heatData.oldTemperature[nodeIndex], meanType_t::Arithmetic);
     }
+
+    /*!
+     * \brief Return the fraction of surface water
+     * \return fraction of surface water    [-]
+     */
+    __cudaSpec double getNodeSurfaceWaterFraction(SF3Duint_t nodeIndex)
+    {
+        if(!nodeGrid.surfaceFlag[nodeIndex])
+            return 0.;
+
+        double hV = SF3Dmax(0., nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]);
+        double h0 = SF3Dmax(0.001, nodeGrid.waterData.pond[nodeIndex]);
+
+        return SF3Dmin(1., hV / h0);
+    }
+
+    __cudaSpec double nodeDistance2D(SF3Duint_t idx1, SF3Duint_t idx2)
+    {
+        double vec[] = {nodeGrid.x[idx1] - nodeGrid.x[idx2], nodeGrid.y[idx1] - nodeGrid.y[idx2]};
+        return vectorNorm(vec, 2);
+    }
+
+    __cudaSpec double nodeDistance3D(SF3Duint_t idx1, SF3Duint_t idx2)
+    {
+        double vec[] = {nodeGrid.x[idx1] - nodeGrid.x[idx2], nodeGrid.y[idx1] - nodeGrid.y[idx2], nodeGrid.z[idx1] - nodeGrid.z[idx2]};
+        return vectorNorm(vec, 3);
+    }
+
+} //namespace

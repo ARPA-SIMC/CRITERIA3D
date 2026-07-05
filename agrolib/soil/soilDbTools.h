@@ -16,7 +16,7 @@
 
     bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, QString& errorStr);
 
-    bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, int horizon, QString& errorStr);
+    bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, int horizonNr, QString& errorStr);
 
     bool insertSoilData(QSqlDatabase &dbSoil, int soilID, const QString &soilCode,
                         const QString &soilName, const QString &soilInfo, QString &errorStr);

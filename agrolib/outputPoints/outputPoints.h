@@ -6,12 +6,14 @@
     #endif
     #include <QString>
 
-    bool importOutputPointsCsv(QString csvFileName, QList<QList<QString>> &data, QString &errorString);
+    bool importPointPropertiesCsv(const QString &csvFileName, QList<QList<QString>> &pointsProperties,
+                                  QString &errorString);
 
-    bool loadOutputPointListCsv(QString csvFileName, std::vector<gis::Crit3DOutputPoint> &outputPointList,
-                             int utmZone, QString &errorString);
+    bool loadOutputPointListCsv(const QString &csvFileName, std::vector<gis::Crit3DOutputPoint> &outputPointList,
+                                int utmZone, QString &errorString);
 
-    bool writeOutputPointListCsv(QString csvFileName, std::vector<gis::Crit3DOutputPoint> &outputPointList, QString &errorString);
+    bool writeOutputPointListCsv(const QString &csvFileName, std::vector<gis::Crit3DOutputPoint> &outputPointList,
+                                 QString &errorString);
 
 
 #endif // OUTPUTPOINTS_H

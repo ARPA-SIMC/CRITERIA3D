@@ -5,10 +5,13 @@
         #include "shapeHandler.h"
     #endif
     #include <QString>
+    #include <QMap>
 
-    bool getFieldList(QString fieldListFileName, QMap<QString, QList<QString>>& fieldList, QString &error);
+    long getFileLenght(const QString &fileName, QString &errorStr);
 
-    bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
-                      QString fieldListFileName, QString outputFileName, QString &error);
+    bool getShapeFieldList(const QString &fileName, QMap<QString, QList<QString>>& fieldList, QString &error);
+
+    bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFileName,
+                      const QString &fieldListFileName, const QString &outputFileName, QString &errorStr);
 
 #endif // SHAPEFROMCSV_H

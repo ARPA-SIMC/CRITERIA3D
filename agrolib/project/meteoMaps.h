@@ -54,6 +54,7 @@
         gis::Crit3DRasterGrid* mapHourlyWindScalarInt;
         gis::Crit3DRasterGrid* mapHourlyET0;
         gis::Crit3DRasterGrid* mapHourlyLeafW;
+        gis::Crit3DRasterGrid* mapHourlyETReal;
 
         Crit3DHourlyMeteoMaps(const gis::Crit3DRasterGrid& DEM);
         ~Crit3DHourlyMeteoMaps();

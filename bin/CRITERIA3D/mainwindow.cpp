@@ -42,15 +42,16 @@
 #include "dialogNewPoint.h"
 #include "glWidget.h"
 #include "dialogWaterFluxesSettings.h"
+#include "dialogModelProcesses.h"
 #include "utilities.h"
+#include "formText.h"
+#include "soilFluxes3D.h"
+#include "watershed.h"
 
 #include <QTime>
 
 
 extern Crit3DProject myProject;
-
-#define MAPBORDER 10
-#define TOOLSWIDTH 270
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -62,37 +63,44 @@ MainWindow::MainWindow(QWidget *parent) :
     viewer3D = nullptr;
 
     // Set the MapGraphics Scene and View
-    this->mapScene = new MapGraphicsScene(this);
-    this->mapView = new MapGraphicsView(mapScene, this->ui->widgetMap);
+    mapScene = new MapGraphicsScene(this);
+    mapView = new MapGraphicsView(mapScene, ui->widgetMap);
 
-    this->rubberBand = new RubberBand(QRubberBand::Rectangle, this->mapView);
+    rubberBand = new RubberBand(QRubberBand::Rectangle, mapView);
 
-    this->inputRasterColorLegend = new ColorLegend(ui->colorScaleInputRaster);
-    this->inputRasterColorLegend->resize(ui->colorScaleInputRaster->size());
+    inputRasterColorLegend = new ColorLegend(ui->colorScaleInputRaster);
+    inputRasterColorLegend->resize(ui->colorScaleInputRaster->size());
 
-    this->outputRasterColorLegend = new ColorLegend(this->ui->colorScaleOutputRaster);
-    this->outputRasterColorLegend->resize(ui->colorScaleOutputRaster->size());
+    outputRasterColorLegend = new ColorLegend(ui->colorScaleOutputRaster);
+    outputRasterColorLegend->resize(ui->colorScaleOutputRaster->size());
 
-    this->meteoPointsLegend = new ColorLegend(ui->colorScaleMeteoPoints);
-    this->meteoPointsLegend->resize(ui->colorScaleMeteoPoints->size());
-    this->meteoPointsLegend->colorScale = myProject.meteoPointsColorScale;
+    meteoPointsLegend = new ColorLegend(ui->colorScaleMeteoPoints);
+    meteoPointsLegend->resize(ui->colorScaleMeteoPoints->size());
+    meteoPointsLegend->colorScale = myProject.meteoPointsColorScale;
 
     // initialize
     ui->labelInputRaster->setText("");
     ui->labelOutputRaster->setText("");
     ui->flagSave_state_daily_step->setChecked(false);
-    this->viewNotActivePoints = true;
-    ui->flagView_not_active_points->setChecked(this->viewNotActivePoints);
-    this->viewOutputPoints = true;
-    this->viewNotActiveOutputPoints = true;
-    ui->flagView_not_active_outputPoints->setChecked(this->viewNotActiveOutputPoints);
-    this->currentPointsVisualization = notShown;
 
-    current3DlayerIndex = waterContent;
-    current3DlayerIndex = 0;
-    view3DVariable = false;
+    _viewNotActivePoints = true;
+    ui->flagView_not_active_points->setChecked(_viewNotActivePoints);
+
+    _viewOutputPoints = true;
+    _viewNotActiveOutputPoints = true;
+    ui->flagView_not_active_outputPoints->setChecked(_viewNotActiveOutputPoints);
+
+    currentPointsVisualization = notShown;
+
+    _current3DlayerIndex = 0;
+    _view3DVariable = false;
 
     ui->flagView_values->setChecked(false);
+
+    _isAreaSelection = false;
+    ui->flag_area_selection->setChecked(_isAreaSelection);
+    _isPointSelection = false;
+    ui->flag_point_selection->setChecked(_isPointSelection);
 
     // show menu
     showPointsGroup = new QActionGroup(this);
@@ -102,43 +110,51 @@ MainWindow::MainWindow(QWidget *parent) :
     showPointsGroup->addAction(ui->actionView_PointsCurrentVariable);
     showPointsGroup->setEnabled(false);
 
-    this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
+    setTileMapSource(WebTileSource::GOOGLE_Terrain);
 
     // Set start size and position
-    this->startCenter = new Position (myProject.gisSettings.startLocation.longitude,
+    startCenter = new Position (myProject.gisSettings.startLocation.longitude,
                                      myProject.gisSettings.startLocation.latitude, 0.0);
-    this->mapView->setZoomLevel(8);
-    this->mapView->centerOn(startCenter->lonLat());
-    connect(this->mapView, SIGNAL(zoomLevelChanged(quint8)), this, SLOT(updateMaps()));
-    connect(this->mapView, SIGNAL(mouseMoveSignal(QPoint)), this, SLOT(mouseMove(QPoint)));
+    mapView->setZoomLevel(8);
+    mapView->centerOn(startCenter->lonLat());
+    connect(mapView, SIGNAL(zoomLevelChanged(quint8)), this, SLOT(updateMaps()));
+    connect(mapView, SIGNAL(mouseMoveSignal(QPoint)), this, SLOT(mouseMove(QPoint)));
+    connect(&myProject, SIGNAL(updateOutputSignal()), this, SLOT(updateOutputMap()));
 
     // Set raster objects
-    this->rasterDEM = new RasterUtmObject(this->mapView);
-    this->rasterDEM->setOpacity(this->ui->opacitySliderRasterInput->value() / 100.0);
-    this->rasterDEM->setColorLegend(this->inputRasterColorLegend);
-    this->rasterDEM->setVisible(false);
-    this->mapView->scene()->addObject(this->rasterDEM);
+    rasterDEM = new RasterUtmObject(mapView);
+    rasterDEM->setOpacity(ui->opacitySliderRasterInput->value() / 100.0);
+    rasterDEM->setColorLegend(inputRasterColorLegend);
+    rasterDEM->setVisible(false);
+    mapView->scene()->addObject(rasterDEM);
 
-    this->rasterOutput = new RasterUtmObject(this->mapView);
-    this->rasterOutput->setOpacity(this->ui->opacitySliderRasterOutput->value() / 100.0);
-    this->rasterOutput->setColorLegend(this->outputRasterColorLegend);
-    this->rasterOutput->setVisible(false);
-    this->mapView->scene()->addObject(this->rasterOutput);
+    rasterOutput = new RasterUtmObject(mapView);
+    rasterOutput->setOpacity(ui->opacitySliderRasterOutput->value() / 100.0);
+    rasterOutput->setColorLegend(outputRasterColorLegend);
+    rasterOutput->setVisible(false);
+    mapView->scene()->addObject(rasterOutput);
 
-    this->updateCurrentVariable();
-    this->updateDateTime();
+    updateCurrentVariable();
+    updateDateTime();
 
     myProject.setSaveDailyState(false);
     ui->flagSave_state_daily_step->setChecked(myProject.isSaveDailyState());
+
+    myProject.setSaveEndOfRunState(false);
+    ui->flagSave_state_endRun->setChecked(myProject.isSaveEndOfRunState());
+
+    myProject.setSaveYearlyState(false);
+    myProject.setSaveMonthlyState(false);
 
     myProject.setSaveOutputPoints(false);
     myProject.setComputeOnlyPoints(false);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
+    ui->action_parallel_computing->setChecked(myProject.isParallelComputing());
+    ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
 
-    this->setMouseTracking(true);
-
-    connect(&myProject, &Crit3DProject::updateOutputSignal, this, &MainWindow::updateOutputMap);
+    setMouseTracking(true);
+    setTitle();
 }
 
 
@@ -147,29 +163,32 @@ void MainWindow::resizeEvent(QResizeEvent * event)
     Q_UNUSED(event)
 
     const int INFOHEIGHT = 42;
-    const int STEPY = 24;
-    int x1 = this->width() - TOOLSWIDTH - MAPBORDER;
-    int dy = ui->groupBoxModel->height() + ui->groupBoxMeteoPoints->height() + ui->groupBoxDEM->height() + ui->groupBoxVariableMap->height() + STEPY*3;
-    int y1 = (this->height() - INFOHEIGHT - dy) / 2;
+    const int TOOLSWIDTH = 270;
 
-    ui->widgetMap->setGeometry(0, 0, x1, this->height() - INFOHEIGHT);
+    int stepY = (height() - INFOHEIGHT) / 40;
+    int x1 = width() - TOOLSWIDTH - MAPBORDER;
+    int dy = ui->groupBoxModel->height() + ui->groupBoxMeteoPoints->height() + ui->groupBoxDEM->height() + ui->groupBoxVariableMap->height() + stepY*3;
+    int y1 = (height() - INFOHEIGHT - dy) / 2;
+
+    ui->widgetMap->setGeometry(0, 0, x1, height() - INFOHEIGHT);
     mapView->resize(ui->widgetMap->size());
 
     ui->groupBoxModel->move(x1, y1);
     ui->groupBoxModel->resize(TOOLSWIDTH, ui->groupBoxModel->height());
-    y1 += ui->groupBoxModel->height() + STEPY;
+    y1 += ui->groupBoxModel->height() + stepY;
 
     ui->groupBoxDEM->move(x1, y1);
     ui->groupBoxDEM->resize(TOOLSWIDTH, ui->groupBoxDEM->height());
-    y1 += ui->groupBoxDEM->height() + STEPY;
+    y1 += ui->groupBoxDEM->height() + stepY;
 
     ui->groupBoxMeteoPoints->move(x1, y1);
     ui->groupBoxMeteoPoints->resize(TOOLSWIDTH, ui->groupBoxMeteoPoints->height());
-    y1 += ui->groupBoxMeteoPoints->height() + STEPY;
+    y1 += ui->groupBoxMeteoPoints->height() + stepY;
 
     ui->groupBoxVariableMap->move(x1, y1);
     ui->groupBoxVariableMap->resize(TOOLSWIDTH, ui->groupBoxVariableMap->height());
-    this->updateMaps();
+
+    updateMaps();
 }
 
 
@@ -193,17 +212,22 @@ void MainWindow::updateOutputMap()
 
     if (myProject.isCriteria3DInitialized)
     {
-        myProject.setCriteria3DMap(current3DVariable, current3DlayerIndex);
+        myProject.computeCriteria3DMap(myProject.criteria3DMap, _current3DVariable, _current3DlayerIndex);
     }
+
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
+
+    refreshViewer3D();
+
     qApp->processEvents();
 }
 
 
-void MainWindow::mouseMove(QPoint eventPos)
+void MainWindow::mouseMove(const QPoint &eventPos)
 {
-    if (! isInsideMap(eventPos)) return;
+    if (! isInsideMap(eventPos))
+        return;
 
     // rubber band
     if (rubberBand != nullptr && rubberBand->isActive)
@@ -213,38 +237,41 @@ void MainWindow::mouseMove(QPoint eventPos)
         return;
     }
 
-    Position pos = this->mapView->mapToScene(eventPos);
+    Position geoPos = mapView->mapToScene(eventPos);
 
-    QString infoStr = "Lat:"+QString::number(pos.latitude())
-                      + "  Lon:" + QString::number(pos.longitude());
+    QString infoStr = "Lat:" + QString::number(geoPos.latitude(), 'g', 7) + " Lon:" + QString::number(geoPos.longitude(), 'g', 7);
 
-    float value = NODATA;
     if (rasterOutput->visible())
     {
-        value = rasterOutput->getValue(pos);
+        float value = rasterOutput->getValue(geoPos);
+        if (! isEqual(value, NODATA))
+            infoStr += "  Value:" + QString::number(double(value));
     }
     else if (rasterDEM->visible())
     {
-        value = rasterDEM->getValue(pos);
+        float value = rasterDEM->getValue(geoPos);
+        if (! isEqual(value, NODATA))
+            infoStr += "  DEM value:" + QString::number(double(value));
     }
-    if (! isEqual(value, NODATA))
-        infoStr += "  Value:" + QString::number(double(value));
 
-    this->ui->statusBar->showMessage(infoStr);
+    ui->statusBar->showMessage(infoStr);
 }
 
 
-bool MainWindow::updateSelection(const QPoint& position)
+bool MainWindow::getRubberBandRect(const QPoint& position, bool& isAdd)
 {
-    if (rubberBand == nullptr || !rubberBand->isActive || !rubberBand->isVisible() )
+    if (rubberBand == nullptr || ! rubberBand->isVisible())
+    {
+        rubberBandRect.setWidth(0);
+        rubberBandRect.setHeight(0);
         return false;
+    }
 
     QPoint lastCornerOffset = getMapPos(position);
     QPoint firstCornerOffset = rubberBand->getOrigin() - QPoint(MAPBORDER, MAPBORDER);
-    QPoint pixelTopLeft;
-    QPoint pixelBottomRight;
-    bool isAdd = false;
+    QPoint pixelTopLeft, pixelBottomRight;
 
+    isAdd = false;
     if (firstCornerOffset.y() > lastCornerOffset.y())
     {
         if (firstCornerOffset.x() > lastCornerOffset.x())
@@ -280,13 +307,21 @@ bool MainWindow::updateSelection(const QPoint& position)
         }
     }
 
-    QPointF topLeft = this->mapView->mapToScene(pixelTopLeft);
-    QPointF bottomRight = this->mapView->mapToScene(pixelBottomRight);
-    QRectF rectF(topLeft, bottomRight);
+    rubberBandRect.setTopLeft(pixelTopLeft);
+    rubberBandRect.setBottomRight(pixelBottomRight);
+    return true;
+}
+
+
+bool MainWindow::updatePointsSelection(bool isAdd)
+{
+    QRectF rubberBandRectGeo;
+    rubberBandRectGeo.setTopLeft(mapView->mapToScene(rubberBandRect.topLeft()));
+    rubberBandRectGeo.setBottomRight(mapView->mapToScene(rubberBandRect.bottomRight()));
 
     for (int i = 0; i < meteoPointList.size(); i++)
     {
-        if (rectF.contains(meteoPointList[i]->longitude(), meteoPointList[i]->latitude()))
+        if (rubberBandRectGeo.contains(meteoPointList[i]->longitude(), meteoPointList[i]->latitude()))
         {
             if (isAdd)
             {
@@ -301,7 +336,7 @@ bool MainWindow::updateSelection(const QPoint& position)
 
     for (int i = 0; i < outputPointList.size(); i++)
     {
-        if (rectF.contains(outputPointList[i]->longitude(), outputPointList[i]->latitude()))
+        if (rubberBandRectGeo.contains(outputPointList[i]->longitude(), outputPointList[i]->latitude()))
         {
             if (isAdd)
             {
@@ -314,6 +349,7 @@ bool MainWindow::updateSelection(const QPoint& position)
         }
     }
 
+    rubberBandRect.setSize(QSize(0,0));
     rubberBand->isActive = false;
     rubberBand->hide();
 
@@ -323,11 +359,26 @@ bool MainWindow::updateSelection(const QPoint& position)
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-    this->updateMaps();
-    if (this->updateSelection(event->pos()))
+    updateMaps();
+
+    if (event->button() == Qt::RightButton)
     {
-        this->redrawMeteoPoints(currentPointsVisualization, false);
-        this->redrawOutputPoints();
+        bool isAdd;
+        if (getRubberBandRect(event->pos(), isAdd))
+        {
+            if (_isPointSelection)
+            {
+                if (updatePointsSelection(isAdd))
+                {
+                    redrawMeteoPoints(currentPointsVisualization, false);
+                    redrawOutputPoints();
+                }
+            }
+            else if (_isAreaSelection)
+            {
+                rubberBand->isActive = false;
+            }
+        }
     }
 }
 
@@ -337,18 +388,20 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent * event)
     QPoint mapPos = getMapPos(event->pos());
     if (! isInsideMap(mapPos)) return;
 
-    Position newCenter = this->mapView->mapToScene(mapPos);
+    Position newCenter = mapView->mapToScene(mapPos);
 
     if (event->button() == Qt::LeftButton)
     {
-        this->mapView->zoomIn();
+        mapView->zoomIn();
     }
     else if (event->button() == Qt::RightButton)
     {
-        this->mapView->zoomOut();
+        mapView->zoomOut();
     }
 
-    this->mapView->centerOn(newCenter.lonLat());
+    mapView->centerOn(newCenter.lonLat());
+
+    updateMaps();
 }
 
 
@@ -356,35 +409,39 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::RightButton)
     {
+        if (_isAreaSelection || _isPointSelection)
+        {
+            if (rubberBand != nullptr)
+            {
+                QPoint mapPos = getMapPos(event->pos());
+                QPoint widgetPos = mapPos + QPoint(MAPBORDER, MAPBORDER);
+                rubberBand->setOrigin(widgetPos);
+                rubberBand->setGeometry(QRect(widgetPos, QSize()));
+                rubberBand->isActive = true;
+                rubberBand->show();
+                return;
+            }
+        }
+
         if (contextMenuRequested(event->pos()))
             return;
-
-        if (rubberBand != nullptr)
-        {
-            QPoint mapPos = getMapPos(event->pos());
-            QPoint widgetPos = mapPos + QPoint(MAPBORDER, MAPBORDER);
-            rubberBand->setOrigin(widgetPos);
-            rubberBand->setGeometry(QRect(widgetPos, QSize()));
-            rubberBand->isActive = true;
-            rubberBand->show();
-            return;
-        }
     }
 }
 
 
 bool MainWindow::contextMenuRequested(QPoint localPos)
 {
-    QMenu contextMenu;
-    int nrItems = 0;
-
     QPoint mapPos = getMapPos(localPos);
     if (! isInsideMap(mapPos))
         return false;
 
+    Position geoPos = mapView->mapToScene(mapPos);
+    QMenu contextMenu;
+    int nrItems = 0;
+
     if (myProject.soilMap.isLoaded)
     {
-        if (isSoil(mapPos))
+        if (isSoil(geoPos))
         {
             contextMenu.addAction("View soil data");
             nrItems++;
@@ -392,11 +449,25 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
     }
     if (myProject.landUseMap.isLoaded && myProject.landUnitList.size() != 0)
     {
-        if (isLandUse(mapPos))
+        if (isLandUse(geoPos))
         {
             contextMenu.addAction("View land use");
             nrItems++;
             contextMenu.addAction("View crop");
+            nrItems++;
+        }
+    }
+
+    if (myProject.DEM.isLoaded)
+    {
+        if (isInsideDEM(geoPos))
+        {
+            contextMenu.addSeparator();
+            contextMenu.addAction("Add output point...");
+            nrItems++;
+            contextMenu.addAction("Extract the basin from this point");
+            nrItems++;
+            contextMenu.addAction("Compute the water runoff path");
             nrItems++;
         }
     }
@@ -411,7 +482,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
         if (selection->text().contains("View soil data"))
         {
             if (myProject.nrSoils > 0) {
-                openSoilWidget(mapPos);
+                openSoilWidget(geoPos);
             }
             else
             {
@@ -419,13 +490,62 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             }
         }
 
+        if (selection->text().contains("Add output point..."))
+        {
+            if (myProject.addOutputPoint(geoPos.latitude(), geoPos.longitude()))
+                addOutputPointsGUI();
+        }
+
+        if (selection->text().contains("Extract the basin"))
+        {
+            double x, y;
+            gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
+
+            // extract basin
+            gis::Crit3DRasterGrid basinRaster;
+            std::string errorStr;
+            if (! gis::extractBasin(myProject.DEM, basinRaster, x, y, errorStr))
+            {
+                myProject.logWarning("Wrong closure point: " + QString::fromStdString(errorStr));
+                return false;
+            }
+
+            // choose fileName
+            QString completeFileName = QFileDialog::getSaveFileName(this, tr("Save basin raster"), "", tr("ESRI float (*.flt)"));
+            if (completeFileName.isEmpty())
+                return false;
+
+            std::string fileName = completeFileName.left(completeFileName.size() - 4).toStdString();
+
+            // save map
+            if (! gis::writeEsriGrid(fileName, &basinRaster, errorStr))
+            {
+                myProject.logError(QString::fromStdString(errorStr));
+                return false;
+            }
+        }
+
+        if (selection->text().contains("water runoff path"))
+        {
+            double x, y;
+            gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
+
+            if (! gis::computeWaterRunoffPath(myProject.DEM, myProject.criteria3DMap, x, y))
+            {
+                myProject.logWarning("Wrong start point.");
+                return false;
+            }
+
+            setAnomalyScale(myProject.criteria3DMap.colorScale);
+            setCurrentRasterOutput(&myProject.criteria3DMap);
+        }
+
         if (selection->text().contains("View land use"))
         {
-            Position geoPos = mapView->mapToScene(mapPos);
             int id = myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude());
             if (id != NODATA)
             {
-                int index = getLandUnitIndex(myProject.landUnitList, id);
+                int index = myProject.getLandUnitListIndex(id);
                 if (index != NODATA)
                 {
                     Crit3DLandUnit landUnit = myProject.landUnitList[index];
@@ -449,11 +569,10 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
 
         if (selection->text().contains("View crop"))
         {
-            Position geoPos = mapView->mapToScene(mapPos);
             int id = myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude());
             if (id != NODATA)
             {
-                int index = getLandUnitIndex(myProject.landUnitList, id);
+                int index = myProject.getLandUnitListIndex(id);
                 if (index != NODATA)
                 {
                     QString infoStr;
@@ -492,12 +611,12 @@ void MainWindow::addOutputPointsGUI()
     for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
     {
         SquareMarker* point = new SquareMarker(7, true, QColor((Qt::green)));
-        point->setId(myProject.outputPoints[i].id);
+        point->setId(QString::fromStdString(myProject.outputPoints[i].id));
         point->setLatitude(myProject.outputPoints[i].latitude);
         point->setLongitude(myProject.outputPoints[i].longitude);
 
-        this->outputPointList.append(point);
-        this->mapView->scene()->addObject(this->outputPointList[i]);
+        outputPointList.append(point);
+        mapView->scene()->addObject(outputPointList[i]);
         outputPointList[i]->setToolTip();
     }
 
@@ -527,9 +646,20 @@ void MainWindow::addMeteoPoints()
 {
     myProject.clearSelectedPoints();
 
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
     {
+        // default: white
         StationMarker* point = new StationMarker(5.0, true, QColor(Qt::white));
+        point->setCallerSoftware(CRITERIA3D_caller);
+
+        if (myProject.meteoPoints[i].lapseRateCode == secondary)
+        {
+            point->setFillColor(QColor(Qt::black));
+        }
+        else if (myProject.meteoPoints[i].lapseRateCode == supplemental)
+        {
+            point->setFillColor(QColor(Qt::gray));
+        }
 
         point->setFlag(MapGraphicsObject::ObjectIsMovable, false);
         point->setLatitude(myProject.meteoPoints[i].latitude);
@@ -541,43 +671,43 @@ void MainWindow::addMeteoPoints()
         point->setMunicipality(myProject.meteoPoints[i].municipality);
         point->setCurrentValue(qreal(myProject.meteoPoints[i].currentValue));
         point->setQuality(myProject.meteoPoints[i].quality);
+        point->setLapseRateCode(myProject.meteoPoints[i].lapseRateCode);
 
-        this->meteoPointList.append(point);
-        this->mapView->scene()->addObject(this->meteoPointList[i]);
+        meteoPointList.append(point);
+        mapView->scene()->addObject(meteoPointList[i]);
 
         point->setToolTip();
-        connect(point, SIGNAL(newStationClicked(std::string, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, bool)));
-        connect(point, SIGNAL(appendStationClicked(std::string, std::string, bool)), this, SLOT(callAppendMeteoWidget(std::string, std::string, bool)));
+        connect(point, SIGNAL(newStationClicked(std::string, std::string, std::string, double, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, std::string, double, std::string, bool)));
+        connect(point, SIGNAL(appendStationClicked(std::string, std::string, std::string, double, std::string, bool)), this, SLOT(callAppendMeteoWidget(std::string, std::string, std::string, double, std::string, bool)));
     }
-
 }
 
 
-void MainWindow::callNewMeteoWidget(std::string id, std::string name, bool isGrid)
+void MainWindow::callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid)
 {
     bool isAppend = false;
     if (isGrid)
     {
-        myProject.showMeteoWidgetGrid(id, isAppend);
+        myProject.showMeteoWidgetGrid(id, dataset, isAppend);
     }
     else
     {
-        myProject.showMeteoWidgetPoint(id, name, isAppend);
+        myProject.showMeteoWidgetPoint(id, name, dataset, altitude, lapseRateCode, isAppend);
     }
     return;
 }
 
 
-void MainWindow::callAppendMeteoWidget(std::string id, std::string name, bool isGrid)
+void MainWindow::callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid)
 {
     bool isAppend = true;
     if (isGrid)
     {
-        myProject.showMeteoWidgetGrid(id, isAppend);
+        myProject.showMeteoWidgetGrid(id, dataset, isAppend);
     }
     else
     {
-        myProject.showMeteoWidgetPoint(id, name, isAppend);
+        myProject.showMeteoWidgetPoint(id, name, dataset, altitude, lapseRateCode, isAppend);
     }
     return;
 }
@@ -588,7 +718,7 @@ void MainWindow::drawMeteoPoints()
     resetMeteoPointMarkers();
     clearWindVectorObjects();
 
-    if (! myProject.meteoPointsLoaded || myProject.nrMeteoPoints == 0)
+    if (! myProject.meteoPointsLoaded || (int)myProject.meteoPoints.size() == 0)
     {
         ui->groupBoxMeteoPoints->setEnabled(false);
         return;
@@ -610,40 +740,54 @@ void MainWindow::drawMeteoPoints()
 
 void MainWindow::setProjectTileMap()
 {
-    if (myProject.currentTileMap != "")
+    QString currentTileMap = myProject.getCurrentTileMap().toUpper();
+    if (! currentTileMap.isEmpty())
     {
-        if (myProject.currentTileMap.toUpper() == "ESRI")
+        if (currentTileMap == "ESRI")
         {
-            this->setTileMapSource(WebTileSource::ESRI_WorldImagery);
+            setTileMapSource(WebTileSource::ESRI_WorldImagery);
         }
-        else if (myProject.currentTileMap.toUpper() == "TERRAIN")
+        else if (currentTileMap == "TERRAIN")
         {
-            this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
+            setTileMapSource(WebTileSource::GOOGLE_Terrain);
         }
-        else if (myProject.currentTileMap.toUpper() == "GOOGLE")
+        else if (currentTileMap == "GOOGLE")
         {
-            this->setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
+            setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
         }
         else
         {
-            this->setTileMapSource(WebTileSource::OPEN_STREET_MAP);
+            setTileMapSource(WebTileSource::OPEN_STREET_MAP);
         }
     }
     else
     {
         // default: Google terrain
-        this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
+        setTileMapSource(WebTileSource::GOOGLE_Terrain);
     }
+}
+
+
+void MainWindow::setTitle()
+{
+    QString title = "CRITERIA3D  " + QString(CRITERIA3D_VERSION);
+    QString projectName = myProject.getProjectName();
+    if (! projectName.isEmpty())
+    {
+        title += " - " + projectName;
+    }
+
+    setWindowTitle(title);
 }
 
 
 void MainWindow::drawProject()
 {
-    this->setProjectTileMap();
+    setProjectTileMap();
 
     if (myProject.DEM.isLoaded)
     {
-        this->renderDEM();
+        renderDEM();
     }
     else
     {
@@ -653,22 +797,18 @@ void MainWindow::drawProject()
         mapView->setZoomLevel(8);
     }
 
-    this->drawMeteoPoints();
-    // drawMeteoGrid();
-    this->addOutputPointsGUI();
+    drawMeteoPoints();
 
-    QString title = "CRITERIA3D";
-    if (myProject.projectName != "")
-        title += " - " + myProject.projectName;
+    addOutputPointsGUI();
 
-    this->setWindowTitle(title);
+    setTitle();
 }
 
 
-void MainWindow::clearMaps_GUI()
+void MainWindow::clearRaster_GUI()
 {
-    rasterDEM->clear();
     rasterOutput->clear();
+    rasterDEM->clear();
 
     ui->labelInputRaster->setText("");
     ui->labelOutputRaster->setText("");
@@ -693,7 +833,7 @@ void MainWindow::clearMeteoPoints_GUI()
 
 void MainWindow::renderDEM()
 {
-    if (!myProject.DEM.isLoaded)
+    if (! myProject.DEM.isLoaded)
         return;
 
     ui->groupBoxDEM->setEnabled(true);
@@ -701,20 +841,20 @@ void MainWindow::renderDEM()
     ui->opacitySliderRasterInput->setEnabled(true);
     ui->opacitySliderRasterOutput->setEnabled(true);
 
-    this->setCurrentRasterInput(&(myProject.DEM));
+    setCurrentRasterInput(&(myProject.DEM));
     ui->labelInputRaster->setText(QString::fromStdString(getVariableString(noMeteoTerrain)));
 
     // center map
-    Position center = this->rasterDEM->getRasterCenter();
+    Position center = rasterDEM->getRasterCenter();
     mapView->centerOn(center.longitude(), center.latitude());
 
     // resize map
-    double size = double(this->rasterDEM->getRasterMaxSize());
+    double size = double(rasterDEM->getRasterMaxSize());
     size = log2(1000 / size);
     mapView->setZoomLevel(quint8(size));
     mapView->centerOn(center.longitude(), center.latitude());
 
-    this->updateMaps();
+    updateMaps();
 }
 
 
@@ -722,25 +862,37 @@ void MainWindow::renderDEM()
 
 void MainWindow::updateDateTime()
 {
-    this->ui->dateEdit->setDate(myProject.getCurrentDate());
-    this->ui->timeEdit->setValue(myProject.getCurrentHour()); 
+    ui->dateEdit->setDate(myProject.getCurrentDate());
+    ui->timeEdit->setValue(myProject.getCurrentHour());
 }
 
 
 void MainWindow::updateModelTime()
 {
-    QDateTime currentDateTime;
-    currentDateTime.setDate(myProject.getCurrentDate());
-    int hour = myProject.getCurrentHour();
+    QDate date = myProject.getCurrentDate();
+    int hour = myProject.getCurrentHour() - 1;
+    if (hour == -1)
+    {
+        date = date.addDays(-1);
+        hour = 23;
+    }
     int minutes = int(floor(myProject.currentSeconds / 60));
     int seconds = myProject.currentSeconds - (minutes * 60);
     if (minutes == 60)
     {
         hour++;
+        if (hour == 24)
+        {
+            date = date.addDays(1);
+            hour = 0;
+        }
         minutes = 0;
     }
+
+    QDateTime currentDateTime;
+    currentDateTime.setDate(date);
     currentDateTime.setTime(QTime(hour, minutes, seconds));
-    this->ui->modelTimeEdit->setText(currentDateTime.toString("yyyy-MM-dd HH:mm:ss"));
+    ui->modelTimeEdit->setText(currentDateTime.toString("yyyy-MM-dd HH:mm:ss"));
 }
 
 
@@ -764,12 +916,12 @@ void MainWindow::on_dateEdit_dateChanged(const QDate &date)
 
 void MainWindow::on_dayBeforeButton_clicked()
 {
-    this->ui->dateEdit->setDate(this->ui->dateEdit->date().addDays(-1));
+    ui->dateEdit->setDate(ui->dateEdit->date().addDays(-1));
 }
 
 void MainWindow::on_dayAfterButton_clicked()
 {
-    this->ui->dateEdit->setDate(this->ui->dateEdit->date().addDays(1));
+    ui->dateEdit->setDate(ui->dateEdit->date().addDays(1));
 }
 
 void MainWindow::on_timeEdit_valueChanged(int myHour)
@@ -784,24 +936,21 @@ void MainWindow::on_timeEdit_valueChanged(int myHour)
 }
 
 
-
 void MainWindow::on_actionLoad_DEM_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Digital Elevation Model"), "",
-                                    tr("ESRI float (*.flt);; ENVI image (*.img)"));
-
+    QString demPath = myProject.getDefaultPath() + PATH_DEM;
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Digital Elevation Model"), demPath,
+                                    tr("ESRI float (*.flt);; ESRI ascii (*.asc);; ENVI image (*.img)"));
     if (fileName == "") return;
 
-    rasterDEM->setDrawing(false);
-    rasterOutput->setDrawing(false);
+    clearRaster_GUI();
 
-    if (! myProject.loadDEM(fileName)) return;
+    if (! myProject.loadDEM(fileName))
+        return;
 
-    rasterDEM->setDrawing(true);
-    rasterOutput->setDrawing(true);
-
-    this->renderDEM();
+    renderDEM();
 }
+
 
 void MainWindow::on_actionOpenProject_triggered()
 {
@@ -810,47 +959,55 @@ void MainWindow::on_actionOpenProject_triggered()
     if (fileName == "") return;
 
     clearMeteoPoints_GUI();
-    clearMaps_GUI();
+    clearRaster_GUI();
 
     if (! myProject.loadCriteria3DProject(fileName))
     {
-        myProject.logError("Error opening project: " + myProject.errorString);
+        myProject.logError("*** Error opening the project! ***\n" + myProject.errorString);
         myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
     }
+
+    ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
+    ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
+
+    myProject.showEachTimeStep = ui->actionCriteria3D_update_subHourly->isChecked();
 
     drawProject();
 }
 
+
 void MainWindow::on_actionCloseProject_triggered()
 {
     clearMeteoPoints_GUI();
-    clearMaps_GUI();
+    clearRaster_GUI();
 
     myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
 
     drawProject();
 }
 
+
 QPoint MainWindow::getMapPos(const QPoint& pos)
 {
-    QPoint mapPoint;
     int x0 = ui->widgetMap->x();
     int y0 = ui->widgetMap->y() + ui->menuBar->height();
+
+    QPoint mapPoint;
     mapPoint.setX(pos.x() - x0 - MAPBORDER);
     mapPoint.setY(pos.y() - y0 - MAPBORDER);
 
     return mapPoint;
 }
 
+
 bool MainWindow::isInsideMap(const QPoint& pos)
 {
     if (pos.x() > 0 && pos.y() > 0 &&
         pos.x() < (mapView->width() - MAPBORDER*2) &&
         pos.y() < (mapView->height() - MAPBORDER*2) )
-    {
         return true;
-    }
-    else return false;
+    else
+        return false;
 }
 
 
@@ -919,7 +1076,7 @@ void MainWindow::redrawOutputPoints()
 {
     for (int i = 0; i < int(myProject.outputPoints.size()); i++)
     {
-        outputPointList[i]->setVisible(this->viewOutputPoints);
+        outputPointList[i]->setVisible(_viewOutputPoints);
 
         if (myProject.outputPoints[unsigned(i)].selected)
         {
@@ -934,7 +1091,7 @@ void MainWindow::redrawOutputPoints()
             else
             {
                 outputPointList[i]->setFillColor(QColor(Qt::red));
-                if (! this->viewNotActiveOutputPoints)
+                if (! _viewNotActiveOutputPoints)
                 {
                     outputPointList[i]->setVisible(false);
                 }
@@ -948,11 +1105,11 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 {
     currentPointsVisualization = myType;
 
-    if (myProject.nrMeteoPoints == 0)
+    if (myProject.meteoPoints.empty())
         return;
 
     // hide all meteo points
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
         meteoPointList[i]->setVisible(false);
 
     clearWindVectorObjects();
@@ -964,39 +1121,45 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         case notShown:
         {
             meteoPointsLegend->setVisible(false);
-            this->ui->actionView_PointsHide->setChecked(true);
+            ui->actionView_PointsHide->setChecked(true);
             break;
         }
         case showLocation:
         {
-            this->ui->actionView_PointsLocation->setChecked(true);
+            ui->actionView_PointsLocation->setChecked(true);
 
-            for (int i = 0; i < myProject.nrMeteoPoints; i++)
+            for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
             {
                 myProject.meteoPoints[i].currentValue = NODATA;
                 meteoPointList[i]->setRadius(5);
                 meteoPointList[i]->setCurrentValue(NODATA);
                 meteoPointList[i]->setToolTip();
 
-                // color
+                // set color - default is white
+                meteoPointList[i]->setFillColor(Qt::white);
+
                 if (myProject.meteoPoints[i].selected)
                 {
                     meteoPointList[i]->setFillColor(Qt::yellow);
                 }
+                else if (! myProject.meteoPoints[i].active)
+                {
+                    meteoPointList[i]->setFillColor(Qt::red);
+                }
                 else
                 {
-                    if (myProject.meteoPoints[i].active)
+                    if (myProject.meteoPoints[i].lapseRateCode == secondary)
                     {
-                        meteoPointList[i]->setFillColor(Qt::white);
+                        meteoPointList[i]->setFillColor(QColor(Qt::black));
                     }
-                    else if (! myProject.meteoPoints[i].active)
+                    else if (myProject.meteoPoints[i].lapseRateCode == supplemental)
                     {
-                        meteoPointList[i]->setFillColor(Qt::red);
+                        meteoPointList[i]->setFillColor(QColor(Qt::gray));
                     }
                 }
 
                 // hide not active points
-                bool isVisible = (myProject.meteoPoints[i].active || viewNotActivePoints);
+                bool isVisible = (myProject.meteoPoints[i].active || _viewNotActivePoints);
                 meteoPointList[i]->setVisible(isVisible);
             }
 
@@ -1008,17 +1171,18 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         {
             meteoVariable currentVar = myProject.getCurrentVariable();
 
-            this->ui->actionView_PointsCurrentVariable->setChecked(true);
+            ui->actionView_PointsCurrentVariable->setChecked(true);
             // quality control
+            std::string errorStdStr;
             checkData(myProject.quality, currentVar,
-                      myProject.meteoPoints, myProject.nrMeteoPoints, myProject.getCrit3DCurrentTime(),
-                      &(myProject.qualityInterpolationSettings), myProject.meteoSettings,
-                      &(myProject.climateParameters), myProject.checkSpatialQuality);
+                      myProject.meteoPoints, myProject.getCrit3DCurrentTime(),
+                      myProject.qualityInterpolationSettings, myProject.meteoSettings,
+                      &(myProject.climateParameters), myProject.checkSpatialQuality, errorStdStr);
 
             if (updateColorSCale)
             {
                 float minimum, maximum;
-                myProject.getMeteoPointsRange(minimum, maximum, viewNotActivePoints);
+                myProject.getMeteoPointsRange(minimum, maximum, _viewNotActivePoints);
 
                 myProject.meteoPointsColorScale->setRange(minimum, maximum);
             }
@@ -1027,16 +1191,21 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             setColorScale(currentVar, myProject.meteoPointsColorScale);
             bool isWindVector = (currentVar == windVectorIntensity || currentVar == windVectorDirection);
 
-            for (int i = 0; i < myProject.nrMeteoPoints; i++)
+            for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
             {
                 if (int(myProject.meteoPoints[i].currentValue) != NODATA)
                 {
                     if (myProject.meteoPoints[i].quality == quality::accepted)
                     {
-                        meteoPointList[i]->setRadius(5);
+                        if (myProject.meteoPoints[i].selected)
+                            meteoPointList[i]->setRadius(8);
+                        else
+                            meteoPointList[i]->setRadius(5);
+
                         Crit3DColor *myColor = myProject.meteoPointsColorScale->getColor(myProject.meteoPoints[i].currentValue);
                         meteoPointList[i]->setFillColor(QColor(myColor->red, myColor->green, myColor->blue));
                         meteoPointList[i]->setOpacity(1.0);
+
                         if (isWindVector)
                             drawWindVector(i);
                     }
@@ -1053,7 +1222,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                     meteoPointList[i]->setToolTip();
 
                     // hide not active points
-                    bool isVisible = (myProject.meteoPoints[i].active || viewNotActivePoints);
+                    bool isVisible = (myProject.meteoPoints[i].active || _viewNotActivePoints);
                     meteoPointList[i]->setVisible(isVisible);
                 }
             }
@@ -1064,7 +1233,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         default:
         {
             meteoPointsLegend->setVisible(false);
-            this->ui->actionView_PointsHide->setChecked(true);
+            ui->actionView_PointsHide->setChecked(true);
             break;
         }
     }
@@ -1073,33 +1242,33 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 
 void MainWindow::on_opacitySliderRasterInput_sliderMoved(int position)
 {
-    this->rasterDEM->setOpacity(position / 100.0);
+    rasterDEM->setOpacity(position / 100.0);
 }
 
 void MainWindow::on_opacitySliderRasterOutput_sliderMoved(int position)
 {
-    this->rasterOutput->setOpacity(position / 100.0);
+    rasterOutput->setOpacity(position / 100.0);
 }
 
 void MainWindow::on_variableButton_clicked()
 {
     myProject.setCurrentVariable(chooseMeteoVariable(myProject));
-    this->currentPointsVisualization = showCurrentVariable;
-    this->updateCurrentVariable();
+    currentPointsVisualization = showCurrentVariable;
+    updateCurrentVariable();
 }
 
-void MainWindow::setInputRasterVisible(bool value)
+void MainWindow::setInputRasterVisible(bool isVisible)
 {
-    inputRasterColorLegend->setVisible(value);
-    ui->labelInputRaster->setVisible(value);
-    rasterDEM->setVisible(value);
+    inputRasterColorLegend->setVisible(isVisible);
+    ui->labelInputRaster->setVisible(isVisible);
+    rasterDEM->setVisible(isVisible);
 }
 
-void MainWindow::setOutputRasterVisible(bool value)
+void MainWindow::setOutputRasterVisible(bool isVisible)
 {
-    outputRasterColorLegend->setVisible(value);
-    ui->labelOutputRaster->setVisible(value);
-    rasterOutput->setVisible(value);
+    outputRasterColorLegend->setVisible(isVisible);
+    ui->labelOutputRaster->setVisible(isVisible);
+    rasterOutput->setVisible(isVisible);
 }
 
 void MainWindow::setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster)
@@ -1113,19 +1282,41 @@ void MainWindow::setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster)
     emit rasterDEM->redrawRequested();
 }
 
-void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
+
+void MainWindow::refreshViewer3D()
+{
+    if (viewer3D != nullptr)
+    {
+        if (rasterOutput->visible())
+        {
+            myProject.update3DColors(rasterOutput->getRasterPointer());
+        }
+        else
+        {
+            myProject.update3DColors();
+        }
+
+        viewer3D->glWidget->update();
+    }
+}
+
+
+void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *rasterPointer)
 {
     setOutputRasterVisible(true);
 
-    rasterOutput->initialize(myRaster, myProject.gisSettings);
-    outputRasterColorLegend->colorScale = myRaster->colorScale;
+    rasterOutput->initialize(rasterPointer, myProject.gisSettings);
+    outputRasterColorLegend->colorScale = rasterPointer->colorScale;
 
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
-
     rasterOutput->updateCenter();
-    view3DVariable = (myRaster == &(myProject.criteria3DMap));
+
+    refreshViewer3D();
+
+    _view3DVariable = (rasterPointer == &(myProject.criteria3DMap));
 }
+
 
 void MainWindow::on_actionProjectSettings_triggered()
 {
@@ -1140,7 +1331,7 @@ void MainWindow::on_actionProjectSettings_triggered()
         {
             startCenter->setLatitude(myProject.gisSettings.startLocation.latitude);
             startCenter->setLongitude(myProject.gisSettings.startLocation.longitude);
-            this->mapView->centerOn(startCenter->lonLat());
+            mapView->centerOn(startCenter->lonLat());
         }
     }
 }
@@ -1150,7 +1341,7 @@ void MainWindow::on_actionProjectSettings_triggered()
 
 void MainWindow::on_flagView_not_active_points_toggled(bool isChecked)
 {
-    this->viewNotActivePoints = isChecked;
+    _viewNotActivePoints = isChecked;
     redrawMeteoPoints(currentPointsVisualization, true);
 }
 
@@ -1180,7 +1371,7 @@ void MainWindow::on_actionView_Slope_triggered()
     }
     else
     {
-        myProject.logError(ERROR_STR_MISSING_DEM);
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
         return;
     }
 }
@@ -1189,13 +1380,16 @@ void MainWindow::on_actionView_Aspect_triggered()
 {
     if (myProject.DEM.isLoaded)
     {
+        myProject.radiationMaps->aspectMap->colorScale->setMinimum(0);
+        myProject.radiationMaps->aspectMap->colorScale->setMaximum(360);
+        myProject.radiationMaps->aspectMap->colorScale->setFixedRange(true);
         setCircolarScale(myProject.radiationMaps->aspectMap->colorScale);
         setCurrentRasterOutput(myProject.radiationMaps->aspectMap);
         ui->labelOutputRaster->setText("Aspect °");
     }
     else
     {
-        myProject.logError(ERROR_STR_MISSING_DEM);
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
         return;
     }
 }
@@ -1210,22 +1404,32 @@ void MainWindow::on_actionView_Boundary_triggered()
     }
     else
     {
-        myProject.logError("Initialize 3D Model before.");
+        myProject.logError(ERROR_STR_INITIALIZE_3D);
         return;
     }
 }
 
 void MainWindow::on_actionView_SoilMap_triggered()
 {
-    showSoilMap();
+    if (myProject.soilMap.isLoaded)
+    {
+        setColorScale(noMeteoVar, myProject.soilMap.colorScale);
+        setCurrentRasterOutput(&(myProject.soilMap));
+        ui->labelOutputRaster->setText("Soil");
+    }
+    else
+    {
+        myProject.logError("Load a soil map before.");
+    }
 }
 
 
-void MainWindow::on_actionHide_soil_map_triggered()
+void MainWindow::on_actionHide_Soil_map_triggered()
 {
     if (ui->labelOutputRaster->text() == "Soil")
     {
         setOutputRasterVisible(false);
+        refreshViewer3D();
     }
 }
 
@@ -1235,13 +1439,13 @@ bool MainWindow::checkMapVariable(bool isComputed)
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logError(ERROR_STR_MISSING_DEM);
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
         return false;
     }
 
     if (! isComputed)
     {
-        myProject.logError("Compute meteo variables before.");
+        myProject.logWarning("Compute meteo variables before.");
         return false;
     }
 
@@ -1329,9 +1533,16 @@ void MainWindow::showMeteoVariable(meteoVariable var)
     }
 }
 
-void MainWindow::on_actionViewMeteoVariable_None_triggered()
+void MainWindow::on_actionView_Radiation_None_triggered()
 {
     setOutputRasterVisible(false);
+    refreshViewer3D();
+}
+
+void MainWindow::on_actionView_MeteoVariable_None_triggered()
+{
+    setOutputRasterVisible(false);
+    refreshViewer3D();
 }
 
 void MainWindow::on_actionView_Air_temperature_triggered()
@@ -1401,6 +1612,12 @@ void MainWindow::showSnowVariable(meteoVariable var)
         setOutputMeteoVariable(snowWaterEquivalent, myProject.snowMaps.getSnowWaterEquivalentMap());
         break;
 
+    case snowVariation:
+        setOutputMeteoVariable(snowVariation, myProject.snowMaps.getDeltaSWEMap());
+        rasterOutput->getRasterPointer()->colorScale->setRange(-5., 5.);
+        rasterOutput->getRasterPointer()->colorScale->setFixedRange(true);
+        break;
+
     case snowSurfaceTemperature:
         setOutputMeteoVariable(snowSurfaceTemperature, myProject.snowMaps.getSnowSurfaceTempMap());
         break;
@@ -1445,6 +1662,11 @@ void MainWindow::showSnowVariable(meteoVariable var)
 void MainWindow::on_actionView_Snow_water_equivalent_triggered()
 {
     showSnowVariable(snowWaterEquivalent);
+}
+
+void MainWindow::on_actionView_SWE_variation_triggered()
+{
+    showSnowVariable(snowVariation);
 }
 
 void MainWindow::on_actionView_Snow_surface_temperature_triggered()
@@ -1495,11 +1717,11 @@ void MainWindow::on_actionView_Snow_latent_heat_triggered()
 
 // ------------- CROP MAPS ---------------------------------------------------
 
-void MainWindow::on_actiondegree_days_triggered()
+void MainWindow::on_actionView_Crop_degreeDays_triggered()
 {
-    if (! myProject.isCriteria3DInitialized)
+    if (! myProject.isCropInitialized)
     {
-        myProject.logError("Initialize 3D model before.");
+        myProject.logWarning("Initialize crop model before.");
         return;
     }
 
@@ -1509,9 +1731,9 @@ void MainWindow::on_actiondegree_days_triggered()
 
 void MainWindow::on_actionView_Crop_LAI_triggered()
 {
-    if (! myProject.isCriteria3DInitialized)
+    if (! myProject.isCropInitialized)
     {
-        myProject.logError("Initialize 3D model before.");
+        myProject.logWarning("Initialize crop model before.");
         return;
     }
 
@@ -1523,27 +1745,27 @@ void MainWindow::on_actionView_Crop_LAI_triggered()
 
 void MainWindow::on_actionMapTerrain_triggered()
 {
-    this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
+    setTileMapSource(WebTileSource::GOOGLE_Terrain);
 }
 
 void MainWindow::on_actionMapOpenStreetMap_triggered()
 {
-    this->setTileMapSource(WebTileSource::OPEN_STREET_MAP);
+    setTileMapSource(WebTileSource::OPEN_STREET_MAP);
 }
 
 void MainWindow::on_actionMapESRISatellite_triggered()
 {
-    this->setTileMapSource(WebTileSource::ESRI_WorldImagery);
+    setTileMapSource(WebTileSource::ESRI_WorldImagery);
 }
 
 void MainWindow::on_actionMapGoogle_satellite_triggered()
 {
-    this->setTileMapSource(WebTileSource::GOOGLE_Satellite);
+    setTileMapSource(WebTileSource::GOOGLE_Satellite);
 }
 
 void MainWindow::on_actionMapGoogle_hybrid_satellite_triggered()
 {
-    this->setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
+    setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
 }
 
 void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
@@ -1579,47 +1801,43 @@ void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
     // set tiles source
     QSharedPointer<WebTileSource> myTiles(new WebTileSource(tileSource), &QObject::deleteLater);
 
-    this->mapView->setTileSource(myTiles);
+    mapView->setTileSource(myTiles);
 }
 
 
 // --------------- SOIL AND LAND USE --------------------------------
 
-bool MainWindow::isSoil(QPoint mapPos)
+bool MainWindow::isInsideDEM(Position geoPos)
+{
+    if (! myProject.DEM.isLoaded)
+        return false;
+
+    double x, y;
+    gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
+
+    float value = myProject.DEM.getValueFromXY(x, y);
+    return (value != myProject.DEM.header->flag);
+}
+
+
+bool MainWindow::isSoil(Position geoPos)
 {
     if (! myProject.soilMap.isLoaded)
         return false;
 
     double x, y;
-    Position geoPos = mapView->mapToScene(mapPos);
     gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
 
-    int idSoil = myProject.getCrit3DSoilId(x, y);
+    int idSoil = myProject.getSoilMapId(x, y);
     return (idSoil != NODATA);
 }
 
 
-void MainWindow::showSoilMap()
-{
-    if (myProject.soilMap.isLoaded)
-    {
-        setColorScale(airTemperature, myProject.soilMap.colorScale);
-        setCurrentRasterOutput(&(myProject.soilMap));
-        ui->labelOutputRaster->setText("Soil");
-    }
-    else
-    {
-        myProject.logError("Load a soil map before.");
-    }
-}
-
-
-bool MainWindow::isLandUse(QPoint mapPos)
+bool MainWindow::isLandUse(Position geoPos)
 {
     if (! myProject.landUseMap.isLoaded)
         return false;
 
-    Position geoPos = mapView->mapToScene(mapPos);
     return (myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude()) != NODATA);
 }
 
@@ -1628,7 +1846,7 @@ void MainWindow::showLandUseMap()
 {
     if (myProject.landUseMap.isLoaded)
     {
-        setColorScale(noMeteoTerrain, myProject.landUseMap.colorScale);
+        setColorScale(noMeteoVar, myProject.landUseMap.colorScale);
         setCurrentRasterOutput(&(myProject.landUseMap));
         ui->labelOutputRaster->setText("Land use");
     }
@@ -1639,12 +1857,11 @@ void MainWindow::showLandUseMap()
 }
 
 
-void MainWindow::openSoilWidget(QPoint mapPos)
+void MainWindow::openSoilWidget(Position geoPos)
 {
     double x, y;
-    Position geoPos = mapView->mapToScene(mapPos);
     gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
-    QString soilCode = myProject.getCrit3DSoilCode(x, y);
+    QString soilCode = myProject.getSoilCode(x, y);
 
     if (soilCode == "")
     {
@@ -1663,7 +1880,9 @@ void MainWindow::openSoilWidget(QPoint mapPos)
             myProject.logError();
             return;
         }
-        soilWidget = new Crit3DSoilWidget();
+
+        QString imgPath = myProject.getApplicationPath() + "/DOC/img/";
+        soilWidget = new Crit3DSoilWidget(imgPath);
         soilWidget->show();
         soilWidget->setDbSoil(dbSoil, soilCode);
     }
@@ -1678,15 +1897,21 @@ bool MainWindow::loadMeteoPointsDB_GUI(QString dbName)
 
     if (success)
         drawMeteoPoints();
+    else
+        myProject.logError();
 
     return success;
 }
 
 void MainWindow::on_actionLoad_MeteoPoints_triggered()
 {
-    QString dbName = QFileDialog::getOpenFileName(this, tr("Open meteo points DB"), "", tr("DB files (*.db)"));
-    if (dbName != "") this->loadMeteoPointsDB_GUI(dbName);
+    QString meteoPointsPath = myProject.getDefaultPath() + PATH_METEOPOINT;
+    QString dbName = QFileDialog::getOpenFileName(this, tr("Open meteo points DB"), meteoPointsPath, tr("DB files (*.db)"));
+
+    if (! dbName.isEmpty())
+        loadMeteoPointsDB_GUI(dbName);
 }
+
 
 void MainWindow::on_actionMeteoPointsImport_data_triggered()
 {
@@ -1778,19 +2003,20 @@ void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
 
 void MainWindow::on_actionLoad_soil_map_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), "",
-                                                    tr("ESRI float (*.flt);; ENVI image (*.img)"));
+    QString soilPath = myProject.getDefaultPath() + PATH_SOIL;
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), soilPath, tr("ESRI float (*.flt);; ENVI image (*.img)"));
     if (fileName == "") return;
 
     if (myProject.loadSoilMap(fileName))
     {
-        showSoilMap();
+        on_actionView_SoilMap_triggered();
     }
 }
 
 void MainWindow::on_actionLoad_soil_data_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Load soil data"), "", tr("SQLite files (*.db)"));
+    QString soilPath = myProject.getDefaultPath() + PATH_SOIL;
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Load soil data"), soilPath, tr("SQLite files (*.db)"));
     if (fileName == "") return;
 
     myProject.loadSoilDatabase(fileName);
@@ -1829,12 +2055,12 @@ void MainWindow::on_actionProxy_analysis_triggered()
         return;
     }
 
-    return myProject.showProxyGraph();
+    return myProject.showProxyGraph(NODATA);
 }
 
 void MainWindow::on_actionComputeHour_meteoVariables_triggered()
 {
-    if (myProject.nrMeteoPoints == 0)
+    if ((int)myProject.meteoPoints.size() == 0)
     {
         myProject.logError(ERROR_STR_MISSING_DB);
         return;
@@ -1862,13 +2088,14 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
     myProject.processes.computeMeteo = true;
     myProject.processes.computeRadiation = true;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
 // ------------------------ MODEL CYCLE ---------------------------
 
-bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
+bool MainWindow::selectDates(QDateTime &firstTime, QDateTime &lastTime)
 {
     if (! myProject.meteoPointsLoaded)
     {
@@ -1876,7 +2103,7 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
         return false;
     }
 
-    firstTime.setTimeZone(QTimeZone::UTC);
+    firstTime.setTimeZone(QTimeZone::utc());
     if (myProject.getCurrentHour() == 24)
     {
         firstTime.setDate(myProject.getCurrentDate().addDays(1));
@@ -1889,7 +2116,7 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
     }
     firstTime = firstTime.addSecs(HOUR_SECONDS);
 
-    lastTime.setTimeZone(QTimeZone::UTC);
+    lastTime.setTimeZone(QTimeZone::utc());
     lastTime = firstTime;
     lastTime.setTime(QTime(23,0,0));
 
@@ -1911,100 +2138,89 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 }
 
 
-bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
+void MainWindow::initializeGroupBoxModel()
 {
-    if (! myProject.DEM.isLoaded)
-    {
-        myProject.logError(ERROR_STR_MISSING_DEM);
-        return false;
-    }
-
-    if (myProject.processes.computeSnow && (! myProject.snowMaps.isInitialized))
-    {
-        myProject.logError("Initialize Snow model or load a state before.");
-        return false;
-    }
-
-    if (myProject.processes.computeWater && (! myProject.isCriteria3DInitialized))
-    {
-        myProject.logError("Initialize 3D water fluxes or load a state before.");
-        return false;
-    }
-
-    if (myProject.processes.computeCrop)
-    {
-        if (myProject.landUnitList.size() == 0)
-        {
-            myProject.logError("load land units map before.");
-            return false;
-        }
-    }
-
-    // Load meteo data
-    myProject.logInfoGUI("Loading meteo data...");
-    if (! myProject.loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), true, false, false))
-    {
-        myProject.logError();
-        return false;
-    }
-    myProject.closeLogInfo();
-
-    // output points
-    if (myProject.isSaveOutputPoints())
-    {
-        if (! myProject.writeOutputPointsTables())
-        {
-            myProject.logError();
-            return false;
-        }
-    }
-
-    // set model interface
-    myProject.modelFirstTime = firstTime;
-    myProject.modelLastTime = lastTime;
-    myProject.modelPause = false;
-    myProject.modelStop = false;
-
     ui->groupBoxModel->setEnabled(true);
-    ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
+    ui->buttonModel_1hour->setDisabled(true);
+    ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
-
-    return myProject.runModels(firstTime, lastTime);
 }
 
 
 void MainWindow::on_buttonModelPause_clicked()
 {
-    myProject.modelPause = true;
+    myProject.isModelPaused = true;
+
     ui->buttonModelPause->setDisabled(true);
+    ui->buttonModel_1hour->setEnabled(true);
     ui->buttonModelStart->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
+
+    qApp->processEvents();
 }
 
 
 void MainWindow::on_buttonModelStop_clicked()
 {
-    myProject.modelStop = true;
+    myProject.isModelStopped = true;
+    myProject.isModelRunning = false;
+
     ui->buttonModelPause->setDisabled(true);
     ui->buttonModelStart->setDisabled(true);
+    ui->buttonModel_1hour->setDisabled(true);
     ui->buttonModelStop->setDisabled(true);
+}
+
+
+void MainWindow::on_buttonModel_1hour_clicked()
+{
+    ui->buttonModelPause->setEnabled(true);
+    ui->buttonModel_1hour->setDisabled(true);
+    ui->buttonModelStart->setDisabled(true);
+    ui->buttonModelStop->setEnabled(true);
+
+    QDateTime firstTime;
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+        firstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), QTimeZone::UTC);
+    #else
+        firstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
+    #endif
+    QDateTime lastTime = firstTime.addSecs(3600);
+    firstTime = firstTime.addSecs(myProject.currentSeconds);
+
+    myProject.isModelPaused = false;
+    bool isRestart = true;
+    myProject.runModels(firstTime, lastTime, isRestart);
+
+    on_buttonModelPause_clicked();
 }
 
 
 void MainWindow::on_buttonModelStart_clicked()
 {
-    if (myProject.modelPause)
+    if (myProject.isModelPaused)
     {
-        myProject.modelPause = false;
         ui->buttonModelPause->setEnabled(true);
+        ui->buttonModel_1hour->setDisabled(true);
         ui->buttonModelStart->setDisabled(true);
         ui->buttonModelStop->setEnabled(true);
 
-        QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
-        newFirstTime = newFirstTime.addSecs(3600);
+        QDateTime restartTime = myProject.getCurrentTime().addSecs(myProject.currentSeconds);
 
-        myProject.runModels(newFirstTime, myProject.modelLastTime);
+        myProject.isModelPaused = false;
+        bool isRestart = true;
+        myProject.runModels(restartTime, myProject.modelLastTime, isRestart);
+
+        // computation finished
+        if (myProject.getCurrentTime() == myProject.modelLastTime && myProject.currentSeconds == HOUR_SECONDS)
+        {
+            on_buttonModelStop_clicked();
+        }
+    }
+    else
+    {
+        myProject.logWarning("Choose the computation period in the 'Run model' menu.");
     }
 }
 
@@ -2017,9 +2233,10 @@ void MainWindow::on_actionRadiation_settings_triggered()
     myDialogRadiation->close();
 }
 
+
 bool MainWindow::setRadiationAsCurrentVariable()
 {
-    if (myProject.nrMeteoPoints == 0)
+    if (myProject.meteoPoints.empty())
     {
         myProject.logError(ERROR_STR_MISSING_DB);
         return false;
@@ -2037,7 +2254,7 @@ void MainWindow::on_actionRadiation_compute_current_hour_triggered()
     if (! setRadiationAsCurrentVariable())
         return;
 
-    this->interpolateCurrentVariable();
+    interpolateCurrentVariable();
 }
 
 void MainWindow::on_actionRadiation_run_model_triggered()
@@ -2052,67 +2269,12 @@ void MainWindow::on_actionRadiation_run_model_triggered()
     myProject.processes.initialize();
     myProject.processes.computeRadiation = true;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
-//-------------------- MENU SNOW MODEL -----------------------
-void MainWindow::on_actionSnow_initialize_triggered()
-{
-    if (myProject.initializeSnowModel())
-    {
-        myProject.logInfoGUI("Snow model successfully initialized.");
-    }
-}
-
-void MainWindow::on_actionSnow_run_model_triggered()
-{
-    if (! myProject.snowMaps.isInitialized)
-    {
-        if (! myProject.initializeSnowModel())
-            return;
-    }
-
-    QDateTime firstTime, lastTime;
-    if (! selectDates (firstTime, lastTime))
-        return;
-
-    myProject.processes.initialize();
-    myProject.processes.computeMeteo = true;
-    myProject.processes.computeRadiation = true;
-    myProject.processes.computeSnow = true;
-
-    startModels(firstTime, lastTime);
-}
-
-
-void MainWindow::on_actionSnow_compute_next_hour_triggered()
-{
-    if (! myProject.snowMaps.isInitialized)
-    {
-        if (! myProject.initializeSnowModel())
-            return;
-    }
-
-    QDateTime currentTime;
-    if (myProject.getCurrentHour() == 23)
-    {
-        currentTime.setDate(myProject.getCurrentDate().addDays(1));
-        currentTime.setTime(QTime(0, 0, 0, 0));
-    }
-    else
-    {
-        currentTime = myProject.getCurrentTime().addSecs(HOUR_SECONDS);
-    }
-
-    myProject.processes.initialize();
-    myProject.processes.computeMeteo = true;
-    myProject.processes.computeRadiation = true;
-    myProject.processes.computeSnow = true;
-
-    startModels(currentTime, currentTime);
-}
-
+//------------------------------- MENU 3D MODEL  ------------------------------------
 
 void MainWindow::on_actionSnow_settings_triggered()
 {
@@ -2123,88 +2285,167 @@ void MainWindow::on_actionSnow_settings_triggered()
     dialogSnowSetting.setSurfaceThickValue(myProject.snowModel.snowParameters.skinThickness);
     dialogSnowSetting.setVegetationHeightValue(myProject.snowModel.snowParameters.snowVegetationHeight);
     dialogSnowSetting.setSoilAlbedoValue(myProject.snowModel.snowParameters.soilAlbedo);
+    dialogSnowSetting.setSnowDampingDepthValue(myProject.snowModel.snowParameters.snowSurfaceDampingDepth);
 
     dialogSnowSetting.exec();
     if (dialogSnowSetting.result() != QDialog::Accepted)
-    {
         return;
-    }
-    else
+
+    myProject.snowModel.snowParameters.tempMinWithRain = dialogSnowSetting.getSnowThresholdValue();
+    myProject.snowModel.snowParameters.tempMaxWithSnow = dialogSnowSetting.getRainfallThresholdValue();
+    myProject.snowModel.snowParameters.snowWaterHoldingCapacity = dialogSnowSetting.getWaterHoldingValue();
+    myProject.snowModel.snowParameters.skinThickness = dialogSnowSetting.getSurfaceThickValue();
+    myProject.snowModel.snowParameters.snowVegetationHeight = dialogSnowSetting.getVegetationHeightValue();
+    myProject.snowModel.snowParameters.soilAlbedo = dialogSnowSetting.getSoilAlbedoValue();
+    myProject.snowModel.snowParameters.snowSurfaceDampingDepth = dialogSnowSetting.getSnowDampingDepthValue();
+
+    bool isSnow = true;
+    bool isWater = false;
+    if (! myProject.writeCriteria3DParameters(isSnow, isWater))
     {
-        double tempMaxWithSnow = dialogSnowSetting.getRainfallThresholdValue();
-        double tempMinWithRain = dialogSnowSetting.getSnowThresholdValue();
-        double snowWaterHoldingCapacity = dialogSnowSetting.getWaterHoldingValue();
-        double skinThickness = dialogSnowSetting.getSurfaceThickValue();
-        double snowVegetationHeight = dialogSnowSetting.getVegetationHeightValue();
-        double soilAlbedo = dialogSnowSetting.getSoilAlbedoValue();
-        myProject.snowModel.snowParameters.tempMinWithRain = tempMinWithRain;
-        myProject.snowModel.snowParameters.tempMaxWithSnow = tempMaxWithSnow;
-        myProject.snowModel.snowParameters.snowWaterHoldingCapacity = snowWaterHoldingCapacity;
-        myProject.snowModel.snowParameters.skinThickness = skinThickness;
-        myProject.snowModel.snowParameters.snowVegetationHeight = snowVegetationHeight;
-        myProject.snowModel.snowParameters.soilAlbedo = soilAlbedo;
-        if (!myProject.writeCriteria3DParameters())
-        {
-            myProject.logError("Error writing snow parameters");
-        }
+        myProject.logError("Error writing snow parameters");
     }
-    return;
 }
 
 
-//--------------------- MENU WATER FLUXES  -----------------------
+void MainWindow::on_actionCriteria3D_set_processes_triggered()
+{
+    DialogModelProcesses dialogProcesses;
+
+    dialogProcesses.snowProcess->setChecked(myProject.processes.computeSnow);
+    dialogProcesses.cropProcess->setChecked(myProject.processes.computeCrop);
+    dialogProcesses.waterFluxesProcess->setChecked(myProject.processes.computeWater);
+    dialogProcesses.hydrallProcess->setChecked(myProject.processes.computeHydrall);
+    dialogProcesses.rothCProcess->setChecked(myProject.processes.computeRothC);
+
+    dialogProcesses.exec();
+
+    if (dialogProcesses.result() == QDialog::Accepted)
+    {
+        myProject.processes.setComputeSnow(dialogProcesses.snowProcess->isChecked());
+        myProject.processes.setComputeCrop(dialogProcesses.cropProcess->isChecked());
+        myProject.processes.setComputeWater(dialogProcesses.waterFluxesProcess->isChecked());
+
+        if (dialogProcesses.hydrallProcess->isChecked() && (! dialogProcesses.cropProcess->isChecked() || ! dialogProcesses.waterFluxesProcess->isChecked()))
+            myProject.logWarning("Crop and water processes will be activated in order to compute Hydrall model.");
+        myProject.processes.setComputeHydrall(dialogProcesses.hydrallProcess->isChecked());
+
+        /*if (dialogProcesses.rothCProcess->isChecked() && (! dialogProcesses.hydrallProcess->isChecked() || ! dialogProcesses.cropProcess->isChecked()
+                                                          || ! dialogProcesses.waterFluxesProcess->isChecked()))
+            myProject.logWarning("Hydrall, crop and water processes will be activated in order to compute RothC model.");*/
+        myProject.processes.setComputeRothC(dialogProcesses.rothCProcess->isChecked());
+    }
+}
 
 
-
-void MainWindow::on_actionWaterFluxes_settings_triggered()
+void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
 {
     DialogWaterFluxesSettings dialogWaterFluxes;
+
+    // lineal
+    dialogWaterFluxes.setLinealAvailable(myProject.isLinealFound);
+    if (myProject.isLinealFound)
+    {
+        dialogWaterFluxes.setLinealUse(myProject.waterFluxesParameters.useLineal);
+        dialogWaterFluxes.setLinealMethod(myProject.waterFluxesParameters.linealMethod);
+    }
+
+    // initial conditions
     dialogWaterFluxes.setInitialWaterPotential(myProject.waterFluxesParameters.initialWaterPotential);
+    dialogWaterFluxes.setInitialDegreeOfSaturation(myProject.waterFluxesParameters.initialDegreeOfSaturation);
+
+    dialogWaterFluxes.useInitialWaterPotential->setChecked(myProject.waterFluxesParameters.isInitialWaterPotential);
+    dialogWaterFluxes.useInitialDegreeOfSaturation->setChecked(! myProject.waterFluxesParameters.isInitialWaterPotential);
+
+    // computation depth
+    if (myProject.waterFluxesParameters.computeOnlySurface)
+        dialogWaterFluxes.setOnlySurface(true);
+    else if (myProject.waterFluxesParameters.computeAllSoilDepth)
+        dialogWaterFluxes.setAllSoilDepth(true);
+    else
+        dialogWaterFluxes.setImposedDepth(true);
+
     dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
 
-    if (myProject.waterFluxesParameters.computeOnlySurface)
-        dialogWaterFluxes.onlySurface->setChecked(true);
-    else if (myProject.waterFluxesParameters.computeAllSoilDepth)
-        dialogWaterFluxes.allSoilDepth->setChecked(true);
-    else
-        dialogWaterFluxes.imposedDepth->setChecked(true);
+    // boundary conditions
+    dialogWaterFluxes.setFreeCatchmentRunoff(myProject.waterFluxesParameters.freeCatchmentRunoff);
+    dialogWaterFluxes.setFreeLateralDrainage(myProject.waterFluxesParameters.freeLateralDrainage);
+    dialogWaterFluxes.setFreeBottomDrainage(myProject.waterFluxesParameters.freeBottomDrainage);
+
+    dialogWaterFluxes.setUseWaterRetentionFitting(myProject.fittingOptions.useWaterRetentionData);
+    dialogWaterFluxes.setConductivityHVRatio(myProject.waterFluxesParameters.conductivityHorizVertRatio);
+
+    // accuracy
+    dialogWaterFluxes.accuracySlider->setValue(myProject.waterFluxesParameters.modelAccuracy);
+    dialogWaterFluxes.setThreadsNumber(myProject.waterFluxesParameters.numberOfThreads);
 
     dialogWaterFluxes.exec();
-    if (dialogWaterFluxes.result() != QDialog::Accepted)
-    {
-        return;
-    }
-    else
-    {
-        myProject.waterFluxesParameters.initialWaterPotential = dialogWaterFluxes.getInitialWaterPotential();
-        myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
-        myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.onlySurface->isChecked();
-        myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
 
-        /*if (!myProject.writeCriteria3DParameters())
+    if (dialogWaterFluxes.isUpdateAccuracy())
+    {
+        myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
+        int nrThread = dialogWaterFluxes.getThreadsNumber();
+        nrThread = soilFluxes3D::setThreadsNumber(nrThread);
+        myProject.waterFluxesParameters.numberOfThreads = nrThread;
+
+        if (myProject.isCriteria3DInitialized)
         {
-            myProject.logError("Error writing snow parameters");
-        }*/
+            myProject.setAccuracy();
+        }
     }
 
-    // layer thickness
-    // processes (snow crop)
-    // boundary (lateral free drainage, bottom free drainage)
-    // lateral conductivity ratio
-    // model accuracy
+    if (dialogWaterFluxes.result() == QDialog::Accepted)
+    {
+        // initial conditions
+        myProject.waterFluxesParameters.initialWaterPotential = dialogWaterFluxes.getInitialWaterPotential();
+        myProject.waterFluxesParameters.initialDegreeOfSaturation = dialogWaterFluxes.getInitialDegreeOfSaturation();
+        myProject.waterFluxesParameters.isInitialWaterPotential = dialogWaterFluxes.useInitialWaterPotential->isChecked();
+
+        myProject.waterFluxesParameters.conductivityHorizVertRatio = dialogWaterFluxes.getConductivityHVRatio();
+
+        // computation depth
+        myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
+        myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.getOnlySurface();
+        myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.getAllSoilDepth();
+
+        // boundary conditions
+        myProject.waterFluxesParameters.freeCatchmentRunoff = dialogWaterFluxes.getFreeCatchmentRunoff();
+        myProject.waterFluxesParameters.freeLateralDrainage = dialogWaterFluxes.getFreeLateralDrainage();
+        myProject.waterFluxesParameters.freeBottomDrainage = dialogWaterFluxes.getFreeBottomDrainage();
+
+        // numerical solution
+        myProject.waterFluxesParameters.useLineal = dialogWaterFluxes.getUseLineal();
+        myProject.waterFluxesParameters.linealMethod = dialogWaterFluxes.getLinealMethod();
+        myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
+
+        // check nr of threads
+        int threadNumber = dialogWaterFluxes.getThreadsNumber();
+        threadNumber = soilFluxes3D::setThreadsNumber(threadNumber);
+        myProject.waterFluxesParameters.numberOfThreads = threadNumber;
+
+        if (myProject.isCriteria3DInitialized)
+        {
+            myProject.setAccuracy();
+        }
+
+        myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.getUseWaterRetentionFitting();
+
+        bool isWater = true;
+        bool isSnow = false;
+        if (! myProject.writeCriteria3DParameters(isSnow, isWater))
+        {
+            myProject.logError("Error writing soil fluxes parameters");
+        }
+
+        // TODO layer thickness
+        // TODO soil crack
+    }
 }
 
 
-void MainWindow::on_actionCriteria3D_Initialize_triggered()
+void MainWindow::initializeCriteria3DInterface()
 {
-    myProject.processes.initialize();
-    myProject.processes.computeMeteo = true;
-    myProject.processes.computeRadiation = true;
-    myProject.processes.computeWater = true;
-    myProject.processes.computeEvaporation = true;
-    myProject.processes.computeCrop = true;
-
-    if (myProject.initializeCriteria3DModel())
+    if (myProject.isCriteria3DInitialized)
     {
         ui->groupBoxModel->setEnabled(true);
 
@@ -2221,21 +2462,142 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             ui->layerNrEdit->setMaximum(myProject.nrLayers - 1);
             ui->layerNrEdit->setValue(1);
 
-            QString depthStr = QString::number(myProject.layerDepth[1],'g',2);
+            QString depthStr = QString::number(myProject.layerDepth[1],'f',2);
             ui->layerDepthEdit->setText(depthStr + " m");
         }
 
-        myProject.currentSeconds = 0;
+        myProject.currentSeconds = 3600;
         updateModelTime();
     }
 }
 
 
+void MainWindow::on_actionCriteria3D_Initialize_triggered()
+{
+    if (! (myProject.processes.computeSnow || myProject.processes.computeCrop || myProject.processes.computeWater ||
+           myProject.processes.computeHydrall || myProject.processes.computeRothC))
+    {
+        myProject.logWarning("Set active processes before.");
+        return;
+    }
+
+    if (myProject.isModelRunning)
+    {
+        myProject.logWarning("The model is running, stop it before reinitializing.");
+        return;
+    }
+
+    if (myProject.processes.computeSnow)
+    {
+        if (! myProject.initializeSnowModel())
+        {
+            myProject.logError();
+            return;
+        }
+    }
+    else
+    {
+        myProject.snowMaps.clear();
+        myProject.isSnowInitialized = false;
+    }
+
+    if (myProject.processes.computeCrop)
+    {
+        if (! myProject.initializeCropWithClimateData())
+        {
+            myProject.logError();
+            return;
+        }
+    }
+    else
+    {
+        myProject.clearCropMaps();
+    }
+
+    if (myProject.processes.computeWater)
+    {
+        if (! myProject.processes.computeCrop)
+        {
+            if (! myProject.initializeCropMaps())
+            {
+                myProject.logError();
+                return;
+            }
+        }
+
+        if (! myProject.initialize3DModel())
+        {
+            myProject.clearWaterBalance3D();
+            return;
+        }
+    }
+    else
+    {
+        myProject.clearWaterBalance3D();
+    }
+
+    if (myProject.processes.computeHydrall)
+    {
+        if (! myProject.processes.computeCrop || ! myProject.processes.computeWater)
+        {
+            myProject.logError("Active water and crop processes before.");
+        }
+
+        myProject.hydrallMaps.initialize(myProject.DEM);
+
+        if (! myProject.initializeHydrall())
+        {
+            myProject.isHydrallInitialized = false;
+            myProject.logError("Couldn't initialize Hydrall model:\n" + myProject.errorString);
+            return;
+        }
+    }
+    else
+    {
+        myProject.clearHydrallMaps();
+    }
+
+    if (myProject.processes.computeRothC)
+    {
+        if (! myProject.processes.computeWater)
+        {
+            QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
+            myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
+
+            if (myProject.rothCModel.BICMapFolderName.empty())
+                return;
+        }
+
+        if (! myProject.initializeRothC())
+        {
+            myProject.isRothCInitialized = false;
+            myProject.logError("Couldn't initialize RothC model.");
+            return;
+        }
+    }
+    else
+    {
+        myProject.clearRothCMaps();
+    }
+
+    initializeCriteria3DInterface();
+    updateOutputMap();
+
+    myProject.logInfoGUI("The model is initialized.");
+}
+
+
 void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
 {
-    if (! myProject.isCriteria3DInitialized)
+    if (! myProject.checkProcesses())
     {
-        myProject.logError("Initialize 3D water fluxes before");
+        myProject.logWarning();
+        return;
+    }
+
+    if (myProject.isModelRunning)
+    {
+        myProject.logWarning("The model is running, stop it before restart.");
         return;
     }
 
@@ -2250,15 +2612,22 @@ void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
         currentTime = myProject.getCurrentTime().addSecs(HOUR_SECONDS);
     }
 
-    startModels(currentTime, currentTime);
+    initializeGroupBoxModel();
+    myProject.startModels(currentTime, currentTime);
 }
 
 
 void MainWindow::on_actionCriteria3D_run_models_triggered()
 {
-    if (! myProject.isCriteria3DInitialized)
+    if (! myProject.checkProcesses())
     {
-        myProject.logError("Initialize 3D water fluxes before");
+        myProject.logWarning();
+        return;
+    }
+
+    if (myProject.isModelRunning)
+    {
+        myProject.logWarning("The model is running, stop it before restart.");
         return;
     }
 
@@ -2266,33 +2635,205 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
     if (! selectDates(firstTime, lastTime))
         return;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
-void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange, float minimum, float maximum)
+void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
 {
     if (! myProject.isCriteria3DInitialized)
     {
-        myProject.logError("Initialize water fluxes before.");
+        myProject.logError(ERROR_STR_INITIALIZE_3D);
         return;
     }
 
-    if (! myProject.setCriteria3DMap(var, layerIndex))
+    gis::Crit3DRasterHeader* header = myProject.indexMap.at(0).header;
+    double voxelArea = header->cellSize * header->cellSize;                     // [m2]
+
+    // default: all map
+    int row0 = 0;
+    int col0 = 0;
+    int row1 = header->nrRows - 1;
+    int col1 = header->nrCols - 1;
+
+    // selection
+    bool isSelection = false;
+    if (rubberBandRect.width() > 1)
+    {
+        double utmX, utmY;
+        QPointF topLeft = mapView->mapToScene(rubberBandRect.topLeft());
+
+        gis::getUtmFromLatLon(myProject.gisSettings, topLeft.y(), topLeft.x(), &utmX, &utmY);
+        if (gis::isOutOfGridXY(utmX, utmY, header))
+        {
+            myProject.logWarning("selection is out of map");
+            return;
+        }
+        gis::getRowColFromXY(*header, utmX, utmY, &row0, &col0);
+
+        QPointF bottomRight = mapView->mapToScene(rubberBandRect.bottomRight());
+        gis::getUtmFromLatLon(myProject.gisSettings, bottomRight.y(), bottomRight.x(), &utmX, &utmY);
+        if (gis::isOutOfGridXY(utmX, utmY, header))
+        {
+            myProject.logWarning("selection is out of map");
+            return;
+        }
+        gis::getRowColFromXY(*header, utmX, utmY, &row1, &col1);
+        isSelection = true;
+    }
+
+    // SURFACE
+    double surfaceWaterContent = 0;     // [m3]
+    long nrSurfaceVoxels = 0;
+    if (! myProject.getTotalSurfaceWaterContent(surfaceWaterContent, nrSurfaceVoxels, row0, col0, row1, col1))
+    {
+        myProject.logError();
+        return;
+    }
+    double surfaceArea = voxelArea * nrSurfaceVoxels;                       // [m2]
+    double surfaceAvgLevel = surfaceWaterContent / surfaceArea * 1000.;     // [mm]
+
+    // SOIL
+    long nrSoilVoxels = 0;
+    double maximumWaterContent = 0.;    // [m3]
+    bool isMaximum = true;
+    if (! myProject.getTotalSoilWaterContent(maximumWaterContent, nrSoilVoxels, isMaximum, row0, col0, row1, col1))
+    {
+        myProject.logError();
+        return;
+    }
+    double soilWaterContent = 0;        // [m3]
+    isMaximum = false;
+    if (! myProject.getTotalSoilWaterContent(soilWaterContent, nrSoilVoxels, isMaximum, row0, col0, row1, col1))
     {
         myProject.logError();
         return;
     }
 
-    current3DVariable = var;
-    current3DlayerIndex = layerIndex;
+    // TOTAL
+    double totalWaterContent = soilFluxes3D::getTotalWaterContent();  // [m3]
+    int nrDecimals = (totalWaterContent <= 1.) ? 1: 2;
 
-    if (current3DVariable == waterContent)
+    QString summaryStr = "WATER CONTENT SUMMARY\n\n";
+
+    summaryStr += "Total water content (full area): " + QString::number(totalWaterContent, 'f', nrDecimals) + " [m3]\n";
+    summaryStr += "-------------------------------------------\n";
+    if (isSelection)
+    {
+        summaryStr += "SELECTED AREA\n";
+        summaryStr += "-------------------------------------------\n";
+    }
+
+    summaryStr += "Surface area: " + QString::number(surfaceArea / 10000., 'f', 3) + " [hectares]\n";
+    summaryStr += "Surface water content: " + QString::number(surfaceWaterContent, 'f', nrDecimals) + " [m3]\n";
+    summaryStr += "Surface average water level: " + QString::number(surfaceAvgLevel, 'f', 2) + " [mm]\n";
+    summaryStr += "-------------------------------------------\n";
+
+    double soilArea = voxelArea * nrSoilVoxels;  // [m2]
+    if (soilArea > 0)
+    {
+        summaryStr += "Soil area: " + QString::number(soilArea / 10000., 'f', 3) + " [hectares]\n";
+        summaryStr += "Soil water content: " + QString::number(soilWaterContent, 'f', nrDecimals) + " [m3]\n";
+        summaryStr += "Maximum soil water content: " + QString::number(maximumWaterContent, 'f', nrDecimals) + " [m3]\n";
+
+        double soilAvgWC = soilWaterContent / soilArea * 1000.;
+        summaryStr += "Soil average water content: " + QString::number(soilAvgWC, 'f', 2) + " [mm]\n";
+    }
+
+    myProject.logInfoGUI(summaryStr);
+}
+
+
+void MainWindow::on_actionDEM_summary_triggered()
+{
+    if (! myProject.DEM.isLoaded)
+    {
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
+        return;
+    }
+
+    long nrVoxels = 0;
+    double elevationSum = 0;
+    float maxElevation = NODATA;
+    float minElevation = NODATA;
+    bool isFirst = true;
+    for (int row = 0; row < myProject.DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col < myProject.DEM.header->nrCols; col++)
+        {
+            float elevation = myProject.DEM.value[row][col];
+            if (! isEqual(elevation, myProject.DEM.header->flag))
+            {
+                if (isFirst)
+                {
+                    maxElevation = elevation;
+                    minElevation = elevation;
+                    isFirst = false;
+                }
+                else
+                {
+                    maxElevation = std::max(maxElevation, elevation);
+                    minElevation = std::min(minElevation, elevation);
+                }
+
+                elevationSum += elevation;
+                nrVoxels++;
+            }
+        }
+    }
+
+    double voxelArea = myProject.DEM.header->cellSize * myProject.DEM.header->cellSize;     // [m2]
+    double area = voxelArea * nrVoxels;                                                     // [m2]
+
+    QString summaryStr = "DIGITAL ELEVATION MODEL SUMMARY\n\n";
+
+    summaryStr += "Number of pixels:  " + QString::number(nrVoxels) + "\n";
+    summaryStr += "Pixel size:  " + QString::number(myProject.DEM.header->cellSize) + " [m]\n";
+    summaryStr += "Area:  " + QString::number(area, 'f', 0) + " [m2]\n";
+    summaryStr += "Hectares:  " + QString::number(area / 10000., 'f', 2) + " [ha]\n";
+    summaryStr += "Area (km2):  " + QString::number(area / 1000000, 'f', 3) + " [km2]\n";
+    summaryStr += "Max. elevation:  " + QString::number(maxElevation, 'f', 1) + " [m]\n";
+    summaryStr += "Min. elevation:  " + QString::number(minElevation, 'f', 1) + " [m]\n";
+    summaryStr += "Avg. elevation:  " + QString::number(elevationSum / nrVoxels, 'f', 1) + " [m]\n";
+
+    myProject.logInfoGUI(summaryStr);
+}
+
+
+void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange,
+                                        bool isHideMinimum, double minimum, double maximum)
+{
+    if (! myProject.isCriteria3DInitialized)
+    {
+        myProject.logWarning("Initialize water fluxes before.");
+        return;
+    }
+
+    // compute map
+    if (! myProject.computeCriteria3DMap(myProject.criteria3DMap, var, layerIndex))
+    {
+        myProject.logWarning();
+        return;
+    }
+
+    _current3DVariable = var;
+    _current3DlayerIndex = layerIndex;
+
+    myProject.criteria3DMap.colorScale->setFixedRange(false);
+    myProject.criteria3DMap.colorScale->setHideMinimum(false);
+    myProject.criteria3DMap.colorScale->setHideZero(false);
+    myProject.criteria3DMap.colorScale->setTransparent(false);
+
+    if (_current3DVariable == volumetricWaterContent)
     {
         if (layerIndex == 0)
         {
             // SURFACE
             setSurfaceWaterScale(myProject.criteria3DMap.colorScale);
+            myProject.criteria3DMap.colorScale->setHideMinimum(true);
+            myProject.criteria3DMap.colorScale->setHideZero(true);
+            myProject.criteria3DMap.colorScale->setTransparent(true);
             ui->labelOutputRaster->setText("Surface water content [mm]");
         }
         else
@@ -2303,55 +2844,44 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
             ui->labelOutputRaster->setText("Volumetric water content [m3 m-3]");
         }
     }
+    else if (_current3DVariable == degreeOfSaturation || _current3DVariable == avgDegreeOfSaturation)
+    {
+        setTemperatureScale(myProject.criteria3DMap.colorScale);
+        reverseColorScale(myProject.criteria3DMap.colorScale);
+        ui->labelOutputRaster->setText("Degree of saturation [-]");
+    }
+    else if (_current3DVariable == waterMatricPotential)
+    {
+        setTemperatureScale(myProject.criteria3DMap.colorScale);
+        reverseColorScale(myProject.criteria3DMap.colorScale);
+        ui->labelOutputRaster->setText("Water matric potential [m]");
+    }
+    else if (_current3DVariable == factorOfSafety || _current3DVariable == minimumFactorOfSafety)
+    {
+        setSlopeStabilityScale(myProject.criteria3DMap.colorScale);
+        ui->labelOutputRaster->setText("Factor of safety [-]");
+    }
+    else if (_current3DVariable == surfacePond)
+    {
+        setSurfaceWaterScale(myProject.criteria3DMap.colorScale);
+        ui->labelOutputRaster->setText("Surface maximum pond [mm]");
+    }
 
-    // set range
+    // range fixed
     if (isFixedRange)
     {
         myProject.criteria3DMap.colorScale->setRange(minimum, maximum);
-        myProject.criteria3DMap.colorScale->setRangeBlocked(true);
+        myProject.criteria3DMap.colorScale->setFixedRange(true);
     }
-    else
+
+    if (isHideMinimum)
     {
-        myProject.criteria3DMap.colorScale->setRangeBlocked(false);
+        myProject.criteria3DMap.colorScale->setRange(minimum, maximum);
+        myProject.criteria3DMap.colorScale->setHideMinimum(true);
     }
 
     setCurrentRasterOutput(&(myProject.criteria3DMap));
 }
-
-
-void MainWindow::on_action_surface_wc_automatic_range_triggered(bool checked)
-{
-    ui->action_surface_wc_Fixed_range->setChecked(! checked);
-
-    if (checked)
-    {
-        showCriteria3DVariable(waterContent, 0, false, NODATA, NODATA);
-    }
-}
-
-
-void MainWindow::on_action_surface_wc_Fixed_range_triggered(bool checked)
-{
-    ui->action_surface_wc_automatic_range->setChecked(! checked);
-
-    if (checked)
-    {
-        // choose minimum
-        float minimum = 0;
-        QString valueStr = editValue("Choose minimum value [mm]", QString::number(minimum));
-        if (valueStr == "") return;
-        minimum = valueStr.toFloat();
-
-        // choose maximum
-        float maximum = 100;
-        valueStr = editValue("Choose maximum value [mm]", QString::number(maximum));
-        if (valueStr == "") return;
-        maximum = valueStr.toFloat();
-
-        showCriteria3DVariable(waterContent, 0, true, minimum, maximum);
-    }
-}
-
 
 
 //------------------- STATES ----------------------
@@ -2361,77 +2891,10 @@ void MainWindow::on_flagSave_state_daily_step_toggled(bool isChecked)
     myProject.setSaveDailyState(isChecked);
 }
 
-void MainWindow::on_actionSave_state_triggered()
+
+void MainWindow::on_flagSave_state_endRun_triggered(bool isChecked)
 {
-    if (myProject.isProjectLoaded)
-    {
-        if (myProject.saveModelState())
-        {
-            myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString()
-                                 + " H:" + QString::number(myProject.getCurrentHour()));
-        }
-    }
-    else
-    {
-        myProject.logError(ERROR_STR_MISSING_PROJECT);
-    }
-    return;
-}
-
-
-void MainWindow::on_actionLoad_external_state_triggered()
-{
-    if (! myProject.isProjectLoaded)
-    {
-        myProject.logError(ERROR_STR_MISSING_PROJECT);
-        return;
-    }
-
-    QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "",
-                                                               QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-    if (myProject.loadModelState(stateDirectory))
-    {
-        updateDateTime();
-        loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-        redrawMeteoPoints(currentPointsVisualization, true);
-    }
-    else
-    {
-        myProject.logError();
-    }
-}
-
-
-void MainWindow::on_actionLoad_state_triggered()
-{
-    if (! myProject.isProjectLoaded)
-    {
-        myProject.logError(ERROR_STR_MISSING_PROJECT);
-        return;
-    }
-
-    QList<QString> stateList = myProject.getAllSavedState();
-    if (stateList.size() == 0)
-    {
-        myProject.logError();
-        return;
-    }
-
-    DialogLoadState dialogLoadState(stateList);
-    if (dialogLoadState.result() != QDialog::Accepted)
-        return;
-
-    QString statePath = myProject.getProjectPath() + PATH_STATES + dialogLoadState.getSelectedState();
-    if (myProject.loadModelState(statePath))
-    {
-        updateDateTime();
-        loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-        redrawMeteoPoints(currentPointsVisualization, true);
-    }
-    else
-    {
-        myProject.logError();
-    }
+     myProject.setSaveEndOfRunState(isChecked);
 }
 
 
@@ -2456,7 +2919,7 @@ void MainWindow::on_actionPoints_activate_all_triggered()
         return;
     }
 
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
     {
         myProject.meteoPoints[i].active = true;
     }
@@ -2479,7 +2942,7 @@ void MainWindow::on_actionPoints_deactivate_all_triggered()
         return;
     }
 
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
     {
         myProject.meteoPoints[i].active = false;
     }
@@ -2537,7 +3000,7 @@ void MainWindow::on_actionPoints_activate_with_criteria_triggered()
         // reload meteoPoint, point properties table is changed
         QString dbName = myProject.dbPointsFileName;
         myProject.closeMeteoPointsDB();
-        this->loadMeteoPointsDB_GUI(dbName);
+        loadMeteoPointsDB_GUI(dbName);
     }
 }
 
@@ -2549,7 +3012,7 @@ void MainWindow::on_actionPoints_deactivate_with_criteria_triggered()
         // reload meteoPoint, point properties table is changed
         QString dbName = myProject.dbPointsFileName;
         myProject.closeMeteoPointsDB();
-        this->loadMeteoPointsDB_GUI(dbName);
+        loadMeteoPointsDB_GUI(dbName);
     }
 }
 
@@ -2563,14 +3026,15 @@ void MainWindow::on_actionPoints_deactivate_with_no_data_triggered()
     }
 
     QList<QString> pointList;
-    myProject.setProgressBar("Checking points...", myProject.nrMeteoPoints);
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    myProject.setProgressBar("Checking points...", (int)myProject.meteoPoints.size());
+    for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
     {
         myProject.updateProgressBar(i);
         if (myProject.meteoPoints[i].active)
         {
-            bool existData = myProject.meteoPointsDbHandler->existData(&myProject.meteoPoints[i], daily) || myProject.meteoPointsDbHandler->existData(&myProject.meteoPoints[i], hourly);
-            if (!existData)
+            bool existData = myProject.meteoPointsDbHandler->existTable(myProject.meteoPoints[i], daily)
+                             || myProject.meteoPointsDbHandler->existTable(myProject.meteoPoints[i], hourly);
+            if (! existData)
             {
                 pointList.append(QString::fromStdString(myProject.meteoPoints[i].id));
             }
@@ -2596,7 +3060,7 @@ void MainWindow::on_actionPoints_deactivate_with_no_data_triggered()
 
     for (int j = 0; j < pointList.size(); j++)
     {
-        for (int i = 0; i < myProject.nrMeteoPoints; i++)
+        for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
         {
             if (myProject.meteoPoints[i].id == pointList[j].toStdString())
             {
@@ -2618,7 +3082,7 @@ void MainWindow::on_actionDelete_Points_Selected_triggered()
     }
 
     QList<QString> pointList;
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
     {
         if (myProject.meteoPoints[i].selected)
         {
@@ -2652,7 +3116,7 @@ void MainWindow::on_actionDelete_Points_NotActive_triggered()
     }
 
     QList<QString> pointList;
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
     {
         if (!myProject.meteoPoints[i].active)
         {
@@ -2686,7 +3150,7 @@ void MainWindow::on_actionPoints_delete_data_selected_triggered()
     }
 
     QList<QString> pointList;
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
     {
         if (myProject.meteoPoints[i].selected)
         {
@@ -2705,8 +3169,7 @@ void MainWindow::on_actionPoints_delete_data_selected_triggered()
         myProject.logError("Failed to delete data.");
     }
 
-    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-    redrawMeteoPoints(currentPointsVisualization, true);
+    loadMeteoPointsDB_GUI(myProject.dbPointsFileName);
 }
 
 
@@ -2719,7 +3182,7 @@ void MainWindow::on_actionPoints_delete_data_not_active_triggered()
     }
 
     QList<QString> pointList;
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
     {
         if (!myProject.meteoPoints[i].active)
         {
@@ -2738,19 +3201,19 @@ void MainWindow::on_actionPoints_delete_data_not_active_triggered()
         myProject.logError("Failed to delete data.");
     }
 
-    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-    redrawMeteoPoints(currentPointsVisualization, true);
+    loadMeteoPointsDB_GUI(myProject.dbPointsFileName);
 }
+
 
 void MainWindow::on_flagHide_outputPoints_toggled(bool isChecked)
 {
-    viewOutputPoints = !isChecked;
+    _viewOutputPoints = !isChecked;
     redrawOutputPoints();
 }
 
 void MainWindow::on_flagView_not_active_outputPoints_toggled(bool isChecked)
 {
-    viewNotActiveOutputPoints = isChecked;
+    _viewNotActiveOutputPoints = isChecked;
     redrawOutputPoints();
 }
 
@@ -2937,13 +3400,20 @@ void MainWindow::on_actionOutputDB_new_triggered()
     myProject.newOutputPointsDB(dbName);
 }
 
+
 void MainWindow::on_actionOutputDB_open_triggered()
 {
     QString dbName = QFileDialog::getOpenFileName(this, tr("Open output db"), myProject.getProjectPath() + PATH_OUTPUT, tr("DB files (*.db)"));
 
-    if (dbName == "") return;
+    if (dbName == "")
+        return;
 
-    myProject.loadOutputPointsDB(dbName);
+    if (myProject.loadOutputPointsDB(dbName))
+        if (! myProject.outputPointsFileName.isEmpty())
+        {
+            myProject.setSaveOutputPoints(true);
+            ui->flagOutputPoints_save_output->setChecked(true);
+        }
 }
 
 
@@ -2982,31 +3452,8 @@ void MainWindow::on_actionLoad_OutputPoints_triggered()
 
 void MainWindow::on_actionOutputPoints_add_triggered()
 {
-    if (myProject.outputPointsFileName.isEmpty())
-    {
-        myProject.logError("Load an output point list before");
-        return;
-    }
-
-    QList<QString> idPoints;
-    for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
-    {
-        idPoints.append(QString::fromStdString(myProject.outputPoints[i].id));
-    }
-
-    gis::Crit3DRasterGrid myGrid;
-    DialogNewPoint newPointDialog(idPoints, myProject.gisSettings, &(myProject.DEM));
-    if (newPointDialog.result() == QDialog::Accepted)
-    {
-        gis::Crit3DOutputPoint newPoint;
-        newPoint.initialize(newPointDialog.getId().toStdString(), true, newPointDialog.getLat(), newPointDialog.getLon(), newPointDialog.getHeight(), myProject.gisSettings.utmZone);
-        myProject.outputPoints.push_back(newPoint);
-        if (!myProject.writeOutputPointList(myProject.outputPointsFileName))
-        {
-            return;
-        }
+    if (myProject.addOutputPoint())
         addOutputPointsGUI();
-    }
 }
 
 
@@ -3014,7 +3461,7 @@ void MainWindow::on_flagView_values_toggled(bool isChecked)
 {
     for (int i = 0; i < meteoPointList.size(); i++)
     {
-        meteoPointList[i]->setShowText(isChecked);
+        meteoPointList[i]->showText(isChecked);
     }
 }
 
@@ -3074,6 +3521,7 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
     }
 
     viewer3D = new Viewer3D(myProject.openGlGeometry);
+    refreshViewer3D();
     viewer3D->show();
 
     connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
@@ -3094,7 +3542,7 @@ void MainWindow::on_actionLoad_land_use_map_triggered()
         if (! myProject.DEM.isLoaded)
         {
             // resize map
-            double size = double(this->rasterOutput->getRasterMaxSize());
+            double size = double(rasterOutput->getRasterMaxSize());
             size = log2(1000 / size);
             mapView->setZoomLevel(quint8(size));
 
@@ -3115,25 +3563,117 @@ void MainWindow::on_actionView_LandUseMap_triggered()
 
 void MainWindow::on_actionHide_LandUseMap_triggered()
 {
-    if (ui->labelOutputRaster->text() == "Land use")
-    {
-        setOutputRasterVisible(false);
-    }
+    setOutputRasterVisible(false);
+    refreshViewer3D();
 }
 
 
 void MainWindow::on_actionHide_Geomap_triggered()
 {
     setOutputRasterVisible(false);
+    refreshViewer3D();
+}
+
+
+//------------------- MENU VIEW SOIL FLUXES OUTPUT ------------------
+
+void MainWindow::on_actionView_SurfacePond_triggered()
+{
+    showCriteria3DVariable(surfacePond, 0, false, false, NODATA, NODATA);
+}
+
+
+void MainWindow::on_actionView_SurfaceWaterContent_automatic_range_triggered()
+{
+    showCriteria3DVariable(volumetricWaterContent, 0, false, false, NODATA, NODATA);
+}
+
+
+void MainWindow::on_actionView_SurfaceWaterContent_fixed_range_triggered()
+{
+    if (! myProject.isCriteria3DInitialized)
+    {
+        myProject.logWarning("Initialize water fluxes before.");
+        return;
+    }
+
+    // choose minimum
+    float minimum = 0;
+    QString valueStr = editValue("Choose minimum value [mm]", QString::number(minimum));
+    if (valueStr == "") return;
+    minimum = valueStr.toFloat();
+
+    // choose maximum
+    float maximum = 100;
+    valueStr = editValue("Choose maximum value [mm]", QString::number(maximum));
+    if (valueStr == "") return;
+    maximum = valueStr.toFloat();
+
+    showCriteria3DVariable(volumetricWaterContent, 0, true, false, minimum, maximum);
 }
 
 
 void MainWindow::on_actionView_SoilMoisture_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
-    showCriteria3DVariable(waterContent, layerIndex, false, NODATA, NODATA);
+    showCriteria3DVariable(volumetricWaterContent, layerIndex, false, false, NODATA, NODATA);
 }
 
+
+
+void MainWindow::on_actionView_Water_potential_triggered()
+{
+    int layerIndex = std::max(1, ui->layerNrEdit->value());
+    showCriteria3DVariable(waterMatricPotential, layerIndex, false, false, NODATA, NODATA);
+}
+
+
+void MainWindow::on_actionView_DegreeOfSaturation_automatic_range_triggered()
+{
+    int layerIndex = ui->layerNrEdit->value();
+    showCriteria3DVariable(degreeOfSaturation, layerIndex, false, false, NODATA, NODATA);
+}
+
+
+void MainWindow::on_actionView_DegreeOfSaturation_Current_depth_triggered()
+{
+    int layerIndex = ui->layerNrEdit->value();
+    showCriteria3DVariable(degreeOfSaturation, layerIndex, true, false, 0.1, 1.0);
+}
+
+
+void MainWindow::on_actionView_DegreeOfSaturation_Avg_triggered()
+{
+    showCriteria3DVariable(avgDegreeOfSaturation, NODATA, true, false, 0.1, 1.0);
+}
+
+
+void MainWindow::on_actionView_Factor_of_safety_triggered()
+{
+    int layerIndex = std::max(1, ui->layerNrEdit->value());
+    showCriteria3DVariable(factorOfSafety, layerIndex, true, false, 0, 2);
+}
+
+
+void MainWindow::on_actionView_Factor_of_safety_minimum_triggered()
+{
+    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, false, 0, 2);
+}
+
+
+void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
+{
+    myProject.showEachTimeStep = isChecked;
+}
+
+
+void MainWindow::on_flag_increase_slope_triggered(bool isChecked)
+{
+    myProject.increaseSlope = isChecked;
+}
+
+
+//------------------- OTHER FUNCTIONS ---------------------
 
 void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
 {
@@ -3150,27 +3690,621 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
         ui->layerNrEdit->setValue(layerIndex);
     }
 
-    QString depthStr = QString::number(myProject.layerDepth[layerIndex],'g',2);
+    QString depthStr = QString::number(myProject.layerDepth[layerIndex],'f',2);
     ui->layerDepthEdit->setText(depthStr + " m");
 
-    if (view3DVariable && current3DlayerIndex != 0)
+    bool isRangeFixed = myProject.criteria3DMap.colorScale->isFixedRange();
+    bool isHideMinimum = myProject.criteria3DMap.colorScale->isHideMinimum();
+
+    showCriteria3DVariable(_current3DVariable, layerIndex, isRangeFixed, isHideMinimum,
+                           myProject.criteria3DMap.colorScale->minimum(),
+                           myProject.criteria3DMap.colorScale->maximum());
+}
+
+
+void MainWindow::loadState(const QString &stateDirectory)
+{
+    if (stateDirectory.isEmpty())
+        return;
+
+    if (! myProject.loadModelState(stateDirectory))
     {
-        if (myProject.criteria3DMap.colorScale->isRangeBlocked())
-        {
-            showCriteria3DVariable(current3DVariable, layerIndex, true,
-                                   myProject.criteria3DMap.colorScale->minimum(),
-                                   myProject.criteria3DMap.colorScale->maximum());
-        }
-        else
-        {
-            showCriteria3DVariable(current3DVariable, layerIndex, false, NODATA, NODATA);
-        }
+        myProject.logError();
+        return;
+    }
+
+    initializeCriteria3DInterface();
+    updateOutputMap();
+
+    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
+    redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+void MainWindow::on_actionCriteria3D_load_state_triggered()
+{
+    if (! myProject.isProjectLoaded())
+    {
+        myProject.logWarning(ERROR_STR_MISSING_PROJECT);
+        return;
+    }
+
+    if (myProject.isModelRunning)
+    {
+        myProject.logWarning("The model is running, stop it before loading a state.");
+        return;
+    }
+
+    QString statesPath = myProject.getProjectPath() + PATH_STATES;
+    QList<QString> stateList;
+    if (! myProject.getAllSavedState(stateList))
+    {
+        myProject.logError();
+        return;
+    }
+
+    DialogLoadState dialogLoadState(stateList);
+    if (dialogLoadState.result() != QDialog::Accepted)
+        return;
+
+    QString stateDirectory = statesPath + dialogLoadState.getSelectedState();
+    loadState(stateDirectory);
+}
+
+
+void MainWindow::on_actionCriteria3D_load_external_state_triggered()
+{
+    if (! myProject.isProjectLoaded())
+    {
+        myProject.logWarning(ERROR_STR_MISSING_PROJECT);
+        return;
+    }
+
+    if (myProject.isModelRunning)
+    {
+        myProject.logWarning("The model is running, stop it before loading a state.");
+        return;
+    }
+
+    QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), myProject.getProjectPath(),
+                                                               QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    loadState(stateDirectory);
+}
+
+
+void MainWindow::on_actionCriteria3D_save_state_triggered()
+{
+    QString dirName;
+    if (myProject.saveModelsState(dirName))
+    {
+        myProject.logInfoGUI("State successfully saved: " + dirName);
+    }
+    else
+    {
+        myProject.logError();
     }
 }
 
 
-void MainWindow::on_actionUpdate_subHourly_triggered(bool checked)
+void MainWindow::on_actionCreate_new_land_use_map_triggered()
 {
-    myProject.showEachTimeStep = checked;
+    if (! myProject.DEM.isLoaded)
+    {
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
+        return;
+    }
+
+    // set default value
+    float defaultValue = 1;
+    bool isOk = false;
+    while (! isOk)
+    {
+        QString valueStr = editValue("Enter the default value for land use:", QString::number(defaultValue));
+        if (valueStr.isEmpty())
+            return;
+
+        defaultValue = valueStr.toFloat(&isOk);
+        if (! isOk)
+        {
+            myProject.logWarning("Wrong value: only numeric values are accepted.");
+        }
+    }
+
+    // initialize land use map with DEM
+    gis::Crit3DRasterGrid landUseMap;
+    landUseMap.initializeGrid(myProject.DEM);
+
+    for (int row = 0; row < myProject.DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col < myProject.DEM.header->nrCols; col++)
+        {
+            if (! isEqual(myProject.DEM.value[row][col], myProject.DEM.header->flag))
+            {
+                landUseMap.value[row][col] = defaultValue;
+            }
+        }
+    }
+
+    // set fileName
+    QString completeFileName = QFileDialog::getSaveFileName(this, tr("Save land use map"), "", tr("ESRI float (*.flt)"));
+    if (completeFileName.isEmpty())
+        return;
+
+    std::string fileName = completeFileName.left(completeFileName.size() - 4).toStdString();
+
+    // save map
+    std::string errorStr;
+    if (! gis::writeEsriGrid(fileName, &landUseMap, errorStr))
+    {
+        myProject.logError(QString::fromStdString(errorStr));
+        return;
+    }
+
+    myProject.loadLandUseMap(completeFileName);
+}
+
+
+void MainWindow::on_actionSave_outputRaster_triggered()
+{
+    if (! rasterOutput->visible())
+    {
+        myProject.logWarning("No current output.");
+        return;
+    }
+
+    // set fileName
+    QString outputFileName = QFileDialog::getSaveFileName(this, tr("Save output raster"), "", tr("ESRI float (*.flt)"));
+    if (outputFileName.isEmpty())
+        return;
+    std::string fileName = outputFileName.left(outputFileName.size() - 4).toStdString();
+
+    // write raster
+    std::string errorStr;
+    if (! gis::writeEsriGrid(fileName, rasterOutput->getRasterPointer(), errorStr))
+    {
+        myProject.logError(QString::fromStdString(errorStr));
+    }
+}
+
+
+void MainWindow::on_actionDecomposable_plant_matter_triggered()
+{
+    if (myProject.isRothCInitialized)
+    {
+        if (myProject.rothCModel.map.decomposablePlantMaterial->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.rothCModel.map.decomposablePlantMaterial->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.map.decomposablePlantMaterial));
+            ui->labelOutputRaster->setText("Decomposable plant matter");
+        }
+        else
+        {
+            myProject.logError("Error while loading decomposable plant matter.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize RothC model before.");
+    }
+}
+
+
+void MainWindow::on_actionResistant_plant_matter_triggered()
+{
+    if (myProject.isRothCInitialized)
+    {
+        if (myProject.rothCModel.map.resistantPlantMaterial->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.rothCModel.map.resistantPlantMaterial->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.map.resistantPlantMaterial));
+            ui->labelOutputRaster->setText("Resistant plant matter");
+        }
+        else
+        {
+            myProject.logError("Error while loading resistant plant matter.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize RothC model before.");
+    }
+}
+
+
+void MainWindow::on_actionMicrobial_biomass_triggered()
+{
+    if (myProject.isRothCInitialized)
+    {
+        if (myProject.rothCModel.map.microbialBiomass->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.rothCModel.map.microbialBiomass->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.map.microbialBiomass));
+            ui->labelOutputRaster->setText("Microbial biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading microbial biomass.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize RothC model before.");
+    }
+}
+
+
+void MainWindow::on_actionHumified_organic_matter_triggered()
+{
+    if (myProject.isRothCInitialized)
+    {
+        if (myProject.rothCModel.map.humifiedOrganicMatter->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.rothCModel.map.humifiedOrganicMatter->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.map.humifiedOrganicMatter));
+            ui->labelOutputRaster->setText("Humified organic matter");
+        }
+        else
+        {
+            myProject.logError("Error while loading humified organic matter.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize RothC model before.");
+    }
+}
+
+
+void MainWindow::on_actionSoil_organic_matter_triggered()
+{
+    if (myProject.isRothCInitialized)
+    {
+        if (myProject.rothCModel.map.soilOrganicMatter->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.rothCModel.map.soilOrganicMatter->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.map.soilOrganicMatter));
+            ui->labelOutputRaster->setText("Soil organic matter");
+        }
+        else
+        {
+            myProject.logError("Error while loading soil organic matter.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize RothC model before.");
+    }
+}
+
+
+void MainWindow::on_actionAutomatic_state_saving_end_of_year_triggered(bool isChecked)
+{
+    myProject.setSaveYearlyState(isChecked);
+}
+
+
+void MainWindow::on_actionAutomatic_state_saving_end_of_month_toggled(bool isChecked)
+{
+    myProject.setSaveMonthlyState(isChecked);
+}
+
+
+void MainWindow::on_actionHide_TreeCover_map_triggered()
+{
+    setOutputRasterVisible(false);
+    refreshViewer3D();
+}
+
+
+void MainWindow::on_actionViewTree_cover_map_triggered()
+{
+    if (myProject.treeCoverMap.isLoaded)
+    {
+        setColorScale(noMeteoVar, myProject.treeCoverMap.colorScale);
+        setCurrentRasterOutput(&(myProject.treeCoverMap));
+        ui->labelOutputRaster->setText("Tree cover");
+    }
+    else
+    {
+        myProject.logWarning("Load a tree cover map before.");
+    }
+}
+
+
+void MainWindow::on_actiontree_NPP_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.treeNetPrimaryProduction->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.treeNetPrimaryProduction->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.treeNetPrimaryProduction));
+            ui->labelOutputRaster->setText("Tree net primary production");
+        }
+        else
+        {
+            myProject.logError("Error while loading tree net primary production.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actionunderstorey_NPP_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.understoreyNetPrimaryProduction->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.understoreyNetPrimaryProduction->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.understoreyNetPrimaryProduction));
+            ui->labelOutputRaster->setText("Understorey net primary production");
+        }
+        else
+        {
+            myProject.logError("Error while loading understorey net primary production.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actiontree_foliage_biomass_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.treeBiomassFoliage->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.treeBiomassFoliage->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.treeBiomassFoliage));
+            ui->labelOutputRaster->setText("Tree foliage biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading tree foliage biomass.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actiontree_root_biomass_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.treeBiomassRoot->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.treeBiomassRoot->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.treeBiomassRoot));
+            ui->labelOutputRaster->setText("Tree root biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading tree root biomass.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actiontree_sapwood_biomass_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.treeBiomassSapwood->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.treeBiomassSapwood->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.treeBiomassSapwood));
+            ui->labelOutputRaster->setText("Tree sapwood biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading tree sapwood biomass.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actionunderstorey_foliage_biomass_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.understoreyBiomassFoliage->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.understoreyBiomassFoliage->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.understoreyBiomassFoliage));
+            ui->labelOutputRaster->setText("Understorey foliage biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading understorey foliage biomass.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actionunderstorey_root_biomass_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.understoreyBiomassRoot->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.understoreyBiomassRoot->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.understoreyBiomassRoot));
+            ui->labelOutputRaster->setText("Understorey root biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading understorey root biomass.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actionoutput_carbon_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.outputC->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.outputC->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.outputC));
+            ui->labelOutputRaster->setText("Carbon output");
+        }
+        else
+        {
+            myProject.logError("Error while loading carbon output.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actioncumulated_yearly_ET0_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.yearlyET0->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.yearlyET0->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.yearlyET0));
+            ui->labelOutputRaster->setText("Cumulated yearly ET0");
+        }
+        else
+        {
+            myProject.logError("Error while loading cumulated yearly ET0.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actioncumulated_yearly_precipitation_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.yearlyPrec->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.yearlyPrec->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.yearlyPrec));
+            ui->labelOutputRaster->setText("Cumulated yearly prec");
+        }
+        else
+        {
+            myProject.logError("Error while loading understorey net primary production.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actionInitialize_soil_carbon_content_triggered()
+{
+    if (myProject.processes.computeWater || myProject.processes.computeCrop || myProject.processes.computeHydrall || myProject.processes.computeSnow)
+    {
+        myProject.logError("Activate RothC and deactivate other processes to initialize soil carbon content.");
+        myProject.clearRothCMaps();
+        return;
+    }
+
+    if (myProject.processes.computeRothC)
+    {
+        QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
+        myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
+
+        if (myProject.rothCModel.BICMapFolderName.empty())
+            return;
+
+        myProject.rothCModel.temperatureMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average temperature files"), defaultPath).toStdString();
+
+        if (myProject.rothCModel.temperatureMapFolderName.empty())
+            return;
+
+
+
+        if (! myProject.initializeRothC())
+        {
+            myProject.isRothCInitialized = false;
+            myProject.logError("Couldn't initialize RothC model.");
+            return;
+        }
+
+        myProject.initializeRothCSoilCarbonContent();
+    }
+    else
+    {
+        myProject.logError("RothC model must be activated in order to initialize soil carbon content.");
+        myProject.clearRothCMaps();
+    }
+
+}
+
+
+void MainWindow::on_action_parallel_computing_triggered(bool isChecked)
+{
+    myProject.setParallelComputing(isChecked);
+}
+
+
+void MainWindow::on_actionOpenShell_triggered()
+{
+    myProject.modality = MODE_CONSOLE;
+    myProject.criteria3DShell();
+    myProject.modality = MODE_GUI;
+}
+
+
+void MainWindow::on_flag_area_selection_triggered(bool isChecked)
+{
+    _isAreaSelection = isChecked;
+    if (isChecked)
+    {
+        ui->flag_point_selection->setChecked(false);
+        _isPointSelection = false;
+    }
+}
+
+
+void MainWindow::on_flag_point_selection_triggered(bool isChecked)
+{
+    _isPointSelection = isChecked;
+    if (isChecked)
+    {
+        ui->flag_area_selection->setChecked(false);
+        _isAreaSelection = false;
+    }
 }
 

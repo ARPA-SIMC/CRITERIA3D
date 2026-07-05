@@ -44,8 +44,9 @@ void Crit3DRadiationSettings::initialize()
     realSky = true;
     shadowing = true;
     linkeMode = PARAM_MODE_FIXED;
-    linke = 4.f;
+    linkeDefault = 4.f;
     albedoMode = PARAM_MODE_FIXED;
+    // default (media tra prati/foresta/urbano/suolo nudo)
     albedo = 0.2f;
     tiltMode = TILT_TYPE_DEM;
     tilt = 0;
@@ -110,14 +111,20 @@ void Crit3DRadiationSettings::setShadowing(bool value)
     shadowing = value;
 }
 
-float Crit3DRadiationSettings::getLinke() const
+float Crit3DRadiationSettings::getLinkeDefault() const
 {
-    return linke;
+    return linkeDefault;
+}
+
+void Crit3DRadiationSettings::setLinkeDefault(float value)
+{
+    linkeDefault = value;
 }
 
 float Crit3DRadiationSettings::getLinke(int row, int col) const
 {
-    if (linkeMode == PARAM_MODE_FIXED) return linke;
+    if (linkeMode == PARAM_MODE_FIXED)
+        return linkeDefault;
 
     float myLinke = NODATA;
 
@@ -130,7 +137,8 @@ float Crit3DRadiationSettings::getLinke(int row, int col) const
 
 float Crit3DRadiationSettings::getLinke(const gis::Crit3DPoint& myPoint) const
 {
-    if (linkeMode == PARAM_MODE_FIXED) return linke;
+    if (linkeMode == PARAM_MODE_FIXED)
+        return linkeDefault;
 
     float myLinke = NODATA;
 
@@ -145,9 +153,16 @@ float Crit3DRadiationSettings::getLinke(const gis::Crit3DPoint& myPoint) const
     return myLinke;
 }
 
-void Crit3DRadiationSettings::setLinke(float value)
+
+float Crit3DRadiationSettings::getLinke(int month) const
 {
-    linke = value;
+    if (linkeMode == PARAM_MODE_FIXED)
+        return linkeDefault;
+
+    if (month >= 0 && month < 12 && month < (int)LinkeMonthly.size())
+        return LinkeMonthly[month];
+    else
+        return linkeDefault;
 }
 
 float Crit3DRadiationSettings::getAlbedo() const
@@ -170,7 +185,8 @@ float Crit3DRadiationSettings::getAlbedo(int row, int col) const
 
 float Crit3DRadiationSettings::getAlbedo(const gis::Crit3DPoint& myPoint) const
 {
-    if (albedoMode == PARAM_MODE_FIXED) return albedo;
+    if (albedoMode == PARAM_MODE_FIXED)
+        return albedo;
 
     float myAlbedo = NODATA;
 
@@ -248,6 +264,26 @@ TtiltMode Crit3DRadiationSettings::getTiltMode() const
 void Crit3DRadiationSettings::setTiltMode(const TtiltMode &value)
 {
     tiltMode = value;
+}
+
+TlandUse Crit3DRadiationSettings::getLandUse() const
+{
+    return landUse;
+}
+
+void Crit3DRadiationSettings::setLandUse(const TlandUse &value)
+{
+    landUse = value;
+
+    if (landUse == LAND_USE_INDUSTRIAL)
+        LinkeMonthly = {4.1f, 4.3f, 4.7f, 5.3f, 5.5f, 5.7f, 5.8f, 5.7f, 5.3f, 4.9f, 4.5f, 4.2f};
+    else if (landUse == LAND_USE_CITY)
+        LinkeMonthly = {3.1f, 3.2f, 3.5f, 4.0f, 4.2f, 4.3f, 4.4f, 4.3f, 4.0f, 3.6f, 3.3f, 3.1f};
+    else if (landUse == LAND_USE_RURAL)
+        LinkeMonthly = {2.1f, 2.2f, 2.5f, 2.9f, 3.2f, 3.4f, 3.5f, 3.3f, 2.9f, 2.6f, 2.3f, 2.2f};
+    else if (landUse == LAND_USE_MOUNTAIN)
+        LinkeMonthly = {1.5f, 1.6f, 1.8f, 1.9f, 2.0f, 2.3f, 2.3f, 2.3f, 2.1f, 1.8f, 1.6f, 1.5f};
+
 }
 
 gis::Crit3DRasterGrid *Crit3DRadiationSettings::getLinkeMap() const
@@ -377,3 +413,18 @@ std::string getKeyStringRealSky(TradiationRealSkyAlgorithm value)
     return key;
 }
 
+std::string getKeyStringLandUse(TlandUse value)
+{
+    std::map<std::string, TlandUse>::const_iterator it;
+    std::string key = "";
+
+    for (it = landUseToString.begin(); it != landUseToString.end(); ++it)
+    {
+        if (it->second == value)
+        {
+            key = it->first;
+            break;
+        }
+    }
+    return key;
+}

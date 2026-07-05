@@ -36,31 +36,61 @@ Crit3DTime::Crit3DTime()
     time = 0;
 }
 
-Crit3DTime::Crit3DTime(Crit3DDate myDate, int mySeconds)
+Crit3DTime::Crit3DTime(const Crit3DDate &myDate, int mySeconds)
     : date{myDate}
 {
     time = 0;
     *this = addSeconds(mySeconds);
 }
 
+
+bool Crit3DTime::setFromISOString(const std::string &dateTimeStr)
+{
+    if (dateTimeStr.size() < 16)
+        return false;
+
+    int hour= 0;
+    int minutes = 0;
+    int seconds = 0;
+    int result;
+
+    if (dateTimeStr.at(10) == 'T')
+    {
+        // MYSQL format: yyyy-MM-ddThh:mm:ss:00
+        result = sscanf(dateTimeStr.data(), "%04d-%02d-%02dT%02d:%02d:%02d", &date.year, &date.month, &date.day, &hour, &minutes, &seconds);
+    }
+    else
+    {
+        // ISO 8601: yyyy-MM-dd hh:mm:ss
+        result = sscanf(dateTimeStr.data(), "%04d-%02d-%02d %02d:%02d:%02d", &date.year, &date.month, &date.day, &hour, &minutes, &seconds);
+    }
+    if (result < 4)
+        return false;
+
+    time = hour * HOUR_SECONDS + minutes * 60 + seconds;
+
+    return true;
+}
+
+
 int Crit3DTime::getHour() const
 {
-    return (time / 3600);
+    return (time / HOUR_SECONDS);
 }
 
 int Crit3DTime::getNearestHour() const
 {
-    return int(round(time / 3600));
+    return int(round(time / HOUR_SECONDS));
 }
 
 int Crit3DTime::getMinutes() const
 {
-    return (time - getHour()*3600) / 60;
+    return (time - getHour()*HOUR_SECONDS) / 60;
 }
 
 int Crit3DTime::getSeconds() const
 {
-    return (time - getHour()*3600 - getMinutes()*60);
+    return (time - getHour()*HOUR_SECONDS - getMinutes()*60);
 }
 
 bool operator < (const Crit3DTime& time1, const Crit3DTime& time2)
@@ -135,7 +165,15 @@ Crit3DTime Crit3DTime::addSeconds(long mySeconds) const
 }
 
 
-std::string Crit3DTime::toISOString()
+int Crit3DTime::hourTo(const Crit3DTime &newTime)
+{
+    int nrDays = this->date.daysTo(newTime.date);
+    int nrHours = newTime.getHour() - this->getHour();
+    return nrDays * 24 + nrHours;
+}
+
+
+std::string Crit3DTime::toISOString() const
 {
     char myStr[17];
     sprintf (myStr, "%d-%02d-%02d %02d:%02d", this->date.year, this->date.month, this->date.day, this->getHour(), this->getMinutes());
@@ -144,7 +182,7 @@ std::string Crit3DTime::toISOString()
 }
 
 
-std::string Crit3DTime::toString()
+std::string Crit3DTime::toString() const
 {
     char myStr[13];
     sprintf (myStr, "%d%02d%02dT%02d%02d", this->date.year, this->date.month, this->date.day, this->getHour(), this->getMinutes());

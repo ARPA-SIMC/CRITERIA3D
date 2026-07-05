@@ -9,7 +9,9 @@
         #include "statistics.h"
     #endif
 
-    #include <map>
+    #ifndef _MAP_
+        #include <map>
+    #endif
 
     #define DEFAULT_MIN_PERCENTAGE 80
     #define DEFAULT_RAINFALL_THRESHOLD 0.2f
@@ -98,11 +100,18 @@
                     leafWetness, dailyLeafWetness, atmPressure,
                     referenceEvapotranspiration, dailyReferenceEvapotranspirationHS, monthlyReferenceEvapotranspirationHS, dailyReferenceEvapotranspirationPM, actualEvaporation,
                     dailyBIC, monthlyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
-                    snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceEnergy,
-                    snowAge, snowLiquidWaterContent, snowMelt, sensibleHeat, latentHeat,
+                    snowWaterEquivalent, snowFall, snowMelt, snowVariation, snowSurfaceTemperature, snowInternalEnergy,
+                    snowSurfaceEnergy, snowAge, snowLiquidWaterContent, sensibleHeat, latentHeat,
                     dailyWaterTableDepth, leafAreaIndex,
-                    anomaly, elaboration, noMeteoTerrain,
+                    cvResidual, noMeteoTerrain, anomalyVar, elaborationVar,
                     noMeteoVar};
+
+
+    enum criteria3DVariable {volumetricWaterContent, waterTotalPotential, waterMatricPotential,
+                              availableWaterContent, degreeOfSaturation, avgDegreeOfSaturation, soilTemperature,
+                              soilSurfaceMoisture, bottomDrainage, waterDeficit, waterInflow, waterOutflow,
+                              factorOfSafety, minimumFactorOfSafety, surfacePond,
+                              minVolumetricWaterContent, maxVolumetricWaterContent};
 
 
     const std::map<std::string, meteoVariable> MapDailyMeteoVar = {
@@ -121,6 +130,7 @@
       { "DAILY_W_SCAL_INT_MAX", dailyWindScalarIntensityMax },
       { "DAILY_ET0_HS", dailyReferenceEvapotranspirationHS },
       { "DAILY_ET0_PM", dailyReferenceEvapotranspirationPM },
+      { "DAILY_BIC", dailyBIC },
       { "DAILY_LEAFW", dailyLeafWetness },
       { "DAILY_TEMPRANGE", dailyAirTemperatureRange },
       { "DAILY_THOMMAX", dailyThomMax },
@@ -132,12 +142,11 @@
       { "DAILY_DIRECT_RAD", dailyDirectRadiation },
       { "DAILY_DIFFUSE_RAD", dailyDiffuseRadiation },
       { "DAILY_REFLEC_RAD", dailyReflectedRadiation },
-      { "DAILY_BIC", dailyBIC },
       { "DAILY_DEGREEDAYS_HEATING", dailyHeatingDegreeDays },
       { "DAILY_DEGREEDAYS_COOLING", dailyCoolingDegreeDays },
       { "DAILY_WATER_TABLE_DEPTH", dailyWaterTableDepth },
-      { "ELABORATION", elaboration },
-      { "ANOMALY", anomaly }
+      { "ELABORATION", elaborationVar },
+      { "ANOMALY", anomalyVar }
     };
 
     const std::map<meteoVariable, std::string> MapDailyMeteoVarToString = {
@@ -156,6 +165,7 @@
       { dailyWindScalarIntensityMax, "DAILY_W_SCAL_INT_MAX" },
       { dailyReferenceEvapotranspirationHS, "DAILY_ET0_HS" },
       { dailyReferenceEvapotranspirationPM, "DAILY_ET0_PM" },
+      { dailyBIC, "DAILY_BIC" },
       { dailyLeafWetness, "DAILY_LEAFW" },
       { dailyAirTemperatureRange, "DAILY_TEMPRANGE" },
       { dailyThomMax, "DAILY_THOMMAX" },
@@ -167,12 +177,12 @@
       { dailyDirectRadiation, "DAILY_DIRECT_RAD" },
       { dailyDiffuseRadiation, "DAILY_DIFFUSE_RAD" },
       { dailyReflectedRadiation, "DAILY_REFLEC_RAD" },
-      { dailyBIC, "DAILY_BIC" },
       { dailyHeatingDegreeDays, "DAILY_DEGREEDAYS_HEATING" },
       { dailyCoolingDegreeDays, "DAILY_DEGREEDAYS_COOLING" },
       { dailyWaterTableDepth, "DAILY_WATER_TABLE_DEPTH" },
-      { elaboration, "ELABORATION" },
-      { anomaly, "ANOMALY" }
+      { elaborationVar, "ELABORATION" },
+      { anomalyVar, "ANOMALY" },
+      { noMeteoVar, "NO_VARIABLE" }
     };
 
     const std::map<std::string, meteoVariable> MapHourlyMeteoVar = {
@@ -197,6 +207,7 @@
       { "ATM_PRESSURE", atmPressure },
       { "ACTUAL_EVAPO", actualEvaporation }
     };
+
 
     const std::map<meteoVariable, std::string> MapHourlyMeteoVarToString = {
         { airTemperature, "TAVG" },
@@ -226,7 +237,8 @@
         { snowSurfaceEnergy, "SNOW_SURF_ENERGY"},
         { snowInternalEnergy, "SNOW_INT_ENERGY"},
         { sensibleHeat, "SENSIBLE_HEAT"},
-        { latentHeat, "LATENT_HEAT"}
+        { latentHeat, "LATENT_HEAT"},
+        { noMeteoVar, "NO_VARIABLE" }
     };
 
     const std::map<std::string, meteoVariable> MapMonthlyMeteoVar = {
@@ -249,10 +261,11 @@
         { monthlyGlobalRadiation, "MONTHLY_RAD" }
     };
 
+    // se cambiano le unità di misura, controllare le procedure che generano i netcdf e ne controllano la unit, come quelle di mapping
     const std::map<std::vector<meteoVariable>, std::string> MapVarUnit = {
-        { {dailyAirTemperatureMin,airTemperature,monthlyAirTemperatureMin}, "°C"} ,
-        { {dailyAirTemperatureMax,monthlyAirTemperatureMax}, "°C"} ,
-        { {dailyAirTemperatureAvg,dailyAirTemperatureRange,monthlyAirTemperatureAvg}, "°C"} ,
+        { {dailyAirTemperatureMin,airTemperature,monthlyAirTemperatureMin}, "C"} ,
+        { {dailyAirTemperatureMax,monthlyAirTemperatureMax}, "C"} ,
+        { {dailyAirTemperatureAvg,dailyAirTemperatureRange,monthlyAirTemperatureAvg}, "C"} ,
         { {dailyPrecipitation,precipitation,monthlyPrecipitation}, "mm"} ,
         { {dailyReferenceEvapotranspirationHS,dailyReferenceEvapotranspirationPM,referenceEvapotranspiration,monthlyReferenceEvapotranspirationHS}, "mm"} ,
         { {dailyAirRelHumidityMin,dailyAirRelHumidityMax,dailyAirRelHumidityAvg,airRelHumidity}, "%"} ,
@@ -263,13 +276,33 @@
         { {dailyWindVectorDirectionPrevailing, dailyWindVectorIntensityMax, windVectorDirection}, "deg"} ,
         { {windVectorIntensity, windVectorX, windVectorY}, "m s-1"} ,
         { {dailyLeafWetness,leafWetness}, "h"} ,
-        { {dailyHeatingDegreeDays,dailyCoolingDegreeDays}, "°D"} ,
+        { {dailyHeatingDegreeDays,dailyCoolingDegreeDays}, "D"} ,
         { {airRelHumidity,dailyAirRelHumidityMin,dailyAirRelHumidityMax,dailyAirRelHumidityAvg}, "%"} ,
-        { {airDewTemperature}, "°C"} ,
+        { {airDewTemperature}, "C"} ,
         { {dailyThomAvg,dailyThomDaytime,dailyThomNighttime,thom}, "-"} ,
         { {dailyWaterTableDepth,snowWaterEquivalent,snowFall,snowMelt,snowLiquidWaterContent}, "mm"} ,
-        { {snowSurfaceTemperature}, "°C"} ,
+        { {snowSurfaceTemperature}, "C"} ,
         { {snowInternalEnergy,snowSurfaceEnergy,sensibleHeat,latentHeat}, "kJ m-2"} ,
+        { {atmPressure}, "hPa"} ,
+    };
+
+
+    const std::map<criteria3DVariable, std::string> MapCriteria3DVarToString = {
+        { volumetricWaterContent , "VOL_WC" },
+        { waterTotalPotential , "TOT_WP" },
+        { waterMatricPotential , "WP" },
+        { availableWaterContent , "AWC" },
+        { degreeOfSaturation , "SATDEG" },
+        { factorOfSafety, "FOS" }
+    };
+
+    const std::map<std::string, criteria3DVariable> MapCriteria3DVar = {
+        { "VOL_WC", volumetricWaterContent },
+        { "TOT_WP", waterTotalPotential },
+        { "WP", waterMatricPotential },
+        { "AWC", availableWaterContent },
+        { "SATDEG", degreeOfSaturation },
+        { "FOS", factorOfSafety }
     };
 
 
@@ -293,7 +326,7 @@
         std::vector <float> tdMinLapseRate;
         std::vector <float> tdMaxLapseRate;
 
-        float getClimateLapseRate(meteoVariable myVar, Crit3DTime myTime);
+        float getClimateLapseRate(meteoVariable myVar, const Crit3DTime& myTime);
         float getClimateLapseRate(meteoVariable myVar, int month);
         float getClimateVar(meteoVariable myVar, int month, float height, float refHeight);
     };
@@ -308,9 +341,9 @@
     double tDewFromRelHum(double RH, double T);
 
     float computeDailyBIC(float prec, float etp);
-    float dailyThermalRange(float Tmin, float Tmax);
-    float dailyAverageT(float Tmin, float Tmax);
-    float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings *meteoSettings);
+    float dailyThermalRange(float tMin, float tMax);
+    float dailyAverageT(float tMin, float tMax);
+    float dailyEtpHargreaves(float Tmin, float Tmax, const Crit3DDate& date, double latitude, Crit3DMeteoSettings *meteoSettings);
     float dewPoint(float relHumAir, float tempAir);
     bool computeLeafWetness(double prec, double relHumidity, short* leafW);
 
@@ -333,16 +366,21 @@
 
     std::string getVariableString(meteoVariable myVar);
     std::string getUnitFromVariable(meteoVariable var);
-    std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteoVariable value);
-    meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string &value);
-    meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(std::map<meteoVariable,std::string> map, const std::string& value);
-    meteoVariable getMeteoVar(std::string varString);
-    meteoVariable getHourlyMeteoVar(std::string varString);
-    std::string getMeteoVarName(meteoVariable var);
-    std::string getLapseRateCodeName(lapseRateCodeType code);
+    std::string getKeyStringMeteoMap(const std::map<std::string, meteoVariable>& map, meteoVariable value);
+    meteoVariable getKeyMeteoVarMeteoMap(const std::map<meteoVariable,std::string>& map, const std::string &value);
+    meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(const std::map<meteoVariable,std::string>& map, const std::string& value);
 
+    meteoVariable getMeteoVar(const std::string& varString);
+    meteoVariable getHourlyMeteoVar(const std::string &varString);
+    std::string getMeteoVarName(meteoVariable var);
+
+    std::string getCriteria3DVarName(criteria3DVariable var);
+
+    std::string getLapseRateCodeName(lapseRateCodeType code);
     bool checkLapseRateCode(lapseRateCodeType myType, bool useLapseRateCode, bool useSupplemental);
+
     meteoVariable getDailyMeteoVarFromHourly(meteoVariable myVar, aggregationMethod myAggregation);
+
     meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq);
 
 

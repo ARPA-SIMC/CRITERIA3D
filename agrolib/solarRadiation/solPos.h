@@ -9,10 +9,10 @@
 *    S_solpos
 *
 *
-*            INPUTS:     (from posdata)
+*            INPUTS:     (from SolPosData)
 *                          year, month, day, hour, minute, second,
 *                          latitude, longitude, timezone, interval
-*            OPTIONAL:   (from posdata; defaults from S_init function)
+*            OPTIONAL:   (from SolPosData; defaults from S_init function)
 *                            press   DEFAULT 1013.0 (standard pressure)
 *                            temp    DEFAULT   10.0 (standard temperature)
 *                            tilt    DEFAULT    0.0 (horizontal panel)
@@ -21,7 +21,7 @@
 *                            sbrad   DEFAULT   31.7 (shadowband radius)
 *                            sbsky   DEFAULT   0.04 (shadowband sky factor)
 *
-*            OUTPUTS:    (posdata) daynum, amass, ampress, azim, cosinc,
+*            OUTPUTS:    (SolPosData) daynum, amass, ampress, azim, cosinc,
 *                        elevref, etr, etrn, etrtilt, prime,
 *                        sbcf, sretr, ssetr, unprime, zenref
 *
@@ -37,6 +37,8 @@
 *    25 March 1998
 *
 */
+
+#include <stdio.h>
 
 /*!
 *
@@ -106,7 +108,8 @@ enum {S_YEAR_ERROR,     /*!<   0   year                  1950 -  2050   */
      S_SBRAD_ERROR,     /*!<  16   shadow band radius (cm)  1 -   100   */
      S_SBSKY_ERROR};    /*!<  17   shadow band sky factor  -1 -     1   */
 
-struct posdata
+
+struct SolPosData
 {
  //! ALPHABETICAL LIST OF COMMON VARIABLES
                           /*! Each comment begins with a 1-column letter code:
@@ -342,25 +345,25 @@ zenref     L_REFRAC   elevetr, press, temp
  * \brief Adapted from the NREL VAX solar libraries, this function calculates the apparent solar position and intensity
  *    (theoretical maximum solar energy) based on the date, time, and
  *    location on Earth. (DEFAULT values are from the optional S_posinit function.)
- * \param pdat a pointer to a posdata structure
+ * \param pdat a pointer to a SolPosData structure
  * \return solar position
  */
-long S_solpos (struct posdata *pdat);
+long S_solpos (struct SolPosData *pdat);
 
 /*!
  * \brief Initiates all of the input functions to S_Solpos().
  *    NOTE: This function is optional if you initialize all input parameters
  *          in your calling code.
- * \param pdat a pointer to a posdata structure, members of which are initialized.
+ * \param pdat a pointer to a SolPosData structure, members of which are initialized.
  */
-void S_init(struct posdata *pdat);
+void S_init(struct SolPosData *pdat);
 
 /*!
  * \brief Decodes the error codes from S_solpos return value
  * \param code a error code
- * \param pdat a pointer to a posdata structure
+ * \param pdat a pointer to a SolPosData structure
  */
-void S_decode(long code, struct posdata *pdat);
+void S_decode(long code, struct SolPosData *pdat, FILE *logfile);
 
 
 #endif // SOLPOS_H

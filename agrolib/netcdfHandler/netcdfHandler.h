@@ -27,6 +27,7 @@
     private:
         int utmZone;
         long nrX, nrY, nrLat, nrLon, nrTime;
+        int indexTimeDim, indexYLonDim, indexXLatDim;
         int idTime, idTimeBnds, idX, idY, idLat, idLon;
 
         float *x, *y;
@@ -53,6 +54,8 @@
         bool isStandardTime;
         bool isHourly;
         bool isDaily;
+
+        double missingValue;
 
         gis::Crit3DLatLonHeader latLonHeader;
 
@@ -92,11 +95,12 @@
         NetCDFVariable getVariableFromId(int idVar);
         NetCDFVariable getVariableFromIndex(int index);
 
-        gis::Crit3DRasterGrid* getRaster();
+        gis::Crit3DRasterGrid* getRasterPointer() { return &dataGrid; }
 
         bool readProperties(std::string fileName);
         bool exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Crit3DTime seriesFirstTime, Crit3DTime seriesLastTime, std::stringstream *buffer);
-        bool extractVariableMap(int idVar, const Crit3DTime &myTime, std::string &error);
+        bool extractVariableMap_old(int idVar, const Crit3DTime &myTime, std::string &error);
+        bool extractVariableMap(int idVar, const Crit3DTime &myTime, std::string &errorStr);
 
         bool createNewFile(std::string fileName);
 

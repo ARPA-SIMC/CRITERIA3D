@@ -1,12 +1,13 @@
 #ifndef GLWIDGET_H
 #define GLWIDGET_H
 
+#include "geometry.h"
+
 #include <QOpenGLWidget>
-#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_4_0_Core>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
 #include <QMatrix4x4>
-#include "geometry.h"
 
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
@@ -14,12 +15,14 @@ QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 #define DEGREE_MULTIPLY 16
 
 
-class Crit3DOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
+class Crit3DOpenGLWidget : public QOpenGLWidget,
+                           protected QOpenGLFunctions_4_0_Core
 {
     Q_OBJECT
 
 public:
-    Crit3DOpenGLWidget(Crit3DGeometry *m_geometry, QWidget *parent = nullptr);
+    explicit Crit3DOpenGLWidget(Crit3DGeometry *geometry, QWidget *parent = nullptr);
+
     ~Crit3DOpenGLWidget() override;
     void clear();
 
@@ -55,7 +58,10 @@ private:
 
     QPoint m_lastPos;
 
-    QOpenGLBuffer m_bufferObject;
+    QOpenGLVertexArrayObject m_vao;
+    QOpenGLBuffer m_vertexBuffer;
+    QOpenGLBuffer m_colorBuffer;
+
     QOpenGLShaderProgram *m_program;
     Crit3DGeometry *m_geometry;
 
@@ -67,4 +73,4 @@ private:
     QMatrix4x4 m_world;
 };
 
-#endif
+#endif // GLWIDGET_H

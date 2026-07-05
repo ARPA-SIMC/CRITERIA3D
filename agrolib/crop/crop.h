@@ -11,8 +11,8 @@
         #include "root.h"
     #endif
 
-    enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, TREE, FALLOW, FALLOW_ANNUAL};
-    #define NR_CROP_SPECIES 7
+    enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, TREE, FALLOW, FALLOW_ANNUAL, BARESOIL};
+    #define NR_CROP_SPECIES 8
 
     /*!
      * \brief The Crit3DCrop class
@@ -43,8 +43,8 @@
         /*!
          * water need
          */
-        double kcMax;                               /*!< [-] */
-        int psiLeaf;                                /*!< [cm] */
+        double kcMax;                               /*!< [-] maximum crop coefficient */
+        int psiLeaf;                                /*!< [cm] maximum water suction potential */
         double stressTolerance;                     /*!< [-] */
         double fRAW;                                /*!< [-] fraction of Readily Available Water */
 
@@ -73,13 +73,15 @@
 
         void clear();
 
-        int getDaysFromTypicalSowing(int myDoy) const;
-        int getDaysFromCurrentSowing(int myDoy) const;
-        bool isInsideTypicalCycle(int myDoy) const;
+        int getDaysFromTypicalSowing(int doy) const;
+        int getDaysFromCurrentSowing(int doy) const;
+        bool isInsideTypicalCycle(int doy) const;
 
         bool isWaterSurplusResistant() const;
         bool isSowingCrop() const;
         bool isRootStatic() const;
+
+        bool isBareSoil() const { return (type == BARESOIL); }
 
         double getDailyDegreeIncrease(double tmin, double tmax, int doy);
 
@@ -91,28 +93,28 @@
         void updateRootDepth(double currentDD, double waterTableDepth);
         double computeRootLength(double currentDD, double waterTableDepth);
 
-        void updateRootDepth3D(double currentDD, double waterTableDepth, double previousRootDepth, double totalSoilDepth);
+        void computeRootLength3D(double currentDD, double totalSoilDepth);
 
         double computeSimpleLAI(double myDegreeDays, double latitude, int currentDoy);
 
-        bool dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
-                         double tmin, double tmax, double waterTableDepth, std::string &myError);
-        bool restore(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
+        bool dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit1DLayer> &soilLayers,
+                         double tmin, double tmax, double waterTableDepth, std::string &errorStr);
+        bool restore(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit1DLayer> &soilLayers,
                      double currentWaterTable, std::string &myError);
 
-        double getCoveredSurfaceFraction();
-        double getMaxEvaporation(double ET0);
-        double getMaxTranspiration(double ET0);
+        double getCoveredSurfaceFraction() const;
+        double getMaxEvaporation(double ET0) const;
+        double getMaxTranspiration(double ET0) const;
         double getSurfaceWaterPonding() const;
 
-        double getCropWaterDeficit(const std::vector<soil::Crit3DLayer> & soilLayers);
+        double getCropWaterDeficit(const std::vector<soil::Crit1DLayer> & soilLayers);
 
-        double computeTranspiration(double maxTranspiration, const std::vector<soil::Crit3DLayer>& soilLayers, double& waterStress);
+        double computeTranspiration(double maxTranspiration, const std::vector<soil::Crit1DLayer>& soilLayers,
+                                    double& waterStress, double &waterExcessStress);
     };
 
 
     speciesType getCropType(std::string cropType);
     std::string getCropTypeString(speciesType cropType);
-
 
 #endif // CROP_H

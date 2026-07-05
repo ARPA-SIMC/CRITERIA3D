@@ -1,9 +1,9 @@
-#----------------------------------------------------
+#--------------------------------------------------------
 #
 #   gis library
-#   This project is part of CRITERIA-3D distribution
+#   This project is part of ARPAE agrolib distribution
 #
-#----------------------------------------------------
+#-------------------------------------------------------
 
 QT  -= core gui
 
@@ -31,9 +31,11 @@ INCLUDEPATH += ../mathFunctions ../crit3dDate
 SOURCES += gis.cpp \
     gisIO.cpp \
     color.cpp \
-    geoMap.cpp
+    geoMap.cpp \
+    watershed.cpp
 
 HEADERS += gis.h \
     color.h \
     gisIO.h \
-    geoMap.h
+    geoMap.h \
+    watershed.h

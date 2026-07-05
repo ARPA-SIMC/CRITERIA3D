@@ -1,9 +1,10 @@
-#----------------------------------------------------
+#-------------------------------------------------------
 #
 #   interpolation library
-#   This project is part of CRITERIA-3D distribution
 #
-#----------------------------------------------------
+#   This project is part of ARPAE agrolib distribution
+#
+#-------------------------------------------------------
 
 QT   -= gui core
 
@@ -11,7 +12,8 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
-CONFIG += c++11 c++14 c++17
+CONFIG += c++17
+
 
 unix:{
     CONFIG(debug, debug|release) {

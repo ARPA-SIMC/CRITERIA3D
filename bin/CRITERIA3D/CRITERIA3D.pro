@@ -1,32 +1,37 @@
-#-----------------------------------------------------
+#-----------------------------------------------------------
 #
 #   CRITERIA3D
-#   3D soil water balance
-#   This project is part of CRITERIA-3D distribution
+#   3D agro-hydrological model
+#   This project is part of ARPAE CRITERIA-3D distribution
 #
-#-----------------------------------------------------
+#-----------------------------------------------------------
 
-QT  += core gui network widgets sql xml charts
+QT  += network widgets sql xml charts
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
 
 TEMPLATE = app
 TARGET = CRITERIA3D
+VERSION = 1.3.3
+QMAKE_TARGET_COPYRIGHT = "\\251 2026 ARPAE ER - Climate Observatory"
 
 CONFIG += debug_and_release
-CONFIG += c++11 c++14 c++17
+CONFIG += c++17
 
-DEFINES += CRITERIA3D
+# parallel computing settings
+include($$absolute_path(../../agrolib/parallel.pri))
 
 INCLUDEPATH +=  ./shared  \
-                ../../agrolib/soilFluxes3D/header  \
+                ../../agrolib/soilFluxes3D  ../../agrolib/soilFluxes3D/lineal  \
                 ../../agrolib/crit3dDate ../../agrolib/mathFunctions \
                 ../../agrolib/crop ../../agrolib/soil ../../agrolib/meteo ../../agrolib/gis \
-                ../../agrolib/interpolation ../../agrolib/solarRadiation ../../agrolib/snow \
+                ../../agrolib/interpolation ../../agrolib/solarRadiation \
                 ../../agrolib/outputPoints ../../agrolib/soilWidget ../../agrolib/utilities  \
                 ../../agrolib/dbMeteoPoints ../../agrolib/outputPoints ../../agrolib/dbMeteoGrid \
-                ../../agrolib/importDataXML ../../agrolib/proxyWidget ../../agrolib/project \
+                ../../agrolib/proxyWidget ../../agrolib/project \
                 ../../agrolib/graphics  ../../agrolib/commonChartElements ../../agrolib/commonDialogs \
-                ../../mapGraphics ../../agrolib/meteoWidget
+                ../../agrolib/meteoWidget ../../agrolib/waterTable  \
+                ../../src/snow ../../src/hydrall ../../src/rothCplusplus ../../src/project3D \
+                ../../mapGraphics
 
 CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/graphics/debug -lgraphics
@@ -36,20 +41,23 @@ CONFIG(debug, debug|release) {
     unix:{
         LIBS += -L../../mapGraphics/release -lMapGraphics
     }
+    LIBS += -L../../src/project3D/debug -lproject3D
     LIBS += -L../../agrolib/project/debug -lproject
     LIBS += -L../../agrolib/proxyWidget/debug -lproxyWidget
-    LIBS += -L../../agrolib/importDataXML/debug -limportDataXML
     LIBS += -L../../agrolib/meteoWidget/debug -lmeteoWidget
     LIBS += -L../../agrolib/commonDialogs/debug -lcommonDialogs
     LIBS += -L../../agrolib/dbMeteoGrid/debug -ldbMeteoGrid
     LIBS += -L../../agrolib/dbMeteoPoints/debug -ldbMeteoPoints
     LIBS += -L../../agrolib/outputPoints/debug -loutputPoints
     LIBS += -L../../agrolib/soilWidget/debug -lsoilWidget
-    LIBS += -L../../agrolib/commonChartElements/debug -lcommonChartElements
     LIBS += -L../../agrolib/crop/debug -lcrop
     LIBS += -L../../agrolib/soil/debug -lsoil
     LIBS += -L../../agrolib/utilities/debug -lutilities
-    LIBS += -L../../agrolib/snow/debug -lsnow
+    LIBS += -L../../agrolib/waterTable/debug -lwaterTable
+    LIBS += -L../../src/snow/debug -lsnow
+    LIBS += -L../../src/hydrall/debug -lhydrall
+    LIBS += -L../../src/rothCplusplus/debug -lrothCplusplus
+    LIBS += -L../../agrolib/commonChartElements/debug -lcommonChartElements
     LIBS += -L../../agrolib/solarRadiation/debug -lsolarRadiation
     LIBS += -L../../agrolib/interpolation/debug -linterpolation
     LIBS += -L../../agrolib/meteo/debug -lmeteo
@@ -61,20 +69,23 @@ CONFIG(debug, debug|release) {
 } else {
     LIBS += -L../../agrolib/graphics/release -lgraphics
     LIBS += -L../../mapGraphics/release -lMapGraphics
+    LIBS += -L../../src/project3D/release -lproject3D
     LIBS += -L../../agrolib/project/release -lproject
     LIBS += -L../../agrolib/proxyWidget/release -lproxyWidget
-    LIBS += -L../../agrolib/importDataXML/release -limportDataXML
     LIBS += -L../../agrolib/meteoWidget/release -lmeteoWidget
     LIBS += -L../../agrolib/commonDialogs/release -lcommonDialogs
     LIBS += -L../../agrolib/dbMeteoGrid/release -ldbMeteoGrid
     LIBS += -L../../agrolib/dbMeteoPoints/release -ldbMeteoPoints
     LIBS += -L../../agrolib/outputPoints/release -loutputPoints
     LIBS += -L../../agrolib/soilWidget/release -lsoilWidget
-    LIBS += -L../../agrolib/commonChartElements/release -lcommonChartElements
     LIBS += -L../../agrolib/crop/release -lcrop
     LIBS += -L../../agrolib/soil/release -lsoil
     LIBS += -L../../agrolib/utilities/release -lutilities
-    LIBS += -L../../agrolib/snow/release -lsnow
+    LIBS += -L../../agrolib/waterTable/release -lwaterTable
+    LIBS += -L../../src/snow/release -lsnow
+    LIBS += -L../../src/hydrall/release -lhydrall
+    LIBS += -L../../src/rothCplusplus/release -lrothCplusplus
+    LIBS += -L../../agrolib/commonChartElements/release -lcommonChartElements
     LIBS += -L../../agrolib/solarRadiation/release -lsolarRadiation
     LIBS += -L../../agrolib/interpolation/release -linterpolation
     LIBS += -L../../agrolib/meteo/release -lmeteo
@@ -85,9 +96,20 @@ CONFIG(debug, debug|release) {
 }
 
 
+HEADERS += \
+    dialogModelProcesses.h \
+    mainGUI.h \
+    mainwindow.h \
+    criteria3DProject.h \
+    dialogLoadState.h \
+    dialogSnowSettings.h \
+    geometry.h \
+    glWidget.h \
+    viewer3D.h
+
 SOURCES += \
-    dialogWaterFluxesSettings.cpp \
-    shared/project3D.cpp \
+    dialogModelProcesses.cpp \
+    mainGUI.cpp \
     mainwindow.cpp \
     criteria3DProject.cpp \
     dialogLoadState.cpp \
@@ -97,18 +119,20 @@ SOURCES += \
     main.cpp \
     viewer3D.cpp
 
-
-HEADERS += \
-    dialogWaterFluxesSettings.h \
-    shared/project3D.h \
-    mainwindow.h \
-    criteria3DProject.h \
-    dialogLoadState.h \
-    dialogSnowSettings.h \
-    geometry.h \
-    glWidget.h \
-    viewer3D.h
-
-
 FORMS += mainwindow.ui
+
+DISTFILES += \
+    Criteria3D.ico
+
+OTHER_FILES += \
+    ../../batchFiles/batchTest.txt \
+    ../../batchFiles/batchTestLinux.txt
+
+RESOURCES += Criteria3D.ico
+
+win32:
+{
+    RC_ICONS = Criteria3D.ico
+}
+
 

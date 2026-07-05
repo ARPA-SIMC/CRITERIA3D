@@ -13,7 +13,7 @@
 #include "netcdfHandler.h"
 #include "utilities.h"
 
-#ifdef GDAL
+#ifdef USE_GDAL
     #include "gdalShapeFunctions.h"
 #endif
 
@@ -38,11 +38,14 @@ void CriteriaOutputProject::initialize()
     dbDataName = "";
     dbClimateDataName = "";
     dbCropName = "";
+
     variableListFileName = "";
     ucmFileName = "";
-    aggregationShapeFileName = "";
-    shapeFieldName = "";
     fieldListFileName = "";
+    computationListFileName = "";
+
+    aggregationShapeFileName = "";
+    aggregationShapeField = "";
     aggregationListFileName = "";
     aggregationCellSize = "";
     aggregationThreshold = "";
@@ -51,8 +54,10 @@ void CriteriaOutputProject::initialize()
     mapPalettePath = "";
     mapCellSize = "";
     mapFormat = "";
-    mapProjection = "";
     mapAreaName = "";
+    mapProjection = "";
+    isPngCopy = false;
+    pngProjection = "";
 
     outputCsvFileName = "";
     outputShapeFileName = "";
@@ -178,12 +183,13 @@ int CriteriaOutputProject::initializeProjectCsv()
 }
 
 
-int CriteriaOutputProject::initializeProject(QString settingsFileName, QString operation, QDate dateComputation, bool isLog)
+int CriteriaOutputProject::initializeProject(const QString &settingsFileName, const QString &operationStr,
+                                             const QDate &_dateComputation, bool isLog)
 {
     closeProject();
     initialize();
-    this->dateComputation = dateComputation;
-    this->operation = operation;
+    this->dateComputation = _dateComputation;
+    this->operation = operationStr;
 
     if (settingsFileName == "")
     {
@@ -207,9 +213,9 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QString o
         return ERROR_SETTINGS_WRONGFILENAME;
     }
 
-    if (!readSettings())
+    if (! readSettings())
     {
-        projectError = "Read settings: " + projectError;
+        projectError = "Reading settings: " + settingsFileName + "\nError: " + projectError;
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
@@ -297,40 +303,53 @@ bool CriteriaOutputProject::readSettings()
     projectSettings->beginGroup("csv");
 
     variableListFileName = projectSettings->value("variable_list","").toString();
-    if (variableListFileName.left(1) == ".")
+    if (! variableListFileName.isEmpty() && variableListFileName.at(0) == '.')
     {
         variableListFileName = QDir::cleanPath(path + variableListFileName);
     }
 
-    bool addDate = projectSettings->value("add_date_to_filename","").toBool();
+    bool isAddDate = projectSettings->value("add_date_to_filename","").toBool();
 
     outputCsvFileName = projectSettings->value("csv_output","").toString();
-    if (outputCsvFileName.right(4) == ".csv")
+    if (! outputCsvFileName.isEmpty())
     {
-        outputCsvFileName = outputCsvFileName.left(outputCsvFileName.length()-4);
-    }
-    if (addDate) outputCsvFileName += "_" + dateStr;
-    outputCsvFileName += ".csv";
+        if (outputCsvFileName.at(0) == '.')
+        {
+            outputCsvFileName = QDir::cleanPath(path + outputCsvFileName);
+        }
 
-    if (outputCsvFileName.left(1) == ".")
-    {
-        outputCsvFileName = QDir::cleanPath(path + outputCsvFileName);
+        if (outputCsvFileName.right(4) == ".csv")
+        {
+            outputCsvFileName = outputCsvFileName.left(outputCsvFileName.length()-4);
+        }
+
+        if (isAddDate)
+            outputCsvFileName += "_" + dateStr;
+
+        outputCsvFileName += ".csv";
     }
+
     projectSettings->endGroup();
 
     // SHAPEFILE
     projectSettings->beginGroup("shapefile");
 
     ucmFileName = projectSettings->value("UCM","").toString();
-    if (ucmFileName.left(1) == ".")
+    if (! ucmFileName.isEmpty() && ucmFileName.at(0) == '.')
     {
         ucmFileName = QDir::cleanPath(path + ucmFileName);
     }
 
     fieldListFileName = projectSettings->value("field_list", "").toString();
-    if (fieldListFileName.left(1) == ".")
+    if (! fieldListFileName.isEmpty() && fieldListFileName.at(0) == '.')
     {
         fieldListFileName = QDir::cleanPath(path + fieldListFileName);
+    }
+
+    computationListFileName = projectSettings->value("computation_list", "").toString();
+    if (! computationListFileName.isEmpty() && computationListFileName.at(0) == '.')
+    {
+        computationListFileName = QDir::cleanPath(path + computationListFileName);
     }
 
     // output shapefile
@@ -349,10 +368,10 @@ bool CriteriaOutputProject::readSettings()
         aggregationShapeFileName = QDir::cleanPath(path + aggregationShapeFileName);
     }
 
-    shapeFieldName = projectSettings->value("shape_field", "").toString();
-    if (shapeFieldName.left(1) == ".")
+    aggregationShapeField = projectSettings->value("shape_field", "").toString();
+    if (aggregationShapeField.left(1) == ".")
     {
-        shapeFieldName = QDir::cleanPath(path + shapeFieldName);
+        aggregationShapeField = QDir::cleanPath(path + aggregationShapeField);
     }
 
     aggregationListFileName = projectSettings->value("aggregation_list","").toString();
@@ -367,52 +386,66 @@ bool CriteriaOutputProject::readSettings()
     // default threshold
     if (aggregationThreshold == "") aggregationThreshold = "0.5";
 
-    addDate = projectSettings->value("add_date_to_filename","").toBool();
+    isAddDate = projectSettings->value("add_date_to_filename","").toBool();
 
     // aggregation output file name
     outputAggrCsvFileName = projectSettings->value("aggregation_output","").toString();
     if (! outputAggrCsvFileName.isEmpty())
     {
+        if (outputAggrCsvFileName.at(0) == '.')
+            outputAggrCsvFileName = QDir::cleanPath(path + outputAggrCsvFileName);
+
         if (outputAggrCsvFileName.right(4) == ".csv")
             outputAggrCsvFileName = outputAggrCsvFileName.left(outputAggrCsvFileName.length()-4);
 
-        if (addDate)
+        if (isAddDate)
             outputAggrCsvFileName += "_" + dateStr;
 
         outputAggrCsvFileName += ".csv";
-
-        if (outputAggrCsvFileName.at(0) == '.')
-            outputAggrCsvFileName = QDir::cleanPath(path + outputAggrCsvFileName);
     }
+
+    if (outputAggrCsvFileName == outputCsvFileName)
+    {
+        projectError = "'aggregation_output' is equal to 'csv_output'";
+        return false;
+    }
+
     projectSettings->endGroup();
 
     // MAPS
     projectSettings->beginGroup("maps");
 
     mapListFileName = projectSettings->value("map_list","").toString();
-    if (! mapListFileName.isEmpty())
+    if (! mapListFileName.isEmpty() && mapListFileName.at(0) == '.')
     {
-        if (mapListFileName.at(0) == '.')
-            mapListFileName = QDir::cleanPath(path + mapListFileName);
+        mapListFileName = QDir::cleanPath(path + mapListFileName);
     }
 
+    // palette
     mapPalettePath = projectSettings->value("palette","").toString();
     if (mapPalettePath.isEmpty())
-         mapPalettePath = projectSettings->value("palette_path","").toString();
-    if (! mapPalettePath.isEmpty())
     {
-         if (mapPalettePath.at(0) == '.')
-            mapPalettePath = QDir::cleanPath(path + mapPalettePath);
+        mapPalettePath = projectSettings->value("palette_path","").toString();
     }
 
-    // format
-    mapFormat = projectSettings->value("format", "").toString();
-    // projection
+    if (! mapPalettePath.isEmpty() && mapPalettePath.at(0) == '.')
+    {
+        mapPalettePath = QDir::cleanPath(path + mapPalettePath);
+    }
+
+    // file format (default = tif)
+    mapFormat = projectSettings->value("format", "tif").toString();
+    // map projection
     mapProjection = projectSettings->value("projection", "").toString();
     // map cell size
-    mapCellSize = projectSettings->value("cellsize","").toString();
+    mapCellSize = projectSettings->value("cellsize", "").toString();
     // map area name
-    mapAreaName = projectSettings->value("area_name","").toString();
+    mapAreaName = projectSettings->value("area_name", "").toString();
+
+    // make a copy in png format (default = false)
+    isPngCopy = projectSettings->value("png_copy", false).toBool();
+    // png projection
+    pngProjection = projectSettings->value("png_projection", "").toString();
 
     projectSettings->endGroup();
 
@@ -440,7 +473,7 @@ int CriteriaOutputProject::precomputeDtx()
     logger.writeInfo("Compute dtx...");
 
     QString idCase;
-    int step = compUnitList.size() * 0.01;
+    int step = MAXVALUE(compUnitList.size() * 0.01, 1);
 
     for (unsigned int i=0; i < compUnitList.size(); i++)
     {
@@ -487,7 +520,7 @@ int CriteriaOutputProject::createCsvFile()
     }
     logger.writeInfo("Query result: " + QString::number(compUnitList.size()) + " distinct computational units.");
 
-    if (!initializeCsvOutputFile())
+    if (! initializeCsvOutputFile())
     {
         return ERROR_PARSERCSV;
     }
@@ -497,23 +530,32 @@ int CriteriaOutputProject::createCsvFile()
     // write output
     QString idCase;
     QString idCropClass;
-    int step = compUnitList.size() * 0.01;
+    int step = std::max(1, int(compUnitList.size() * 0.01));
 
+    // list of data tables
+    QList<QString> dataTables = dbData.tables();
+
+    int totalMissingData = 0;
     for (unsigned int i=0; i < compUnitList.size(); i++)
     {
         idCase = compUnitList[i].idCase;
         idCropClass = compUnitList[i].idCropClass;
 
-        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbClimateData,
-                                      dateComputation, outputVariable, outputCsvFileName, projectError);
+        int nrMissingData;
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dataTables, dbData, dbCrop, dbClimateData,
+                                      dateComputation, outputVariable, outputCsvFileName, nrMissingData, projectError);
         if (myResult != CRIT1D_OK)
         {
-            if (QFile(outputCsvFileName).exists())
+            if (QFile(outputCsvFileName).exists() && i == 0)
             {
+                // delete empty file
                 QDir().remove(outputCsvFileName);
             }
+
             return myResult;
         }
+
+        totalMissingData += nrMissingData;
 
         // counter
         if (i % step == 0)
@@ -525,6 +567,11 @@ int CriteriaOutputProject::createCsvFile()
         {
             std::cout << "100\n";
         }
+    }
+
+    if (totalMissingData > 0)
+    {
+        logger.writeInfo("WARNING! Cases with missing data: " + QString::number(totalMissingData));
     }
 
     return CRIT1D_OK;
@@ -548,15 +595,19 @@ int CriteriaOutputProject::createShapeFile()
 
     Crit3DShapeHandler inputShape;
 
-    if (!inputShape.open(ucmFileName.toStdString()))
+    if (! inputShape.open(ucmFileName.toStdString(), false))
     {
-        projectError = "Wrong shapefile: " + ucmFileName;
+        projectError = "Wrong UCM shapefile: " + ucmFileName;
         return ERROR_SHAPEFILE;
     }
 
     logger.writeInfo("UCM shapefile: " + ucmFileName);
     logger.writeInfo("CSV data: " + outputCsvFileName);
-    logger.writeInfo("Shape field list: " + fieldListFileName);
+    logger.writeInfo("Shape fields list: " + fieldListFileName);
+    if (! computationListFileName.isEmpty())
+    {
+        logger.writeInfo("Computation list: " + computationListFileName);
+    }
     logger.writeInfo("Output shapefile: " + outputShapeFileName);
     logger.writeInfo("Write shapefile...");
 
@@ -564,6 +615,7 @@ int CriteriaOutputProject::createShapeFile()
     {
         QDir().mkdir(outputShapeFilePath);
     }
+
     if (! shapeFromCsv(inputShape, outputCsvFileName, fieldListFileName, outputShapeFileName, projectError))
     {
         return ERROR_SHAPEFILE;
@@ -573,124 +625,181 @@ int CriteriaOutputProject::createShapeFile()
 }
 
 
-#ifdef GDAL
-int CriteriaOutputProject::createMaps()
-{
-    // check map list
-    if (! QFile(mapListFileName).exists())
-    {
-        projectError = "Missing map list: " + mapListFileName;
-        return ERROR_SETTINGS_MISSINGDATA;
-    }
+#ifdef USE_GDAL
 
-    // check cellsize
-    bool ok;
-    mapCellSize.toInt(&ok, 10);
-    if (!ok)
+    int CriteriaOutputProject::createMaps()
     {
-        projectError = "Invalid map cellsize: " + mapCellSize;
-        return ERROR_SETTINGS_MISSINGDATA;
-    }
-
-    if (!mapExtensionShortName.contains(mapFormat))
-    {
-        projectError = "Unknown output format ";
-        return ERROR_SETTINGS_MISSINGDATA;
-    }
-
-    // check shapefile
-    if (! QFile(outputShapeFileName).exists())
-    {
-        int myResult = createShapeFile();
-        if (myResult != CRIT1D_OK)
+        // check map list
+        if (! QFile(mapListFileName).exists())
         {
-            return myResult;
+            projectError = "Wrong map list: " + mapListFileName;
+            return ERROR_SETTINGS_MISSINGDATA;
         }
-    }
 
-    logger.writeInfo("MAPS");
+        // check cellsize
+        bool isOk;
+        mapCellSize.toInt(&isOk, 10);
+        if (! isOk)
+        {
+            projectError = "Invalid map cellsize: " + mapCellSize;
+            return ERROR_SETTINGS_MISSINGDATA;
+        }
 
-    // parser csv file mapListFileName
-    QList<QString> inputField;
-    QList<QString> outputName;
-    QList<QString> paletteFileName;
-    QFile mapList(mapListFileName);
-    if ( !mapList.open(QFile::ReadOnly | QFile::Text) )
-    {
-        projectError = "Map List csv file not exists: " + mapListFileName;
-        return ERROR_SETTINGS_MISSINGDATA;
-    }
-    else
-    {
+        // check map format
+        if (! mapExtensionShortName.contains(mapFormat))
+        {
+            projectError = "Unknown output format ";
+            return ERROR_SETTINGS_MISSINGDATA;
+        }
+
+        // check shapefile
+        if (! QFile(outputShapeFileName).exists())
+        {
+            int myResult = createShapeFile();
+            if (myResult != CRIT1D_OK)
+            {
+                return myResult;
+            }
+        }
+
+        logger.writeInfo("MAPS");
+
+        QList<QString> inputFieldName;
+        QList<QString> outputFileName;
+        QList<QString> paletteFileName;
+
+        // parse csv file mapListFileName
+        QFile mapList(mapListFileName);
+        if (! mapList.open(QFile::ReadOnly | QFile::Text) )
+        {
+            projectError = "Wrong map list file: " + mapListFileName;
+            return ERROR_SETTINGS_MISSINGDATA;
+        }
+
         QTextStream in(&mapList);
-        //skip header
+        // skip header
         QString line = in.readLine();
 
-        while (!in.atEnd())
+        while (! in.atEnd())
         {
             line = in.readLine();
             QList<QString> items = line.split(",");
-            if (items.size() < REQUIREDMAPLISTCSVINFO)
+
+            if (! mapPalettePath.isEmpty())
             {
-                projectError = "invalid line in map list:\n" + line + "\n"
-                               + "Required input field, output file name, palette file name.";
-                return ERROR_SETTINGS_MISSINGDATA;
+                if (items.size() < 3)
+                {
+                    projectError = "invalid line in map list:\n" + line + "\n"
+                                   + "Required: input field name, output file name, palette file name.";
+                    return ERROR_SETTINGS_MISSINGDATA;
+                }
+            }
+            else
+            {
+                if (items.size() < 2)
+                {
+                    projectError = "invalid line in map list:\n" + line + "\n"
+                                   + "Required: input field name, output file name.";
+                    return ERROR_SETTINGS_MISSINGDATA;
+                }
             }
 
             // input field (remove whitespace)
-            inputField.push_back(items[0].toUpper().trimmed());
-            if (inputField.last().isEmpty())
+            inputFieldName.push_back(items[0].trimmed());
+            if ( inputFieldName.last().isEmpty() )
             {
                 projectError = "missing shape input field in line:\n" + line;
                 return ERROR_SETTINGS_MISSINGDATA;
             }
 
-            // output file name (remove whitespace)
-            outputName.push_back(items[1].toUpper().trimmed());
-            if (outputName.last().isEmpty())
+            // output file (remove whitespace)
+            outputFileName.push_back(items[1].trimmed());
+            if ( outputFileName.last().isEmpty() )
             {
                 projectError = "missing output map name in line:\n" + line;
                 return ERROR_SETTINGS_MISSINGDATA;
             }
 
-            // palette file name (remove whitespace)
-            paletteFileName.push_back(items[2].toUpper().trimmed());
-            if (paletteFileName.last().isEmpty())
+            if (! mapPalettePath.isEmpty())
             {
-                projectError = "missing palette file name in line:\n" + line;
-                return ERROR_SETTINGS_MISSINGDATA;
+                // palette file name (remove whitespace)
+                paletteFileName.push_back(items[2].trimmed());
+                if ( paletteFileName.last().isEmpty() )
+                {
+                    projectError = "missing palette file name in line:\n" + line;
+                    return ERROR_SETTINGS_MISSINGDATA;
+                }
             }
         }
-    }
 
-    int rasterOK = 0;
-
-    for (int i=0; i < inputField.size(); i++)
-    {
-        QString mapName = outputShapeFilePath + "/" + outputName[i]+ "." + mapFormat;
-        QString paletteName = mapPalettePath + "/" + paletteFileName[i];
-        logger.writeInfo("Write map: " + mapName);
-        if (shapeToRaster(outputShapeFileName, inputField[i], mapCellSize, mapProjection, mapName, paletteName, projectError))
+        if (inputFieldName.isEmpty())
         {
-            rasterOK = rasterOK + 1;
+            projectError = "Map list is void: " + mapListFileName;
+            return ERROR_SETTINGS_MISSINGDATA;
+        }
+
+        // create png directory
+        if (isPngCopy)
+        {
+            QString pngPath = outputShapeFilePath + "/png";
+            if (! QDir(pngPath).exists())
+            {
+                QDir().mkdir(pngPath);
+            }
+        }
+
+        // main cycle
+        int nrRasterOK= 0;
+        for (int i=0; i < inputFieldName.size(); i++)
+        {
+            QString mapFileName = outputShapeFilePath + "/" + outputFileName[i]+ "." + mapFormat;
+            QString pngFileName = outputShapeFilePath + "/png/" + outputFileName[i]+ ".png";
+
+            QString paletteCompleteFileName = "";
+            if (! mapPalettePath.isEmpty())
+            {
+                paletteCompleteFileName = mapPalettePath + "/" + paletteFileName[i];
+                if (! QFile(paletteCompleteFileName).exists())
+                {
+                    logger.writeError("Missing palette file: " + paletteCompleteFileName);
+                    // skip this map
+                    continue;
+                }
+            }
+
+            logger.writeInfo("Write map: " + mapFileName);
+            if (gdalShapeToRaster(outputShapeFileName, inputFieldName[i], mapCellSize,
+                                  mapProjection, mapFileName, paletteCompleteFileName,
+                                  isPngCopy, pngFileName, pngProjection, projectError))
+            {
+                nrRasterOK++;
+            }
+            else
+            {
+                logger.writeError(projectError);
+            }
+        }
+
+        if (nrRasterOK == inputFieldName.size())
+        {
+            return CRIT1D_OK;
+        }
+        else
+        {
+            int nRasterError = inputFieldName.size() - nrRasterOK;
+            projectError = QString::number(nRasterError) + " invalid raster.";
+            return ERROR_MAPS;
         }
     }
-
-    if (rasterOK == inputField.size())
-    {
-        return CRIT1D_OK;
-    }
-    else
-    {
-        int nRasterError = inputField.size() - rasterOK;
-        projectError = QString::number(nRasterError) + " invalid raster - " + projectError;
-        return ERROR_MAPS;
-    }
-}
 #endif
 
 
-int CriteriaOutputProject::createAggregationFile()
+/*! \brief createAggregationFile
+ *  create aggregation (shapefile and .csv file)
+ *  \param isReorder: enable/disable csv reorder
+ *  \return CRIT1D_OK if aggregation is ok
+ */
+int CriteriaOutputProject::createAggregationFile(bool isReorder)
 {
     logger.writeInfo("AGGREGATION");
 
@@ -707,16 +816,16 @@ int CriteriaOutputProject::createAggregationFile()
         QFile().remove(outputAggrCsvFileName);
     }
 
-    if (shapeFieldName.isNull() || shapeFieldName.isEmpty())
+    if (aggregationShapeField.isNull() || aggregationShapeField.isEmpty())
     {
-        projectError = "Missing shape field name.";
+        projectError = "Missing aggregation shape field.";
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
     // check aggregation cell size
     bool ok;
     int cellSize = aggregationCellSize.toInt(&ok, 10);
-    if (!ok)
+    if (! ok)
     {
         projectError = "Invalid aggregation_cellsize: " + aggregationCellSize;
         return ERROR_WRONGPARAMETER;
@@ -724,7 +833,7 @@ int CriteriaOutputProject::createAggregationFile()
 
     // check aggregation threshold
     double threshold = aggregationThreshold.toDouble(&ok);
-    if (!ok)
+    if (! ok)
     {
         projectError = "Invalid aggregation_threshold: " + aggregationThreshold;
         return ERROR_WRONGPARAMETER;
@@ -739,16 +848,16 @@ int CriteriaOutputProject::createAggregationFile()
     if (! QFile(outputShapeFileName).exists())
     {
         // create shapefile
-        int myResult = createShapeFile();
-        if (myResult != CRIT1D_OK)
+        int result = createShapeFile();
+        if (result != CRIT1D_OK)
         {
-            return myResult;
+            return result;
         }
     }
 
     Crit3DShapeHandler shapeVal, shapeRef;
 
-    if (!shapeVal.open(outputShapeFileName.toStdString()))
+    if (! shapeVal.open(outputShapeFileName.toStdString(), false))
     {
         projectError = "Load shapefile failed: " + outputShapeFileName;
         return ERROR_SHAPEFILE;
@@ -766,15 +875,20 @@ int CriteriaOutputProject::createAggregationFile()
     }
 
     QString outputAggrShapeFileName = cloneShapeFile(aggregationShapeFileName, outputAggrShapePath);
+    if (outputAggrShapeFileName.isEmpty())
+    {
+        projectError = "Error creating shapefile: " + outputAggrShapePath;
+        return ERROR_SHAPEFILE;
+    }
 
-    if (!shapeRef.open(outputAggrShapeFileName.toStdString()))
+    if (! shapeRef.open(outputAggrShapeFileName.toStdString(), true))
     {
         projectError = "Load shapefile failed: " + outputAggrShapeFileName;
         return ERROR_SHAPEFILE;
     }
 
     // check shape type
-    if ( shapeRef.getTypeString() != shapeVal.getTypeString() || shapeRef.getTypeString() != "2D Polygon" )
+    if (shapeRef.getTypeString() != shapeVal.getTypeString() || shapeRef.getTypeString() != "2D Polygon" )
     {
         projectError = "shape type error: not 2D Polygon type" ;
         return ERROR_SHAPEFILE;
@@ -795,12 +909,12 @@ int CriteriaOutputProject::createAggregationFile()
     // check utm zone
     if (shapeRef.getUtmZone() != shapeVal.getUtmZone())
     {
-        projectError = "utm zone: different utm zones" ;
+        projectError = "Different utm zones in the shapefiles" ;
         return ERROR_SHAPEFILE;
     }
 
     // parser aggregation list
-    if (!aggregationVariable.parserAggregationVariable(aggregationListFileName, projectError))
+    if (! aggregationVariable.parserAggregationVariable(aggregationListFileName, projectError))
     {
         projectError = "Open failure: " + aggregationListFileName + "\n" + projectError;
         return ERROR_ZONAL_STATISTICS_SHAPE;
@@ -810,37 +924,41 @@ int CriteriaOutputProject::createAggregationFile()
     logger.writeInfo("output csv file: " + outputAggrCsvFileName);
     logger.writeInfo("Compute aggregation...");
 
-    //shape to raster
+    logger.writeInfo("Reference shape to raster...");
     gis::Crit3DRasterGrid rasterRef;
-    gis::Crit3DRasterGrid rasterVal;
     initializeRasterFromShape(shapeRef, rasterRef, cellSize);
-    initializeRasterFromShape(shapeVal, rasterVal, cellSize);
-
     fillRasterWithShapeNumber(rasterRef, shapeRef);
+
+    logger.writeInfo("Values shape to raster...");
+    gis::Crit3DRasterGrid rasterVal;
+    initializeRasterFromShape(shapeVal, rasterVal, cellSize);
     fillRasterWithShapeNumber(rasterVal, shapeVal);
 
+    logger.writeInfo("Matrix Analysis...");
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(shapeRef, shapeVal, rasterRef, rasterVal, vectorNull);
+
     bool isOk = false;
     for(int i=0; i < aggregationVariable.outputVarName.size(); i++)
     {
+        logger.writeInfo(aggregationVariable.outputVarName[i]);
+        std::string shapeFieldName = aggregationVariable.inputFieldName[i].toStdString();
+
         std::string error;
         if (aggregationVariable.aggregationType[i] == "MAJORITY")
         {
             isOk = zonalStatisticsShapeMajority(shapeRef, shapeVal, matrix, vectorNull,
-                                                aggregationVariable.inputField[i].toStdString(),
-                                                aggregationVariable.outputVarName[i].toStdString(),
-                                                threshold, error);
+                                                shapeFieldName, shapeFieldName, threshold, error);
         }
         else
         {
-            isOk = zonalStatisticsShape(shapeRef, shapeVal, matrix, vectorNull, aggregationVariable.inputField[i].toStdString(),
-                                        aggregationVariable.outputVarName[i].toStdString(),
+            isOk = zonalStatisticsShape(shapeRef, shapeVal, matrix, vectorNull,
+                                        shapeFieldName, shapeFieldName,
                                         aggregationVariable.aggregationType[i].toStdString(),
                                         threshold, error);
         }
 
-        if (!isOk)
+        if (! isOk)
         {
             projectError = QString::fromStdString(error);
             break;
@@ -853,25 +971,27 @@ int CriteriaOutputProject::createAggregationFile()
     matrix.clear();
     shapeVal.close();
 
-    if (!isOk)
+    if (! isOk)
     {
         shapeRef.close();
         return ERROR_ZONAL_STATISTICS_SHAPE;
     }
 
     // write csv aggregation data
-    int myResult = writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
-                                 aggregationVariable.outputVarName, shapeFieldName, projectError);
-
+    int result = writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
+                                       aggregationVariable.inputFieldName, aggregationVariable.outputVarName,
+                                       aggregationShapeField, projectError);
     shapeRef.close();
 
-    bool reorder = true;  // enable/disable csv reorder
-    if (reorder)
+    if (result == CRIT1D_OK)
     {
-        return orderCsvByField(outputAggrCsvFileName,"ZONE ID",projectError);
+        if (isReorder)
+        {
+            return orderCsvByField(outputAggrCsvFileName, "ZONE ID", projectError);
+        }
     }
 
-    return myResult;
+    return result;
 }
 
 
@@ -890,9 +1010,9 @@ int CriteriaOutputProject::createNetcdf()
         projectError = "Missing 'cellsize' in group [maps]";
         return ERROR_SETTINGS_MISSINGDATA;
     }
-    bool isNumberOk;
-    int cellSize = mapCellSize.toInt(&isNumberOk, 10);
-    if (!isNumberOk)
+    bool isOk;
+    int cellSize = mapCellSize.toInt(&isOk);
+    if (! isOk)
     {
         projectError = "Invalid cellsize (it must be an integer): " + mapCellSize;
         return ERROR_SETTINGS_MISSINGDATA;
@@ -913,7 +1033,7 @@ int CriteriaOutputProject::createNetcdf()
     logger.writeInfo("EXPORT TO NETCDF");
 
     Crit3DShapeHandler shapeHandler;
-    if (!shapeHandler.open(outputShapeFileName.toStdString()))
+    if (! shapeHandler.open(outputShapeFileName.toStdString(), false))
     {
         projectError = "Load shapefile failed: " + outputShapeFileName;
         return ERROR_SHAPEFILE;
@@ -921,7 +1041,7 @@ int CriteriaOutputProject::createNetcdf()
 
     // read field list
     QMap<QString, QList<QString>> fieldList;
-    if (! getFieldList(fieldListFileName, fieldList, projectError))
+    if (! getShapeFieldList(fieldListFileName, fieldList, projectError))
     {
         return ERROR_NETCDF;
     }
@@ -949,19 +1069,19 @@ int CriteriaOutputProject::createNetcdf()
 }
 
 
-bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std::string outputFileName,
-                                                 std::string field, std::string variableName, std::string variableUnit, double cellSize,
-                                                 Crit3DDate computationDate, int nrDays)
+bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandler, const std::string outputFileName,
+                                                 const std::string field, const std::string variableName, const std::string variableUnit,
+                                                 double cellSize, const Crit3DDate &computationDate, int nrDays)
 {
-    if (! shape.getIsWGS84())
+    if (! shapeHandler.getIsWGS84())
     {
         projectError = "Shapefile is not WGS84.";
         return false;
     }
 
     // rasterize shape
-    gis::Crit3DRasterGrid myRaster;
-    if (! rasterizeShape(shape, myRaster, field, cellSize))
+    gis::Crit3DRasterGrid tmpRaster;
+    if (! rasterizeShape(shapeHandler, tmpRaster, field, cellSize))
     {
         projectError = "Error in rasterize shape.";
         return false;
@@ -969,14 +1089,14 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
 
     // set UTM zone and emisphere
     gis::Crit3DGisSettings gisSettings;
-    gisSettings.utmZone = shape.getUtmZone();
+    gisSettings.utmZone = shapeHandler.getUtmZone();
     double sign = 1;
-    if (! shape.getIsNorth()) sign = -1;
+    if (! shapeHandler.getIsNorth()) sign = -1;
     gisSettings.startLocation.latitude = sign * abs(gisSettings.startLocation.latitude);
 
     // convert to lat lon raster
     gis::Crit3DLatLonHeader latLonHeader;
-    gis::getGeoExtentsFromUTMHeader(gisSettings, myRaster.header, &latLonHeader);
+    gis::getGeoExtentsFromUTMHeader(gisSettings, tmpRaster.header, &latLonHeader);
 
     // initialize data raster (only for values)
     gis::Crit3DRasterGrid dataRaster;
@@ -986,6 +1106,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
     dataRaster.header->llCorner.y = latLonHeader.llCorner.latitude;
     dataRaster.header->llCorner.x = latLonHeader.llCorner.longitude;
     dataRaster.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
+    dataRaster.header->invCellSize = 1.0 / dataRaster.header->cellSize;
     dataRaster.initializeGrid(latLonHeader.flag);
 
     // assign lat lon values
@@ -997,11 +1118,11 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
         {
             gis::getLatLonFromRowCol(latLonHeader, row, col, &lat, &lon);
             gis::latLonToUtmForceZone(gisSettings.utmZone, lat, lon, &x, &y);
-            if (! gis::isOutOfGridXY(x, y, myRaster.header))
+            if (! gis::isOutOfGridXY(x, y, tmpRaster.header))
             {
-                gis::getRowColFromXY(*(myRaster.header), x, y, &utmRow, &utmCol);
-                float value = myRaster.getValueFromRowCol(utmRow, utmCol);
-                if (int(value) != int(myRaster.header->flag))
+                gis::getRowColFromXY(*(tmpRaster.header), x, y, &utmRow, &utmCol);
+                float value = tmpRaster.getValueFromRowCol(utmRow, utmCol);
+                if (int(value) != int(tmpRaster.header->flag))
                 {
                     dataRaster.value[row][col] = value;
                 }
@@ -1010,27 +1131,27 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
     }
 
     // create netcdf
-    NetCDFHandler myNetCDF;
-    myNetCDF.createNewFile(outputFileName);
+    NetCDFHandler netCDF;
+    netCDF.createNewFile(outputFileName);
 
     std::string title = projectName.toStdString();
 
-    if (! myNetCDF.writeMetadata(latLonHeader, title, variableName, variableUnit,
+    if (! netCDF.writeMetadata(latLonHeader, title, variableName, variableUnit,
                                 computationDate, nrDays, NODATA, NODATA))
     {
         projectError = "Error in write metadata to netcdf.";
-        myNetCDF.close();
+        netCDF.close();
         return false;
     }
 
-    if (! myNetCDF.writeData_NoTime(dataRaster))
+    if (! netCDF.writeData_NoTime(dataRaster))
     {
         projectError = "Error in write data to netcdf.";
-        myNetCDF.close();
+        netCDF.close();
         return false;
     }
 
-    myNetCDF.close();
+    netCDF.close();
 
     return true;
 }
@@ -1064,7 +1185,7 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
         logger.writeInfo("Output file: " + outputCsvFileName);
     }
 
-    QString header = "date,ID_CASE,CROP," + outputVariable.outputVarName.join(",");
+    QString header = "date,ID_CASE,CROP," + outputVariable.outputVarNameList.join(",");
     QTextStream out(&outputFile);
     out << header << "\n";
     outputFile.close();
@@ -1133,7 +1254,7 @@ bool CriteriaOutputProject::getAllDbVariable()
     }
     else
     {
-        outputVariable.varName = varList;
+        outputVariable.varNameList = varList;
         return true;
     }
 }
@@ -1189,9 +1310,8 @@ bool CriteriaOutputProject::getDbDataDates(QDate &firstDate, QDate &lastDate)
 }
 
 
-int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString csvFileName)
+int CriteriaOutputProject::createCsvFileFromGUI(const QDate &dateComputation, const QString &csvFileName)
 {
-
     int myResult = initializeProjectCsv();
     if (myResult != CRIT1D_OK)
     {
@@ -1199,15 +1319,16 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
     }
 
     outputCsvFileName = csvFileName;
+
     // open outputCsvFileName and write header
     outputFile.setFileName(outputCsvFileName);
-    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
+    if (! outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
         projectError = "Open failure: " + outputCsvFileName;
         return ERROR_CSVFILE;
     }
 
-    QString header = "date,ID_CASE,CROP," + outputVariable.outputVarName[0];
+    QString header = "date,ID_CASE,CROP," + outputVariable.outputVarNameList[0];
     QTextStream out(&outputFile);
     out << header << "\n";
     outputFile.close();
@@ -1218,19 +1339,23 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
         return ERROR_READ_UNITS;
     }
 
+    // list of data tables
+    QList<QString> dataTables = dbData.tables();
+
     // write output
-    QString idCase;
-    QString idCropClass;
     for (unsigned int i=0; i < compUnitList.size(); i++)
     {
-        idCase = compUnitList[i].idCase;
-        idCropClass = compUnitList[i].idCropClass;
+        QString idCase = compUnitList[i].idCase;
+        QString idCropClass = compUnitList[i].idCropClass;
 
-        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbClimateData, dateComputation, outputVariable, csvFileName, projectError);
+        int nrMissingData = 0;
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dataTables, dbData, dbCrop, dbClimateData,
+                                      dateComputation, outputVariable, csvFileName, nrMissingData, projectError);
         if (myResult != CRIT1D_OK)
         {
-            if (QFile(csvFileName).exists())
+            if (QFile(csvFileName).exists() && i == 0)
             {
+                // delete empty file
                 QDir().remove(csvFileName);
             }
             return myResult;
@@ -1239,11 +1364,12 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
     return CRIT1D_OK;
 }
 
+
 int CriteriaOutputProject::createShapeFileFromGUI()
 {
     Crit3DShapeHandler inputShape;
 
-    if (!inputShape.open(ucmFileName.toStdString()))
+    if (! inputShape.open(ucmFileName.toStdString(), false))
     {
         projectError = "Wrong shapefile: " + ucmFileName;
         return ERROR_SHAPEFILE;

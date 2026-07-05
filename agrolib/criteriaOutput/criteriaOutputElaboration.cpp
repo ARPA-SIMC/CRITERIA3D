@@ -10,7 +10,8 @@
 #include <QSqlRecord>
 #include <QTextStream>
 
-int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &errorStr)
+
+int computeAllDtxUnit(const QSqlDatabase &db, const QString &idCase, QString &errorStr)
 {
     // check if table exist (skip otherwise)
     if (! db.tables().contains(idCase))
@@ -128,7 +129,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &errorStr)
 }
 
 
-int computeAllDtxPeriod(QSqlDatabase db, QString idCase, unsigned int period, std::vector<double>& dtx, QString& errorStr)
+int computeAllDtxPeriod(const QSqlDatabase &db, const QString &idCase, unsigned int period, std::vector<double>& dtx, QString& errorStr)
 {
     // read all data
     QSqlQuery qry(db);
@@ -211,8 +212,8 @@ QString getNumberStr(double value)
 }
 
 
-bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
-                  std::vector<double>& dt90, std::vector<double>& dt180, QString& errorStr)
+bool writeDtxToDB(const QSqlDatabase &db, const QString &idCase, const std::vector<double> &dt30,
+                  const std::vector<double> &dt90, const std::vector<double> &dt180, QString& errorStr)
 {
     QSqlQuery qry(db);
     qry.prepare("SELECT * FROM " + idCase);
@@ -288,11 +289,21 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
 }
 
 
-int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData, QSqlDatabase& dbCrop, QSqlDatabase& dbClimateData,
-                       QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString &errorStr)
+int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const QList<QString> &dataTables,
+                       const QSqlDatabase &dbData, const QSqlDatabase &dbCrop, const QSqlDatabase &dbClimateData,
+                       const QDate &dateComputation, const CriteriaOutputVariable &outputVariable,
+                       const QString &csvFileName, int &nrMissingData, QString &errorStr)
 {
     // IRRI RATIO (parameter for elaboration on IRRIGATION variable)
-    float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class", idCropClass, errorStr);
+    float irriRatio = NODATA;
+    for (int i = 0; i < outputVariable.varNameList.size(); i++)
+    {
+        if (outputVariable.varNameList[i].toUpper() == "IRRIGATION")
+        {
+            irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class", idCropClass, errorStr);
+            break;
+        }
+    }
 
     QList<QString> resultList;
     QString statement;
@@ -301,19 +312,20 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
 
     double result = NODATA;
     int periodTDX = NODATA;
+    nrMissingData = 0;
 
     // check if table for idCase exist (skip otherwise)
-    if (! dbData.tables().contains(idCase))
+    if (! dataTables.contains(idCase))
     {
         return CRIT1D_OK;
     }
 
-    for (int i = 0; i < outputVariable.varName.size(); i++)
+    for (int i = 0; i < outputVariable.varNameList.size(); i++)
     {
         resultVector.clear();
-        QString varName = outputVariable.varName[i];
-        QString computation = outputVariable.computation[i];
-        if (!computation.isEmpty())
+        QString varName = outputVariable.varNameList[i];
+        QString computation = outputVariable.computationList[i];
+        if (! computation.isEmpty())
         {
             // nrDays is required, because the computation should be done between values into interval referenceDate+-nrDays
             if (outputVariable.nrDays[i].isEmpty())
@@ -386,6 +398,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             if (selectRes == ERROR_DB_INCOMPLETE_DATA)
             {
                 result = NODATA;
+                ++nrMissingData;
             }
             else if(selectRes != CRIT1D_OK)
             {
@@ -401,7 +414,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             // DTX case
             bool ok;
             periodTDX = varName.right(varName.size()-2).toInt(&ok, 10);
-            if (!ok)
+            if (! ok)
             {
                 errorStr = "Parser CSV errorStr";
                 return ERROR_PARSERCSV;
@@ -411,6 +424,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             if (DTXRes == ERROR_DB_INCOMPLETE_DATA)
             {
                 result = NODATA;
+                ++nrMissingData;
             }
             else if (DTXRes != CRIT1D_OK)
             {
@@ -422,7 +436,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             }
         }
 
-        if (int(result) == int(NODATA))
+        if (isEqual(result, NODATA))
         {
             resultList.append(QString::number(result));
         }
@@ -431,9 +445,9 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             // there is no climate computation
             if (outputVariable.climateComputation[i].isEmpty())
             {
-                // fraction of available water [0-1] requires 3 decimal digits
-                QString varName = outputVariable.varName[i];
-                if (varName == "FRACTION_AW" || varName.left(3) == "FAW")
+                // fraction and index [0-1] requires 3 decimal digits
+                QString varName = outputVariable.varNameList[i];
+                if (varName == "FRACTION_AW" || varName.left(3) == "FAW" || varName.left(3) == "SWI")
                 {
                     resultList.append(QString::number(result,'f', 3));
                 }
@@ -506,10 +520,9 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                                                         previousFirstDate, previousLastDate, irriRatio, resultVector, errorStr);
                             if (queryResult == ERROR_DB_INCOMPLETE_DATA)
                             {
-                                // only first year can be incomplete, otherwise the comparison is not valid and can be terminated
-                                if (year != climateFirstDate.year())
+                                // only first and last years can be incomplete, otherwise the comparison is not valid and can be terminated
+                                if (year != climateFirstDate.year() && year != climateLastDate.year())
                                 {
-                                    result = NODATA;
                                     skip = true;
                                     break;
                                 }
@@ -526,6 +539,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                             }
                             year = year+1;
                         }
+
                         resultVector.clear();
                         if (skip)
                         {
@@ -552,11 +566,12 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
     // write CSV
     QFile outputFile;
     outputFile.setFileName(csvFileName);
-    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Append))
+    if (! outputFile.open(QIODevice::ReadWrite | QIODevice::Append))
     {
         errorStr = "Open failure: " + csvFileName;
         return false;
     }
+
     QTextStream out(&outputFile);
     out << dateComputation.toString("yyyy-MM-dd");
     out << "," << idCase;
@@ -571,33 +586,30 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
 
 
 // TODO: possibile problema con computation != "" e valori pari a -9999
-int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString computation,
-                    QDate firstDate, QDate lastDate, float irriRatio, std::vector<float>& resultVector, QString& errorStr)
+int selectSimpleVar(const QSqlDatabase &db, const QString &idCase, const QString &varName, const QString &computation,
+                    const QDate &firstDate, const QDate &lastDate, float irriRatio, std::vector<float>& resultVector, QString& errorStr)
 {
-
     QSqlQuery qry(db);
-    int count = 0;
-    QString statement;
-    float result = NODATA;
 
     // check nr of values
-    if (computation != "")
+    if (! computation.isEmpty())
     {
-        statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE >= '%3' AND DATE <= '%4'")
+        QString statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE >= '%3' AND DATE <= '%4'")
                         .arg(varName, idCase, firstDate.toString("yyyy-MM-dd"), lastDate.toString("yyyy-MM-dd"));
-        if( !qry.exec(statement) )
+        if(! qry.exec(statement))
         {
             errorStr = "Wrong variable: " + varName + "\n" + qry.lastError().text();
             return ERROR_OUTPUT_VARIABLES;
         }
 
         qry.first();
-        if (!qry.isValid())
+        if (! qry.isValid())
         {
             errorStr = qry.lastError().text();
             return ERROR_OUTPUT_VARIABLES ;
         }
 
+        int count;
         getValue(qry.value(0), &count);
         if (count < firstDate.daysTo(lastDate)+1)
         {
@@ -605,10 +617,9 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
         }
     }
 
-    count = 0;
-    statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'")
+    QString statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'")
                     .arg(computation, varName, idCase, firstDate.toString("yyyy-MM-dd"), lastDate.toString("yyyy-MM-dd"));
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement))
     {
         if (varName.left(2) == "DT")
         {
@@ -623,16 +634,18 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
     }
 
     qry.first();
-    if (!qry.isValid())
+    if (! qry.isValid())
     {
-        errorStr = "Missing data: " + statement;
+        errorStr = "Missing data:\n" + statement;
         return ERROR_DB_MISSING_DATA ;
     }
 
+    int count = 0;
+    float result = NODATA;
     do
     {
         getValue(qry.value(0), &result);
-        count = count+1;
+        ++count;
         if (varName == "IRRIGATION")
         {
             result = result * irriRatio;
@@ -642,7 +655,7 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
     while(qry.next());
 
     // check for simple queries
-    if (computation == "")
+    if (computation.isEmpty())
     {
         if (count < firstDate.daysTo(lastDate)+1)
         {
@@ -652,21 +665,23 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
     }
 
     return CRIT1D_OK;
-
 }
 
-int computeDTX(QSqlDatabase &db, QString idCase, int period, QString computation,
-               QDate firstDate, QDate lastDate, std::vector<float>& resultVector, QString &errorStr)
+
+int computeDTX(const QSqlDatabase &db, const QString &idCase, int period, const QString &computation,
+               const QDate &firstDate, const QDate &lastDate, std::vector<float>& resultVector, QString &errorStr)
 {
     QSqlQuery qry(db);
     QString statement;
-    double result = NODATA;
-    std::vector<float> dtx;
     int count = 0;
     int count2 = 0;
     float var1, var2;
     QDate end = firstDate;
     QDate start;
+
+    double result = NODATA;
+    std::vector<float> dtx;
+
     while (end <= lastDate)
     {
         start = end.addDays(-period+1);
@@ -744,14 +759,15 @@ int computeDTX(QSqlDatabase &db, QString idCase, int period, QString computation
 }
 
 
-int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
-                          QDate dateComputation, QList<QString> outputVarName, QString shapeField, QString &errorStr)
+int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, const QString &csvFileName, const QDate &dateComputation,
+                          const QList<QString> &shapeVarName, const QList<QString> &outputVarName,
+                          const QString &shapeField, QString &errorStr)
 {
     QList<QList<QString>> valuesFromShape;
     // write CSV
     QFile outputFile;
     outputFile.setFileName(csvFileName);
-    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
+    if (! outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
         errorStr = "Open failure: " + csvFileName;
         return ERROR_WRITECSV;
@@ -769,7 +785,7 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         fieldIndex = refShapeFile.getDBFFieldIndex(shapeFieldStdString.c_str());
         if (fieldIndex == -1)
         {
-            errorStr = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + shapeField;
+            errorStr = "Aggregation shapefile has not field called: " + shapeField;
             return ERROR_SHAPEFILE;
         }
         DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
@@ -788,30 +804,31 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
 
         // read outputVarName
         values.clear();
-        for (int field = 0; field < outputVarName.size(); field++)
+        for (int i = 0; i < outputVarName.size(); ++i)
         {
-            std::string valField = outputVarName[field].toStdString();
+            std::string valField = shapeVarName[i].toStdString();
             fieldIndex = refShapeFile.getDBFFieldIndex(valField.c_str());
             if (fieldIndex == -1)
             {
-                errorStr = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + outputVarName[field];
+                errorStr = QString::fromStdString(refShapeFile.getFilepath()) + " has not field called " + shapeVarName[i];
                 return ERROR_SHAPEFILE;
             }
 
             DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
             if (fieldType == FTInteger)
             {
-                values.push_back(QString::number(refShapeFile.readIntAttribute(row,fieldIndex)));
+                values.push_back(QString::number(refShapeFile.readIntAttribute(row, fieldIndex)));
             }
             else if (fieldType == FTDouble)
             {
-                values.push_back(QString::number(refShapeFile.readDoubleAttribute(row,fieldIndex)));
+                values.push_back(QString::number(refShapeFile.readDoubleAttribute(row, fieldIndex)));
             }
             else if (fieldType == FTString)
             {
-                values.push_back(QString::fromStdString(refShapeFile.readStringAttribute(row,fieldIndex)));
+                values.push_back(QString::fromStdString(refShapeFile.readStringAttribute(row, fieldIndex)));
             }
         }
+
         valuesFromShape.push_back(values);
     }
 
@@ -835,11 +852,11 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
 }
 
 
-int orderCsvByField(QString csvFileName, QString field, QString &errorStr)
+int orderCsvByField(const QString &csvFileName, const QString &field, QString &errorStr)
 {
     QFile fileCsv;
     fileCsv.setFileName(csvFileName);
-    if (!fileCsv.open(QIODevice::ReadWrite))
+    if (! fileCsv.open(QIODevice::ReadWrite))
     {
         errorStr = "Open failure: " + csvFileName;
         return ERROR_WRITECSV;
@@ -861,7 +878,7 @@ int orderCsvByField(QString csvFileName, QString field, QString &errorStr)
     QList<QString> keyList;
     QList<QList<QString>> itemsList;
 
-    while (!in.atEnd())
+    while (! in.atEnd())
     {
         line = in.readLine();
         QList<QString> items = line.split(",");

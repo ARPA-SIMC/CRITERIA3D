@@ -1,10 +1,13 @@
-
 #include "gdalRasterFunctions.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 
 #include <iostream>
 #include <cmath>
 
+#include <gdalwarper.h>
+
+#include <QFileInfo>
 #include <QString>
 #include <QDebug>
 
@@ -13,20 +16,20 @@
  * \brief open a raster file with GDAL library
  * \return GDALDataset
  */
-bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int &utmZone, QString &error)
+bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* rasterPointer, int &utmZone, QString &errorStr)
 {
-    // check
-    if (myRaster == nullptr) return false;
+    // check parameters
+    if (rasterPointer == nullptr) return false;
     if (fileName == "") return false;
 
     GDALDataset* dataset = (GDALDataset*) GDALOpen(fileName.toStdString().data(), GA_ReadOnly);
     if(! dataset)
     {
-        error = "Load raster failed!";
+        errorStr = "Load raster failed!";
         return false;
     }
 
-    bool myResult = convertGdalRaster(dataset, myRaster, utmZone, error);
+    bool myResult = convertGdalRaster(dataset, rasterPointer, utmZone, errorStr);
     GDALClose(dataset);
 
     return myResult;
@@ -36,7 +39,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int &utmZ
 /*! convertGdalRaster
  * \brief convert a GDAL dataset in a Crit3DRasterGrid
  */
-bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, int &utmZone, QString &error)
+bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, int &utmZone, QString &errorStr)
 {
     myRaster->isLoaded = false;
 
@@ -52,17 +55,17 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     qDebug() << "Size (x,y) =" << dataset->GetRasterXSize() << dataset->GetRasterYSize();
 
     // projection
-    OGRSpatialReference* spatialReference = new OGRSpatialReference();
-    QString prjString = QString::fromStdString(dataset->GetProjectionRef());
-    if (prjString != "")
+    OGRSpatialReference* spatialReference;
+    QString projectionRef = QString::fromStdString(dataset->GetProjectionRef());
+    if (projectionRef != "")
     {
-        qDebug() << "Projection =" << dataset->GetProjectionRef();
+        qDebug() << "Projection =" << projectionRef;
         spatialReference = new OGRSpatialReference(dataset->GetProjectionRef());
 
-        // TODO geo projection?
+        // TODO geo projection
         if (! spatialReference->IsProjected())
         {
-            error = "Not projected data";
+            errorStr = "Not projected data: " + projectionRef;
             return false;
         }
 
@@ -70,11 +73,12 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
 
         // UTM zone
         utmZone = spatialReference->GetUTMZone();
-        qDebug() << "UTM zone =" << spatialReference->GetUTMZone();
+        qDebug() << "UTM zone = " << spatialReference->GetUTMZone();
     }
     else
     {
         qDebug() << "Projection is missing! It will use WGS84 UTM zone:" << utmZone;
+        spatialReference = new OGRSpatialReference();
         spatialReference->SetWellKnownGeogCS("WGS84");
     }
 
@@ -86,7 +90,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     }
     if (adfGeoTransform[1] != fabs(adfGeoTransform[5]))
     {
-        error = "Not regular pixel size! Will be used x size.";
+        errorStr = "Not regular pixel size! Will be used x size.";
     }
 
     // TODO choose band
@@ -94,20 +98,22 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     GDALRasterBand* band = dataset->GetRasterBand(1);
     if(band == nullptr)
     {
-        error = "Missing data!";
+        errorStr = "Missing data!";
         return false;
     }
 
     int             bGotMin, bGotMax;
     double          adfMinMax[2];
-    qDebug() << "Type =" << GDALGetDataTypeName(band->GetRasterDataType());
+
+    QString dataType = QString(GDALGetDataTypeName(band->GetRasterDataType()));
+    qDebug() << "Data type =" << dataType;
     qDebug() << "ColorInterpretation =" << GDALGetColorInterpretationName(band->GetColorInterpretation());
 
     adfMinMax[0] = band->GetMinimum( &bGotMin );
     adfMinMax[1] = band->GetMaximum( &bGotMax );
 
     // min e max
-    if( ! (bGotMin && bGotMax) )
+    if(! (bGotMin && bGotMax) )
     {
         GDALComputeRasterMinMax(GDALRasterBandH(band), TRUE, adfMinMax);
     }
@@ -127,42 +133,90 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         qDebug() << "Missing NODATA: will be set on minimum value.";
         nodataValue = adfMinMax[0];
     }
+    if ((nodataValue < adfMinMax[0] || nodataValue > adfMinMax[1]) && (adfMinMax[0] <= -9999))
+    {
+        qDebug() << "Wrong NODATA: will be set on minimum value.";
+        nodataValue = adfMinMax[0];
+    }
     qDebug() << "Nodata =" << QString::number(nodataValue);
 
     // initialize raster
-    myRaster->header->nrCols = dataset->GetRasterXSize();
-    myRaster->header->nrRows = dataset->GetRasterYSize();
+    int xSize = dataset->GetRasterXSize();
+    int ySize = dataset->GetRasterYSize();
+    myRaster->header->nrCols = xSize;
+    myRaster->header->nrRows = ySize;
     myRaster->header->cellSize = adfGeoTransform[1];
+    myRaster->header->invCellSize = 1.0 / myRaster->header->cellSize;
     myRaster->header->llCorner.x = adfGeoTransform[0];
     myRaster->header->llCorner.y = adfGeoTransform[3] - myRaster->header->cellSize * myRaster->header->nrRows;
-    myRaster->header->flag = float(nodataValue);
+    myRaster->header->flag = float(NODATA);
 
     if (! myRaster->initializeGrid(myRaster->header->flag))
     {
-        error = "Memory error: file too big.";
+        errorStr = "Memory error: file too big.";
         return false;
     }
 
-    // read data
-    int xSize = band->GetXSize();
-    int ySize = band->GetYSize();
-    float* data = (float *) CPLMalloc(sizeof(float) * xSize * ySize);
-    CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data, xSize, ySize, GDT_Float32, 0, 0);
-
-    if (errGdal > CE_Warning)
+    if (dataType == "Float64")
     {
-        error = "Error in RasterIO";
-        CPLFree(data);
-        return false;
+        // read 64 bit data
+        double* data_double = (double *) CPLMalloc(sizeof(double) * xSize * ySize);
+        CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data_double, xSize, ySize, GDT_Float64, 0, 0);
+
+        if (errGdal > CE_Warning)
+        {
+            errorStr = "Error in RasterIO";
+            CPLFree(data_double);
+            return false;
+        }
+
+        // set data
+        for (int row = 0; row < myRaster->header->nrRows; row++)
+            for (int col = 0; col < myRaster->header->nrCols; col++)
+            {
+                if (isEqual(data_double[row*xSize+col], nodataValue))
+                {
+                    myRaster->value[row][col] = myRaster->header->flag;
+                }
+                else
+                {
+                    myRaster->value[row][col] = float(data_double[row*xSize+col]);
+                }
+            }
+
+        // free memory
+        CPLFree(data_double);
     }
+    else
+    {
+        // read 32 bit data
+        float* data_float = (float *) CPLMalloc(sizeof(float) * xSize * ySize);
+        CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data_float, xSize, ySize, GDT_Float32, 0, 0);
 
-    // set data
-    for (int row = 0; row < myRaster->header->nrRows; row++)
-        for (int col = 0; col < myRaster->header->nrCols; col++)
-            myRaster->value[row][col] = data[row*xSize+col];
+        if (errGdal > CE_Warning)
+        {
+            errorStr = "Error in RasterIO";
+            CPLFree(data_float);
+            return false;
+        }
 
-    // free memory
-    CPLFree(data);
+        // set data
+        for (int row = 0; row < myRaster->header->nrRows; row++)
+            for (int col = 0; col < myRaster->header->nrCols; col++)
+            {
+                if (isEqual(data_float[row*xSize+col], (float)nodataValue))
+                {
+                    myRaster->value[row][col] = myRaster->header->flag;
+                }
+                else
+                {
+                    myRaster->value[row][col] = data_float[row*xSize+col];
+                }
+            }
+
+        // free memory
+        CPLFree(data_float);
+    }
 
     // min & max
     if (noDataOk)
@@ -177,4 +231,202 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
 
     return true;
 }
+
+
+bool gdalReprojection(GDALDatasetH &srcDataset, GDALDatasetH &dstDataset,
+                      QString newProjection, QString projFileName, QString &errorStr)
+{
+    // check destination coordinate system
+    OGRSpatialReference dstSpatialRef;
+    int ogrError = dstSpatialRef.importFromEPSG(newProjection.toInt());
+    if (ogrError != OGRERR_NONE)
+    {
+        errorStr = "Error in gdalReprojection. Wrong projection: " + newProjection;
+        return false;
+    }
+
+    // source projection
+    const char* srcWKTProjection = GDALGetProjectionRef( srcDataset ) ;
+
+    // destination projection
+    char* dstWKTProjection;
+    dstSpatialRef.exportToWkt( &dstWKTProjection );
+
+    // datatype
+    GDALDataType dataType = GDALGetRasterDataType(GDALGetRasterBand(srcDataset, 1));
+
+    // output driver (GeoTIFF format)
+    GDALDriverH hDriver = GDALGetDriverByName( "GTiff" );
+    if (hDriver == nullptr)
+    {
+        errorStr = "Error in gdalReprojection (GDALGetDriverByName GTiff)";
+        return false;
+    }
+
+    // Create a transformer that maps from source pixel/line coordinates
+    // to destination georeferenced coordinates (not destination
+    // pixel line).  We do that by omitting the destination dataset
+    // handle (setting it to nullptr).
+    void *handleTransformArg = GDALCreateGenImgProjTransformer(srcDataset, srcWKTProjection, nullptr, dstWKTProjection, FALSE, 0, 1 );
+
+    if ( handleTransformArg == nullptr )
+    {
+        errorStr = "Error in gdalReprojection (GDALCreateGenImgProjTransformer)";
+        return false;
+    }
+
+    // Get approximate output georeferenced bounds and resolution for file.
+    int nrPixels, nrLines;
+    double adfDstGeoTransform[6];
+
+    CPLErr eErr;
+    eErr = GDALSuggestedWarpOutput( srcDataset,
+                                   GDALGenImgProjTransform, handleTransformArg,
+                                   adfDstGeoTransform, &nrPixels, &nrLines );
+    if( eErr != CE_None )
+    {
+        errorStr = "Error gdalReprojection (GDALSuggestedWarpOutput). Error nr: " + QString::number(eErr);
+        return false;
+    }
+
+    char *createOptions[] = { strdup("COMPRESS=LZW"), nullptr };
+
+    // Create the projected dataset
+    dstDataset = GDALCreate( hDriver, strdup(projFileName.toStdString().c_str()), nrPixels, nrLines,
+                             GDALGetRasterCount(srcDataset), dataType, createOptions );
+    if( dstDataset == nullptr )
+    {
+        errorStr = "Error in gdalReprojection (GDALCreate)";
+        return false;
+    }
+
+    // Write out the projection definition.
+    GDALSetProjection( dstDataset, dstWKTProjection );
+    GDALSetGeoTransform( dstDataset, adfDstGeoTransform );
+
+    // Setup warp options.
+    GDALWarpOptions *psWarpOptions = GDALCreateWarpOptions();
+    psWarpOptions->hSrcDS = srcDataset;
+    psWarpOptions->hDstDS = dstDataset;
+    psWarpOptions->nBandCount = MIN(GDALGetRasterCount(srcDataset),
+                                    GDALGetRasterCount(dstDataset));
+
+    psWarpOptions->panSrcBands = (int *)CPLMalloc(sizeof(int) * psWarpOptions->nBandCount);
+    psWarpOptions->panDstBands = (int *)CPLMalloc(sizeof(int) * psWarpOptions->nBandCount);
+
+    for( int iBand = 0; iBand < psWarpOptions->nBandCount; iBand++ )
+    {
+        psWarpOptions->panSrcBands[iBand] = iBand+1;
+        psWarpOptions->panDstBands[iBand] = iBand+1;
+    }
+
+    /* -------------------------------------------------------------------- */
+    /*      Setup no data values                                            */
+    /* -------------------------------------------------------------------- */
+    for (int i = 0; i < psWarpOptions->nBandCount; i++)
+    {
+        GDALRasterBandH rasterBand = GDALGetRasterBand( psWarpOptions->hSrcDS, psWarpOptions->panSrcBands[i] );
+
+        int hasNoDataValue;
+        double noDataValue = GDALGetRasterNoDataValue(rasterBand, &hasNoDataValue );
+
+        if ( hasNoDataValue )
+        {
+            // Check if the nodata value is out of range
+            int bClamped = FALSE;
+            int bRounded = FALSE;
+            CPL_IGNORE_RET_VAL(
+                GDALAdjustValueToDataType( GDALGetRasterDataType( rasterBand ), noDataValue, &bClamped, &bRounded ));
+            if (! bClamped )
+            {
+                GDALWarpInitNoDataReal( psWarpOptions, -1e10 );
+                GDALSetRasterNoDataValue( GDALGetRasterBand(psWarpOptions->hDstDS, i+1), noDataValue);
+                psWarpOptions->padfSrcNoDataReal[i] = noDataValue;
+                psWarpOptions->padfDstNoDataReal[i] = noDataValue;
+            }
+        }
+    }
+
+    psWarpOptions->pTransformerArg = handleTransformArg;
+    psWarpOptions->papszWarpOptions = CSLSetNameValue( psWarpOptions->papszWarpOptions, "INIT_DEST", "NO_DATA" );
+    psWarpOptions->papszWarpOptions = CSLSetNameValue( psWarpOptions->papszWarpOptions, "WRITE_FLUSH", "YES" );
+    CPLFetchBool( psWarpOptions->papszWarpOptions, "OPTIMIZE_SIZE", true );
+
+    psWarpOptions->pfnTransformer = GDALGenImgProjTransform;
+
+    // Initialize and execute the warp operation.
+    int cplError;
+    cplError = GDALReprojectImage(srcDataset, srcWKTProjection,
+                              dstDataset, dstWKTProjection,
+                              GRA_Bilinear,
+                              0.0, 0.0,
+                              GDALTermProgress, nullptr,
+                              psWarpOptions);
+
+    GDALDestroyGenImgProjTransformer( handleTransformArg );
+    GDALDestroyWarpOptions( psWarpOptions );
+
+    if (cplError != CE_None)
+    {
+        errorStr =  CPLGetLastErrorMsg();
+        return false;
+    }
+    else
+    {
+        errorStr = "";
+        return true;
+    }
+}
+
+
+// make a png copy
+bool gdalExportPng(GDALDatasetH &rasterDataset, QString pngFileName, QString pngProjection, QString &errorStr)
+{
+    // rename old file
+    QFile::remove(pngFileName);
+
+    // tmp file
+    QFileInfo outputFile(pngFileName);
+    QString tmpFileName = outputFile.absolutePath() + "/tmp";
+
+    // reprojection
+    GDALDatasetH projDataset;
+    if (! pngProjection.isEmpty())
+    {
+        if (! gdalReprojection(rasterDataset, projDataset, pngProjection, tmpFileName, errorStr))
+        {
+            return false;
+        }
+    }
+
+    // copy png
+    GDALDriverH driver = GDALGetDriverByName("PNG");
+    GDALDriver *pngDriver = (GDALDriver *)driver;
+    GDALDataset *pngDataset;
+
+    if (! pngProjection.isEmpty())
+    {
+        pngDataset = pngDriver->CreateCopy(strdup(pngFileName.toStdString().c_str()),
+                                           (GDALDataset *)projDataset, FALSE, NULL, NULL, NULL);
+        GDALClose( projDataset );
+        QFile::remove(tmpFileName);
+    }
+    else
+    {
+        pngDataset = pngDriver->CreateCopy(strdup(pngFileName.toStdString().c_str()),
+                                           (GDALDataset *)rasterDataset, FALSE, NULL, NULL, NULL);
+    }
+
+    if (pngDataset == nullptr)
+    {
+        errorStr = "Error to create PNG copy.";
+        return false;
+    }
+    else
+    {
+        GDALClose( pngDataset );
+        return true;
+    }
+}
+
 

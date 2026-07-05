@@ -1,7 +1,7 @@
 #include "dialogRemoveStation.h"
 
-DialogRemoveStation::DialogRemoveStation(QList<QString> allStations)
-: allStations(allStations)
+DialogRemoveStation::DialogRemoveStation(QList<QString> _activeStationsList)
+: _activeStationsList(_activeStationsList)
 {
     setWindowTitle("Remove stations");
     QVBoxLayout *mainLayout = new QVBoxLayout();
@@ -12,16 +12,16 @@ DialogRemoveStation::DialogRemoveStation(QList<QString> allStations)
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
     layoutOk->addWidget(&buttonBox);
-    listAllStations = new QListWidget;
-    listAllStations->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    _listStationsWidget = new QListWidget;
+    _listStationsWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
     QLabel *allHeader = new QLabel("All stations");
 
-    listAllStations->addItems(allStations);
-    stationLayout->addWidget(listAllStations);
+    _listStationsWidget->addItems(_activeStationsList);
+    stationLayout->addWidget(_listStationsWidget);
 
     headerLayout->addWidget(allHeader);
-    headerLayout->addSpacing(listAllStations->width());
+    headerLayout->addSpacing(_listStationsWidget->width());
     mainLayout->addLayout(headerLayout);
     mainLayout->addLayout(stationLayout);
     mainLayout->addLayout(layoutOk);
@@ -39,11 +39,11 @@ void DialogRemoveStation::done(bool res)
 {
     if (res)
     {
-        QList<QListWidgetItem*> selStations = listAllStations->selectedItems();
+        QList<QListWidgetItem*> selStations = _listStationsWidget->selectedItems();
         for(int i = 0; i < selStations.count(); ++i)
         {
             QString station = selStations[i]->text();
-            selectedStations.append(station);
+            _selectedStations.append(station);
         }
         QDialog::done(QDialog::Accepted);
         return;
@@ -57,7 +57,7 @@ void DialogRemoveStation::done(bool res)
 
 QList<QString> DialogRemoveStation::getSelectedStations()
 {
-    return selectedStations;
+    return _selectedStations;
 }
 
 

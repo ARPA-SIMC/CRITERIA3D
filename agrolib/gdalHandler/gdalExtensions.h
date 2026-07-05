@@ -15,12 +15,12 @@
         readWrite = 2
     };
 
-    QStringList getGdalExtensions(GdalFileType type, GdalFileIO io);
+    QList<QString> getGdalExtensions(GdalFileType type, GdalFileIO io);
 
-    QStringList getGdalRasterReadExtension();
-    QStringList getGdalRasterWriteExtension();
-    QStringList getGdalVectorReadExtension();
-    QStringList getGdalVectorWriteExtension();
+    QList<QString> getGdalRasterReadExtension();
+    QList<QString> getGdalRasterWriteExtension();
+    QList<QString> getGdalVectorReadExtension();
+    QList<QString> getGdalVectorWriteExtension();
 
 
 #endif // GDALEXTENSIONS_H

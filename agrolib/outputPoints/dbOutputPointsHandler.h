@@ -6,6 +6,7 @@
     #endif
 
     #include <QSqlDatabase>
+    #include <QSqlError>
     #include <QDateTime>
 
     class Crit3DOutputPointsDbHandler
@@ -14,22 +15,50 @@
         explicit Crit3DOutputPointsDbHandler(QString dbname_);
         ~Crit3DOutputPointsDbHandler();
 
-        void closeDatabase();
-        QSqlDatabase getDb() const;
-        QString getDbName();
-        QString getErrorString();
-        bool isOpen();
+        QString getDbName()
+        { return _db.databaseName(); }
 
-        bool createTable(QString tableName, QString &errorStr);
-        bool addColumn(QString tableName, meteoVariable myVar, QString &errorString);
-        bool saveHourlyData(QString tableName, const QDateTime &myTime,
-                            const std::vector<meteoVariable> &varList,
-                            const std::vector<float> &values, QString& errorStr);
+        QString getErrorString()
+        { return _db.lastError().text(); }
+
+        bool isOpen()
+        { return _db.isOpen(); }
+
+        bool createTable(const QString &tableName, QString &errorStr);
+
+        bool addColumn(const QString &tableName, meteoVariable myVar, QString &errorString);
+
+        bool addCriteria3DColumn(const QString &tableName, criteria3DVariable myVar, int depth, QString &errorStr);
+
+        bool saveHourlyMeteoData(const QString &tableName, const QDateTime &myTime,
+                                const std::vector<meteoVariable> &varList,
+                                const std::vector<float> &valuesList, QString &errorStr);
+
+        bool saveHourlyCriteria3D_Data(const QString &tableName, const QDateTime& myTime,
+                                       const std::vector<float>& values,
+                                       const std::vector<int>& waterContentDepthList,
+                                       const std::vector<int>& waterPotentialDepthList,
+                                       const std::vector<int>& degreeOfSaturationDepthList,
+                                       const std::vector<int>& factorOfSafetyDepthList,
+                                       QString &errorStr);
+
+        void appendCriteria3DOutputValue(criteria3DVariable myVar, const std::vector<int> &depthList,
+                                         const std::vector<float>& values, int &firstIndex,
+                                         QList<QString> &outputList);
 
     private:
 
         QSqlDatabase _db;
-        QString errorString;
+
+        bool saveHourlyMeteoData_insert(const QString &tableName, const QString timeStr,
+                                        const std::vector<meteoVariable> &varList,
+                                        const std::vector<float> &values,
+                                        QString &errorStr);
+
+        bool saveHourlyMeteoData_update(const QString &tableName, const QString timeStr,
+                                         const std::vector<meteoVariable> &varList,
+                                         const std::vector<float> &values,
+                                         QString &errorStr);
     };
 
 

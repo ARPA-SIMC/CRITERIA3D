@@ -19,7 +19,6 @@
         int index;
         bool isActive;
         bool isMarked;
-        float distance;
         float value;
         float regressionWeight;
         lapseRateCodeType lapseRateCode;
@@ -28,7 +27,7 @@
 
         Crit3DInterpolationDataPoint();
 
-        float getProxyValue(unsigned int pos);
+        float getProxyValue(unsigned int pos) const;
     };
 
 #endif // INTERPOLATIONPOINT_H

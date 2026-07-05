@@ -1,7 +1,7 @@
 #include "dialogSelectionMeteoPoint.h"
 
-DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(bool active, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler)
-    :active(active)
+DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(QString type, bool isSelect, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler)
+    :_type(type), _isSelect(isSelect)
 {
     municipalityList = meteoPointsDbHandler->getMunicipalityList();
     provinceList = meteoPointsDbHandler->getProvinceList();
@@ -10,6 +10,7 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(bool active, Crit3DMeteoPoi
     datasetList = meteoPointsDbHandler->getDatasetList();
 
     setWindowTitle("Select");
+    setMinimumWidth(400);
     QVBoxLayout mainLayout;
     QHBoxLayout selectionLayout;
     QHBoxLayout buttonLayout;
@@ -23,6 +24,7 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(bool active, Crit3DMeteoPoi
     selectionMode.addItem("id_point");
     selectionMode.addItem("altitude");
     selectionMode.addItem("DEM distance [m]");
+    selectionMode.addItem("orog_code");
     selectionLayout.addWidget(&selectionMode);
 
     selectionOperation.addItem("=");
@@ -40,14 +42,21 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(bool active, Crit3DMeteoPoi
 
     QDialogButtonBox buttonBox;
     QPushButton activeButton;
-    if (active)
+    if (_type.toUpper() == "ACTIVE")
     {
-        activeButton.setText("Active");
+        if (_isSelect)
+            activeButton.setText("Activate");
+        else
+            activeButton.setText("Deactivate");
     }
-    else
+    else if (_type.toUpper() == "SELECT")
     {
-        activeButton.setText("Deactive");
+        if (_isSelect)
+            activeButton.setText("Select");
+        else
+            activeButton.setText("Deselect");
     }
+
     activeButton.setCheckable(true);
     activeButton.setAutoDefault(false);
 
@@ -123,6 +132,7 @@ void DialogSelectionMeteoPoint::selectionModeChanged()
     else if (selectionMode.currentText() == "name" || selectionMode.currentText() == "id_point")
     {
         selectionOperation.addItem("Like");
+        selectionOperation.addItem("=");
         selectionItems.setVisible(false);
         editItems.setVisible(true);
         itemFromList = false;
@@ -136,6 +146,15 @@ void DialogSelectionMeteoPoint::selectionModeChanged()
         selectionItems.setVisible(false);
         editItems.setVisible(true);
         itemFromList = false;
+    }
+    else if(selectionMode.currentText() == "orog_code")
+    {
+        QList<QString> lapseRateCodeList = {"0", "1", "2"};
+        selectionOperation.addItem("=");
+        selectionOperation.addItem("!=");
+        selectionItems.addItems(lapseRateCodeList);
+        selectionItems.setVisible(true);
+        itemFromList = true;
     }
 }
 

@@ -1,20 +1,33 @@
-#-----------------------------------------------------
+#-------------------------------------------------------
 #
 #   solarRadiation library
-#   This project is part of CRITERIA3D distribution
+#   This project is part of ARPAE agrolib distribution
 #
 #   It uses code from:
 #   G_calc_solar_position() by Markus Neteler
 #
-#-----------------------------------------------------
+#-------------------------------------------------------
 
 QT       -= core gui
 
 TEMPLATE = lib
 CONFIG += staticlib
+CONFIG += c++17
+
+win32:{
+    QMAKE_CXXFLAGS += -openmp -GL
+    QMAKE_LFLAGS   += -LTCG
+}
+unix:{
+    QMAKE_CXXFLAGS += -fopenmp #-flto
+    QMAKE_LFLAGS += -fopenmp #-flto
+}
+macx:{
+    QMAKE_CXXFLAGS += -fopenmp #-flto
+    QMAKE_LFLAGS += -fopenmp #-flto
+}
 
 CONFIG += debug_and_release
-QMAKE_CXXFLAGS += -std=c++11
 
 unix:{
     CONFIG(debug, debug|release) {

@@ -1,7 +1,7 @@
-ncols         449
-nrows         478
-xllcorner     364874
-yllcorner     5041583
+ncols         443
+nrows         394
+xllcorner     364978
+yllcorner     5043689
 cellsize      26
 NODATA_value  -9999
 byteorder     LSBFIRST

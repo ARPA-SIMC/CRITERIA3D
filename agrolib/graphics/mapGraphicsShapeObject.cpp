@@ -17,11 +17,14 @@ MapGraphicsShapeObject::MapGraphicsShapeObject(MapGraphicsView* _view, MapGraphi
     colorScale = new Crit3DColorScale();
 
     geoMap = new gis::Crit3DGeoMap();
-    isDrawing = false;
-    isFill = false;
     shapePointer = nullptr;
-    nrShapes = 0;
-    selectedShape = NODATA;
+
+    _isDrawing = false;
+    _isFill = false;
+    _isSelectedRed = false;
+
+    _nrShapes = 0;
+    _selectedShape = NODATA;
 
     updateCenter();
 }
@@ -52,7 +55,8 @@ void MapGraphicsShapeObject::updateCenter()
     // reference pixel
     referencePixel = view->tileSource()->ll2qgs(newCenter, view->zoomLevel());
 
-    if (isDrawing) setPos(newCenter);
+    if (_isDrawing)
+        setPos(newCenter);
 }
 
 
@@ -61,7 +65,7 @@ void MapGraphicsShapeObject::paint(QPainter *painter, const QStyleOptionGraphics
     Q_UNUSED(option)
     Q_UNUSED(widget)
 
-    if (isDrawing)
+    if (_isDrawing)
     {
         setMapExtents();
 
@@ -110,34 +114,41 @@ void MapGraphicsShapeObject::setPolygon(unsigned int i, unsigned int j, QPolygon
 
 void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
 {
-    QPolygonF polygon;
-    QPainterPath* path;
-    QPainterPath* inner;
-    QColor color;
-    std::vector<unsigned int> myHoles;
+    if (! myPainter)
+        return;
 
-    for (unsigned long i = 0; i < nrShapes; i++)
+    static const QColor gray(64,64,64);
+    static const QColor red(Qt::red);
+    static const QColor black(Qt::black);
+
+    for (unsigned long i = 0; i < _nrShapes; i++)
     {
         QPen myPen;
-        if (i != selectedShape)
+        if (i != _selectedShape)
         {
-            myPen.setColor(QColor(64, 64, 64));
+            myPen.setColor(gray);
             myPen.setWidth(1);
         }
         else
         {
-            myPen.setColor(QColor(255, 0, 0));
-            myPen.setWidth(5);
+            if (_isSelectedRed)
+                myPen.setColor(red);
+            else
+                myPen.setColor(black);
+
+            myPen.setWidth(2);
         }
+
         myPainter->setPen(myPen);
         myPainter->setBrush(Qt::NoBrush);
 
-        if (isFill && values[i] != NODATA)
+        if (_isFill && values[i] != NODATA)
         {
             Crit3DColor* myColor = colorScale->getColor(values[i]);
-            color = QColor(myColor->red, myColor->green, myColor->blue);
+            QColor color(myColor->red, myColor->green, myColor->blue);
             myPainter->setBrush(color);
-            if (i != selectedShape)
+
+            if (i != _selectedShape)
             {
                 myPainter->setPen(color);
             }
@@ -152,37 +163,32 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
                     || geoBounds[i][j].v0.lat > geoMap->topRight.latitude
                     || geoBounds[i][j].v1.lon < geoMap->bottomLeft.longitude
                     || geoBounds[i][j].v1.lat < geoMap->bottomLeft.latitude)
-            {
                 continue;
-            }
 
+            QPolygonF polygon;
             setPolygon(i, j, &polygon);
 
-            myHoles = shapePointer->getHoles(i, j);
+            std::vector<unsigned int> myHoles = shapePointer->getHoles(i, j);
 
-            if (myHoles.size() == 0)
+            if (myHoles.empty())
             {
                 myPainter->drawPolygon(polygon);
             }
             else
             {
-                path = new QPainterPath();
-                path->addPolygon(polygon);
+                QPainterPath path;
+                path.setFillRule(Qt::OddEvenFill);
 
-                // holes
-                inner = new QPainterPath();
-                for (unsigned int k = 0; k < myHoles.size(); k++)
+                path.addPolygon(polygon);
+
+                for (unsigned int k = 0; k < myHoles.size(); ++k)
                 {
                     setPolygon(i, myHoles[k], &polygon);
-                    inner->addPolygon(polygon);
+                    path.addPolygon(polygon);
                 }
 
-                myPainter->drawPath(path->subtracted(*inner));
-
-                delete inner;
-                delete path;
+                myPainter->drawPath(path);
             }
-            myHoles.clear();
         }
     }
 }
@@ -199,11 +205,11 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
     ShapeObject myShape;
     Box<double>* bounds;
 
-    nrShapes = unsigned(shapePointer->getShapeCount());
-    shapeParts.resize(nrShapes);
-    geoBounds.resize(nrShapes);
-    geoPoints.resize(nrShapes);
-    values.resize(nrShapes);
+    _nrShapes = unsigned(shapePointer->getShapeCount());
+    shapeParts.resize(_nrShapes);
+    geoBounds.resize(_nrShapes);
+    geoPoints.resize(_nrShapes);
+    values.resize(_nrShapes);
 
     double refLatitude = geoMap->referencePoint.latitude;
 
@@ -213,7 +219,7 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
         return false;
     }
 
-    for (unsigned int i = 0; i < nrShapes; i++)
+    for (unsigned int i = 0; i < _nrShapes; i++)
     {
         shapePointer->getShape(int(i), myShape);
         shapeParts[i] = myShape.getParts();
@@ -261,7 +267,7 @@ void MapGraphicsShapeObject::setNumericValues(std::string fieldName)
 {
     // set values
     float firstValue = NODATA;
-    for (unsigned int i = 0; i < nrShapes; i++)
+    for (unsigned int i = 0; i < _nrShapes; i++)
     {
         values[i] = float(shapePointer->getNumericValue(signed(i), fieldName));
 
@@ -273,7 +279,7 @@ void MapGraphicsShapeObject::setNumericValues(std::string fieldName)
     colorScale->setRange(firstValue, firstValue);
     if (! isEqual(firstValue, NODATA))
     {
-        for (unsigned int i = 0; i < nrShapes; i++)
+        for (unsigned int i = 0; i < _nrShapes; i++)
             if (! isEqual(values[i], NODATA))
             {
                 colorScale->setMinimum(MINVALUE(colorScale->minimum(), values[i]));
@@ -299,7 +305,7 @@ void MapGraphicsShapeObject::setCategories(std::string fieldName)
 {
     // fill categories and set values(index of categories)
     categories.clear();
-    for (unsigned int i = 0; i < nrShapes; i++)
+    for (unsigned int i = 0; i < _nrShapes; i++)
     {
         std::string strValue = shapePointer->getStringValue(signed(i), fieldName);
 
@@ -349,7 +355,7 @@ void MapGraphicsShapeObject::clear()
 {
     setDrawing(false);
 
-    for (unsigned int i = 0; i < nrShapes; i++)
+    for (unsigned int i = 0; i < _nrShapes; i++)
     {
         shapeParts[i].clear();
         geoBounds[i].clear();
@@ -360,5 +366,5 @@ void MapGraphicsShapeObject::clear()
     geoBounds.clear();
     geoPoints.clear();
 
-    nrShapes = 0;
+    _nrShapes = 0;
 }

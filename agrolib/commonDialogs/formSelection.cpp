@@ -7,7 +7,7 @@ FormSelection::FormSelection(QList<QString> stringList_, QString title)
 
     this->setWindowTitle(title);
     QVBoxLayout* mainLayout = new QVBoxLayout;
-    this->resize(250, 100);
+    this->resize(300, 100);
 
     QHBoxLayout *layoutOk = new QHBoxLayout;
     QHBoxLayout *datasetLayout = new QHBoxLayout;

@@ -85,14 +85,3 @@ QSlider* Viewer3D::horizontalSlider(int minimum, int maximum, int step, int tick
 }
 
 
-float Viewer3D::getSlope()
-{
-    return slopeSlider->value();
-}
-
-
-void Viewer3D::on_slopeChanged()
-{
-    emit slopeChanged();
-}
-

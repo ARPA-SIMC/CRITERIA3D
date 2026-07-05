@@ -1,6 +1,9 @@
 #ifndef RADIATIONDEFINITIONS_H
 #define RADIATIONDEFINITIONS_H
 
+    #ifndef COMMONCONSTANTS_H
+        #include "commonConstants.h"
+    #endif
     #ifndef _STRING_
         #include <string>
     #endif
@@ -14,25 +17,26 @@
     #endif
 
     /*! Surface pressure at sea level (millibars) (used for refraction correction and optical air mass) */
-    #define PRESSURE_SEALEVEL 1013
+    #define PRESSURE_SEALEVEL 1013.0
     /*! Ambient default dry-bulb temperature (degrees C) (used for refraction correction) */
-    #define TEMPERATURE_DEFAULT 15
+    #define TEMPERATURE_DEFAULT 10.0
     /*! scale height of Rayleigh atmosphere near the Earth surface */
     #define RAYLEIGH_Z0 8434.5
 
     /*! Eppley shadow band width (cm) */
-    #define SBWID 7.6f
+    #define SBWID 7.6
     /*! Eppley shadow band radius (cm) */
-    #define SBRAD 31.7f
+    #define SBRAD 31.7
     /*! Drummond factor for partly cloudy skies */
-    #define SBSKY 0.04f
+    #define SBSKY 0.04
 
-    #define CLEAR_SKY_TRANSMISSIVITY_DEFAULT     0.75f
-    #define SHADOW_FACTOR 1
+    #define CLEAR_SKY_TRANSMISSIVITY_DEFAULT     0.75
+    #define SHADOW_FACTOR 1.0
 
     enum TradiationAlgorithm{RADIATION_ALGORITHM_RSUN = 0};
     enum TradiationRealSkyAlgorithm{RADIATION_REALSKY_TOTALTRANSMISSIVITY, RADIATION_REALSKY_LINKE};
     enum TparameterMode {PARAM_MODE_FIXED = 0, PARAM_MODE_MAP = 1, PARAM_MODE_MONTHLY = 2} ;
+    enum TlandUse {LAND_USE_MOUNTAIN = 0, LAND_USE_RURAL = 1, LAND_USE_CITY = 2, LAND_USE_INDUSTRIAL = 3};
     enum TtiltMode{TILT_TYPE_FIXED=1, TILT_TYPE_DEM=2};
     //enum TtransmissivityAlgorithm{TRANSMISSIVITY_MODEL_HOURLY = 0, TRANSMISSIVITY_MODEL_DAILY = 1, TRANSMISSIVITY_MODEL_SAMANI = 2};
     //enum TtransmissivityComputationPeriod{TRANSMISSIVITY_COMPUTATION_DYNAMIC = 0,TRANSMISSIVITY_COMPUTATION_DAILY = 1};
@@ -57,9 +61,16 @@
       { "dem", TILT_TYPE_DEM }
     };
 
+    const std::map<std::string, TlandUse> landUseToString = {
+        { "industrial", LAND_USE_INDUSTRIAL },
+        { "urban", LAND_USE_CITY },
+        { "country", LAND_USE_RURAL },
+        { "mountain", LAND_USE_MOUNTAIN }
+    };
+
     struct TsunPosition
     {
-        float hourDecimal;
+        //float hourDecimal;
         float rise;                     /*!<  Sunrise time, from midnight, local, WITHOUT refraction [s] */
         float set;                      /*!<  Sunset time, from midnight, local, WITHOUT refraction [s] */
         float azimuth;                  /*!<  Solar azimuth angle [degrees, N=0, E=90, S=180, W = 270] */
@@ -75,18 +86,26 @@
 
     struct TradPoint
     {
-        double x;
-        double y;
-        double height;
-        double lat;
-        double lon;
-        double slope;
-        double aspect;
-        double beam;
-        double diffuse;
-        double reflected;
-        double global;
-        double transmissivity;
+        double x = NODATA;
+        double y = NODATA;
+        double height = NODATA;
+        double lat = NODATA;
+        double lon = NODATA;
+        double slope = NODATA;
+        double aspect = NODATA;
+        double beam = NODATA;
+        double diffuse = NODATA;
+        double reflected = NODATA;
+        double global = NODATA;
+        double transmissivity = NODATA;
+    };
+
+    struct TelabRadPoint
+    {
+        TradPoint radPoint;
+        std::string fileName;
+        Crit3DDate iniDate, endDate;
+        int iniHour, endHour;
     };
 
 

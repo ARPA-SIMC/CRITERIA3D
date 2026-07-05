@@ -82,19 +82,6 @@ QualityTab::QualityTab(Crit3DQuality *quality)
     referenceClimateHeightEdit.setValidator(doubleValHeight);
     referenceClimateHeightEdit.setText(QString::number(quality->getReferenceHeight()));
 
-    QLabel *deltaTSuspect = new QLabel(tr("difference in temperature in climatological control (suspect value) [degC]:"));
-    QDoubleValidator *doubleValT = new QDoubleValidator( -100.0, 100.0, 5, this );
-    doubleValT->setNotation(QDoubleValidator::StandardNotation);
-    deltaTSuspectEdit.setFixedWidth(EDIT_SIZE);
-    deltaTSuspectEdit.setValidator(doubleValT);
-    deltaTSuspectEdit.setText(QString::number(quality->getDeltaTSuspect()));
-
-
-    QLabel *deltaTWrong = new QLabel(tr("difference in temperature in climatological control (wrong value) [degC]:"));
-    deltaTWrongEdit.setFixedWidth(EDIT_SIZE);
-    deltaTWrongEdit.setValidator(doubleValT);
-    deltaTWrongEdit.setText(QString::number(quality->getDeltaTWrong()));
-
     QLabel *humidityTolerance = new QLabel(tr("instrumental maximum allowed relative humidity [%]:"));
     humidityToleranceEdit.setFixedWidth(EDIT_SIZE);
     QDoubleValidator *doubleValPerc = new QDoubleValidator( 0.0, 100.0, 5, this );
@@ -103,18 +90,23 @@ QualityTab::QualityTab(Crit3DQuality *quality)
     humidityToleranceEdit.setValidator(doubleValPerc);
     humidityToleranceEdit.setText(QString::number(quality->getRelHumTolerance()));
 
+    QLabel *waterTableDepth = new QLabel(tr("maximum value of the observed water table depth [cm]:"));
+    waterTableDepthEdit.setFixedWidth(EDIT_SIZE);
+    QIntValidator *intWaterTableDepth = new QIntValidator( 0, 10000, this );
+    doubleValPerc->setNotation(QDoubleValidator::StandardNotation);
+    waterTableDepthEdit.setFixedWidth(EDIT_SIZE);
+    waterTableDepthEdit.setValidator(intWaterTableDepth);
+    waterTableDepthEdit.setText(QString::number(quality->getWaterTableMaximumDepth()));
+
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(referenceClimateHeight);
     mainLayout->addWidget(&referenceClimateHeightEdit);
 
-    mainLayout->addWidget(deltaTSuspect);
-    mainLayout->addWidget(&deltaTSuspectEdit);
-
-    mainLayout->addWidget(deltaTWrong);
-    mainLayout->addWidget(&deltaTWrongEdit);
-
     mainLayout->addWidget(humidityTolerance);
     mainLayout->addWidget(&humidityToleranceEdit);
+
+    mainLayout->addWidget(waterTableDepth);
+    mainLayout->addWidget(&waterTableDepthEdit);
 
     mainLayout->addStretch(1);
     setLayout(mainLayout);
@@ -130,7 +122,7 @@ MeteoTab::MeteoTab(Crit3DMeteoSettings *meteoSettings)
     minimumPercentageEdit.setValidator(doubleValPerc);
     minimumPercentageEdit.setText(QString::number(meteoSettings->getMinimumPercentage()));
 
-    QLabel *rainfallThreshold = new QLabel(tr("minimum value for valid precipitation [mm]:"));
+    QLabel *rainfallThresholdLabel = new QLabel(tr("minimum value for valid precipitation [mm]:"));
     QDoubleValidator *doubleValThreshold = new QDoubleValidator( 0.0, 20.0, 5, this );
     doubleValThreshold->setNotation(QDoubleValidator::StandardNotation);
     rainfallThresholdEdit.setFixedWidth(EDIT_SIZE);
@@ -174,7 +166,7 @@ MeteoTab::MeteoTab(Crit3DMeteoSettings *meteoSettings)
     mainLayout->addWidget(minimumPercentage);
     mainLayout->addWidget(&minimumPercentageEdit);
 
-    mainLayout->addWidget(rainfallThreshold);
+    mainLayout->addWidget(rainfallThresholdLabel);
     mainLayout->addWidget(&rainfallThresholdEdit);
 
     mainLayout->addWidget(thomThreshold);
@@ -268,21 +260,15 @@ bool DialogSettings::acceptValues()
         return false;
     }
 
-    if (qualityTab->deltaTSuspectEdit.text().isEmpty())
-    {
-        QMessageBox::information(nullptr, "Missing Parameter", "insert difference in temperature suspect value");
-        return false;
-    }
-
-    if (qualityTab->deltaTWrongEdit.text().isEmpty())
-    {
-        QMessageBox::information(nullptr, "Missing Parameter", "insert difference in temperature wrong value");
-        return false;
-    }
-
     if (qualityTab->humidityToleranceEdit.text().isEmpty())
     {
         QMessageBox::information(nullptr, "Missing Parameter", "instrumental maximum allowed relative humidity");
+        return false;
+    }
+
+    if (qualityTab->waterTableDepthEdit.text().isEmpty())
+    {
+        QMessageBox::information(nullptr, "Missing Parameter", "maximum value of the observed water table depth");
         return false;
     }
 
@@ -319,9 +305,8 @@ bool DialogSettings::acceptValues()
     project_->gisSettings.isUTC = projectTab->utc.isChecked();
 
     project_->quality->setReferenceHeight(qualityTab->referenceClimateHeightEdit.text().toFloat());
-    project_->quality->setDeltaTSuspect(qualityTab->deltaTSuspectEdit.text().toFloat());
-    project_->quality->setDeltaTWrong(qualityTab->deltaTWrongEdit.text().toFloat());
     project_->quality->setRelHumTolerance(qualityTab->humidityToleranceEdit.text().toFloat());
+    project_->quality->setWaterTableMaximumDepth(qualityTab->waterTableDepthEdit.text().toFloat());
 
     project_->meteoSettings->setMinimumPercentage(metTab->minimumPercentageEdit.text().toFloat());
     project_->meteoSettings->setRainfallThreshold(metTab->rainfallThresholdEdit.text().toFloat());

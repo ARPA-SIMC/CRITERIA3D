@@ -13,9 +13,13 @@
         Q_OBJECT
 
         public:
-            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality* quality,  Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality);
-            ~Crit3DProxyWidget();
-            void closeEvent(QCloseEvent *event);
+        Crit3DProxyWidget(Crit3DInterpolationSettings &_interpolationSettings, const std::vector<Crit3DMeteoPoint> meteoPoints,
+                              frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality,
+                              Crit3DInterpolationSettings &SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
+                              Crit3DClimateParameters *climateParameters, bool checkSpatialQuality, int macroAreaNumber);
+
+            ~Crit3DProxyWidget() override;
+            void closeEvent(QCloseEvent *event) override;
             void updateDateTime(QDate newDate, int newHour);
             void updateFrequency(frequencyType newFrequency);
             void changeProxyPos(const QString proxyName);
@@ -23,20 +27,26 @@
             void plot();
             void climatologicalLRClicked(int toggled);
             void modelLRClicked(int toggled);
+            void addMacroAreaLR();
 
     private:
-            Crit3DInterpolationSettings* interpolationSettings;
-            Crit3DQuality* quality;
-            Crit3DInterpolationSettings* SQinterpolationSettings;
-            Crit3DMeteoSettings *meteoSettings;
-            Crit3DMeteoPoint* meteoPoints;
-            Crit3DClimateParameters *climateParam;
-            int nrMeteoPoints;
-            bool checkSpatialQuality;
-            frequencyType currentFrequency;
-            QDate currentDate;
-            int currentHour;
-            std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
+            Crit3DInterpolationSettings _interpolationSettings;
+            std::vector<Crit3DMeteoPoint> _meteoPoints;
+            frequencyType _currentFrequency;
+            QDate _currentDate;
+            int _currentHour;
+            Crit3DQuality* _quality;
+            Crit3DInterpolationSettings _SQinterpolationSettings;
+            Crit3DMeteoSettings* _meteoSettings;
+
+            bool _checkSpatialQuality;
+            int _proxyPos;
+            int _macroAreaNumber;
+
+            std::vector <Crit3DInterpolationDataPoint> _outInterpolationPoints;
+            Crit3DClimateParameters* _climateParameters;
+
+            QValueAxis *axisY_sx;
             QComboBox comboVariable;
             QComboBox comboAxisX;
             QCheckBox detrended;
@@ -46,9 +56,10 @@
             QTextEdit lapseRate;
             ChartView *chartView;
             meteoVariable myVar;
-            int proxyPos;
 
             Crit3DTime getCurrentTime();
+
+            void on_actionChangeLeftAxis();
 
     signals:
         void closeProxyWidget();

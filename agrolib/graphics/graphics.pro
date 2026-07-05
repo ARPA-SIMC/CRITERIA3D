@@ -1,14 +1,13 @@
 #------------------------------------------------------
 #
 #   graphics library
-#   contains graphics objects:
 #   colorLegend, markers, raster and shape
 #
-#   This project is part of CRITERIA-3D distribution
+#   This project is part of ARPAE agrolib distribution
 #
 #------------------------------------------------------
 
-QT  += core gui widgets
+QT  += widgets
 
 TEMPLATE = lib
 CONFIG += staticlib

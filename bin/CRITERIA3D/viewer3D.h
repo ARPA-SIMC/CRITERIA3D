@@ -2,10 +2,10 @@
 #define VIEWER3D_H
 
     #include <QWidget>
+    #include <QSlider>
 
     class Crit3DGeometry;
     class Crit3DOpenGLWidget;
-    class QSlider;
 
     class Viewer3D : public QWidget
     {
@@ -13,8 +13,12 @@
 
     public:
         Viewer3D(Crit3DGeometry *geometry);
-        float getSlope();
+
         Crit3DOpenGLWidget *glWidget;
+
+        float getSlope() const {
+            return slopeSlider->value();
+        }
 
     protected:
 
@@ -30,7 +34,9 @@
         QSlider *magnifySlider;
         QSlider *slopeSlider;
 
-        void on_slopeChanged();
+        void on_slopeChanged() {
+            emit slopeChanged();
+        }
     };
 
 #endif

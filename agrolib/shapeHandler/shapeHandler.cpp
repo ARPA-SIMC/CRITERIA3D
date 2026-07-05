@@ -27,12 +27,15 @@
 #include "basicMath.h"
 #include "shapeHandler.h"
 #include "commonConstants.h"
+
 #include <fstream>
+#include <algorithm>
 #include <string.h>
+#include <filesystem>
 
 
 Crit3DShapeHandler::Crit3DShapeHandler()
-    : m_handle(nullptr), m_dbf(nullptr), m_count(0), m_type(0)
+    : m_handle(nullptr), m_dbf(nullptr), m_count(0), m_type(0), m_fields(0), errorString("")
 { }
 
 
@@ -44,11 +47,11 @@ Crit3DShapeHandler::~Crit3DShapeHandler()
 
 void Crit3DShapeHandler::close()
 {
-    if ((m_handle != nullptr) || (m_dbf != nullptr))
-    {
+    if (m_handle)
         SHPClose(m_handle);
+
+    if (m_dbf)
         DBFClose(m_dbf);
-    }
 
     m_fieldsList.clear();
     m_fieldsTypeList.clear();
@@ -56,77 +59,98 @@ void Crit3DShapeHandler::close()
 
     m_handle = nullptr;
     m_dbf = nullptr;
+
+    m_count = 0;
+    m_type = 0;
+    m_fields = 0;
 }
 
 
 void Crit3DShapeHandler::closeDBF()
 {
-    if (m_dbf != nullptr)
-    {
+    if (m_dbf )
         DBFClose(m_dbf);
-    }
+
     m_dbf = nullptr;
 }
 
 void Crit3DShapeHandler::closeSHP()
 {
-    if ((m_handle != nullptr))
-    {
+    if (m_handle)
         SHPClose(m_handle);
-    }
+
     m_handle = nullptr;
 }
 
 
-bool Crit3DShapeHandler::open(std::string filename)
+bool Crit3DShapeHandler::open(const std::string &filename, bool isWrite)
 {
     close();
-    m_handle = SHPOpen(filename.c_str(), "r+b");
-    m_dbf = DBFOpen(filename.c_str(), "r+b");
-    m_filepath = filename;
-    if ( (m_handle == nullptr) || (m_dbf == nullptr)) return false;
 
-    SHPGetInfo(m_handle, &m_count, &m_type, nullptr, nullptr);
+    std::string pszAccess = "rb";   // default: only read
+    if (isWrite)
+        pszAccess = "r+b";          // read/write
+
+    m_handle = SHPOpen(filename.c_str(), pszAccess.c_str());
+    if (! m_handle)
+    {
+        errorString = "failed to open .shp file";
+        return false;
+    }
+
+    m_dbf = DBFOpen(filename.c_str(), pszAccess.c_str());
+    if (! m_dbf)
+    {
+        errorString = "failed to open .dbf file";
+        close();
+        return false;
+    }
+
+    SHPGetInfo(m_handle, &m_count, &m_type, m_minBound, m_maxBound);
     m_fields = m_dbf->nFields;
 
-    char *fieldNamePtr =  new char[XBASE_FLDNAME_LEN_READ];
+    if (m_count <= 0)
+    {
+        errorString = "Wrong shapefile (no shapes)";
+        close();
+        return false;
+    }
+
+    m_filepath = filename;
+
+    std::vector<char> fieldName(XBASE_FLDNAME_LEN_READ + 1);
     DBFFieldType fieldType;
 
     m_fieldsList.clear();
     m_fieldsTypeList.clear();
     for (int i = 0; i < m_fields; i++)
     {
-        fieldType = DBFGetFieldInfo( m_dbf, i, fieldNamePtr, nullptr, nullptr);
-        m_fieldsList.push_back(std::string(fieldNamePtr));
+        fieldType = DBFGetFieldInfo( m_dbf, i, fieldName.data(), nullptr, nullptr);
+        m_fieldsList.push_back(std::string(fieldName.data()));
         m_fieldsTypeList.push_back(fieldType);
     }
 
-    // check if WGS84 PROJ and set UTM
-    std::string filePrj = filename;
-    std::string::size_type i = filePrj.rfind('.', filePrj.length());
-    std::string prjExt = "prj";
-    if (i != std::string::npos)
-    {
-        filePrj.replace(i+1, prjExt.length(), prjExt);
-    }
-    isWGS84Proj(filePrj);
-    setUTMzone(filePrj);
+    // check if PROJ is WGS84 and set UTM zone
+    std::filesystem::path prjPath(filename);
+    prjPath.replace_extension(".prj");
+
+    isWGS84Proj(prjPath.string());
+    setUTMzone(prjPath.string());
 
     // save holes inside parts
     ShapeObject myShape;
-    Point<double> point;
 
     m_parts = 0;
     m_holes = 0;
     holes.clear();
     holes.resize(unsigned(m_count));
 
-    std::vector<ShapeObject::Part> shapeParts;
-
-    for (unsigned int i = 0; i < unsigned(m_count); i++)
+    for (int i = 0; i < m_count; ++i)
     {
-        getShape(int(i), myShape);
-        shapeParts = myShape.getParts();
+        if (! getShape(i, myShape))
+            continue;
+
+        const auto& shapeParts = myShape.getParts();
 
         unsigned int nrParts = myShape.getPartCount();
         m_parts += nrParts;
@@ -138,19 +162,35 @@ bool Crit3DShapeHandler::open(std::string filename)
             // holes
             if (shapeParts[j].hole)
             {
-                m_holes++;
                 // check first point
                 unsigned long offset = shapeParts[j].offset;
-                point = myShape.getVertex(offset);
-                int index = myShape.getIndexPart(point.x, point.y);
-                if (index != NODATA)
+                if (offset < myShape.getVertexCount())
                 {
-                    holes[i][unsigned(index)].push_back(j);
+                    Point<double> point = myShape.getVertex(offset);
+                    int index = myShape.getIndexPart(point.x, point.y);
+                    if (index != NODATA && index >= 0 && static_cast<unsigned>(index) < nrParts)
+                    {
+                        holes[i][index].push_back(j);
+                        m_holes++;
+                    }
                 }
             }
         }
-        shapeParts.clear();
     }
+
+    return true;
+}
+
+
+bool Crit3DShapeHandler::getBounds(double &xMin, double &yMin, double &xMax, double &yMax) const
+{
+    if (! m_handle || ! m_count)
+        return false;
+
+    xMin = m_minBound[0];
+    yMin = m_minBound[1];
+    xMax = m_maxBound[0];
+    yMax = m_maxBound[1];
 
     return true;
 }
@@ -164,7 +204,7 @@ void Crit3DShapeHandler::newShapeFile(std::string filename, int nShapeType)
 }
 
 
-bool Crit3DShapeHandler::openDBF(std::string filename)
+bool Crit3DShapeHandler::openDBF(const std::string &filename)
 {
     closeDBF();
     m_dbf = DBFOpen(filename.c_str(), "r+b");
@@ -185,11 +225,12 @@ bool Crit3DShapeHandler::openDBF(std::string filename)
         m_fieldsTypeList.push_back(fieldType);
     }
 
+    delete[] fieldName;
     return true;
 }
 
 
-bool Crit3DShapeHandler::openSHP(std::string filename)
+bool Crit3DShapeHandler::openSHP(const std::string &filename)
 {
     closeSHP();
     m_handle = SHPOpen(filename.c_str(), "r+b");
@@ -200,7 +241,7 @@ bool Crit3DShapeHandler::openSHP(std::string filename)
 }
 
 
-bool Crit3DShapeHandler::isWGS84Proj(std::string prjFileName)
+bool Crit3DShapeHandler::isWGS84Proj(const std::string &prjFileName)
 {
     std::ifstream prjFile (prjFileName);
     std::string line;
@@ -234,7 +275,7 @@ bool Crit3DShapeHandler::isWGS84Proj(std::string prjFileName)
 }
 
 
-bool Crit3DShapeHandler::setUTMzone(std::string prjFileName)
+bool Crit3DShapeHandler::setUTMzone(const std::string &prjFileName)
 {
     std::ifstream prjFile (prjFileName);
     std::string line;
@@ -269,9 +310,10 @@ bool Crit3DShapeHandler::setUTMzone(std::string prjFileName)
 }
 
 
-bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape)
+bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape) const
 {
-    if ( (m_handle == nullptr) || (m_dbf == nullptr)) return false;
+    if ((m_handle == nullptr) || (m_dbf == nullptr))
+        return false;
 
     SHPObject *obj = SHPReadObject(m_handle, index);
     shape.assign(obj);
@@ -281,38 +323,58 @@ bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape)
 }
 
 
-int	Crit3DShapeHandler::getDBFFieldIndex(const char *pszFieldName)
+int	Crit3DShapeHandler::getDBFFieldIndex(const char *pszFieldName) const
 {
     return DBFGetFieldIndex(m_dbf, pszFieldName);
 }
 
-int	Crit3DShapeHandler::isDBFRecordDeleted(int record)
+int	Crit3DShapeHandler::isDBFRecordDeleted(int record) const
 {
     return DBFIsRecordDeleted(m_dbf, record);
 }
 
 
-int	Crit3DShapeHandler::getFieldPos(std::string fieldName)
+int	Crit3DShapeHandler::getFieldPos(const std::string &_fieldName) const
 {
+    // upper case
+    std::string fieldName = _fieldName;
+    std::transform(fieldName.begin(), fieldName.end(), fieldName.begin(), ::toupper);
+
     for (int i = 0; i < m_fields; i++)
-        if (m_fieldsList.at(unsigned(i)) == fieldName)
+    {
+        std::string currentField = m_fieldsList.at(unsigned(i));
+        // upper case
+        std::transform(currentField.begin(), currentField.end(), currentField.begin(), ::toupper);
+
+        if (currentField == fieldName)
             return i;
+    }
 
     return -1;
 }
 
 
-bool Crit3DShapeHandler::existField(std::string fieldName)
+bool Crit3DShapeHandler::existField(const std::string &_fieldName) const
 {
+    // upper case
+    std::string fieldName = _fieldName;
+    std::transform(fieldName.begin(), fieldName.end(), fieldName.begin(), ::toupper);
+
     for (int i = 0; i < m_fields; i++)
-        if (m_fieldsList.at(unsigned(i)) == fieldName)
+    {
+        std::string currentField = m_fieldsList.at(unsigned(i));
+        // upper case
+        std::transform(currentField.begin(), currentField.end(), currentField.begin(), ::toupper);
+
+        if (currentField == fieldName)
             return true;
+    }
 
     return false;
 }
 
 
-DBFFieldType Crit3DShapeHandler::getFieldType(std::string fieldName)
+DBFFieldType Crit3DShapeHandler::getFieldType(const std::string &fieldName) const
 {
     int pos = getFieldPos(fieldName);
 
@@ -323,17 +385,18 @@ DBFFieldType Crit3DShapeHandler::getFieldType(std::string fieldName)
 }
 
 
-double Crit3DShapeHandler::getNumericValue(int shapeNumber, std::string fieldName)
+double Crit3DShapeHandler::getNumericValue(int shapeNumber, const std::string &fieldName) const
 {
     int fieldPos = getFieldPos(fieldName);
-
-    if (fieldPos == -1) return NODATA;
+    if (fieldPos == -1)
+        return NODATA;
 
     return getNumericValue(shapeNumber, fieldPos);
 }
 
 
-double Crit3DShapeHandler::getNumericValue(int shapeNumber, int fieldPos)
+// return NODATA as null value
+double Crit3DShapeHandler::getNumericValue(int shapeNumber, int fieldPos) const
 {
     DBFFieldType fieldType = getFieldType(fieldPos);
 
@@ -361,25 +424,26 @@ double Crit3DShapeHandler::getNumericValue(int shapeNumber, int fieldPos)
 }
 
 
-std::string Crit3DShapeHandler::getStringValue(int shapeNumber, std::string fieldName)
+std::string Crit3DShapeHandler::getStringValue(int shapeNumber, const std::string &fieldName) const
 {
     int fieldPos = getFieldPos(fieldName);
-    if (fieldPos == -1) return "";
+    if (fieldPos == -1)
+        return "";
 
     return readStringAttribute(shapeNumber, fieldPos);
 }
 
-int Crit3DShapeHandler::readIntAttribute(int shapeNumber, int fieldPos)
+int Crit3DShapeHandler::readIntAttribute(int shapeNumber, int fieldPos) const
 {
     return DBFReadIntegerAttribute(m_dbf,shapeNumber,fieldPos);
 }
 
-bool Crit3DShapeHandler::writeIntAttribute(int shapeNumber, int fieldPos, int nFieldValue)
+bool Crit3DShapeHandler::writeIntAttribute(int shapeNumber, int fieldPos, int nFieldValue) const
 {
     return DBFWriteIntegerAttribute(m_dbf,shapeNumber,fieldPos,nFieldValue);
 }
 
-double Crit3DShapeHandler::readDoubleAttribute(int shapeNumber, int fieldPos)
+double Crit3DShapeHandler::readDoubleAttribute(int shapeNumber, int fieldPos) const
 {
     return DBFReadDoubleAttribute(m_dbf,shapeNumber,fieldPos);
 }
@@ -389,7 +453,7 @@ bool Crit3DShapeHandler::writeDoubleAttribute(int shapeNumber, int fieldPos, dou
     return DBFWriteDoubleAttribute(m_dbf,shapeNumber,fieldPos,dFieldValue);
 }
 
-std::string Crit3DShapeHandler::readStringAttribute(int shapeNumber, int fieldPos)
+std::string Crit3DShapeHandler::readStringAttribute(int shapeNumber, int fieldPos) const
 {
     return DBFReadStringAttribute(m_dbf,shapeNumber,fieldPos);
 }
@@ -446,7 +510,7 @@ bool Crit3DShapeHandler::addRecord(std::vector<std::string> fields)
 */
 
 // LC MAI testata
-bool Crit3DShapeHandler::addShape(std::string type, std::vector<double> coordinates)
+bool Crit3DShapeHandler::addShape(const std::string &type, const std::vector<double> &coordinates)
 {
     openSHP(m_filepath);
     if ( (m_handle == nullptr) || (m_dbf == nullptr)) return false;
@@ -510,54 +574,40 @@ bool Crit3DShapeHandler::addShape(std::string type, std::vector<double> coordina
 }
 
 
-bool Crit3DShapeHandler::addField(const char * fieldName, int type, int nWidth, int nDecimals )
+bool Crit3DShapeHandler::addField(const char *fieldName, int type, int nWidth, int nDecimals)
 {
-
     DBFFieldType DBFtype;
-    if (type == 0)
+    switch (type)
     {
-        DBFtype = FTString;
-    }
-    else if (type == 1)
-    {
-        DBFtype = FTInteger;
-    }
-    else if (type == 2)
-    {
-        DBFtype = FTDouble;
-    }
-    else
-    {
-        DBFtype = FTInvalid;
+        case 0: DBFtype = FTString;
+            break;
+        case 1: DBFtype = FTInteger;
+            break;
+        case 2: DBFtype = FTDouble;
+            break;
+        default: DBFtype = FTInvalid;
+            break;
     }
 
-    if (DBFAddField(m_dbf, fieldName, DBFtype, nWidth, nDecimals) != -1)
-    {
-        m_fields = m_fields + 1;
-        m_fieldsList.push_back(std::string(fieldName));
-        m_fieldsTypeList.push_back(DBFtype);
-        return true;
-    }
-    else
-    {
+    if (DBFAddField(m_dbf, fieldName, DBFtype, nWidth, nDecimals) == -1)
         return false;
-    }
+
+    m_fields = m_fields + 1;
+    m_fieldsList.push_back(std::string(fieldName));
+    m_fieldsTypeList.push_back(DBFtype);
+    return true;
 }
 
 
 bool Crit3DShapeHandler::removeField(int iField)
 {
-    if (DBFDeleteField(m_dbf, iField))
-    {
-        m_fields = m_fields - 1;
-        m_fieldsList.erase(m_fieldsList.begin()+iField);
-        m_fieldsTypeList.erase(m_fieldsTypeList.begin()+iField);
-        return true;
-    }
-    else
-    {
+    if (! DBFDeleteField(m_dbf, iField))
         return false;
-    }
+
+    m_fields--;
+    m_fieldsList.erase(m_fieldsList.begin()+iField);
+    m_fieldsTypeList.erase(m_fieldsTypeList.begin()+iField);
+    return true;
 }
 
 
@@ -586,23 +636,19 @@ void Crit3DShapeHandler::packDBF(std::string newFile)
             DBFWriteTuple(hDBF, newCount, (void*)row);
             newCount = newCount + 1;
         }
-
     }
-    DBFClose( hDBF );
 
+    DBFClose( hDBF );
 }
 
-bool Crit3DShapeHandler::existRecordDeleted()
+
+bool Crit3DShapeHandler::existRecordDeleted() const
 {
     int nRecord = DBFGetRecordCount(m_dbf);
 
     for (int i = 0; i<nRecord; i++)
-    {
         if (DBFIsRecordDeleted(m_dbf, i))
-        {
             return true;
-        }
-    }
 
     return false;
 }
@@ -615,7 +661,7 @@ void Crit3DShapeHandler::packSHP(std::string newFile)
 
     for( int i = 0; i < m_count; i++ )
     {
-        if (!DBFIsRecordDeleted(m_dbf, i))
+        if (! DBFIsRecordDeleted(m_dbf, i))
         {
             SHPObject *obj = SHPReadObject(m_handle, i);
             SHPWriteObject(hSHP, -1, obj);
@@ -627,19 +673,20 @@ void Crit3DShapeHandler::packSHP(std::string newFile)
 }
 
 
-std::vector<unsigned int> Crit3DShapeHandler::getHoles(int shapeNumber, int partNumber)
+std::vector<unsigned int> Crit3DShapeHandler::getHoles(int shapeNumber, int partNumber) const
 {
     if (shapeNumber > m_count || partNumber > int(holes[shapeNumber].size()))
     {
         std::vector<unsigned int> emptyVector;
         return emptyVector;
     }
+
     return holes[unsigned(shapeNumber)][unsigned(partNumber)];
 }
 
 
 
-int Crit3DShapeHandler::getShapeIndexfromPoint(double utmX, double utmY)
+int Crit3DShapeHandler::getShapeIndexfromPoint(double utmX, double utmY) const
 {
     if (m_handle == nullptr || m_count <= 0)
         return NODATA;
@@ -661,13 +708,10 @@ int Crit3DShapeHandler::getShapeIndexfromPoint(double utmX, double utmY)
 
 
 /* return list of attributes */
-std::string Crit3DShapeHandler::getAttributesList(int index)
+std::string Crit3DShapeHandler::getAttributesList(int index) const
 {
-    // check index
     if (index == NODATA || index >= m_count)
-    {
         return "";
-    }
 
     std::string shapeData = "Shape nr. " + std::to_string(index) + "\n";
 
@@ -704,4 +748,6 @@ std::string Crit3DShapeHandler::getAttributesList(int index)
 
     return shapeData;
 }
+
+
 

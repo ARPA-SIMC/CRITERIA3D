@@ -1,17 +1,17 @@
 #-----------------------------------------------------
 #
 #   project library
-#   This project is part of CRITERIA-3D distribution
+#   This project is part of ARPAE agrolib distribution
 #
 #-----------------------------------------------------
 
-QT  += core gui widgets charts sql xml
+QT  += widgets charts sql xml
 
 TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
-CONFIG += c++11 c++14 c++17
+CONFIG += c++17
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
@@ -26,11 +26,15 @@ win32:{
     TARGET = project
 }
 
+# parallel computing settings
+include($$absolute_path(../parallel.pri))
+
 
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo   \
-            ../solarRadiation ../interpolation ../utilities     \
-            ../netcdfHandler ../dbMeteoPoints ../outputPoints ../dbMeteoGrid    \
-            ../meteoWidget ../commonDialogs ../commonChartElements ../climate ../proxyWidget ../importDataXML
+            ../solarRadiation ../interpolation ../utilities ../netcdfHandler \
+            ../dbMeteoPoints ../outputPoints ../dbMeteoGrid ../meteoWidget \
+            ../commonDialogs ../commonChartElements ../climate \
+            ../proxyWidget ../waterTable
 
 
 SOURCES += \

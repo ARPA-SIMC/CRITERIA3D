@@ -264,6 +264,313 @@
      <height>2000</height>
     </size>
    </property>
+   <property name="palette">
+    <palette>
+     <active>
+      <colorrole role="WindowText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Button">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Light">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Midlight">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Text">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="BrightText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="ButtonText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Base">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Window">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="AlternateBase">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>240</red>
+         <green>240</green>
+         <blue>240</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="PlaceholderText">
+       <brush brushstyle="NoBrush">
+        <color alpha="128">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </active>
+     <inactive>
+      <colorrole role="WindowText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Button">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Light">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Midlight">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Text">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="BrightText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="ButtonText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Base">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Window">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="AlternateBase">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>240</red>
+         <green>240</green>
+         <blue>240</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="PlaceholderText">
+       <brush brushstyle="NoBrush">
+        <color alpha="128">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </inactive>
+     <disabled>
+      <colorrole role="WindowText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>190</red>
+         <green>190</green>
+         <blue>190</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Button">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Light">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Midlight">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Text">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>190</red>
+         <green>190</green>
+         <blue>190</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="BrightText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="ButtonText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>190</red>
+         <green>190</green>
+         <blue>190</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Base">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Window">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="AlternateBase">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>240</red>
+         <green>240</green>
+         <blue>240</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="PlaceholderText">
+       <brush brushstyle="NoBrush">
+        <color alpha="128">
+         <red>0</red>
+         <green>0</green>
+         <blue>0</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </disabled>
+    </palette>
+   </property>
    <widget class="QWidget" name="widgetMap" native="true">
     <property name="geometry">
      <rect>
@@ -298,21 +605,30 @@
     <property name="palette">
      <palette>
       <active>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Midlight">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -334,12 +650,21 @@
          </color>
         </brush>
        </colorrole>
-       <colorrole role="Window">
+       <colorrole role="Base">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
           <red>255</red>
           <green>255</green>
           <blue>255</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Window">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -355,9 +680,9 @@
        <colorrole role="AlternateBase">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -372,21 +697,30 @@
        </colorrole>
       </active>
       <inactive>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Midlight">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -408,12 +742,21 @@
          </color>
         </brush>
        </colorrole>
-       <colorrole role="Window">
+       <colorrole role="Base">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
           <red>255</red>
           <green>255</green>
           <blue>255</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Window">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -429,9 +772,9 @@
        <colorrole role="AlternateBase">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -446,21 +789,30 @@
        </colorrole>
       </inactive>
       <disabled>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>190</red>
+          <green>190</green>
+          <blue>190</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Midlight">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -482,12 +834,21 @@
          </color>
         </brush>
        </colorrole>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -503,9 +864,9 @@
        <colorrole role="AlternateBase">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -528,13 +889,13 @@
      </font>
     </property>
     <property name="autoFillBackground">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="title">
      <string notr="true">Digital Elevation Model</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QSlider" name="opacitySliderRasterInput">
      <property name="enabled">
@@ -573,14 +934,14 @@
       <number>75</number>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
     <widget class="QWidget" name="colorScaleInputRaster" native="true">
      <property name="geometry">
       <rect>
-       <x>1</x>
-       <y>60</y>
+       <x>2</x>
+       <y>62</y>
        <width>266</width>
        <height>42</height>
       </rect>
@@ -599,7 +960,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>40</y>
+       <y>37</y>
        <width>241</width>
        <height>21</height>
       </rect>
@@ -637,6 +998,15 @@
     <property name="palette">
      <palette>
       <active>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -673,12 +1043,21 @@
          </color>
         </brush>
        </colorrole>
-       <colorrole role="Window">
+       <colorrole role="Base">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
           <red>255</red>
           <green>255</green>
           <blue>255</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Window">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -711,6 +1090,15 @@
        </colorrole>
       </active>
       <inactive>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -747,12 +1135,21 @@
          </color>
         </brush>
        </colorrole>
-       <colorrole role="Window">
+       <colorrole role="Base">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
           <red>255</red>
           <green>255</green>
           <blue>255</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Window">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -785,6 +1182,15 @@
        </colorrole>
       </inactive>
       <disabled>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>190</red>
+          <green>190</green>
+          <blue>190</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -821,12 +1227,21 @@
          </color>
         </brush>
        </colorrole>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -867,13 +1282,13 @@
      </font>
     </property>
     <property name="autoFillBackground">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="title">
      <string notr="true">Variable map</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QSlider" name="opacitySliderRasterOutput">
      <property name="enabled">
@@ -912,14 +1327,14 @@
       <number>75</number>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
     <widget class="QWidget" name="colorScaleOutputRaster" native="true">
      <property name="geometry">
       <rect>
-       <x>1</x>
-       <y>70</y>
+       <x>2</x>
+       <y>67</y>
        <width>266</width>
        <height>42</height>
       </rect>
@@ -938,7 +1353,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>45</y>
+       <y>41</y>
        <width>248</width>
        <height>21</height>
       </rect>
@@ -976,6 +1391,15 @@
     <property name="palette">
      <palette>
       <active>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -1006,18 +1430,45 @@
        <colorrole role="Mid">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>170</red>
-          <green>170</green>
-          <blue>170</blue>
+          <red>100</red>
+          <green>100</green>
+          <blue>100</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Text">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="ButtonText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>255</red>
+          <green>255</green>
+          <blue>255</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1050,6 +1501,15 @@
        </colorrole>
       </active>
       <inactive>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -1080,18 +1540,45 @@
        <colorrole role="Mid">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>170</red>
-          <green>170</green>
-          <blue>170</blue>
+          <red>100</red>
+          <green>100</green>
+          <blue>100</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Text">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="ButtonText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>255</red>
+          <green>255</green>
+          <blue>255</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1124,6 +1611,15 @@
        </colorrole>
       </inactive>
       <disabled>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>190</red>
+          <green>190</green>
+          <blue>190</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -1154,18 +1650,45 @@
        <colorrole role="Mid">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>170</red>
-          <green>170</green>
-          <blue>170</blue>
+          <red>100</red>
+          <green>100</green>
+          <blue>100</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Text">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>190</red>
+          <green>190</green>
+          <blue>190</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="ButtonText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>190</red>
+          <green>190</green>
+          <blue>190</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1206,20 +1729,20 @@
      </font>
     </property>
     <property name="autoFillBackground">
-     <bool>true</bool>
+     <bool>false</bool>
     </property>
     <property name="title">
      <string notr="true">Meteo Points</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QDateEdit" name="dateEdit">
      <property name="geometry">
       <rect>
-       <x>50</x>
+       <x>42</x>
        <y>30</y>
-       <width>101</width>
+       <width>111</width>
        <height>31</height>
       </rect>
      </property>
@@ -1262,6 +1785,7 @@
      </property>
      <property name="font">
       <font>
+       <family>Arial</family>
        <pointsize>9</pointsize>
        <bold>false</bold>
       </font>
@@ -1292,8 +1816,8 @@
        <minute>0</minute>
        <second>0</second>
        <year>1752</year>
-       <month>9</month>
-       <day>29</day>
+       <month>8</month>
+       <day>19</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1304,7 +1828,7 @@
       </date>
      </property>
      <property name="currentSection">
-      <enum>QDateTimeEdit::YearSection</enum>
+      <enum>QDateTimeEdit::Section::YearSection</enum>
      </property>
      <property name="displayFormat">
       <string>yyyy-MM-dd</string>
@@ -1368,7 +1892,7 @@
     <widget class="QWidget" name="colorScaleMeteoPoints" native="true">
      <property name="geometry">
       <rect>
-       <x>1</x>
+       <x>2</x>
        <y>100</y>
        <width>266</width>
        <height>42</height>
@@ -1387,11 +1911,18 @@
     <widget class="QSpinBox" name="timeEdit">
      <property name="geometry">
       <rect>
-       <x>200</x>
+       <x>182</x>
        <y>30</y>
-       <width>41</width>
+       <width>71</width>
        <height>31</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="minimum">
       <number>0</number>
@@ -1403,9 +1934,9 @@
     <widget class="QPushButton" name="dayBeforeButton">
      <property name="geometry">
       <rect>
-       <x>20</x>
+       <x>17</x>
        <y>30</y>
-       <width>31</width>
+       <width>26</width>
        <height>31</height>
       </rect>
      </property>
@@ -1416,9 +1947,9 @@
     <widget class="QPushButton" name="dayAfterButton">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>152</x>
        <y>30</y>
-       <width>31</width>
+       <width>26</width>
        <height>31</height>
       </rect>
      </property>
@@ -1442,6 +1973,15 @@
     <property name="palette">
      <palette>
       <active>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -1478,12 +2018,21 @@
          </color>
         </brush>
        </colorrole>
-       <colorrole role="Window">
+       <colorrole role="Base">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
           <red>255</red>
           <green>255</green>
           <blue>255</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Window">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1516,6 +2065,15 @@
        </colorrole>
       </active>
       <inactive>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -1552,12 +2110,21 @@
          </color>
         </brush>
        </colorrole>
-       <colorrole role="Window">
+       <colorrole role="Base">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
           <red>255</red>
           <green>255</green>
           <blue>255</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Window">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1590,6 +2157,15 @@
        </colorrole>
       </inactive>
       <disabled>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>190</red>
+          <green>190</green>
+          <blue>190</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -1626,12 +2202,21 @@
          </color>
         </brush>
        </colorrole>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1674,18 +2259,21 @@
     <property name="autoFillBackground">
      <bool>true</bool>
     </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
     <property name="title">
      <string notr="true">Model run</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QPushButton" name="buttonModelStart">
      <property name="geometry">
       <rect>
-       <x>120</x>
+       <x>140</x>
        <y>30</y>
-       <width>31</width>
+       <width>30</width>
        <height>28</height>
       </rect>
      </property>
@@ -1696,9 +2284,9 @@
     <widget class="QPushButton" name="buttonModelPause">
      <property name="geometry">
       <rect>
-       <x>50</x>
+       <x>30</x>
        <y>30</y>
-       <width>61</width>
+       <width>60</width>
        <height>28</height>
       </rect>
      </property>
@@ -1715,9 +2303,9 @@
     <widget class="QPushButton" name="buttonModelStop">
      <property name="geometry">
       <rect>
-       <x>160</x>
+       <x>180</x>
        <y>30</y>
-       <width>61</width>
+       <width>60</width>
        <height>28</height>
       </rect>
      </property>
@@ -1734,11 +2322,18 @@
     <widget class="QSpinBox" name="layerNrEdit">
      <property name="geometry">
       <rect>
-       <x>100</x>
+       <x>70</x>
        <y>70</y>
-       <width>42</width>
+       <width>71</width>
        <height>24</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Arial</family>
+       <pointsize>9</pointsize>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="readOnly">
       <bool>false</bool>
@@ -1753,7 +2348,7 @@
     <widget class="QLabel" name="labelLayer">
      <property name="geometry">
       <rect>
-       <x>40</x>
+       <x>10</x>
        <y>70</y>
        <width>51</width>
        <height>21</height>
@@ -1773,21 +2368,21 @@
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::RightToLeft</enum>
+      <enum>Qt::LayoutDirection::RightToLeft</enum>
      </property>
      <property name="text">
       <string>Layer</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QLineEdit" name="layerDepthEdit">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>140</x>
        <y>70</y>
-       <width>71</width>
+       <width>81</width>
        <height>24</height>
       </rect>
      </property>
@@ -1798,9 +2393,9 @@
     <widget class="QLabel" name="labelLayer_2">
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>9</x>
        <y>102</y>
-       <width>50</width>
+       <width>51</width>
        <height>21</height>
       </rect>
      </property>
@@ -1818,13 +2413,13 @@
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::RightToLeft</enum>
+      <enum>Qt::LayoutDirection::RightToLeft</enum>
      </property>
      <property name="text">
       <string>Time</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QLineEdit" name="modelTimeEdit">
@@ -1840,6 +2435,19 @@
       <bool>true</bool>
      </property>
     </widget>
+    <widget class="QPushButton" name="buttonModel_1hour">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>30</y>
+       <width>41</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>&gt;1h</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -1853,9 +2461,39 @@
    </property>
    <property name="palette">
     <palette>
-     <active/>
-     <inactive/>
-     <disabled/>
+     <active>
+      <colorrole role="ButtonText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </active>
+     <inactive>
+      <colorrole role="ButtonText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </inactive>
+     <disabled>
+      <colorrole role="ButtonText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>190</red>
+         <green>190</green>
+         <blue>190</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </disabled>
     </palette>
    </property>
    <property name="autoFillBackground">
@@ -1863,7 +2501,7 @@
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>Fi&amp;le</string>
+     <string>File</string>
     </property>
     <widget class="QMenu" name="menuInput">
      <property name="title">
@@ -1890,6 +2528,8 @@
       </property>
       <addaction name="actionLoad_land_use_map"/>
       <addaction name="actionLoad_crop_data"/>
+      <addaction name="separator"/>
+      <addaction name="actionCreate_new_land_use_map"/>
      </widget>
      <addaction name="actionLoad_DEM"/>
      <addaction name="menuMeteo_points"/>
@@ -1923,12 +2563,15 @@
      </widget>
      <addaction name="menuOutput_points_4"/>
      <addaction name="menuOutput_db"/>
+     <addaction name="actionSave_outputRaster"/>
     </widget>
     <addaction name="menuOpen_project"/>
     <addaction name="separator"/>
     <addaction name="menuInput"/>
     <addaction name="separator"/>
     <addaction name="menuOutput"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpenShell"/>
    </widget>
    <widget class="QMenu" name="menuDataSpatialization">
     <property name="title">
@@ -1950,6 +2593,7 @@
     <addaction name="actionComputePeriod_meteoVariables"/>
     <addaction name="separator"/>
     <addaction name="actionProxy_analysis"/>
+    <addaction name="action_parallel_computing"/>
    </widget>
    <widget class="QMenu" name="menuGIS_settings">
     <property name="title">
@@ -1957,7 +2601,7 @@
     </property>
     <widget class="QMenu" name="menuMap">
      <property name="title">
-      <string>&amp;Map</string>
+      <string>Background Map</string>
      </property>
      <addaction name="actionMapOpenStreetMap"/>
      <addaction name="actionMapGoogle_satellite"/>
@@ -1965,21 +2609,39 @@
      <addaction name="actionMapTerrain"/>
      <addaction name="actionMapESRISatellite"/>
     </widget>
-    <addaction name="menuMap"/>
     <addaction name="actionProjectSettings"/>
     <addaction name="separator"/>
+    <addaction name="flag_point_selection"/>
+    <addaction name="flag_area_selection"/>
+    <addaction name="separator"/>
+    <addaction name="menuMap"/>
    </widget>
-   <widget class="QMenu" name="menuCriteria3D">
+   <widget class="QMenu" name="menu3DModel">
     <property name="title">
-     <string>Water fluxes</string>
+     <string>3D model</string>
     </property>
-    <addaction name="actionWaterFluxes_settings"/>
+    <addaction name="actionCriteria3D_set_processes"/>
+    <addaction name="actionCriteria3D_waterFluxes_settings"/>
+    <addaction name="actionSnow_settings"/>
+    <addaction name="separator"/>
+    <addaction name="actionCriteria3D_load_state"/>
+    <addaction name="actionCriteria3D_load_external_state"/>
+    <addaction name="actionCriteria3D_save_state"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_Initialize"/>
+    <addaction name="actionInitialize_soil_carbon_content"/>
     <addaction name="actionCriteria3D_compute_next_hour"/>
     <addaction name="actionCriteria3D_run_models"/>
     <addaction name="separator"/>
-    <addaction name="actionUpdate_subHourly"/>
+    <addaction name="actionCriteria3D_update_subHourly"/>
+    <addaction name="separator"/>
+    <addaction name="flagSave_state_endRun"/>
+    <addaction name="flagSave_state_daily_step"/>
+    <addaction name="actionAutomatic_state_saving_end_of_year"/>
+    <addaction name="actionAutomatic_state_saving_end_of_month"/>
+    <addaction name="separator"/>
+    <addaction name="actionCriteria3D_Water_content_summary"/>
+    <addaction name="actionDEM_summary"/>
    </widget>
    <widget class="QMenu" name="menuShow">
     <property name="title">
@@ -2009,7 +2671,7 @@
     </widget>
     <widget class="QMenu" name="menuMeteo_variables">
      <property name="title">
-      <string>Meteo map</string>
+      <string>Meteo maps</string>
      </property>
      <addaction name="actionView_Air_temperature"/>
      <addaction name="actionView_Air_relative_humidity"/>
@@ -2018,7 +2680,7 @@
      <addaction name="separator"/>
      <addaction name="actionView_ET0"/>
      <addaction name="separator"/>
-     <addaction name="actionViewMeteoVariable_None"/>
+     <addaction name="actionView_MeteoVariable_None"/>
     </widget>
     <widget class="QMenu" name="menuShowSoil">
      <property name="title">
@@ -2026,13 +2688,14 @@
      </property>
      <addaction name="actionView_SoilMap"/>
      <addaction name="separator"/>
-     <addaction name="actionHide_soil_map"/>
+     <addaction name="actionHide_Soil_map"/>
     </widget>
     <widget class="QMenu" name="menuSnow">
      <property name="title">
       <string>Snow model</string>
      </property>
      <addaction name="actionView_Snow_water_equivalent"/>
+     <addaction name="actionView_SWE_variation"/>
      <addaction name="actionView_Snow_fall"/>
      <addaction name="actionView_Snowmelt"/>
      <addaction name="separator"/>
@@ -2054,6 +2717,8 @@
      <addaction name="actionView_Diffuse_irradiance"/>
      <addaction name="actionView_Reflected_irradiance"/>
      <addaction name="actionView_Transmissivity"/>
+     <addaction name="separator"/>
+     <addaction name="actionView_Radiation_None"/>
     </widget>
     <widget class="QMenu" name="menuOutput_points_3">
      <property name="title">
@@ -2071,31 +2736,89 @@
       <property name="title">
        <string>Surface water content</string>
       </property>
-      <addaction name="action_surface_wc_automatic_range"/>
-      <addaction name="action_surface_wc_Fixed_range"/>
+      <addaction name="actionView_SurfaceWaterContent_automatic_range"/>
+      <addaction name="actionView_SurfaceWaterContent_fixed_range"/>
+     </widget>
+     <widget class="QMenu" name="menuDegree_of_saturation">
+      <property name="title">
+       <string>Degree of saturation</string>
+      </property>
+      <widget class="QMenu" name="menuFixed_range">
+       <property name="title">
+        <string>Fixed range</string>
+       </property>
+       <addaction name="actionView_DegreeOfSaturation_Current_depth"/>
+       <addaction name="actionView_DegreeOfSaturation_Avg"/>
+      </widget>
+      <addaction name="actionView_DegreeOfSaturation_automatic_range"/>
+      <addaction name="menuFixed_range"/>
      </widget>
      <addaction name="menuSurface_water_content"/>
+     <addaction name="actionView_SurfacePond"/>
+     <addaction name="separator"/>
      <addaction name="actionView_SoilMoisture"/>
+     <addaction name="menuDegree_of_saturation"/>
+     <addaction name="separator"/>
+     <addaction name="actionView_Water_potential"/>
     </widget>
     <widget class="QMenu" name="menuShowLand_use">
      <property name="title">
       <string>Land use</string>
      </property>
      <addaction name="actionView_LandUseMap"/>
-     <addaction name="separator"/>
      <addaction name="actionHide_LandUseMap"/>
+     <addaction name="separator"/>
+     <addaction name="actionViewTree_cover_map"/>
+     <addaction name="actionHide_TreeCover_map"/>
     </widget>
-    <widget class="QMenu" name="actionView_Crop_degreeDays">
+    <widget class="QMenu" name="actionView_Crop">
      <property name="title">
       <string>Crop model</string>
      </property>
-     <addaction name="actiondegree_days"/>
      <addaction name="actionView_Crop_LAI"/>
+     <addaction name="actionView_Crop_degreeDays"/>
+    </widget>
+    <widget class="QMenu" name="menuSlope_stability">
+     <property name="title">
+      <string>Slope stability</string>
+     </property>
+     <addaction name="actionView_Factor_of_safety"/>
+     <addaction name="actionView_Factor_of_safety_minimum"/>
+     <addaction name="flag_increase_slope"/>
+    </widget>
+    <widget class="QMenu" name="menuRothC_model">
+     <property name="title">
+      <string>RothC model</string>
+     </property>
+     <addaction name="actionDecomposable_plant_matter"/>
+     <addaction name="actionResistant_plant_matter"/>
+     <addaction name="actionMicrobial_biomass"/>
+     <addaction name="actionHumified_organic_matter"/>
+     <addaction name="actionSoil_organic_matter"/>
+    </widget>
+    <widget class="QMenu" name="menuHydrall_model">
+     <property name="title">
+      <string>Hydrall model</string>
+     </property>
+     <addaction name="actiontree_NPP"/>
+     <addaction name="actionunderstorey_NPP"/>
+     <addaction name="actiontree_foliage_biomass"/>
+     <addaction name="actiontree_root_biomass"/>
+     <addaction name="actiontree_sapwood_biomass"/>
+     <addaction name="actionunderstorey_foliage_biomass"/>
+     <addaction name="actionunderstorey_root_biomass"/>
+     <addaction name="actionoutput_carbon"/>
+     <addaction name="actioncumulated_yearly_ET0"/>
+     <addaction name="actioncumulated_yearly_precipitation"/>
     </widget>
     <addaction name="actionShow_3D_viewer"/>
     <addaction name="separator"/>
     <addaction name="menuPoints"/>
     <addaction name="menuOutput_points_3"/>
+    <addaction name="separator"/>
+    <addaction name="menuDEM"/>
+    <addaction name="menuShowSoil"/>
+    <addaction name="menuShowLand_use"/>
     <addaction name="separator"/>
     <addaction name="menuMeteo_variables"/>
     <addaction name="separator"/>
@@ -2103,30 +2826,13 @@
     <addaction name="separator"/>
     <addaction name="menuSnow"/>
     <addaction name="separator"/>
-    <addaction name="actionView_Crop_degreeDays"/>
+    <addaction name="actionView_Crop"/>
     <addaction name="separator"/>
     <addaction name="menuWater_fluxes"/>
+    <addaction name="menuSlope_stability"/>
     <addaction name="separator"/>
-    <addaction name="menuDEM"/>
-    <addaction name="menuShowSoil"/>
-    <addaction name="menuShowLand_use"/>
-    <addaction name="separator"/>
-   </widget>
-   <widget class="QMenu" name="menuSnow_model">
-    <property name="title">
-     <string>Snow model</string>
-    </property>
-    <addaction name="actionSnow_settings"/>
-    <addaction name="separator"/>
-    <addaction name="actionLoad_state"/>
-    <addaction name="actionLoad_external_state"/>
-    <addaction name="actionSave_state"/>
-    <addaction name="separator"/>
-    <addaction name="actionSnow_initialize"/>
-    <addaction name="actionSnow_compute_next_hour"/>
-    <addaction name="actionSnow_run_model"/>
-    <addaction name="separator"/>
-    <addaction name="flagSave_state_daily_step"/>
+    <addaction name="menuRothC_model"/>
+    <addaction name="menuHydrall_model"/>
    </widget>
    <widget class="QMenu" name="menuSolar_radiation_model_2">
     <property name="title">
@@ -2221,8 +2927,7 @@
    <addaction name="menuMeteo_points_2"/>
    <addaction name="menuDataSpatialization"/>
    <addaction name="menuSolar_radiation_model_2"/>
-   <addaction name="menuCriteria3D"/>
-   <addaction name="menuSnow_model"/>
+   <addaction name="menu3DModel"/>
    <addaction name="menuOutput_points"/>
    <addaction name="menuGIS_settings"/>
   </widget>
@@ -2270,7 +2975,7 @@
     <string>Spatial quality control</string>
    </property>
   </action>
-  <action name="actionWaterFluxes_settings">
+  <action name="actionCriteria3D_waterFluxes_settings">
    <property name="text">
     <string>Water fluxes settings...</string>
    </property>
@@ -2421,7 +3126,7 @@
     <string>Hide map</string>
    </property>
   </action>
-  <action name="actionViewMeteoVariable_None">
+  <action name="actionView_MeteoVariable_None">
    <property name="text">
     <string>None</string>
    </property>
@@ -2444,27 +3149,12 @@
     <string>New (from csv)...</string>
    </property>
   </action>
-  <action name="actionLoad_state">
-   <property name="text">
-    <string>Load state...</string>
-   </property>
-  </action>
-  <action name="actionSave_state">
-   <property name="text">
-    <string>Save state</string>
-   </property>
-  </action>
   <action name="actionSnow_settings">
    <property name="checkable">
     <bool>false</bool>
    </property>
    <property name="text">
     <string>Snow settings...</string>
-   </property>
-  </action>
-  <action name="actionSnow_run_model">
-   <property name="text">
-    <string>Run model...</string>
    </property>
   </action>
   <action name="actionView_Snow_water_equivalent">
@@ -2482,22 +3172,14 @@
     <string>Energy content (snow pack or soil)</string>
    </property>
   </action>
-  <action name="actionSnow_initialize">
-   <property name="text">
-    <string>Initialize</string>
-   </property>
-   <property name="toolTip">
-    <string>Initialize snow model</string>
-   </property>
-  </action>
   <action name="actionView_Snow_fall">
    <property name="text">
-    <string>Snow fall</string>
+    <string>Snow fall (hourly)</string>
    </property>
   </action>
   <action name="actionView_Snow_surface_internal_energy">
    <property name="text">
-    <string>Energy content surface layer</string>
+    <string>Energy content (surface layer)</string>
    </property>
   </action>
   <action name="flagSave_state_daily_step">
@@ -2508,7 +3190,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Automatic save state (daily step)</string>
+    <string>Automatic state saving (daily step)</string>
    </property>
   </action>
   <action name="actionMapGoogle_satellite">
@@ -2541,17 +3223,12 @@
   </action>
   <action name="actionView_Snow_age">
    <property name="text">
-    <string>Age of snow</string>
-   </property>
-  </action>
-  <action name="actionSnow_compute_next_hour">
-   <property name="text">
-    <string>Compute next hour</string>
+    <string>Age of snow (days)</string>
    </property>
   </action>
   <action name="actionView_Snowmelt">
    <property name="text">
-    <string>Snowmelt</string>
+    <string>Snowmelt (hourly)</string>
    </property>
   </action>
   <action name="actionRadiation_run_model">
@@ -2727,7 +3404,7 @@
     <string>View not active</string>
    </property>
   </action>
-  <action name="actionHide_soil_map">
+  <action name="actionHide_Soil_map">
    <property name="text">
     <string>Hide map</string>
    </property>
@@ -2758,17 +3435,12 @@
   </action>
   <action name="actionView_Snow_sensible_heat">
    <property name="text">
-    <string>Sensible heat</string>
+    <string>Sensible heat flux (hourly)</string>
    </property>
   </action>
   <action name="actionView_Snow_latent_heat">
    <property name="text">
-    <string>Latent heat</string>
-   </property>
-  </action>
-  <action name="actionLoad_external_state">
-   <property name="text">
-    <string>Load external state...</string>
+    <string>Latent heat flux (hourly)</string>
    </property>
   </action>
   <action name="actionTopographicDistanceMapWrite">
@@ -2808,41 +3480,41 @@
   </action>
   <action name="actionLoad_soil_data">
    <property name="text">
-    <string>Soil data...</string>
+    <string>Soil db...</string>
    </property>
   </action>
   <action name="actionLoad_land_use_map">
    <property name="text">
-    <string>Land use map...</string>
+    <string>Load land use map...</string>
    </property>
   </action>
   <action name="actionLoad_crop_data">
    <property name="text">
-    <string>Crop and land units data...</string>
+    <string>Load crop and land units db...</string>
    </property>
   </action>
   <action name="actionView_SoilMoisture">
    <property name="text">
-    <string>Soil moisture</string>
+    <string>Volumetric water content</string>
    </property>
   </action>
-  <action name="action_surface_wc_automatic_range">
+  <action name="actionView_SurfaceWaterContent_automatic_range">
    <property name="checkable">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="text">
     <string>Automatic range</string>
    </property>
   </action>
-  <action name="action_surface_wc_Fixed_range">
+  <action name="actionView_SurfaceWaterContent_fixed_range">
    <property name="checkable">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="text">
     <string>Fixed range</string>
    </property>
   </action>
-  <action name="actiondegree_days">
+  <action name="actionView_Crop_degreeDays">
    <property name="text">
     <string>Degree days</string>
    </property>
@@ -2852,12 +3524,260 @@
     <string>Leaf Area Index</string>
    </property>
   </action>
-  <action name="actionUpdate_subHourly">
+  <action name="actionCriteria3D_update_subHourly">
    <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
     <bool>true</bool>
    </property>
    <property name="text">
     <string>Update sub hourly</string>
+   </property>
+  </action>
+  <action name="actionView_Factor_of_safety">
+   <property name="text">
+    <string>Factor of safety (current depth)</string>
+   </property>
+  </action>
+  <action name="actionView_DegreeOfSaturation_automatic_range">
+   <property name="text">
+    <string>Automatic range</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_load_state">
+   <property name="text">
+    <string>Load state...</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_load_external_state">
+   <property name="text">
+    <string>Load external state...</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_save_state">
+   <property name="text">
+    <string>Save state</string>
+   </property>
+  </action>
+  <action name="actionView_Factor_of_safety_minimum">
+   <property name="text">
+    <string>Factor of safety (minimum value)</string>
+   </property>
+  </action>
+  <action name="flagSave_state_endRun">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Automatic state saving (end of run)</string>
+   </property>
+  </action>
+  <action name="flag_increase_slope">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>increase slope</string>
+   </property>
+  </action>
+  <action name="actionView_Radiation_None">
+   <property name="text">
+    <string>None</string>
+   </property>
+  </action>
+  <action name="actionView_Water_potential">
+   <property name="text">
+    <string>Water potential</string>
+   </property>
+  </action>
+  <action name="actionCreate_new_land_use_map">
+   <property name="text">
+    <string>Create new land use map...</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_set_processes">
+   <property name="text">
+    <string>Set active processes...</string>
+   </property>
+  </action>
+  <action name="actionView_SurfacePond">
+   <property name="text">
+    <string>Surface Pond</string>
+   </property>
+  </action>
+  <action name="actionSave_outputRaster">
+   <property name="text">
+    <string>Save current output (raster)...</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_Water_content_summary">
+   <property name="text">
+    <string>Water Content summary...</string>
+   </property>
+  </action>
+  <action name="actionDEM_summary">
+   <property name="text">
+    <string>Digital Elevation Model summary...</string>
+   </property>
+  </action>
+  <action name="actionViewTree_cover_map">
+   <property name="text">
+    <string>Tree cover map</string>
+   </property>
+  </action>
+  <action name="actionDecomposable_plant_matter">
+   <property name="text">
+    <string>Decomposable plant matter</string>
+   </property>
+  </action>
+  <action name="actionResistant_plant_matter">
+   <property name="text">
+    <string>Resistant plant matter</string>
+   </property>
+  </action>
+  <action name="actionMicrobial_biomass">
+   <property name="text">
+    <string>Microbial biomass</string>
+   </property>
+  </action>
+  <action name="actionHumified_organic_matter">
+   <property name="text">
+    <string>Humified organic matter</string>
+   </property>
+  </action>
+  <action name="actionSoil_organic_matter">
+   <property name="text">
+    <string>Soil organic matter</string>
+   </property>
+  </action>
+  <action name="actionAutomatic_state_saving_end_of_year">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Automatic state saving (end of year)</string>
+   </property>
+  </action>
+  <action name="actionAutomatic_state_saving_end_of_month">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Automatic state saving (end of month)</string>
+   </property>
+  </action>
+  <action name="action_parallel_computing">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Parallel computing</string>
+   </property>
+  </action>
+  <action name="actionHide_TreeCover_map">
+   <property name="text">
+    <string>Hide map</string>
+   </property>
+  </action>
+  <action name="actiontree_NPP">
+   <property name="text">
+    <string>tree NPP</string>
+   </property>
+  </action>
+  <action name="actionunderstorey_NPP">
+   <property name="text">
+    <string>understorey NPP</string>
+   </property>
+  </action>
+  <action name="actiontree_foliage_biomass">
+   <property name="text">
+    <string>tree foliage biomass</string>
+   </property>
+  </action>
+  <action name="actiontree_root_biomass">
+   <property name="text">
+    <string>tree root biomass</string>
+   </property>
+  </action>
+  <action name="actiontree_sapwood_biomass">
+   <property name="text">
+    <string>tree sapwood biomass</string>
+   </property>
+  </action>
+  <action name="actionunderstorey_foliage_biomass">
+   <property name="text">
+    <string>understorey foliage biomass</string>
+   </property>
+  </action>
+  <action name="actionunderstorey_root_biomass">
+   <property name="text">
+    <string>understorey root biomass</string>
+   </property>
+  </action>
+  <action name="actionoutput_carbon">
+   <property name="text">
+    <string>carbon output</string>
+   </property>
+   <property name="toolTip">
+    <string>carbon output</string>
+   </property>
+  </action>
+  <action name="actioncumulated_yearly_ET0">
+   <property name="text">
+    <string>cumulated yearly ET0</string>
+   </property>
+  </action>
+  <action name="actioncumulated_yearly_precipitation">
+   <property name="text">
+    <string>cumulated yearly precipitation</string>
+   </property>
+  </action>
+  <action name="actionInitialize_soil_carbon_content">
+   <property name="text">
+    <string>Initialize soil carbon content</string>
+   </property>
+  </action>
+  <action name="actionOpenShell">
+   <property name="text">
+    <string>Shell..</string>
+   </property>
+  </action>
+  <action name="flag_area_selection">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Area selection</string>
+   </property>
+  </action>
+  <action name="flag_point_selection">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Point selection</string>
+   </property>
+  </action>
+  <action name="actionView_SWE_variation">
+   <property name="text">
+    <string>SWE variation (hourly)</string>
+   </property>
+  </action>
+  <action name="actionView_DegreeOfSaturation_Current_depth">
+   <property name="text">
+    <string>Current depth</string>
+   </property>
+  </action>
+  <action name="actionView_DegreeOfSaturation_Avg">
+   <property name="text">
+    <string>Average over soil depth</string>
    </property>
   </action>
  </widget>

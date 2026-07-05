@@ -1,9 +1,12 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
+    //Deprecated? Check soilPhysics.h and heat.h in soilFluxes3D lib
+
     #include <vector>
 
     double pressureFromAltitude(double myHeight);
+    double pressureFromAltitude(double temperature, double height);
     double airMolarDensity(double myPressure, double myT);
     double airVolumetricSpecificHeat(double myPressure, double myT);
     double saturationVaporPressure(double myTCelsius);
@@ -19,7 +22,7 @@
                                   double roughnessHeight, double airTemperature, double windSpeed);
     double aerodynamicConductanceOpenwater(double myHeight, double myWaterBodySurface, double myAirTemperature, double myWindSpeed10);
     float erosivityFactor(std::vector<float> values, int nValues);
-    float rainIntensity(std::vector<float> values, int nValues, float rainfallThreshold);
+    float rainIntensity(std::vector<float> values, int nValues, float myRainfallThreshold);
     int windPrevailingDir(std::vector<float> intensity, std::vector<float> dir, int nValues, bool useIntensity);
     float timeIntegrationFunction(std::vector<float> values, float timeStep);
 

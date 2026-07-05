@@ -14,23 +14,28 @@ greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 TARGET = VINE3D
 TEMPLATE = app
 
-DEFINES += VINE3D
+CONFIG += c++17
 
-INCLUDEPATH +=  ../../mapGraphics \
-                ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/soilFluxes3D/header \
+# parallel computing settings
+include($$absolute_path(../../agrolib/parallel.pri))
+
+INCLUDEPATH +=  ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/soilFluxes3D \
                 ../../agrolib/gis ../../agrolib/meteo ../../agrolib/interpolation \
                 ../../agrolib/solarRadiation ../../agrolib/soil  \
-                ../../agrolib/crop ../../agrolib/grapevine ../../agrolib/outputPoints \
+                ../../agrolib/crop  ../../agrolib/outputPoints \
                 ../../agrolib/utilities ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid \
-                ../../agrolib/importDataXML ../../agrolib/proxyWidget \
+                ../../agrolib/proxyWidget ../../agrolib/waterTable \
                 ../../agrolib/commonDialogs ../../agrolib/project \
-                ../../agrolib/graphics ../../agrolib/commonChartElements ../../agrolib/meteoWidget ../../mapGraphics  \
-                ../CRITERIA3D/shared
+                ../../agrolib/graphics ../../agrolib/commonChartElements ../../agrolib/meteoWidget  \
+                ../../src/grapevine ../../src/project3D \
+                ../../mapGraphics
 
 CONFIG += debug_and_release
 
 
 CONFIG(debug, debug|release) {
+    LIBS += -L../../src/project3D/debug -lproject3D
+    LIBS += -L../../src/grapevine/debug -lgrapevine
     LIBS += -L../../agrolib/graphics/debug -lgraphics
     win32:{
         LIBS += -L../../mapGraphics/debug -lMapGraphics
@@ -40,7 +45,6 @@ CONFIG(debug, debug|release) {
     }
     LIBS += -L../../agrolib/project/debug -lproject
     LIBS += -L../../agrolib/proxyWidget/debug -lproxyWidget
-    LIBS += -L../../agrolib/importDataXML/debug -limportDataXML
     LIBS += -L../../agrolib/meteoWidget/debug -lmeteoWidget
     LIBS += -L../../agrolib/commonChartElements/debug -lcommonChartElements
     LIBS += -L../../agrolib/commonDialogs/debug -lcommonDialogs
@@ -48,7 +52,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/dbMeteoPoints/debug -ldbMeteoPoints
     LIBS += -L../../agrolib/outputPoints/debug -loutputPoints
     LIBS += -L../../agrolib/utilities/debug -lutilities
-    LIBS += -L../../agrolib/grapevine/debug -lgrapevine
+    LIBS += -L../../agrolib/waterTable/debug -lwaterTable
     LIBS += -L../../agrolib/soil/debug -lsoil
     LIBS += -L../../agrolib/crop/debug -lcrop
     LIBS += -L../../agrolib/solarRadiation/debug -lsolarRadiation
@@ -59,11 +63,12 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/crit3dDate/debug -lcrit3dDate
     LIBS += -L../../agrolib/mathFunctions/debug -lmathFunctions
 } else {
+    LIBS += -L../../src/project3D/release -lproject3D
+    LIBS += -L../../src/grapevine/release -lgrapevine
     LIBS += -L../../agrolib/graphics/release -lgraphics
     LIBS += -L../../mapGraphics/release -lMapGraphics
     LIBS += -L../../agrolib/project/release -lproject
     LIBS += -L../../agrolib/proxyWidget/release -lproxyWidget
-    LIBS += -L../../agrolib/importDataXML/release -limportDataXML
     LIBS += -L../../agrolib/meteoWidget/release -lmeteoWidget
     LIBS += -L../../agrolib/commonChartElements/release -lcommonChartElements
     LIBS += -L../../agrolib/commonDialogs/release -lcommonDialogs
@@ -71,7 +76,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/dbMeteoPoints/release -ldbMeteoPoints
     LIBS += -L../../agrolib/outputPoints/release -loutputPoints
     LIBS += -L../../agrolib/utilities/release -lutilities
-    LIBS += -L../../agrolib/grapevine/release -lgrapevine
+    LIBS += -L../../agrolib/waterTable/release -lwaterTable
     LIBS += -L../../agrolib/soil/release -lsoil
     LIBS += -L../../agrolib/crop/release -lcrop
     LIBS += -L../../agrolib/solarRadiation/release -lsolarRadiation
@@ -84,30 +89,23 @@ CONFIG(debug, debug|release) {
 }
 
 SOURCES += \
-    atmosphere.cpp \
-    dataHandler.cpp \
     disease.cpp \
-    main.cpp \
     modelCore.cpp \
     plant.cpp \
     vine3DShell.cpp \
     waterBalance.cpp \
     vine3DProject.cpp \
     mainWindow.cpp \
-    ../CRITERIA3D/shared/project3D.cpp
+    main.cpp
 
 
 HEADERS += \
-    atmosphere.h \
-    dataHandler.h \
     disease.h \
-    modelCore.h \
     plant.h \
-    vine3DShell.h \
     waterBalance.h \
     vine3DProject.h \
-    mainWindow.h \
-    ../CRITERIA3D/shared/project3D.h
+    mainWindow.h
+
 
 FORMS += \
     mainWindow.ui \

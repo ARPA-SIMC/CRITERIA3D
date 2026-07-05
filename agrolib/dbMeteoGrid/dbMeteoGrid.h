@@ -8,19 +8,10 @@
         #include "meteoGrid.h"
     #endif
 
-    #ifndef QSQLDATABASE_H
-        #include <QSqlDatabase>
-    #endif
-    #ifndef QMAP_H
-        #include <QMap>
-    #endif
-    #ifndef QDOM_H
-        #include <QDomElement>
-    #endif
-    #ifndef QDATETIME_H
-        #include <QDate>
-    #endif
-
+    #include <QSqlDatabase>
+    #include <QMap>
+    #include <QDomElement>
+    #include <QDate>
 
     struct TXMLConnection
     {
@@ -30,7 +21,6 @@
         QString user;
         QString password;
     };
-
 
     struct TXMLvar
     {
@@ -58,34 +48,44 @@
         Crit3DMeteoGridDbHandler();
         ~Crit3DMeteoGridDbHandler();
 
-        bool openDatabase(QString *myError);
-        bool openDatabase(QString *myError, QString connectionName);
-        bool newDatabase(QString *myError);
-        bool newDatabase(QString *myError, QString connectionName);
-        bool deleteDatabase(QString *myError);
+        QString fileName() const { return _fileName; }
+        TXMLConnection connection() const { return _connection; }
+
+        QSqlDatabase& db() { return _db; }
+        void setDb(const QSqlDatabase &db) { _db = db; }
+
+        QDate firstDate() const { return _firstDate; }
+        QDate lastDate() const { return _lastDate; }
+
+        void setFirstDate(const QDate &firstDate) { _firstDate = firstDate; }
+        void setLastDate(const QDate &lastDate) { _lastDate = lastDate; }
+
+        Crit3DMeteoGridStructure& gridStructure() { return _gridStructure; }
+
+        Crit3DMeteoGrid *meteoGrid() const { return _meteoGrid; }
+        void setMeteoGrid(Crit3DMeteoGrid *meteoGrid) { _meteoGrid = meteoGrid; }
+
+        int getActiveCellsNr();
+
+        TXMLTable tableHourly() const { return _tableHourly; }
+        TXMLTable tableDaily() const { return _tableDaily; }
+        TXMLTable tableMonthly() const { return _tableMonthly; }
+
+        QString tableDailyModel() const { return _tableDailyModel; }
+        QString tableHourlyModel() const { return _tableHourlyModel; }
+
+        bool openDatabase(QString &errorStr);
+        bool openDatabase(QString &errorStr, const QString &connectionName);
+        bool openNewConnection(QSqlDatabase &myDb, const QString &connectionName, QString &errorStr);
+
+        bool newDatabase(QString &errorStr);
+        bool newDatabase(QString &errorStr, const QString &connectionName);
+        bool deleteDatabase(QString &errorStr);
         void closeDatabase();
-        bool parseXMLFile(QString xmlFileName, QDomDocument* xmlDoc, QString *error);
-        bool checkXML(QString *myError);
-        bool parseXMLGrid(QString xmlFileName, QString *myError);
+        bool parseXMLFile(const QString &xmlFileName, QDomDocument &xmlDoc, QString &errorStr);
+        bool checkXML(QString &errorStr);
+        bool parseXMLGrid(QString xmlFileName, QString &errorStr);
         void initMapMySqlVarType();
-
-        QSqlDatabase db() const;
-        QString fileName() const;
-        TXMLConnection connection() const;
-        Crit3DMeteoGridStructure gridStructure() const;
-        Crit3DMeteoGrid *meteoGrid() const;
-        QDate firstDate() const;
-        QDate lastDate() const;
-        TXMLTable tableDaily() const;
-        TXMLTable tableHourly() const;
-        TXMLTable tableMonthly() const;
-        QString tableDailyModel() const;
-        QString tableHourlyModel() const;
-
-        void setMeteoGrid(Crit3DMeteoGrid *meteoGrid);
-        void setDb(const QSqlDatabase &db);
-        void setFirstDate(const QDate &firstDate);
-        void setLastDate(const QDate &lastDate);
 
         int getDailyVarCode(meteoVariable meteoGridDailyVar);
         QString getDailyVarField(meteoVariable meteoGridDailyVar);
@@ -95,79 +95,140 @@
         int getHourlyVarCode(meteoVariable meteoGridHourlyVar);
         QString getHourlyVarField(meteoVariable meteoGridHourlyVar);
         meteoVariable getHourlyVarEnum(int varCode);
-        meteoVariable getHourlyVarFieldEnum(QString varField);
+        meteoVariable getHourlyVarFieldEnum(const QString &varField);
 
         int getMonthlyVarCode(meteoVariable meteoGridMonthlyVar);
         QString getMonthlyVarField(meteoVariable meteoGridMonthlyVar);
         meteoVariable getMonthlyVarEnum(int varCode);
-        meteoVariable getMonthlyVarFieldEnum(QString varField);
+        meteoVariable getMonthlyVarFieldEnum(const QString &varField);
 
         std::string getDailyPragaName(meteoVariable meteoVar);
         std::string getHourlyPragaName(meteoVariable meteoVar);
         std::string getMonthlyPragaName(meteoVariable meteoVar);
 
-        bool loadCellProperties(QString *myError);
-        bool newCellProperties(QString *myError);
-        bool writeCellProperties(QString *myError, int nRow, int nCol);
-        bool loadIdMeteoProperties(QString *myError, QString idMeteo);
-        bool updateGridDate(QString *myError);
+        bool loadCellProperties(QString &errorStr);
+        bool newCellProperties(QString &errorStr);
+        bool writeCellProperties(Crit3DMeteoGridStructure myStructure, QString &errorStr);
+        bool loadIdMeteoProperties(QString &errorStr, const QString &idMeteo);
+        bool updateMeteoGridDate(QString &errorStr);
 
-        bool loadGridDailyData(QString &errorStr, const QString &meteoPoint, const QDate &first, const QDate &last);
-        bool loadGridDailyDataFixedFields(QString &myError, QString meteoPoint, QDate first, QDate last);
-        bool loadGridDailyDataEnsemble(QString &myError, QString meteoPoint, int memberNr, QDate first, QDate last);
-        bool loadGridHourlyData(QString &myError, QString meteoPoint, QDateTime first, QDateTime last);
-        bool loadGridHourlyDataFixedFields(QString &myError, QString meteoPoint, QDateTime first, QDateTime last);
-        bool loadGridHourlyDataEnsemble(QString &myError, QString meteoPoint, int memberNr, QDateTime first, QDateTime last);
-        bool loadGridMonthlyData(QString &myError, QString meteoPoint, QDate first, QDate last);
+        bool loadGridDailyDataRowCol(int row, int col, QSqlDatabase &myDb, const QString &meteoPointId, const QDate &firstDate,
+                                     const QDate &lastDate, QString &errorStr);
+        bool loadGridDailyData(QString &errorStr, const QString &meteoPointId, const QDate &firstDate, const QDate &lastDate);
+        bool loadGridDailyDataFixedFields(QString &errorStr, QString meteoPoint, QDate first, QDate last);
+        bool loadGridDailyDataEnsemble(QString &errorStr, QString meteoPoint, int memberNr, QDate first, QDate last);
+        bool loadGridDailyMeteoPrec(QString &errorStr, const QString &meteoPointId, const QDate &firstDate, const QDate &lastDate);
+        bool loadGridHourlyData(QSqlDatabase &myDb, const QString &meteoPointId,
+                                const QDateTime &firstDate, const QDateTime &lastDate, QString &errorStr);
+        bool loadGridHourlyDataFixedFields(QString &errorStr, const QString &meteoPoint, const QDateTime &first, const QDateTime &last);
+        bool loadGridHourlyDataEnsemble(QString &errorStr, QString meteoPoint, int memberNr, QDateTime first, QDateTime last);
+        bool loadGridMonthlyData(QSqlDatabase &myDb, const QString meteoPointId, QDate firstDate, QDate lastDate, QString &errorStr);
+        bool loadGridAllMonthlyData(QString &errorStr, QDate firstDate, QDate lastDate);
+        bool loadGridMonthlySingleDate(QSqlDatabase &myDb, const QString &meteoPointId, const QDate &myDate, QString errorStr);
 
-        std::vector<float> loadGridDailyVar(QString *myError, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate *firstDateDB);
-        std::vector<float> loadGridDailyVarFixedFields(QString *myError, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate* firstDateDB);
-        std::vector<float> loadGridHourlyVar(QString *myError, QString meteoPoint, meteoVariable variable, QDateTime first, QDateTime last, QDateTime* firstDateDB);
-        std::vector<float> loadGridHourlyVarFixedFields(QString *myError, QString meteoPoint, meteoVariable variable, QDateTime first, QDateTime last, QDateTime* firstDateDB);
-        bool getYearList(QString *myError, QString meteoPoint, QList<QString>* yearList);
-        bool idDailyList(QString *myError, QList<QString>* idMeteoList);
+        bool importDailyDataCsv(QString &errorStr, const QString &csvFileName, QList<QString> &meteoVarList);
 
-        bool saveGridData(QString *myError, QDateTime firstTime, QDateTime lastTime, QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings *meteoSettings);
-        bool saveGridHourlyData(QString *myError, QDateTime firstDate, QDateTime lastDate, QList<meteoVariable> meteoVariableList);
-        bool saveGridDailyData(QString *myError, QDateTime firstDate, QDateTime lastDate, QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings *meteoSettings);
-        bool deleteAndWriteCellGridDailyData(QString& myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
-                                             QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings* meteoSettings);
-        bool saveCellGridDailyData(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate, QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings *meteoSettings);
-        bool saveCellGridDailyDataFF(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate, Crit3DMeteoSettings *meteoSettings);
-        bool saveCellGridDailyDataEnsemble(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
-                                                             QList<meteoVariable> meteoVariableList, int memberNr, Crit3DMeteoSettings *meteoSettings);
-        bool saveCellGridMonthlyData(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
-                                                             QList<meteoVariable> meteoVariableList);
-        bool saveListDailyDataEnsemble(QString *myError, QString meteoPointID, QDate date, meteoVariable meteoVar, QList<float> values);
-        bool saveListDailyData(QString *myError, QString meteoPointID, QDate firstDate, meteoVariable meteoVar, QList<float> values, bool reverseOrder);
-        bool cleanDailyOldData(QString *myError, QDate date);
-        bool saveListHourlyData(QString *myError, QString meteoPointID, QDateTime firstDateTime, meteoVariable meteoVar, QList<float> values);
-        bool saveCellCurrentGridDaily(QString *myError, QString meteoPointID, QDate date, int varCode, float value);
+        std::vector<float> loadGridDailyVar(const QString &meteoPointId, meteoVariable variable,
+                                            const QDate &first, const QDate &last, QDate &firstDateDB, QString &errorStr);
 
-        bool saveCellCurrentGridDailyList(QString meteoPointID, QList<QString> listEntries, QString &errorStr);
-        bool saveCellCurrentGridHourlyList(QString meteoPointID, QList<QString> listEntries, QString &errorStr);
+        std::vector<float> loadGridDailyVarFixedFields(const QString &meteoPointId, meteoVariable variable,
+                                                       const QDate &first, const QDate &last, QDate &firstDateDB, QString &errorStr);
+
+        std::vector<float> loadGridHourlyVar(meteoVariable variable, const QString& meteoPointId,
+                                             const QDateTime &firstTime, const QDateTime &lastTime,
+                                             QDateTime &firstTimeDB, QString &errorStr);
+
+        std::vector<float> loadGridHourlyVarFixedFields(meteoVariable variable, const QString &meteoPointId,
+                                                        const QDateTime &firstTime, const QDateTime &lastTime,
+                                                        QDateTime &firstDateTimeDB, QString &errorStr);
+
+        std::vector<float> exportAllDataVar(QString &errorStr, frequencyType freq, meteoVariable variable,
+                                            const QString &id, const QDateTime &myFirstTime, const QDateTime &myLastTime,
+                                            std::vector<QString> &dateStrList);
+
+        bool getYearList(QString &errorStr, QString meteoPoint, QList<QString>* yearList);
+        bool idDailyList(QString &errorStr, QList<QString> &idMeteoList);
+
+        bool saveGridData(QString &errorStr, const QDateTime &firstTime, const QDateTime &lastTime,
+                          QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings *meteoSettings);
+
+        bool saveGridHourlyData(QString &errorStr, QDateTime firstDate, QDateTime lastDate, QList<meteoVariable> meteoVariableList);
+
+        bool saveGridDailyData(QString &errorStr, const QDateTime &firstDate, const QDateTime &lastDate,
+                               QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings *meteoSettings);
+
+        bool deleteAndWriteCellGridDailyData(QString& errorStr, const QString &meteoPointID,
+                                             int row, int col, const QDate &firstDate, const QDate &lastDate,
+                                             QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings *meteoSettings);
+
+        bool saveCellGridDailyData(QString &errorStr, const QString &meteoPointID, int row, int col,
+                                   const QDate &firstDate, const QDate &lastDate,
+                                   QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings *meteoSettings);
+
+        bool saveCellGridDailyDataFF(QString &errorStr, const QString &meteoPointID, int row, int col,
+                                     const QDate &firstDate, const QDate &lastDate, Crit3DMeteoSettings *meteoSettings);
+
+        bool saveCellGridDailyDataEnsemble(QString &errorStr, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
+                                           QList<meteoVariable> meteoVariableList, int memberNr, Crit3DMeteoSettings *meteoSettings);
+
+        bool saveCellGridMonthlyData(QString &errorStr, const QString &meteoPointID, int row, int col,
+                                     QDate firstDate, QDate lastDate, const QList<meteoVariable> &meteoVariableList);
+
+        bool saveListDailyDataEnsemble(QString &errorStr, const QString &meteoPointID, const QDate &date,
+                                       meteoVariable meteoVar, const QList<float> &values);
+
+        bool saveListDailyData(QString &errorStr, const QString &meteoPointID, const QDate &firstDate,
+                               meteoVariable meteoVar, const QList<float> &values, bool reverseOrder);
+
+        bool cleanDailyOldData(QString &errorStr, const QDate &myDate);
+        bool saveListHourlyData(QString &errorStr, const QString &meteoPointID, const QDateTime &firstDateTime, meteoVariable meteoVar, const QList<float> &values);
+        bool saveCellCurrentGridDaily(QString &errorStr, const QString &meteoPointID, const QDate &ate, int varCode, float value);
+
+        bool saveCellCurrentGridDailyList(const QString &meteoPointID, const QList<QString> &listEntries, QString &errorStr);
+        bool saveCellCurrentGridHourlyList(const QString &meteoPointID, const QList<QString> &listEntries, QString &errorStr);
 
         bool saveCellCurrentGridDailyFF(QString &errorStr, QString meteoPointID, QDate date, QString varPragaName, float value);
-        bool saveCellGridHourlyData(QString *myError, QString meteoPointID, int row, int col, QDateTime firstTime, QDateTime lastTime, QList<meteoVariable> meteoVariableList);
-        bool saveCellGridHourlyDataFF(QString *myError, QString meteoPointID, int row, int col, QDateTime firstTime, QDateTime lastTime);
-        bool saveCellGridHourlyDataEnsemble(QString *myError, QString meteoPointID, int row, int col,
-                                                              QDateTime firstTime, QDateTime lastTime, QList<meteoVariable> meteoVariableList, int memberNr);
-        bool saveCellCurrentGridHourly(QString& errorStr, QString meteoPointID, QDateTime dateTime, int varCode, float value);
-        bool saveCellCurrentGridHourlyFF(QString &errorStr, QString meteoPointID, QDateTime dateTime, QString varPragaName, float value);
-        bool activeAllCells(QString *myError);
-        bool setActiveStateCellsInList(QString *myError, QList<QString> idList, bool activeState);
+        bool saveCellGridHourlyData(QString &errorStr, QString meteoPointID, int row, int col, QDateTime firstTime, QDateTime lastTime, QList<meteoVariable> meteoVariableList);
+        bool saveCellGridHourlyDataFF(QString &errorStr, QString meteoPointID, int row, int col, QDateTime firstTime, QDateTime lastTime);
 
-        bool exportDailyDataCsv(QString &errorStr, bool isTPrec, QDate firstDate, QDate lastDate, QString idListFileName, QString outputPath);
+        bool saveCellGridHourlyDataEnsemble(QString &errorStr, const QString &meteoPointID, int row, int col,
+                                            const QDateTime &firstTime, const QDateTime &lastTime,
+                                            QList<meteoVariable> meteoVariableList, int memberNr);
+
+        bool saveCellCurrentGridHourly(QString& errorStr, const QString &meteoPointID, const QDateTime &dateTime,
+                                       int varCode, float value);
+
+        bool saveCellCurrentGridHourlyFF(QString &errorStr, const QString &meteoPointID, const QDateTime &dateTime,
+                                         const QString &varPragaName, float value);
+
+        bool activeAllCells(QString &errorStr);
+
+        bool setActiveStateCellsInList(QString &errorStr, const QList<QString> &idList, bool activeState);
+
+        bool saveHourlyDataCsv(const QString &csvFileName, const QList<meteoVariable> &variableList,
+                               const QDate &firstDate, const QDate &lastDate,unsigned row, unsigned col, QString &errorStr);
+        bool saveDailyDataCsv(const QString &csvFileName, const QList<meteoVariable> &variableList,
+                              const QDate &firstDate, const QDate &lastDate, unsigned row, unsigned col, QString &errorStr);
+
+        bool exportHourlyDataCsv(const QList<meteoVariable> &variableList, const QDate &firstDate,
+                                const QDate &lastDate, const QString &idListFileName, QString &outputPath, QString &errorStr);
+        bool exportDailyDataCsv(const QList<meteoVariable> &variableList, const QDate &firstDate,
+                                const QDate &lastDate, const QString &idListFileName, QString &outputPath, QString &errorStr);
+
         bool MeteoGridToRasterFlt(double cellSize, const gis::Crit3DGisSettings &gisSettings, gis::Crit3DRasterGrid& myGrid);
 
         QDate getFirstDailyDate() const;
         QDate getLastDailyDate() const;
         QDate getFirstHourlyDate() const;
         QDate getLastHourlyDate() const;
-        QDate getFirsMonthlytDate() const;
+        QDate getFirstMonthlytDate() const;
         QDate getLastMonthlyDate() const;
 
-        bool saveLogProcedures(QString *myError, QString nameProc, QDate date);
+        bool isDaily();
+        bool isHourly();
+        bool isMonthly();
+
+        bool saveLogProcedures(QString &errorStr, QString nameProc, QDate date);
 
     private:
 
@@ -184,7 +245,7 @@
         QDate _lastDailyDate;
         QDate _firstHourlyDate;
         QDate _lastHourlyDate;
-        QDate _firsMonthlytDate;
+        QDate _firstMonthlyDate;
         QDate _lastMonthlyDate;
 
         TXMLTable _tableDaily;

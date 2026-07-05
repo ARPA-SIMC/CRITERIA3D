@@ -4,56 +4,9 @@
 #include "basicMath.h"
 #include "interpolation.h"
 #include "plant.h"
-#include "dataHandler.h"
 #include "vine3DProject.h"
 #include "commonConstants.h"
 
-
-bool initializeGrapevine(Vine3DProject* myProject)
-{
-    myProject->outputPlantMaps = new Crit3DOutputPlantMaps(myProject->DEM, myProject->nrLayers);
-
-    //initialize root density for every model case
-    int soilIndex, nrHorizons;
-    soil::Crit3DHorizon myHorizon;
-
-    if (! myProject->grapevine.initializeLayers(myProject->nrLayers))
-        return false;
-
-    int nrSoilLayersWithoutRoots = 2;
-    int soilLayerWithRoot;
-    double depthModeRootDensity;     //[m] depth of mode of root density
-    double depthMeanRootDensity;     //[m] depth of mean of root density
-
-    for (int i = 0 ; i < myProject->modelCases.size(); i++)
-    {
-        soilIndex = myProject->modelCases[i].soilIndex;
-        nrHorizons = myProject->soilList[soilIndex].nrHorizons;
-        myHorizon = myProject->soilList[soilIndex].horizon[nrHorizons - 1];
-
-        int j=0;
-        while (j < myProject->nrLayers - 1 && myProject->layerDepth.at(size_t(j)) <= myHorizon.lowerDepth)
-            j++;
-
-        myProject->modelCases[i].soilLayersNr = j;
-        myProject->modelCases[i].soilTotalDepth = myHorizon.lowerDepth;
-
-        soilLayerWithRoot = myProject->modelCases[i].soilLayersNr - nrSoilLayersWithoutRoots;
-        depthModeRootDensity = 0.35 * myProject->modelCases[i].soilTotalDepth;
-        depthMeanRootDensity = 0.5 * myProject->modelCases[i].soilTotalDepth;
-
-        double grassRootDepth = myProject->modelCases[i].soilTotalDepth * 0.66;
-        double fallowRootDepth = myProject->modelCases[i].soilTotalDepth;
-
-        myProject->grapevine.setGrassRootDensity(&(myProject->modelCases[i]), &(myProject->soilList[soilIndex]), myProject->layerDepth, myProject->layerThickness, 0.02, grassRootDepth);
-        myProject->grapevine.setFallowRootDensity(&(myProject->modelCases[i]), &(myProject->soilList[soilIndex]), myProject->layerDepth, myProject->layerThickness, 0.02, fallowRootDepth);
-        myProject->grapevine.setRootDensity(&(myProject->modelCases[i]), &(myProject->soilList[soilIndex]),
-                                            myProject->layerDepth, myProject->layerThickness, soilLayerWithRoot, nrSoilLayersWithoutRoots,
-                                            GAMMA_DISTRIBUTION, depthModeRootDensity, depthMeanRootDensity);
-    }
-
-    return true;
-}
 
 void Crit3DStatePlantMaps::initialize()
 {
@@ -469,5 +422,78 @@ bool updateThermalSum(Vine3DProject* myProject, QDate myDate)
             }
         }
     }
+
     return true;
 }
+
+
+QString getVarNameFromPlantVariable(plantVariable myVar)
+{
+    if (myVar == tartaricAcidVar)
+        return "tartaricAcid";
+    else if (myVar == wineYieldVar)
+        return "wineYield";
+    else if (myVar == pHBerryVar)
+        return "pHBerry";
+    else if (myVar == brixBerryVar)
+        return "brixBerry";
+    else if (myVar == brixMaximumVar)
+        return "brixMaximum";
+    else if (myVar == deltaBrixVar)
+        return "deltabrix";
+    else if (myVar == daysAfterBloomVar)
+        return "daysAfterBloom";
+    else if (myVar == cumulatedBiomassVar)
+        return "totalBiomass";
+    else if (myVar == daysFromFloweringVar)
+        return "daysFromFlowering";
+    else if (myVar == isHarvestedVar)
+        return "isHarvested";
+    else if (myVar == fruitBiomassVar)
+        return "fruitBiomass";
+    else if (myVar == shootLeafNumberVar)
+        return "shootLeafNumber";
+    else if (myVar == meanTemperatureLastMonthVar)
+        return "meanTLastMonth";
+    else if (myVar == chillingUnitsVar)
+        return "chillingUnits";
+    else if (myVar == forceStateBudBurstVar)
+        return "forceStBudBurst";
+    else if (myVar == forceStateVegetativeSeasonVar)
+        return "forceStVegSeason";
+    else if (myVar == stageVar)
+        return "phenoPhase";
+    else if (myVar == cumRadFruitsetVerVar)
+        return "cumRadFSVeraison";
+    else if (myVar == leafAreaIndexVar)
+        return "leafAreaIndex";
+    else if (myVar == transpirationStressVar)
+        return "vineStress";
+    else if (myVar == transpirationVineyardVar)
+        return "transpirationVine";
+    else if (myVar == transpirationGrassVar)
+        return "transpirationGrass";
+    else if (myVar == degreeDaysFromFirstMarchVar)
+        return "degreeDaysFromFirstMarch";
+    else if (myVar == degreeDays10FromBudBurstVar)
+        return "degreeDaysFromBudBurst";
+    else if (myVar == degreeDaysAtFruitSetVar)
+        return "degreeDaysAtFruitSet";
+    else if (myVar == powderyCurrentColoniesVar)
+        return "powderyCurrentColonies";
+    else if (myVar == powderyAICVar)
+        return "powderyAIC";
+    else if (myVar == powderyCOLVar)
+        return "powderyCOL";
+    else if (myVar == powderyINFRVar)
+        return "powderyINFR";
+    else if (myVar == powderySporulatingColoniesVar)
+        return "powderyTSCOL";
+    else if (myVar == powderyPrimaryInfectionRiskVar)
+        return "powderyPIR";
+    else if (myVar == fruitBiomassIndexVar)
+        return "fruitBiomassIndex";
+    else
+        return "";
+}
+

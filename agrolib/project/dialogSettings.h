@@ -41,9 +41,8 @@
         explicit QualityTab(Crit3DQuality *quality);
 
         QLineEdit referenceClimateHeightEdit;
-        QLineEdit deltaTSuspectEdit;
-        QLineEdit deltaTWrongEdit;
         QLineEdit humidityToleranceEdit;
+        QLineEdit waterTableDepthEdit;
 
     private:
 

@@ -1,12 +1,12 @@
-#-------------------------------------------------
+#------------------------------------------------------
 #
 #   Utilities library
-#   This project is part of CRITERIA-3D distribution
+#   This project is part of ARPAE agrolib distribution
 #
-#-------------------------------------------------
+#------------------------------------------------------
 
-QT      += core sql
-QT      -= gui
+QT     += sql
+QT     -= gui
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -30,10 +30,12 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions
 SOURCES += \
     computationUnitsDb.cpp \
     logger.cpp \
-    utilities.cpp
+    utilities.cpp \
+    waterTableDb.cpp
 
 HEADERS += \
     computationUnitsDb.h \
     logger.h \
-    utilities.h
+    utilities.h \
+    waterTableDb.h
 

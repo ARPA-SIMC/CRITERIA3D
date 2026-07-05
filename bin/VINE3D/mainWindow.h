@@ -35,6 +35,9 @@
 
     private slots:
 
+        void callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid);
+        void callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid);
+
         void on_mnuFileOpenProject_triggered();
 
         void on_actionShowPointsHide_triggered();
@@ -69,6 +72,10 @@
         void on_actionRadiation_settings_triggered();
 
         void updateMaps();
+
+        void on_actionShow_model_cases_map_triggered();
+
+        void on_actionCriteria3D_settings_triggered();
 
     protected:
         /*!

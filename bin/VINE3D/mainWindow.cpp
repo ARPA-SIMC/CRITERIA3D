@@ -9,6 +9,8 @@
 #include "dialogSettings.h"
 #include "dialogSelection.h"
 #include "formTimePeriod.h"
+#include "dialogWaterFluxesSettings.h"
+#include "soilFluxes3D.h"
 
 #include "mainWindow.h"
 #include "ui_mainWindow.h"
@@ -17,7 +19,7 @@
 extern Vine3DProject myProject;
 
 #define MAPBORDER 10
-#define TOOLSWIDTH 270
+#define TOOLSWIDTH 260
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -50,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) :
     showPointsGroup->setEnabled(false);
 
     // Set tiles source
-    this->setMapSource(WebTileSource::OPEN_STREET_MAP);
+    this->setMapSource(WebTileSource::GOOGLE_Terrain);
 
     // Set start size and position
     this->startCenter = new Position (myProject.gisSettings.startLocation.longitude, myProject.gisSettings.startLocation.latitude, 0.0);
@@ -231,7 +233,7 @@ void MainWindow::renderDEM()
 void MainWindow::drawMeteoPoints()
 {
     resetMeteoPointMarkers();
-    if (! myProject.meteoPointsLoaded || myProject.nrMeteoPoints == 0)
+    if (! myProject.meteoPointsLoaded || myProject.meteoPoints.size() == 0)
     {
         ui->groupBoxMeteoPoints->setEnabled(false);
         return;
@@ -252,7 +254,9 @@ void MainWindow::drawMeteoPoints()
 
 void MainWindow::on_mnuFileOpenProject_triggered()
 {
-    QString myFileName = QFileDialog::getOpenFileName(this,tr("Open Project"), "", tr("Project files (*.ini)"));
+    QString projectPath = myProject.getDefaultPath() + PATH_PROJECT;
+
+    QString myFileName = QFileDialog::getOpenFileName(this,tr("Open Project"), projectPath, tr("Project files (*.ini)"));
     if (myFileName == "") return;
 
     myProject.loadVine3DProject(myFileName);
@@ -271,7 +275,7 @@ void MainWindow::on_mnuFileOpenProject_triggered()
 
 void MainWindow::on_actionRun_models_triggered()
 {
-    if (! myProject.isProjectLoaded)
+    if (! myProject.isProjectLoaded())
     {
         myProject.logError("Load a project before.");
         return;
@@ -404,11 +408,11 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 {
     currentPointsVisualization = myType;
 
-    if (myProject.nrMeteoPoints == 0)
+    if (myProject.meteoPoints.empty())
         return;
 
     // hide all meteo points
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < myProject.meteoPoints.size(); i++)
         meteoPointList[i]->setVisible(false);
 
     meteoPointsLegend->setVisible(true);
@@ -424,7 +428,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         case showLocation:
         {
             this->ui->actionShowPointsLocation->setChecked(true);
-            for (int i = 0; i < myProject.nrMeteoPoints; i++)
+            for (int i = 0; i < myProject.meteoPoints.size(); i++)
             {
                     myProject.meteoPoints[i].currentValue = NODATA;
                     meteoPointList[i]->setFillColor(QColor(Qt::white));
@@ -443,10 +447,11 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             this->ui->actionShowPointsVariable->setChecked(true);
 
             // quality control
+            std::string errorStdStr;
             checkData(myProject.quality, myProject.getCurrentVariable(),
-                      myProject.meteoPoints, myProject.nrMeteoPoints, myProject.getCrit3DCurrentTime(),
-                      &myProject.qualityInterpolationSettings, myProject.meteoSettings,
-                      &(myProject.climateParameters), myProject.checkSpatialQuality);
+                      myProject.meteoPoints, myProject.getCrit3DCurrentTime(),
+                      myProject.qualityInterpolationSettings, myProject.meteoSettings,
+                      &(myProject.climateParameters), myProject.checkSpatialQuality, errorStdStr);
 
             if (updateColorSCale)
             {
@@ -460,7 +465,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             setColorScale(myProject.getCurrentVariable(), myProject.meteoPointsColorScale);
 
             Crit3DColor *myColor;
-            for (int i = 0; i < myProject.nrMeteoPoints; i++)
+            for (int i = 0; i < myProject.meteoPoints.size(); i++)
             {
                 if (int(myProject.meteoPoints[i].currentValue) != NODATA)
                 {
@@ -495,7 +500,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 void MainWindow::addMeteoPoints()
 {
     myProject.clearSelectedPoints();
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < myProject.meteoPoints.size(); i++)
     {
         StationMarker* point = new StationMarker(5.0, true, QColor(Qt::white));
 
@@ -514,8 +519,8 @@ void MainWindow::addMeteoPoints()
         this->mapView->scene()->addObject(this->meteoPointList[i]);
 
         point->setToolTip();
-        connect(point, SIGNAL(newStationClicked(std::string, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, bool)));
-        connect(point, SIGNAL(appendStationClicked(std::string, std::string, bool)), this, SLOT(callAppendMeteoWidget(std::string, std::string, bool)));
+        connect(point, SIGNAL(newStationClicked(std::string, std::string, std::string, double, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, std::string, double, std::string, bool)));
+        connect(point, SIGNAL(appendStationClicked(std::string, std::string, std::string, double, std::string, bool)), this, SLOT(callAppendMeteoWidget(std::string, std::string, std::string, double, std::string, bool)));
     }
 }
 
@@ -529,7 +534,7 @@ void MainWindow::setMapSource(WebTileSource::WebTileType mySource)
 
 void MainWindow::on_rasterScaleButton_clicked()
 {
-    if (this->rasterObj->getRaster() == nullptr)
+    if (this->rasterObj->getRasterPointer() == nullptr)
     {
         QMessageBox::information(nullptr, "No Raster", "Load raster before");
         return;
@@ -538,7 +543,7 @@ void MainWindow::on_rasterScaleButton_clicked()
     meteoVariable myVar = chooseColorScale();
     if (myVar != noMeteoVar)
     {
-        setColorScale(myVar, this->rasterObj->getRaster()->colorScale);
+        setColorScale(myVar, this->rasterObj->getRasterPointer()->colorScale);
         ui->labelRasterScale->setText(QString::fromStdString(getVariableString(myVar)));
     }
 }
@@ -560,7 +565,7 @@ void MainWindow::on_variableButton_clicked()
 
 void MainWindow::on_rasterRestoreButton_clicked()
 {
-    if (rasterObj->getRaster() == nullptr)
+    if (rasterObj->getRasterPointer() == nullptr)
     {
         QMessageBox::information(nullptr, "No Raster", "Load raster before");
         return;
@@ -631,7 +636,7 @@ void MainWindow::on_actionShow_DEM_triggered()
     }
     else
     {
-        myProject.logError("Load a Digital Elevation Model before.");
+        myProject.logWarning("Load a Digital Elevation Model before.");
         return;
     }
 }
@@ -646,23 +651,21 @@ void MainWindow::on_actionShow_boundary_triggered()
         }
         else
         {
-            myProject.logError("Initialize model before.");
+            myProject.logWarning("Initialize model before.");
             return;
         }
 }
 
 
-
 void MainWindow::on_actionVine3D_InitializeWaterBalance_triggered()
 {
-    if (! myProject.setVine3DSoilIndexMap()) return;
-
-    if (myProject.initializeWaterBalance3D())
+    if (myProject.initialize3DModel())
     {
         myProject.outputWaterBalanceMaps = new Crit3DWaterBalanceMaps(myProject.DEM);
-        QMessageBox::information(nullptr, "", "Criteria3D initialized.");
+        QMessageBox::information(nullptr, "", "3D water fluxes initialized.");
     }
 }
+
 
 void MainWindow::on_actionShowPointsHide_triggered()
 {
@@ -683,5 +686,137 @@ void MainWindow::on_actionRadiation_settings_triggered()
 {
     DialogRadiation* myDialogRadiation = new DialogRadiation(&myProject);
     myDialogRadiation->close();
+}
+
+void MainWindow::callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid)
+{
+    bool isAppend = false;
+    if (isGrid)
+    {
+        myProject.showMeteoWidgetGrid(id, dataset, isAppend);
+    }
+    else
+    {
+        myProject.showMeteoWidgetPoint(id, name, dataset, altitude, lapseRateCode, isAppend);
+    }
+    return;
+}
+
+
+void MainWindow::callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid)
+{
+    bool isAppend = true;
+    if (isGrid)
+    {
+        myProject.showMeteoWidgetGrid(id, dataset, isAppend);
+    }
+    else
+    {
+        myProject.showMeteoWidgetPoint(id, name, dataset, altitude, lapseRateCode, isAppend);
+    }
+    return;
+}
+
+
+void MainWindow::on_actionShow_model_cases_map_triggered()
+{
+    if (myProject.landUseMap.isLoaded)
+    {
+        setDefaultScale(myProject.landUseMap.colorScale);
+        this->setCurrentRaster(&(myProject.landUseMap));
+        ui->labelRasterScale->setText("model cases");
+    }
+    else
+    {
+        myProject.logWarning("Load land use and soil maps before.");
+        return;
+    }
+}
+
+
+void MainWindow::on_actionCriteria3D_settings_triggered()
+{
+    DialogWaterFluxesSettings dialogWaterFluxes;
+    dialogWaterFluxes.setInitialWaterPotential(myProject.waterFluxesParameters.initialWaterPotential);
+    dialogWaterFluxes.setInitialDegreeOfSaturation(myProject.waterFluxesParameters.initialDegreeOfSaturation);
+
+    dialogWaterFluxes.useInitialWaterPotential->setChecked(myProject.waterFluxesParameters.isInitialWaterPotential);
+    dialogWaterFluxes.useInitialDegreeOfSaturation->setChecked(! myProject.waterFluxesParameters.isInitialWaterPotential);
+
+    // computation depth
+    if (myProject.waterFluxesParameters.computeOnlySurface)
+        dialogWaterFluxes.setOnlySurface(true);
+    else if (myProject.waterFluxesParameters.computeAllSoilDepth)
+        dialogWaterFluxes.setAllSoilDepth(true);
+    else
+        dialogWaterFluxes.setImposedDepth(true);
+
+    dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
+
+    // boundary conditions
+    dialogWaterFluxes.setFreeCatchmentRunoff(myProject.waterFluxesParameters.freeCatchmentRunoff);
+    dialogWaterFluxes.setFreeLateralDrainage(myProject.waterFluxesParameters.freeLateralDrainage);
+    dialogWaterFluxes.setFreeBottomDrainage(myProject.waterFluxesParameters.freeBottomDrainage);
+
+    dialogWaterFluxes.setUseWaterRetentionFitting(myProject.fittingOptions.useWaterRetentionData);
+    dialogWaterFluxes.setConductivityHVRatio(myProject.waterFluxesParameters.conductivityHorizVertRatio);
+
+    // accuracy
+    dialogWaterFluxes.accuracySlider->setValue(myProject.waterFluxesParameters.modelAccuracy);
+    dialogWaterFluxes.setThreadsNumber(myProject.waterFluxesParameters.numberOfThreads);
+
+    dialogWaterFluxes.exec();
+
+    if (dialogWaterFluxes.isUpdateAccuracy())
+    {
+        myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
+        int nrThread = dialogWaterFluxes.getThreadsNumber();
+        nrThread = soilFluxes3D::setThreadsNumber(nrThread);
+        myProject.waterFluxesParameters.numberOfThreads = nrThread;
+
+        if (myProject.isCriteria3DInitialized)
+        {
+            myProject.setAccuracy();
+        }
+    }
+
+    if (dialogWaterFluxes.result() == QDialog::Accepted)
+    {
+        // initial conditions
+        myProject.waterFluxesParameters.initialWaterPotential = dialogWaterFluxes.getInitialWaterPotential();
+        myProject.waterFluxesParameters.initialDegreeOfSaturation = dialogWaterFluxes.getInitialDegreeOfSaturation();
+        myProject.waterFluxesParameters.isInitialWaterPotential = dialogWaterFluxes.useInitialWaterPotential->isChecked();
+
+        myProject.waterFluxesParameters.conductivityHorizVertRatio = dialogWaterFluxes.getConductivityHVRatio();
+
+        // computation depth
+        myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
+        myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.getOnlySurface();
+        myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.getAllSoilDepth();
+
+        // boundary conditions
+        myProject.waterFluxesParameters.freeCatchmentRunoff = dialogWaterFluxes.getFreeCatchmentRunoff();
+        myProject.waterFluxesParameters.freeLateralDrainage = dialogWaterFluxes.getFreeLateralDrainage();
+        myProject.waterFluxesParameters.freeBottomDrainage = dialogWaterFluxes.getFreeBottomDrainage();
+
+        myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
+
+        // check nr of threads
+        int threadNumber = dialogWaterFluxes.getThreadsNumber();
+        threadNumber = soilFluxes3D::setThreadsNumber(threadNumber);
+        myProject.waterFluxesParameters.numberOfThreads = threadNumber;
+
+        if (myProject.isCriteria3DInitialized)
+        {
+            myProject.setAccuracy();
+        }
+
+        myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.getUseWaterRetentionFitting();
+
+        if (! myProject.writeCriteria3DParameters())
+        {
+            myProject.logError("Error writing soil fluxes parameters");
+        }
+    }
 }
 

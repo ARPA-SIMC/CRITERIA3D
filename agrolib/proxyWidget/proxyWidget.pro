@@ -1,10 +1,9 @@
-#----------------------------------------------------
+#------------------------------------------------------
 #
 #   Proxy Widget library
-#   This project is part of CRITERIA-3D distribution
+#   This project is part of ARPAE agrolib distribution
 #
-#
-#----------------------------------------------------
+#------------------------------------------------------
 
 QT  += widgets charts sql
 
@@ -37,11 +36,13 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../co
 
 SOURCES += \
     chartView.cpp \
+    localProxyWidget.cpp \
     proxyWidget.cpp
 
 
 HEADERS += \
     chartView.h \
+    localProxyWidget.h \
     proxyWidget.h 
 
 

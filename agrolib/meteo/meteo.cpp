@@ -23,15 +23,19 @@
     ftomei@arpae.it
 */
 
+#include <iostream>
 #include <math.h>
 #include <algorithm>
+#include <unordered_map>
 
 #include "commonConstants.h"
 #include "basicMath.h"
+#include "crit3dDate.h"
 #include "quality.h"
 #include "physics.h"
 #include "meteo.h"
 #include "color.h"
+
 
 Crit3DMeteoSettings::Crit3DMeteoSettings()
 {
@@ -177,14 +181,16 @@ float computeTminHourlyWeight(int myHour)
 }
 
 
-float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTime myTime)
+float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, const Crit3DTime &myTime)
 {
+    const float DEFAULT_LAPSERATE = -0.006f;
+
     Crit3DDate myDate = myTime.date;
     int myHour = myTime.getNearestHour();
 
     // TODO improve!
     if (myDate.isNullDate() || myHour == NODATA)
-        return -0.006f;
+        return DEFAULT_LAPSERATE;
 
     unsigned int indexMonth = unsigned(myDate.month - 1);
 
@@ -208,7 +214,7 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTi
             lapseTmax = tdMaxLapseRate[indexMonth];
         }
         else
-            return NODATA;
+            return DEFAULT_LAPSERATE;
 
         float tminWeight = computeTminHourlyWeight(myHour);
         return (lapseTmin * tminWeight + lapseTmax * (1 - tminWeight));
@@ -348,64 +354,61 @@ double dailyExtrRadiation(double myLat, int myDoy)
     return SOLAR_CONSTANT * DAY_SECONDS / 1000000. * dr / PI * (OmegaS * sin(Phi) * sin(delta) + cos(Phi) * cos(delta) * sin(OmegaS));
 }
 
+
 float computeDailyBIC(float prec, float etp)
 {
-
     Crit3DQuality qualityCheck;
 
-    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
     quality::qualityType qualityPrec = qualityCheck.syntacticQualitySingleValue(dailyPrecipitation, prec);
     quality::qualityType qualityETP = qualityCheck.syntacticQualitySingleValue(dailyReferenceEvapotranspirationHS, etp);
+
     if (qualityPrec == quality::accepted && qualityETP == quality::accepted)
-    {
-            return (prec - etp);
-    }
+        return (prec - etp);
     else
         return NODATA;
-
 }
 
-float dailyThermalRange(float Tmin, float Tmax)
-{
 
+float dailyThermalRange(float tMin, float tMax)
+{
     Crit3DQuality qualityCheck;
 
-    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
-    quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
-    quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
+    quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, tMin);
+    quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, tMax);
+
     if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-        return (Tmax - Tmin);
+        return (tMax - tMin);
     else
         return NODATA;
-
 }
 
-float dailyAverageT(float Tmin, float Tmax)
+
+float dailyAverageT(float tMin, float tMax)
 {
         Crit3DQuality qualityCheck;
 
-        // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
-        quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
-        quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
+        quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, tMin);
+        quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, tMax);
+
         if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-            return ( (Tmin + Tmax) / 2) ;
+            return (tMin + tMax) * 0.5f;
         else
             return NODATA;
 }
 
 
-float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings* meteoSettings)
+float dailyEtpHargreaves(float Tmin, float Tmax, const Crit3DDate &date, double latitude, Crit3DMeteoSettings* meteoSettings)
 {
     Crit3DQuality qualityCheck;
 
-    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
     quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
     quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
-    int dayOfYear = getDoyFromDate(date);
-    if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-            return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin));
-    else
+
+    if (qualityTmin != quality::accepted || qualityTmax != quality::accepted)
         return NODATA;
+
+    int dayOfYear = getDoyFromDate(date);
+    return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin));
 }
 
 
@@ -629,6 +632,9 @@ double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double air
     double gamma;                                /*!<  psychrometric constant (kPa C-1) */
     double firstTerm, secondTerm, denominator;
 
+    if (heigth == NODATA || netIrradiance == NODATA || airTemp == NODATA || airHum == NODATA || windSpeed10 == NODATA)
+        return NODATA;
+
     netRadiation = 3600 * netIrradiance;
 
     es = saturationVaporPressure(airTemp) / 1000.;
@@ -685,7 +691,7 @@ double ET0_Hargreaves(double KT, double myLat, int myDoy, double tmax, double tm
 
     tavg = (tmax + tmin) * 0.5;
 
-    return 0.0135 * (tavg + 17.78) * KT * (extraTerrRadiation / 2.456) * sqrt(deltaT);
+    return std::max(0., 0.0135 * (tavg + 17.78) * KT * (extraTerrRadiation / 2.456) * sqrt(deltaT));
     
     // 2.456 MJ kg-1 latent heat of vaporization
 }
@@ -716,6 +722,7 @@ float computeThomIndex(float temp, float relHum)
     else
         return NODATA;
 }
+
 
 bool computeWindCartesian(float intensity, float direction, float* u, float* v)
 {
@@ -766,14 +773,16 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
 
     switch(variable)
     {
-        case airTemperature: case dailyAirTemperatureAvg: case dailyAirTemperatureMax:
-        case dailyAirTemperatureMin: case dailyAirTemperatureRange:
+        case airTemperature: case dailyAirTemperatureAvg:
+        case dailyAirTemperatureMax: case dailyAirTemperatureMin: case dailyAirTemperatureRange:
+        case monthlyAirTemperatureAvg: case monthlyAirTemperatureMax: case monthlyAirTemperatureMin:
         case airDewTemperature:
         case snowSurfaceTemperature:
         case dailyHeatingDegreeDays:
+        case atmPressure:
             setTemperatureScale(colorScale);
             break;
-        case elaboration:
+        case elaborationVar:
             setDefaultScale(colorScale);
             break;
         case airRelHumidity: case dailyAirRelHumidityAvg: case dailyAirRelHumidityMax:
@@ -781,18 +790,29 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case thom: case dailyThomMax: case dailyThomAvg: case dailyThomHoursAbove: case dailyThomDaytime: case dailyThomNighttime:
             setRelativeHumidityScale(colorScale);
             break;
-        case precipitation: case dailyPrecipitation: case referenceEvapotranspiration:
-        case dailyReferenceEvapotranspirationHS: case dailyReferenceEvapotranspirationPM: case actualEvaporation:
-        case snowFall: case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt:
+        case precipitation:
+        case snowWaterEquivalent: case snowMelt: case snowFall: case snowLiquidWaterContent:
+            setPrecipitationScale(colorScale);
+            colorScale->setHideZero(true);
+            colorScale->setHideMinimum(true);
+            colorScale->setTransparent(true);
+            break;
+        case dailyPrecipitation: case monthlyPrecipitation:
+            setPrecipitationScale(colorScale);
+            colorScale->setHideZero(true);
+            break;
+        case referenceEvapotranspiration: case dailyReferenceEvapotranspirationHS:
+        case dailyReferenceEvapotranspirationPM: case actualEvaporation:
         case dailyWaterTableDepth:
             setPrecipitationScale(colorScale);
-            break;  
+            break;
         case snowAge:
             setGrayScale(colorScale);
             reverseColorScale(colorScale);
             break;
-        case dailyBIC:
-            setCenteredScale(colorScale);
+        case dailyBIC: case monthlyBIC:
+            setPrecipitationScale(colorScale);
+            reverseColorScale(colorScale);
             break;
         case globalIrradiance: case directIrradiance: case diffuseIrradiance: case reflectedIrradiance:
         case netIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
@@ -800,14 +820,20 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case sensibleHeat: case latentHeat:
             setRadiationScale(colorScale);
             break;
-        case windVectorIntensity: case windScalarIntensity: case windVectorX: case windVectorY: case dailyWindVectorIntensityAvg: case dailyWindVectorIntensityMax: case dailyWindScalarIntensityAvg: case dailyWindScalarIntensityMax:
-        case atmPressure:
+        case windVectorIntensity: case windScalarIntensity: case windVectorX: case windVectorY:
+        case dailyWindVectorIntensityAvg: case dailyWindVectorIntensityMax:
+        case dailyWindScalarIntensityAvg: case dailyWindScalarIntensityMax:
             setWindIntensityScale(colorScale);
             break;
         case leafAreaIndex:
             setLAIScale(colorScale);
             break;
-        case anomaly:
+        case snowVariation:
+            setAnomalyScale(colorScale);
+            reverseColorScale(colorScale);
+            colorScale->setHideZero(true);
+            break;
+        case anomalyVar:
             setAnomalyScale(colorScale);
             break;
         case noMeteoTerrain:
@@ -822,114 +848,116 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
 }
 
 
+static const std::unordered_map<meteoVariable, std::string> variableStringMap =
+    {
+        {airTemperature, "Air temperature (°C)"},
+        {dailyAirTemperatureAvg, "Air temperature (°C)"},
+        {monthlyAirTemperatureAvg, "Monthly air temperature (°C)"},
+
+        {dailyAirTemperatureMax, "Maximum air temperature (°C)"},
+        {monthlyAirTemperatureMax, "Monthly maximum air temperature (°C)"},
+
+        {dailyAirTemperatureMin, "Minimum air temperature (°C)"},
+        {monthlyAirTemperatureMin, "Monthly minimum air temperature (°C)"},
+
+        {dailyAirTemperatureRange, "Air temperature range (°C)"},
+
+        {airRelHumidity, "Air relative humidity (%)"},
+        {dailyAirRelHumidityAvg, "Air relative humidity (%)"},
+
+        {dailyAirRelHumidityMax, "Maximum relative humidity (%)"},
+        {dailyAirRelHumidityMin, "Minimum relative humidity (%)"},
+
+        {airDewTemperature, "Air dew temperature (°C)"},
+
+        {thom, "Thom index ()"},
+        {dailyThomAvg, "Thom index ()"},
+        {dailyThomDaytime, "Day Thom index ()"},
+        {dailyThomNighttime, "Night Thom index ()"},
+        {dailyThomHoursAbove, "Hours with Thom index above (h)"},
+
+        {dailyPrecipitation, "Precipitation (mm)"},
+        {precipitation, "Precipitation (mm)"},
+        {monthlyPrecipitation, "Monthly precipitation (mm)"},
+
+        {dailyGlobalRadiation, "Solar radiation (MJ m-2)"},
+        {monthlyGlobalRadiation, "Monthly solar radiation (MJ m-2)"},
+
+        {globalIrradiance, "Global solar irradiance (W m-2)"},
+        {directIrradiance, "Direct solar irradiance (W m-2)"},
+        {diffuseIrradiance, "Diffuse solar irradiance (W m-2)"},
+        {reflectedIrradiance, "Reflected solar irradiance (W m-2)"},
+        {netIrradiance, "Solar net irradiance (W m-2)"},
+
+        {atmTransmissivity, "Atmospheric transmissivity [-]"},
+        {atmPressure, "Atmospheric pressure [hPa]"},
+
+        {windVectorIntensity, "Wind vector intensity (m s-1)"},
+        {windVectorDirection, "Wind vector direction (deg)"},
+        {windVectorX, "Wind vector component X (m s-1)"},
+        {windVectorY, "Wind vector component Y (m s-1)"},
+        {windScalarIntensity, "Wind scalar intensity (m s-1)"},
+
+        {dailyWindVectorIntensityAvg, "Average wind vector intensity (m s-1)"},
+        {dailyWindVectorIntensityMax, "Maximum wind vector intensity (m s-1)"},
+        {dailyWindVectorDirectionPrevailing, "Prevailing wind direction (deg)"},
+
+        {dailyWindScalarIntensityAvg, "Average wind scalar intensity (m s-1)"},
+        {dailyWindScalarIntensityMax, "Maximum wind scalar intensity (m s-1)"},
+
+        {referenceEvapotranspiration, "Reference evapotranspiration (mm)"},
+        {dailyReferenceEvapotranspirationHS, "Reference evapotranspiration HS (mm)"},
+        {dailyReferenceEvapotranspirationPM, "Reference evapotranspiration PM (mm)"},
+        {monthlyReferenceEvapotranspirationHS, "Monthly reference evapotranspiration HS (mm)"},
+
+        {actualEvaporation, "Actual evaporation (mm)"},
+
+        {leafWetness, "Leaf wetness (h)"},
+        {dailyLeafWetness, "Leaf wetness (h)"},
+
+        {dailyBIC, "Hydroclimatic balance (mm)"},
+        {monthlyBIC, "Monthly hydroclimatic balance (mm)"},
+
+        {dailyWaterTableDepth, "Water table depth (mm)"},
+
+        {snowWaterEquivalent, "Snow water equivalent (mm)"},
+        {snowFall, "Snow fall (mm)"},
+        {snowMelt, "Snowmelt (mm)"},
+        {snowVariation, "Variation in SWE (mm)"},
+        {snowLiquidWaterContent, "Snow liquid water content (mm)"},
+        {snowAge, "Snow age (days)"},
+
+        {snowSurfaceTemperature, "Surface temperature (°C)"},
+        {snowInternalEnergy, "Energy content (kJ m-2)"},
+        {snowSurfaceEnergy, "Energy content surface layer (kJ m-2)"},
+
+        {sensibleHeat, "Sensible heat (kJ m-2)"},
+        {latentHeat, "Latent heat (kJ m-2)"},
+
+        {dailyHeatingDegreeDays, "Heating degree days (°D)"},
+
+        {leafAreaIndex, "Leaf area index (m2 m-2)"},
+
+        {elaborationVar, "Elaboration"},
+        {anomalyVar, "Anomaly"},
+
+        {noMeteoTerrain, "Elevation (m)"}
+};
+
+
 std::string getVariableString(meteoVariable myVar)
 {
-    if (myVar == airTemperature || myVar == dailyAirTemperatureAvg || myVar == monthlyAirTemperatureAvg)
-        return "Air temperature (°C)";
-    else if (myVar == dailyAirTemperatureMax || myVar == monthlyAirTemperatureMax)
-        return "Maximum air temperature (°C)";
-    else if (myVar == dailyAirTemperatureMin || myVar == monthlyAirTemperatureMin)
-        return "Minimum air temperature (°C)";
-    else if (myVar == dailyAirTemperatureRange)
-        return "Air temperature range (°C)";
-    else if (myVar == airRelHumidity || myVar == dailyAirRelHumidityAvg)
-        return "Air relative humidity (%)";
-    else if (myVar == dailyAirRelHumidityMax)
-        return "Maximum relative humidity (%)";
-    else if (myVar == dailyAirRelHumidityMin)
-        return "Minimum relative humidity (%)";
-    else if (myVar == airDewTemperature)
-        return "Air dew temperature (°C)";
-    else if (myVar == thom || myVar == dailyThomAvg)
-        return "Thom index ()";
-    else if (myVar == dailyThomDaytime)
-        return "Day Thom index ()";
-    else if (myVar == dailyThomNighttime)
-        return "Night Thom index ()";
-    else if (myVar == dailyThomHoursAbove)
-        return "Hours with Thom index above (h)";
-    else if ((myVar == dailyPrecipitation ||  myVar == precipitation || myVar == monthlyPrecipitation))
-        return "Precipitation (mm)";
-    else if (myVar == dailyGlobalRadiation || myVar == monthlyGlobalRadiation)
-        return "Solar radiation (MJ m-2)";
-    else if (myVar == globalIrradiance)
-        return "Global solar irradiance (W m-2)";
-    else if (myVar == directIrradiance)
-        return "Direct solar irradiance (W m-2)";
-    else if (myVar == diffuseIrradiance)
-        return "Diffuse solar irradiance (W m-2)";
-    else if (myVar == reflectedIrradiance)
-        return "Reflected solar irradiance (W m-2)";
-    else if (myVar == netIrradiance)
-        return "Solar net irradiance (W m-2)";
-    else if (myVar == atmTransmissivity)
-        return "Atmospheric transmissivity [-]";
-    else if (myVar == windVectorIntensity)
-        return "Wind vector intensity (m s-1)";
-    else if (myVar == windVectorDirection)
-        return "Wind vector direction (deg)";
-    else if (myVar == windVectorX)
-        return "Wind vector component X (m s-1)";
-    else if (myVar == windVectorY)
-        return "Wind vector component Y (m s-1)";
-    else if (myVar == windScalarIntensity)
-        return "Wind scalar intensity (m s-1)";
-    else if (myVar == dailyWindVectorIntensityAvg)
-        return "Average wind vector intensity (m s-1)";
-    else if (myVar == dailyWindVectorIntensityMax)
-        return "Maximum wind vector intensity (m s-1)";
-    else if (myVar == dailyWindVectorDirectionPrevailing)
-        return "Prevailing wind direction (deg)";
-    else if (myVar == dailyWindScalarIntensityAvg)
-        return "Average wind scalar intensity (m s-1)";
-    else if (myVar == dailyWindScalarIntensityMax)
-        return "Maximum wind scalar intensity (m s-1)";
-    else if (myVar == referenceEvapotranspiration ||
-             myVar == dailyReferenceEvapotranspirationHS ||
-             myVar == monthlyReferenceEvapotranspirationHS ||
-             myVar == dailyReferenceEvapotranspirationPM ||
-             myVar == actualEvaporation)
-        return "Reference evapotranspiration (mm)";
-    else if (myVar == leafWetness || myVar == dailyLeafWetness)
-        return "Leaf wetness (h)";
-    else if (myVar == dailyBIC || myVar == monthlyBIC)
-        return "Hydroclimatic balance (mm)";
-    else if (myVar == dailyWaterTableDepth)
-        return "Water table depth (mm)";
-    else if (myVar == snowWaterEquivalent)
-        return "Snow water equivalent (mm)";
-    else if (myVar == snowFall)
-        return "Snow fall (mm)";
-    else if (myVar == snowMelt)
-        return "Snowmelt (mm)";
-    else if (myVar == snowLiquidWaterContent)
-        return "Snow liquid water content (mm)";
-    else if (myVar == snowAge)
-        return "Snow age (days)";
-    else if (myVar == snowSurfaceTemperature)
-        return "Surface temperature (°C)";
-    else if (myVar == snowInternalEnergy)
-        return "Energy content (kJ m-2)";
-    else if (myVar == snowSurfaceEnergy)
-        return "Energy content surface layer (kJ m-2)";
-    else if (myVar == sensibleHeat)
-        return "Sensible heat (kJ m-2)";
-    else if (myVar == latentHeat)
-        return "Latent heat (kJ m-2)";
-    else if (myVar == dailyHeatingDegreeDays)
-        return "Heating degree days (°D)";
-    else if (myVar == leafAreaIndex)
-            return "Leaf area index (m2 m-2)";
+    auto it = variableStringMap.find(myVar);
 
-    else if (myVar == noMeteoTerrain)
-        return "Elevation (m)";
-    else
-        return "No variable";
+    if (it != variableStringMap.end())
+        return it->second;
+
+    return "No variable.";
 }
 
-std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteoVariable value)
-{
 
+std::string getKeyStringMeteoMap(const std::map<std::string, meteoVariable> &map, meteoVariable value)
+{
     std::map<std::string, meteoVariable>::const_iterator it;
     std::string key = "";
 
@@ -941,12 +969,13 @@ std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteo
             break;
         }
     }
+
     return key;
 }
 
+
 std::string getUnitFromVariable(meteoVariable var)
 {
-
     std::string unit = "";
     std::map<std::vector<meteoVariable>, std::string>::const_iterator it;
     std::vector<meteoVariable> key;
@@ -961,10 +990,12 @@ std::string getUnitFromVariable(meteoVariable var)
         }
         key.clear();
     }
+
     return unit;
 }
 
-meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string& value)
+
+meteoVariable getKeyMeteoVarMeteoMap(const std::map<meteoVariable, std::string> &map, const std::string& value)
 {
     std::map<meteoVariable, std::string>::const_iterator it;
     meteoVariable key = noMeteoVar;
@@ -977,10 +1008,12 @@ meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, co
             break;
         }
     }
+
     return key;
 }
 
-meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(std::map<meteoVariable,std::string> map, const std::string& value)
+
+meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(const std::map<meteoVariable, std::string> &map, const std::string& value)
 {
     std::map<meteoVariable, std::string>::const_iterator it;
     meteoVariable key = noMeteoVar;
@@ -998,6 +1031,7 @@ meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(std::map<meteoVariable,std
     return key;
 }
 
+
 frequencyType getVarFrequency(meteoVariable myVar)
 {
     if (MapDailyMeteoVarToString.find(myVar) != MapDailyMeteoVarToString.end())
@@ -1010,7 +1044,8 @@ frequencyType getVarFrequency(meteoVariable myVar)
         return noFrequency;
 }
 
-meteoVariable getMeteoVar(std::string varString)
+
+meteoVariable getMeteoVar(const std::string& varString)
 {
     auto search = MapDailyMeteoVar.find(varString);
 
@@ -1031,11 +1066,11 @@ meteoVariable getMeteoVar(std::string varString)
                 return search->second;
             }
         }
-
     }
 
     return noMeteoVar;
 }
+
 
 std::string getMeteoVarName(meteoVariable var)
 {
@@ -1046,11 +1081,29 @@ std::string getMeteoVarName(meteoVariable var)
     else
     {
         search = MapHourlyMeteoVarToString.find(var);
-        if (search != MapHourlyMeteoVarToString.end()) return search->second;
+        if (search != MapHourlyMeteoVarToString.end())
+            return search->second;
+        else
+        {
+            search = MapMonthlyMeteoVarToString.find(var);
+            if (search != MapMonthlyMeteoVarToString.end())
+                return search->second;
+        }
     }
 
     return "";
 }
+
+
+std::string getCriteria3DVarName(criteria3DVariable var)
+{
+    auto search = MapCriteria3DVarToString.find(var);
+    if (search != MapCriteria3DVarToString.end())
+        return search->second;
+
+    return "";
+}
+
 
 std::string getLapseRateCodeName(lapseRateCodeType code)
 {
@@ -1061,14 +1114,13 @@ std::string getLapseRateCodeName(lapseRateCodeType code)
     return "";
 }
 
-meteoVariable getHourlyMeteoVar(std::string varString)
+meteoVariable getHourlyMeteoVar(const std::string& varString)
 {
     auto search = MapHourlyMeteoVar.find(varString);
-
     if (search != MapHourlyMeteoVar.end())
         return search->second;
-    else
-        return noMeteoVar;
+
+    return noMeteoVar;
 }
 
 
@@ -1158,6 +1210,7 @@ meteoVariable getDailyMeteoVarFromHourly(meteoVariable myVar, aggregationMethod 
 
     return noMeteoVar;
 }
+
 
 meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
 {

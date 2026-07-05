@@ -6,11 +6,12 @@
 #-----------------------------------------------------
 
 QT -= gui
-QT += core sql
+QT += sql
 
 TARGET = crop
 TEMPLATE = lib
 CONFIG += staticlib
+CONFIG += c++17
 
 CONFIG += debug_and_release
 

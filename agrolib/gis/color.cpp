@@ -24,7 +24,9 @@
 */
 
 #include <algorithm>
+#include <random>
 #include <math.h>
+
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "color.h"
@@ -54,7 +56,10 @@ Crit3DColorScale::Crit3DColorScale()
 
     _minimum = NODATA;
     _maximum = NODATA;
-    _isRangeBlocked = false;
+    _isFixedRange = false;
+    _isHideMinimum = false;
+    _isTransparent = false;
+    _isHideZero = 0;
 
     _classification = classificationMethod::EqualInterval;
 }
@@ -108,46 +113,74 @@ bool Crit3DColorScale::classify()
                 color[n].blue = keyColor[i].blue + short(dBlue * float(j));
             }
         }
-        color[_nrColors-1] = keyColor[_nrKeyColors -1];
+
+        // last colors
+        int lastIndex = nrStep * nrIntervals;
+        for (i = lastIndex; i < _nrColors; i++)
+        {
+            color[i] = keyColor[_nrKeyColors -1];
+        }
     }
 
     return true;
 }
 
 
-Crit3DColor* Crit3DColorScale::getColor(float value)
+Crit3DColor* Crit3DColorScale::getColor(double value)
 {
-    unsigned int index = 0;
-
-    if (value <= _minimum)
-    {
-        index = 0;
-    }
-    else if (value >= _maximum)
-    {
-        index = _nrColors-1;
-    }
-    else
-    {
-        if (_classification == classificationMethod::EqualInterval)
-        {
-            index = unsigned(float(_nrColors-1) * ((value - _minimum) / (_maximum - _minimum)));
-        }
-    }
-
+    unsigned int index = getColorIndex(value);
     return &color[index];
 }
 
 
-unsigned int Crit3DColorScale::getColorIndex(float value)
+unsigned int Crit3DColorScale::getColorIndex(double value) const
 {
+    if (_nrColors == 0)
+        return 0;
+
+    if (_nrColors == 1 || _maximum <= _minimum)
+        return 0;
+
     if (value <= _minimum)
         return 0;
-    else if (value >= _maximum)
-        return _nrColors-1;
-    else if (_classification == classificationMethod::EqualInterval)
-        return unsigned(float(_nrColors-1) * ((value - _minimum) / (_maximum - _minimum)));
-    else return 0;
+
+    if (value >= _maximum)
+        return _nrColors - 1;
+
+    if (_classification == classificationMethod::EqualInterval)
+    {
+        return static_cast<unsigned int>((_nrColors - 1) *
+                                         (value - _minimum) / (_maximum - _minimum));
+    }
+    else
+    {
+        // todo other classificationMethod
+        return 0;
+    }
+}
+
+
+bool setRandomColors(Crit3DColorScale* myScale)
+{
+    if (! myScale)
+        return false;
+
+    myScale->initialize(64, 64);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dist(0, 255);
+
+    for (size_t i = 0; i < myScale->keyColor.size(); ++i)
+    {
+        int r = dist(gen);
+        int g = dist(gen);
+        int b = dist(gen);
+
+        myScale->keyColor[i] = Crit3DColor(r, g, b);
+    }
+
+    return myScale->classify();
 }
 
 
@@ -179,11 +212,12 @@ bool setDTMScale(Crit3DColorScale* myScale)
 
 bool setLAIScale(Crit3DColorScale* myScale)
 {
-    myScale->initialize(3, 256);
+    myScale->initialize(4, 256);
 
-    myScale->keyColor[0] = Crit3DColor(200, 150, 0);        /*!<  ocra */
-    myScale->keyColor[1] = Crit3DColor(32, 150, 32);        /*!<  dark green */
-    myScale->keyColor[2] = Crit3DColor(0, 255, 0);          /*!<  green */
+    myScale->keyColor[0] = Crit3DColor(200, 160, 0);        /*!<  ocra */
+    myScale->keyColor[1] = Crit3DColor(160, 160, 0);        /*!<  yellow */
+    myScale->keyColor[2] = Crit3DColor(32, 160, 32);        /*!<  dark green */
+    myScale->keyColor[3] = Crit3DColor(0, 255, 0);          /*!<  green */
 
     return(myScale->classify());
 }
@@ -198,6 +232,20 @@ bool setTemperatureScale(Crit3DColorScale* myScale)
     myScale->keyColor[2] = Crit3DColor(255, 255, 0);       /*!< yellow */
     myScale->keyColor[3] = Crit3DColor(255, 0, 0);         /*!< red */
     myScale->keyColor[4] = Crit3DColor(128, 0, 128);       /*!< violet */
+
+    return(myScale->classify());
+}
+
+
+bool setSlopeStabilityScale(Crit3DColorScale* myScale)
+{
+    myScale->initialize(5, 256);
+
+    myScale->keyColor[0] = Crit3DColor(0, 0, 0);           /*!< black */
+    myScale->keyColor[1] = Crit3DColor(128, 0, 128);       /*!< violet */
+    myScale->keyColor[2] = Crit3DColor(255, 0, 0);         /*!< red */
+    myScale->keyColor[3] = Crit3DColor(255, 255, 0);       /*!< yellow */
+    myScale->keyColor[4] = Crit3DColor(64, 196, 64);       /*!< green */
 
     return(myScale->classify());
 }
@@ -299,11 +347,13 @@ bool setRadiationScale(Crit3DColorScale* myScale)
 
 bool setSurfaceWaterScale(Crit3DColorScale* myScale)
 {
-    myScale->initialize(3, 256);
+    myScale->initialize(5, 256);
 
     myScale->keyColor[0] = Crit3DColor(255, 255, 255);      /*!< white */
     myScale->keyColor[1] = Crit3DColor(0, 255, 255);        /*!< cyan */
     myScale->keyColor[2] = Crit3DColor(0, 0, 255);          /*!< blue */
+    myScale->keyColor[3] = Crit3DColor(128, 0, 255);        /*!< violet */
+    myScale->keyColor[4] = Crit3DColor(255, 0, 0);          /*!< red */
 
     return(myScale->classify());
 }
@@ -349,6 +399,23 @@ bool reverseColorScale(Crit3DColorScale* myScale)
 }
 
 
+void mixColors(const Crit3DColor &backColor, const Crit3DColor &foreColor, Crit3DColor &outColor, float alpha)
+{
+    if (alpha == 0)
+    {
+        outColor.red = backColor.red;
+        outColor.green = backColor.green;
+        outColor.blue = backColor.blue;
+    }
+    else
+    {
+        outColor.red = std::min(255, int(backColor.red * (1. - alpha)) + int(foreColor.red * alpha));
+        outColor.green = std::min(255, int(backColor.green * (1. - alpha)) + int(foreColor.green * alpha));
+        outColor.blue = std::min(255, int(backColor.blue * (1. - alpha)) +int(foreColor.blue * alpha));
+    }
+}
+
+
 /*!
  * \brief roundColorScale round colorScale values on the second (or third) digit of each range.
  * It requires that nrColors is a multiply of nrIntervals for a correct visualization in the colors legend.
@@ -391,7 +458,7 @@ bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounde
     }
     else
     {
-        double logAvg = log10(abs(avg));
+        double logAvg = log10(fabs(avg));
         if (lessRounded)
         {
             myExp = int((floor(logStep) + floor(logAvg))/2 - 1);

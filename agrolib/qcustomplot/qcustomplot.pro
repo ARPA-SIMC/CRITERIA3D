@@ -11,7 +11,7 @@
 #  Version: 2.0.1
 #----------------------------------------------------
 
-QT   += gui
+QT  += printsupport
 
 TEMPLATE = lib
 CONFIG += staticlib

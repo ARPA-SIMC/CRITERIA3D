@@ -1,6 +1,7 @@
 #include "soil.h"
 #include "soilDbTools.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "utilities.h"
 
 #include <math.h>
@@ -10,15 +11,21 @@
 #include <QSqlError>
 #include <QUuid>
 #include <QVariant>
+#include <QFile>
 
 
 bool openDbSoil(const QString &dbSoilName, QSqlDatabase &dbSoil, QString &errorStr)
 {
+    if (! QFile(dbSoilName).exists())
+    {
+        errorStr = "Soil database doesn't exist:\n" + dbSoilName;
+        return false;
+    }
 
     dbSoil = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
     dbSoil.setDatabaseName(dbSoilName);
 
-    if (!dbSoil.open())
+    if (! dbSoil.open())
     {
        errorStr = "Connection with database fail";
        return false;
@@ -30,11 +37,10 @@ bool openDbSoil(const QString &dbSoilName, QSqlDatabase &dbSoil, QString &errorS
 
 bool loadGeotechnicsParameters(const QSqlDatabase &dbSoil, std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList, QString &errorStr)
 {
-    QString queryString = "SELECT id_class, effective_cohesion, friction_angle ";
-    queryString        += "FROM geotechnics ORDER BY id_class";
+    QString queryString = "SELECT id_class, effective_cohesion, friction_angle FROM geotechnics ORDER BY id_class";
+    QSqlQuery query(dbSoil);
 
-    QSqlQuery query = dbSoil.exec(queryString);
-    if (query.lastError().text() != "")
+    if (! query.exec(queryString))
     {
         errorStr = query.lastError().text();
         return false;
@@ -80,6 +86,7 @@ bool loadVanGenuchtenParameters(const QSqlDatabase &dbSoil, std::vector<soil::Cr
     queryString        += "FROM van_genuchten ORDER BY id_texture";
 
     QSqlQuery query = dbSoil.exec(queryString);
+
     query.last();
     int tableSize = query.at() + 1;     //SQLITE doesn't support SIZE
 
@@ -117,7 +124,7 @@ bool loadVanGenuchtenParameters(const QSqlDatabase &dbSoil, std::vector<soil::Cr
             }
 
         textureClassList[id].classNameUSDA = query.value(1).toString().toStdString();
-        textureClassList[id].vanGenuchten.alpha = query.value(2).toDouble();    //[kPa^-1]
+        textureClassList[id].vanGenuchten.alpha = query.value(2).toDouble();    //[kPa-1]
         textureClassList[id].vanGenuchten.n = query.value(3).toDouble();
         textureClassList[id].vanGenuchten.he = query.value(4).toDouble();       //[kPa]
 
@@ -215,7 +222,7 @@ bool loadSoilInfo(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Cri
         }
         else
         {
-            errorStr = "soilCode not found";
+            errorStr = "soilCode not found: " + soilCode ;
             return false;
         }
     }
@@ -269,6 +276,13 @@ bool loadSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Cri
         getValue(query.value("sand"), &sand);
         getValue(query.value("silt"), &silt);
         getValue(query.value("clay"), &clay);
+        // check
+        if (! isEqual(sand, NODATA) && ! isEqual(silt, NODATA) && ! isEqual(clay, NODATA) && (sand + silt + clay) <= 1.01)
+        {
+            sand *= 100;
+            silt *= 100;
+            clay *= 100;
+        }
         mySoil.horizon[i].dbData.sand = sand;
         mySoil.horizon[i].dbData.silt = silt;
         mySoil.horizon[i].dbData.clay = clay;
@@ -291,7 +305,7 @@ bool loadSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Cri
         getValue(query.value("k_sat"), &ksat);
         mySoil.horizon[i].dbData.kSat = ksat;
 
-        // NEW fields for soil stability, not present in old databases
+        // NEW fields for slope stability, not present in old databases
         QList<QString> fieldList = getFields(query);
 
         double value = NODATA;
@@ -345,11 +359,12 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
               const std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
               const soil::Crit3DFittingOptions &fittingOptions, QString& errorStr)
 {
-    if (!loadSoilInfo(dbSoil, soilCode, mySoil, errorStr))
+    if (! loadSoilInfo(dbSoil, soilCode, mySoil, errorStr))
     {
         return false;
     }
-    if (!loadSoilData(dbSoil, soilCode, mySoil, errorStr))
+
+    if (! loadSoilData(dbSoil, soilCode, mySoil, errorStr))
     {
         return false;
     }
@@ -369,12 +384,16 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
             }
             else
             {
-                errorStr += "\n";
+                if (horizonError != "")
+                    errorStr += "\n";
             }
 
-            errorStr += "soil_code: " + soilCode
+            if (horizonError != "")
+            {
+                errorStr += "soil_code: " + soilCode
                         + " horizon nr." + QString::number(mySoil.horizon[i].dbData.horizonNr)
                         + " " + QString::fromStdString(horizonError);
+            }
         }
     }
 
@@ -382,16 +401,20 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
     // errors on the last horizon is tolerated (bedrock)
     if (mySoil.nrHorizons > 0)
     {
-        int lastHorizonIndex = mySoil.nrHorizons-1;
         if (firstWrongIndex != NODATA)
         {
-            if (mySoil.nrHorizons == 1)
+            if (mySoil.nrHorizons == 1 || firstWrongIndex == 0)
+            {
                 return false;
+            }
             else
-                lastHorizonIndex = firstWrongIndex-1;
+            {
+                mySoil.nrHorizons = firstWrongIndex;
+                mySoil.horizon.resize(mySoil.nrHorizons);
+            }
         }
 
-        mySoil.totalDepth = mySoil.horizon[lastHorizonIndex].lowerDepth;
+        mySoil.totalDepth = mySoil.horizon[mySoil.nrHorizons-1].lowerDepth;
     }
     else
     {
@@ -536,7 +559,7 @@ bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::C
 }
 
 
-bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, int horizon, QString &errorStr)
+bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, int horizonNr, QString &errorStr)
 {
     QSqlQuery qry(dbSoil);
     if (soilCode.isEmpty())
@@ -548,7 +571,7 @@ bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soi
     // delete all row from table horizons of soil:soilCode
     qry.prepare( "DELETE FROM water_retention WHERE soil_code = :soil_code AND horizon_nr = :horizon_nr");
     qry.bindValue(":soil_code", soilCode);
-    qry.bindValue(":horizon_nr", horizon);
+    qry.bindValue(":horizon_nr", horizonNr);
 
     if( !qry.exec() )
     {
@@ -565,11 +588,11 @@ bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soi
     QVariantList water_potential;
     QVariantList water_content;
 
-    unsigned int horizon_index = unsigned(horizon-1);
+    unsigned int horizon_index = unsigned(horizonNr-1);
     for (unsigned int i=0; i < mySoil.horizon[horizon_index].dbData.waterRetention.size(); i++)
     {
         soil_code << soilCode;
-        horizon_nr << horizon;
+        horizon_nr << horizonNr;
         water_potential << mySoil.horizon[horizon_index].dbData.waterRetention[i].water_potential;
         water_content << mySoil.horizon[horizon_index].dbData.waterRetention[i].water_content;
     }

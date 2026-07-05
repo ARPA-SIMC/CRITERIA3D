@@ -4,9 +4,6 @@
     #ifndef GIS_H
         #include "gis.h"
     #endif
-    #ifndef CRIT3DDATE_H
-        #include "crit3dDate.h"
-    #endif
     #ifndef PROJECT3D_H
         #include "project3D.h"
     #endif
@@ -51,11 +48,8 @@
     bool saveWaterBalanceCumulatedOutput(Vine3DProject* myProject, QDate myDate, criteria3DVariable myVar,
                                 QString varName, QString notes, QString outputPath);
 
-    double* getCriteria3DVarProfile(Vine3DProject* myProject, int myRow, int myCol, criteria3DVariable myVar);
-    double* getSoilVarProfile(Vine3DProject* myProject, int myRow, int myCol, soil::soilVariable myVar);
-
-    void resetWaterBalanceMap(Vine3DProject* myProject);
-    void updateWaterBalanceMaps(Vine3DProject* myProject);
+    std::vector<double> getCriteria3DVarProfile(Vine3DProject* myProject, int myRow, int myCol, criteria3DVariable myVar);
+    std::vector<double> getSoilVarProfile(Vine3DProject* myProject, int myRow, int myCol, soil::soilVariable myVar);
 
 
 #endif // WATERBALANCE_H

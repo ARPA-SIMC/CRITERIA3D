@@ -21,6 +21,7 @@
 #include <string.h>
 #include "shapeObject.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 
 
 unsigned int ShapeObject::getPartCount() const
@@ -119,7 +120,7 @@ void ShapeObject::assign(const SHPObject* obj)
             }
 
             // assign if the part is an hole
-            if (!isClockWise(part))
+            if (! isClockWise(*part))
             {
                 part->hole = true;
             }
@@ -199,7 +200,7 @@ const Point<double>* ShapeObject::getVertices() const
     return const_cast<const Point<double>*>(vertices);
 }
 
-Point<double> ShapeObject::getVertex(unsigned int index)
+Point<double> ShapeObject::getVertex(unsigned int index) const
 {
     return vertices[index];
 }
@@ -220,18 +221,27 @@ ShapeObject::Part ShapeObject::getPart(unsigned int indexPart) const
 }
 
 
-double ShapeObject::polygonArea(Part* part)
+double ShapeObject::getTotalArea() const
+{
+    double sumArea = 0.0;
+
+    for (unsigned int i = 0; i < parts.size(); ++i)
+    {
+        auto currentPart = getPart(i);
+        sumArea += std::abs(polygonArea(currentPart));
+    }
+
+    return sumArea;
+}
+
+
+double ShapeObject::polygonArea(Part& part) const
 {
     double area = 0.0;
-    unsigned long i;
-    unsigned long j;
+    unsigned long i, j;
 
-    if (part == nullptr)
-    {
-        return NODATA;
-    }
-    unsigned long offSet = part->offset;
-    unsigned long length = part->length;
+    unsigned long offSet = part.offset;
+    unsigned long length = part.length;
 
     for (i = 0; i < length; i++)
     {
@@ -243,19 +253,19 @@ double ShapeObject::polygonArea(Part* part)
 }
 
 
-bool ShapeObject::isClockWise(Part* part)
+bool ShapeObject::isClockWise(Part &part) const
 {
     return polygonArea(part) < 0;
 }
 
 
-bool ShapeObject::isHole(unsigned int n)
+bool ShapeObject::isHole(unsigned int n) const
 {
     return getPart(n).hole;
 }
 
 
-bool ShapeObject::pointInPart(double x, double y, unsigned int indexPart)
+bool ShapeObject::pointInPart(double x, double y, unsigned int indexPart) const
 {
     Part part = getPart(indexPart);
 
@@ -289,7 +299,7 @@ bool ShapeObject::pointInPart(double x, double y, unsigned int indexPart)
 // WARNING: if the test point is on the border of the polygon,
 // this algorithm will deliver unpredictable results
 // --------------------------------------------------------------
-bool ShapeObject::pointInPolygon(double x, double y)
+bool ShapeObject::pointInPolygon(double x, double y) const
 {
     if (x < bounds.xmin || x > bounds.xmax || y < bounds.ymin || y > bounds.ymax)
     {
@@ -321,7 +331,7 @@ bool ShapeObject::pointInPolygon(double x, double y)
 }
 
 
-int ShapeObject::getIndexPart(double x, double y)
+int ShapeObject::getIndexPart(double x, double y) const
 {
     if (x < bounds.xmin || x > bounds.xmax || y < bounds.ymin || y > bounds.ymax)
     {

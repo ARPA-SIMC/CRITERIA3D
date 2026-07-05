@@ -37,19 +37,15 @@
 
     private slots:
 
-        void mouseMove(QPoint eventPos);
+        // slots for connect
+        void mouseMove(const QPoint &eventPos);
         void updateMaps();
         void updateOutputMap();
 
-        void on_actionOpenProject_triggered();
-        void on_actionCloseProject_triggered();
-        void on_actionLoad_DEM_triggered();
-        void on_actionLoad_soil_map_triggered();
-        void on_actionLoad_soil_data_triggered();
-        void on_actionLoad_MeteoPoints_triggered();
-        void on_actionMeteoPointsImport_data_triggered();
-
-        void on_actionNew_meteoPointsDB_from_csv_triggered();
+        void callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude,
+                                std::string lapseRateCode, bool isGrid);
+        void callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude,
+                                   std::string lapseRateCode, bool isGrid);
 
         void on_dateEdit_dateChanged(const QDate &date);
         void on_timeEdit_valueChanged(int myHour);
@@ -60,10 +56,30 @@
         void on_opacitySliderRasterInput_sliderMoved(int position);
         void on_opacitySliderRasterOutput_sliderMoved(int position);
 
+        // Menu File
+        void on_actionOpenProject_triggered();
+        void on_actionCloseProject_triggered();
+        void on_actionLoad_DEM_triggered();
+        void on_actionLoad_soil_map_triggered();
+        void on_actionLoad_soil_data_triggered();
+        void on_actionLoad_MeteoPoints_triggered();
+        void on_actionMeteoPointsImport_data_triggered();
+        void on_actionNew_meteoPointsDB_from_csv_triggered();
+
+        // Menu Show
+        void on_actionShow_3D_viewer_triggered();
+        void on_viewer3DClosed();
+        void on_slopeChanged();
+
         void on_flagView_not_active_points_toggled(bool state);
         void on_actionView_PointsHide_triggered();
         void on_actionView_PointsLocation_triggered();
         void on_actionView_PointsCurrentVariable_triggered();
+
+        void on_flagView_values_toggled(bool arg1);
+
+        void on_actionView_SoilMap_triggered();
+        void on_actionHide_Soil_map_triggered();
 
         void on_actionView_Boundary_triggered();
         void on_actionView_Slope_triggered();
@@ -79,33 +95,8 @@
         void on_actionView_Air_relative_humidity_triggered();
         void on_actionView_Wind_intensity_triggered();
         void on_actionView_ET0_triggered();
-        void on_actionViewMeteoVariable_None_triggered();
-
-        void on_actionMapOpenStreetMap_triggered();
-        void on_actionMapESRISatellite_triggered();
-        void on_actionMapTerrain_triggered();
-        void on_actionMapGoogle_hybrid_satellite_triggered();
-        void on_actionMapGoogle_satellite_triggered();
-
-        void on_actionProjectSettings_triggered();
-
-        void on_actionVariableQualitySpatial_triggered();
-        void on_actionInterpolationSettings_triggered();
-        void on_actionProxy_analysis_triggered();
-        void on_actionComputePeriod_meteoVariables_triggered();
-        void on_actionComputeHour_meteoVariables_triggered();
-
-        void callNewMeteoWidget(std::string id, std::string name, bool isGrid);
-        void callAppendMeteoWidget(std::string id, std::string name, bool isGrid);
-
-        void on_actionRadiation_settings_triggered();
-        void on_actionRadiation_compute_current_hour_triggered();
-        void on_actionRadiation_run_model_triggered();
-
-        void on_actionSnow_settings_triggered();
-        void on_actionSnow_initialize_triggered();
-        void on_actionSnow_compute_next_hour_triggered();
-        void on_actionSnow_run_model_triggered();
+        void on_actionView_MeteoVariable_None_triggered();
+        void on_actionView_Radiation_None_triggered();
 
         void on_actionView_Snow_water_equivalent_triggered();
         void on_actionView_Snow_surface_temperature_triggered();
@@ -116,19 +107,24 @@
         void on_actionView_Snow_age_triggered();
         void on_actionView_Snowmelt_triggered();
 
-        void on_actionSave_state_triggered();
-        void on_actionLoad_state_triggered();
-        void on_flagSave_state_daily_step_toggled(bool isChecked);
+        void on_actionView_Snow_sensible_heat_triggered();
+        void on_actionView_Snow_latent_heat_triggered();
 
-        void on_actionCriteria3D_Initialize_triggered();
-        void on_actionCriteria3D_compute_next_hour_triggered();
-        void on_actionCriteria3D_run_models_triggered();
+        void on_actionView_Crop_LAI_triggered();
+        void on_actionView_Crop_degreeDays_triggered();
 
-        void on_buttonModelPause_clicked();
-        void on_buttonModelStop_clicked();
-        void on_buttonModelStart_clicked();
+        void on_actionView_Factor_of_safety_triggered();
+        void on_actionView_Factor_of_safety_minimum_triggered();
+
+        void on_actionView_DegreeOfSaturation_automatic_range_triggered();
+        void on_actionView_DegreeOfSaturation_Current_depth_triggered();
+        void on_actionView_DegreeOfSaturation_Avg_triggered();
+
+        void on_actionView_SurfaceWaterContent_automatic_range_triggered();
+        void on_actionView_SurfaceWaterContent_fixed_range_triggered();
 
         // menu meteo points
+        void on_actionPoints_clear_selection_triggered();
         void on_actionDelete_Points_Selected_triggered();
         void on_actionDelete_Points_NotActive_triggered();
         void on_actionPoints_activate_all_triggered();
@@ -136,71 +132,74 @@
         void on_actionPoints_activate_selected_triggered();
         void on_actionPoints_deactivate_selected_triggered();
         void on_actionPoints_activate_from_point_list_triggered();
-
         void on_actionPoints_deactivate_from_point_list_triggered();
-
         void on_actionPoints_activate_with_criteria_triggered();
-
         void on_actionPoints_deactivate_with_criteria_triggered();
-
         void on_actionPoints_delete_data_selected_triggered();
-
-        void on_actionPoints_clear_selection_triggered();
-
         void on_actionPoints_delete_data_not_active_triggered();
-
         void on_actionPoints_deactivate_with_no_data_triggered();
 
-        void on_actionOutputPoints_clear_selection_triggered();
-
-        void on_actionOutputPoints_deactivate_all_triggered();
-
-        void on_actionOutputPoints_deactivate_selected_triggered();
-
-        void on_actionView_SoilMap_triggered();
-
-        void on_flagHide_outputPoints_toggled(bool isChecked);
-
-        void on_flagView_not_active_outputPoints_toggled(bool isChecked);
-
-        void on_actionOutputPoints_activate_all_triggered();
-
-        void on_actionOutputPoints_activate_selected_triggered();
-
-        void on_actionHide_soil_map_triggered();
-
-        void on_actionOutputPoints_newFile_triggered();
-
-        void on_actionOutputDB_new_triggered();
-
-        void on_actionOutputDB_open_triggered();
-
-        void on_actionOutputPoints_delete_selected_triggered();
-
-        void on_flagOutputPoints_save_output_toggled(bool isChecked);
-
-        void on_flagCompute_only_points_toggled(bool isChecked);
-
-        void on_actionLoad_OutputPoints_triggered();
-
-        void on_actionOutputPoints_add_triggered();
-
-        void on_flagView_values_toggled(bool arg1);
-
-        void on_actionView_Snow_sensible_heat_triggered();
-
-        void on_actionView_Snow_latent_heat_triggered();
-
-        void on_actionLoad_external_state_triggered();
+        // Menu data spatialization
+        void on_actionVariableQualitySpatial_triggered();
+        void on_actionInterpolationSettings_triggered();
+        void on_actionProxy_analysis_triggered();
 
         void on_actionTopographicDistanceMapWrite_triggered();
-
         void on_actionTopographicDistanceMapLoad_triggered();
 
-        void on_actionShow_3D_viewer_triggered();
+        void on_actionComputePeriod_meteoVariables_triggered();
+        void on_actionComputeHour_meteoVariables_triggered();
 
-        void on_viewer3DClosed();
-        void on_slopeChanged();
+        // Menu soalr radiation
+        void on_actionRadiation_settings_triggered();
+        void on_actionRadiation_compute_current_hour_triggered();
+        void on_actionRadiation_run_model_triggered();
+
+        // menu 3D model
+        void on_actionSnow_settings_triggered();
+        void on_actionCriteria3D_Initialize_triggered();
+        void on_actionCriteria3D_compute_next_hour_triggered();
+        void on_actionCriteria3D_run_models_triggered();
+        void on_actionCriteria3D_update_subHourly_triggered(bool isChecked);
+        void on_actionCriteria3D_load_state_triggered();
+        void on_actionCriteria3D_load_external_state_triggered();
+        void on_actionCriteria3D_save_state_triggered();
+        void on_actionCriteria3D_set_processes_triggered();
+        void on_actionCriteria3D_waterFluxes_settings_triggered();
+        void on_actionCriteria3D_Water_content_summary_triggered();
+
+        void on_flagSave_state_daily_step_toggled(bool isChecked);
+        void on_flagSave_state_endRun_triggered(bool isChecked);
+
+        void initializeGroupBoxModel();
+        void on_buttonModelPause_clicked();
+        void on_buttonModelStop_clicked();
+        void on_buttonModelStart_clicked();
+
+        // menu output points
+        void on_actionOutputPoints_clear_selection_triggered();
+        void on_actionOutputPoints_deactivate_all_triggered();
+        void on_actionOutputPoints_deactivate_selected_triggered();
+        void on_flagHide_outputPoints_toggled(bool isChecked);
+        void on_flagView_not_active_outputPoints_toggled(bool isChecked);
+        void on_actionOutputPoints_activate_all_triggered();
+        void on_actionOutputPoints_activate_selected_triggered();
+        void on_actionOutputPoints_newFile_triggered();
+        void on_actionOutputDB_new_triggered();
+        void on_actionOutputDB_open_triggered();
+        void on_actionOutputPoints_delete_selected_triggered();
+        void on_flagOutputPoints_save_output_toggled(bool isChecked);
+        void on_flagCompute_only_points_toggled(bool isChecked);
+        void on_actionLoad_OutputPoints_triggered();
+        void on_actionOutputPoints_add_triggered();
+
+        // Menu settings
+        void on_actionMapOpenStreetMap_triggered();
+        void on_actionMapESRISatellite_triggered();
+        void on_actionMapTerrain_triggered();
+        void on_actionMapGoogle_hybrid_satellite_triggered();
+        void on_actionMapGoogle_satellite_triggered();
+        void on_actionProjectSettings_triggered();
 
         void on_actionLoad_land_use_map_triggered();
 
@@ -216,17 +215,68 @@
 
         void on_layerNrEdit_valueChanged(int layerIndex);
 
-        void on_actionWaterFluxes_settings_triggered();
+        void on_flag_increase_slope_triggered(bool isChecked);
 
-        void on_action_surface_wc_automatic_range_triggered(bool checked);
+        void on_actionView_Water_potential_triggered();
 
-        void on_action_surface_wc_Fixed_range_triggered(bool checked);
+        void on_actionCreate_new_land_use_map_triggered();
 
-        void on_actionView_Crop_LAI_triggered();
+        void on_actionView_SurfacePond_triggered();
 
-        void on_actiondegree_days_triggered();
+        void on_actionSave_outputRaster_triggered();
 
-        void on_actionUpdate_subHourly_triggered(bool checked);
+        void on_actionDEM_summary_triggered();
+
+        void on_actionDecomposable_plant_matter_triggered();
+
+        void on_actionResistant_plant_matter_triggered();
+
+        void on_actionMicrobial_biomass_triggered();
+
+        void on_actionHumified_organic_matter_triggered();
+
+        void on_actionSoil_organic_matter_triggered();
+
+        void on_actionAutomatic_state_saving_end_of_year_triggered(bool isChecked);
+
+        void on_actionAutomatic_state_saving_end_of_month_toggled(bool isChecked);
+
+        void on_buttonModel_1hour_clicked();
+
+        void on_actionHide_TreeCover_map_triggered();
+
+        void on_actionViewTree_cover_map_triggered();
+
+        void on_actiontree_NPP_triggered();
+
+        void on_actionunderstorey_NPP_triggered();
+
+        void on_actiontree_foliage_biomass_triggered();
+
+        void on_actiontree_root_biomass_triggered();
+
+        void on_actiontree_sapwood_biomass_triggered();
+
+        void on_actionunderstorey_foliage_biomass_triggered();
+
+        void on_actionunderstorey_root_biomass_triggered();
+
+        void on_actionoutput_carbon_triggered();
+
+        void on_actioncumulated_yearly_ET0_triggered();
+
+        void on_actioncumulated_yearly_precipitation_triggered();
+
+        void on_actionInitialize_soil_carbon_content_triggered();
+
+        void on_action_parallel_computing_triggered(bool isChecked);
+
+        void on_actionOpenShell_triggered();
+
+        void on_flag_area_selection_triggered(bool isChecked);
+        void on_flag_point_selection_triggered(bool isChecked);
+
+        void on_actionView_SWE_variation_triggered();
 
     protected:
         /*!
@@ -266,17 +316,20 @@
         ColorLegend *meteoPointsLegend;
 
         RubberBand *rubberBand;
+        QRect rubberBandRect;
 
         QActionGroup *showPointsGroup;
 
         visualizationType currentPointsVisualization;
-        criteria3DVariable current3DVariable;
-        int current3DlayerIndex;
+        criteria3DVariable _current3DVariable;
+        int _current3DlayerIndex;
 
-        bool view3DVariable;
-        bool viewNotActivePoints;
-        bool viewOutputPoints;
-        bool viewNotActiveOutputPoints;
+        bool _view3DVariable;
+        bool _viewNotActivePoints;
+        bool _viewOutputPoints;
+        bool _viewNotActiveOutputPoints;
+        bool _isAreaSelection;
+        bool _isPointSelection;
 
         Crit3DSoilWidget *soilWidget;
 
@@ -286,7 +339,8 @@
         QPoint getMapPos(const QPoint& pos);
         bool isInsideMap(const QPoint& pos);
 
-        bool updateSelection(const QPoint& position);
+        bool getRubberBandRect(const QPoint& position, bool& isAdd);
+        bool updatePointsSelection(bool isAdd);
         void updateCurrentVariable();
         void updateDateTime();
         void updateModelTime();
@@ -295,40 +349,45 @@
 
         bool loadMeteoPointsDB_GUI(QString dbName);
         void setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster);
-        void setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster);
+        void setCurrentRasterOutput(gis::Crit3DRasterGrid *rasterPointer);
         void interpolateCurrentVariable();
         bool initializeViewer3D();
+        void refreshViewer3D();
+
         bool checkMapVariable(bool isComputed);
 
-        bool isSoil(QPoint mapPos);
-        void openSoilWidget(QPoint mapPos);
-        void showSoilMap();
+        bool isInsideDEM(Position geoPos);
 
-        bool isLandUse(QPoint mapPos);
+        bool isSoil(Position geoPos);
+        void openSoilWidget(Position geoPos);
+
+        bool isLandUse(Position geoPos);
         void showLandUseMap();
 
         bool contextMenuRequested(QPoint localPos);
 
-        void setInputRasterVisible(bool value);
-        void setOutputRasterVisible(bool value);
+        void setInputRasterVisible(bool isVisible);
+        void setOutputRasterVisible(bool isVisible);
 
         void addMeteoPoints();
         void drawWindVector(int i);
         void drawProject();
         void renderDEM();
         void drawMeteoPoints();
-        void clearMaps_GUI();
+        void clearRaster_GUI();
         void clearMeteoPoints_GUI();
+
+        void setTitle();
 
         void setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
         void setOutputMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
 
         void showMeteoVariable(meteoVariable var);
         void showSnowVariable(meteoVariable var);
-        void showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange, float minimum, float maximum);
+        void showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange,
+                                    bool isHideMinimum, double minimum, double maximum);
 
         bool setRadiationAsCurrentVariable();
-        bool startModels(QDateTime firstTime, QDateTime lastTime);
 
         void testOutputPoints();
         void addOutputPointsGUI();
@@ -336,9 +395,11 @@
         void resetOutputPointMarkers();
         void clearWindVectorObjects();
         void loadMeteoPointsDataSingleDay(const QDate &date, bool showInfo);
-    };
 
-    bool selectDates(QDateTime &firstTime, QDateTime &lastTime);
+        void initializeCriteria3DInterface();
+        void loadState(const QString &stateDirectory);
+        bool selectDates(QDateTime &firstTime, QDateTime &lastTime);
+    };
 
 
 #endif // MAINWINDOW_H

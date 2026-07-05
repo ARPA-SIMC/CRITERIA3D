@@ -10,11 +10,11 @@
     {
     public:
         QList<QString> outputVarName;
-        QList<QString> inputField;
+        QList<QString> inputFieldName;
         QList<QString> aggregationType;
 
-        CriteriaAggregationVariable();
-        bool parserAggregationVariable(QString fileName, QString &error);
+        CriteriaAggregationVariable() { }
+        bool parserAggregationVariable(const QString fileName, QString &errorStr);
     };
 
 #endif // CRITERIAAGGREGATIONVARIABLE_H

@@ -4,12 +4,17 @@
     #ifndef METEO_H
         #include "meteo.h"
     #endif
+    #ifndef COMMONCONSTANTS_H
+        #include "commonConstants.h"
+    #endif
 
     // default
+    // [m]
     #define DEF_VALUE_REF_HEIGHT 300
-    #define DEF_VALUE_DELTA_T_SUSP 13
-    #define DEF_VALUE_DELTA_T_WRONG 26
+    // [%]
     #define DEF_VALUE_REL_HUM_TOLERANCE 102
+    // [cm]
+    #define DEF_VALUE_WATERTABLE_MAX_DEPTH 300
 
 
     class Crit3DMeteoPoint;
@@ -20,14 +25,15 @@
 
         class Range {
             private:
-                float max;
-                float min;
-            public:
-                Range();
-                Range(float myMin, float myMax);
+                float _min, _max;
 
-                float getMin();
-                float getMax();
+            public:
+                Range() { _min = NODATA; _max = NODATA; }
+
+                Range(float min, float max): _min(min), _max(max) { }
+
+                float getMin() { return _min; }
+                float getMax() { return _max; }
         };
     }
 
@@ -53,12 +59,11 @@
         quality::Range* qualityDailyWDir;
         quality::Range* qualityDailyGRad;
         quality::Range* qualityDailyET0;
+        quality::Range* qualityDailyBIC;
 
         float referenceHeight;
-        float deltaTSuspect;
-        float deltaTWrong;
         float relHumTolerance;
-
+        float waterTableMaximumDepth;
 
     public:
 
@@ -69,33 +74,30 @@
 
         quality::Range* getQualityRange(meteoVariable myVar);
 
-        void syntacticQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints);
+        void syntacticQualityControl(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints);
 
         quality::qualityType syntacticQualitySingleValue(meteoVariable myVar, float myValue);
 
-        float getReferenceHeight() const;
+        float getReferenceHeight() const { return referenceHeight; }
+        void setReferenceHeight(float value) { referenceHeight = value; }
 
-        void setReferenceHeight(float value);
+        float getRelHumTolerance() const { return relHumTolerance; }
+        void setRelHumTolerance(float value) { relHumTolerance = value; }
 
-        float getDeltaTSuspect() const;
+        float getWaterTableMaximumDepth() const { return waterTableMaximumDepth; }
+        void setWaterTableMaximumDepth(float value) { waterTableMaximumDepth = value; }
 
-        void setDeltaTSuspect(float value);
+        quality::qualityType checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam,
+                                                             float myValue, int month, float height);
 
-        float getDeltaTWrong() const;
+        bool wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam,
+                                         float myValue, int month, float height);
 
-        void setDeltaTWrong(float value);
+        quality::qualityType checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+                                                              float myValue, int month, float height);
 
-        float getRelHumTolerance() const;
-
-        void setRelHumTolerance(float value);
-
-        quality::qualityType checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam, float myValue, int month, float height);
-
-        bool wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam, float myValue, int month, float height);
-
-        quality::qualityType checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height);
-
-        bool wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height);
+        bool wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+                                          float myValue, int month, float height);
 
     };
 

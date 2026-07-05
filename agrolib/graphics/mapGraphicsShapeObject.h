@@ -33,8 +33,8 @@
         gis::Crit3DGeoMap* geoMap;
         QPointF referencePixel;
 
-        unsigned int nrShapes;
-        unsigned int selectedShape;
+        unsigned int _nrShapes;
+        unsigned int _selectedShape;
 
         std::vector< std::vector<ShapeObject::Part>> shapeParts;
         std::vector< std::vector<GeoBounds>> geoBounds;
@@ -43,8 +43,9 @@
         std::vector<float> values;
         std::vector<std::string> categories;
 
-        bool isDrawing;
-        bool isFill;
+        bool _isDrawing;
+        bool _isFill;
+        bool _isSelectedRed;
 
         void setMapExtents();
         void drawShape(QPainter* myPainter);
@@ -85,10 +86,12 @@
         void setNumericValues(std::string fieldName);
         void setCategories(std::string fieldName);
 
-        int getSelected() { return selectedShape; }
-        void setSelected(int index) { selectedShape = index; }
-        void setFill(bool value) { isFill = value; }
-        void setDrawing(bool value) { isDrawing = value; }
+        int getSelected() { return _selectedShape; }
+        void setSelected(int index) { _selectedShape = index; }
+        void setSelectedRed(bool value) { _isSelectedRed = value; }
+        bool isSelectedRed() { return _isSelectedRed; }
+        void setFill(bool value) { _isFill = value; }
+        void setDrawing(bool value) { _isDrawing = value; }
 
         Crit3DShapeHandler* getShapePointer() { return shapePointer; }
 

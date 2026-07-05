@@ -1,16 +1,30 @@
 #ifndef COMMONCONSTANTS_H
 #define COMMONCONSTANTS_H
 
+    #include <cfloat>
+
     #ifndef MINVALUE
-        #define MINVALUE(a, b) (((a) < (b))? (a) : (b))
+        #define MINVALUE(a, b) (((a) < (b)) ? (a) : (b))
     #endif
 
     #ifndef MAXVALUE
-        #define MAXVALUE(a, b) (((a) > (b))? (a) : (b))
+        #define MAXVALUE(a, b) (((a) > (b)) ? (a) : (b))
+    #endif
+
+    #ifndef BOUNDFUNCTION
+        #define BOUNDFUNCTION(lowerValue, upperValue, x) (MAXVALUE((lowerValue), MINVALUE((upperValue), (x))) )
+    #endif
+
+    #ifndef MAXVALUE3
+        #define MAXVALUE3(a, b, c) ((MAXVALUE((a), (b))),(c))
+    #endif
+
+    #ifndef MINVALUE3
+        #define MINVALUE3(a, b, c) ((MINVALUE((a), (b))),(c))
     #endif
 
     #ifndef sgnVariable
-        #define sgnVariable(a) (((a) < 0 )? -1 : 1)
+        #define sgnVariable(a) (((a) < 0) ? -1 : 1)
     #endif
 
     #ifndef NODATA
@@ -51,7 +65,21 @@
     #define PATH_LOG "LOG/"
     #define PATH_OUTPUT "OUTPUT/"
     #define PATH_TD "TD/"
+    #define PATH_GLOCAL "GLOCAL/"
     #define PATH_STATES "STATES/"
+    #define PATH_NETCDF "NETCDF/"
+
+    // --------------- PRAGA constants  ----------------
+    #define PRAGA_OK 0
+    #define PRAGA_ERROR 100
+    #define PRAGA_INVALID_COMMAND 101
+    #define PRAGA_MISSING_FILE 102
+    #define PRAGA_ENV_ERROR 103
+    #define PRAGA_MISSING_PARAMETERS 104
+    #define NOT_SHARED_COMMAND 105
+    #define NO_ACTIVE -8888
+    #define MAXDAYS_DOWNLOAD_DAILY 180
+    #define MAXDAYS_DOWNLOAD_HOURLY 10
 
     // --------------- soilFluxes3D ----------------
     #define NOLINK -1
@@ -72,15 +100,10 @@
     #define PARAMETER_ERROR -7777
 
     #define CRIT1D_OK 0
-    #define CRIT3D_OK 1
 
-    // --------------- PRAGA constants  ----------------
-    #define PRAGA_OK 0
-    #define PRAGA_ERROR 100
-    #define PRAGA_INVALID_COMMAND 101
-    #define PRAGA_MISSING_FILE 102
-    #define PRAGA_ENV_ERROR 103
-    #define NO_ACTIVE -8888
+    #define CRIT3D_OK 0
+    #define CRIT3D_ERROR 100
+    #define CRIT3D_INVALID_COMMAND 101
 
     #define VANGENUCHTEN 0
     #define MODIFIEDVANGENUCHTEN 1
@@ -89,18 +112,23 @@
     #define MEAN_GEOMETRIC 0
     #define MEAN_LOGARITHMIC 1
 
-    //#define BOUNDARY_SURFACE 1
+    // maximum soil depth for evaporation computation [m]
+    #define MAX_EVAPORATION_DEPTH 0.25
+
     #define BOUNDARY_RUNOFF 2
     #define BOUNDARY_FREEDRAINAGE 3
     #define BOUNDARY_FREELATERALDRAINAGE 4
     #define BOUNDARY_PRESCRIBEDTOTALPOTENTIAL 5
-    #define BOUNDARY_CULVERT 6
+    #define BOUNDARY_URBAN 10
+    #define BOUNDARY_ROAD 11
+    #define BOUNDARY_CULVERT 12
 
-    #define BOUNDARY_HEAT_SURFACE 10
+    #define BOUNDARY_HEAT_SURFACE 20
     #define BOUNDARY_SOLUTEFLUX 30
     #define BOUNDARY_NONE 99
 
-    #define RELAXATION 1
+    #define GAUSS_SEIDEL 1
+    #define JACOBI 2
 
     // --------------- heat model -----------------
     #define SAVE_HEATFLUXES_NONE 0
@@ -150,6 +178,10 @@
     #define	MO2		0.032
     // [kg mol-1] mass of molecular nitrogen (N2)
     #define	MN2		0.028
+    // [kg mol-1] mass of carbon (C)
+    #define MC      0.012
+    // [kg mol-1] mass of air
+    #define M_AIR    0.029
     // [K] zero Celsius
     #define	ZEROCELSIUS	273.15
     // [] ratio molecular weight of water vapour/dry air
@@ -162,7 +194,7 @@
     // [K m-1] constant lapse rate of moist air
     #define LAPSE_RATE_MOIST_AIR 0.0065
     // [Pa] standard atmospheric pressure at sea level
-    #define P0 101300.
+    #define P0 101325.
     // [K] temperature at reference pressure level (P0)
     #define TP0 293.16
     // [g s-2] surface tension at 25 degC
@@ -171,7 +203,7 @@
     // [W m-1 K-1] thermal conductivity of water
     #define KH_H2O 0.57
     // [W m-1 K-1] average thermal conductivity of soil minerals (no quartz)
-    #define KH_mineral 2.5
+    #define mineralHK 2.5
 
     // [W m-2 K-4] Stefan-Boltzmann constant
     #define STEFAN_BOLTZMANN 5.670373E-8
@@ -187,7 +219,7 @@
     #define HEAT_CAPACITY_WATER 4182000.
     #define HEAT_CAPACITY_AIR  1290.
     #define HEAT_CAPACITY_SNOW 2100000.
-    #define HEAT_CAPACITY_MINERAL 231000
+    #define HEAT_CAPACITY_MINERAL 231000.
 
     // [J kg-1 K-1] specific heat
     #define HEAT_CAPACITY_WATER_VAPOR 1996.
@@ -198,8 +230,11 @@
     // [m2 s-1] vapor diffusivity at standard conditions
     #define	 VAPOR_DIFFUSIVITY0 0.0000212
 
+    // [J kg-1] latent heat of vaporization
+    #define LATENT_HEAT_VAPORIZATION 2.45e6;
+
     // [Pa] default atmospheric pressure at sea level
-    #define SEA_LEVEL_PRESSURE 101325.
+    //#define SEA_LEVEL_PRESSURE 101325.
 
     #define ALBEDO_WATER 0.05
     #define ALBEDO_SOIL 0.15
@@ -211,17 +246,25 @@
 
     // --------------------MATH---------------------
     #ifndef PI
-        #define PI 3.141592653589793238462643383
+        #define PI 3.1415926535898
     #endif
     #ifndef EPSILON
-        #define EPSILON 0.000001
+        #define EPSILON 0.00001
     #endif
     #define EULER 2.718281828459
-    #define DEG_TO_RAD 0.0174532925
-    #define RAD_TO_DEG 57.2957795
+    #define DEG_TO_RAD 0.01745329252
+    #define RAD_TO_DEG 57.295779513
     #define SQRT_2 1.41421356237
+    #define GOLDEN_SECTION 1.6180339887499
+
 
     #define MINIMUM_PERCENTILE_DATA 3
+
+    //-----NEW COSTANT - TO DO: MOVE THEM IN THE APPROPRIATE SECTION
+    //boundary.cpp/computeSoilSurfaceResistance
+    #define THETAMIN 0.15
+    //boundary.cpp/updateBoundaryWater
+    #define EPSILON_RUNOFF 0.001        // [m] 1 mm
 
 
 #endif // COMMONCONSTANTS_H

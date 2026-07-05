@@ -2,13 +2,14 @@
 #include <QMessageBox>
 #include <QtGui>
 #include <QApplication>
+
 #include "commonConstants.h"
 #include "vine3DProject.h"
-#include "vine3DShell.h"
 #include "mainWindow.h"
 
 
 Vine3DProject myProject;
+
 
 int main(int argc, char *argv[])
 {
@@ -36,9 +37,6 @@ int main(int argc, char *argv[])
     if (! myProject.loadParameters("parameters.ini"))
         return -1;
 
-    if (! myProject.loadVine3DSettings())
-        return -1;
-
     if (myProject.modality == MODE_GUI)
     {
         QApplication::setOverrideCursor(Qt::ArrowCursor);
@@ -48,10 +46,10 @@ int main(int argc, char *argv[])
     }
     else if (myProject.modality == MODE_CONSOLE)
     {
-        return vine3dShell(&myProject);
+        return myProject.vine3dShell();
     }
     else if (myProject.modality == MODE_BATCH)
     {
-        return vine3dBatch(&myProject, argv[1]);
+        return myProject.vine3dBatch(argv[1]);
     }
 }

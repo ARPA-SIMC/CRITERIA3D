@@ -4,13 +4,6 @@
     #ifndef METEOPOINT_H
         #include "meteoPoint.h"
     #endif
-    #ifndef COMMONCONSTANTS_H
-        #include "commonConstants.h"
-    #endif
-
-    #ifndef VECTOR_H
-        #include <vector>
-    #endif
 
     #define GRID_MIN_COVERAGE 0
 
@@ -90,11 +83,11 @@
             Crit3DMeteoGridStructure gridStructure() const;
             void setGridStructure(const Crit3DMeteoGridStructure &gridStructure);
 
-            std::vector<std::vector<Crit3DMeteoPoint *> > meteoPoints() const;
+            std::vector<std::vector<Crit3DMeteoPoint *>> meteoPoints() const;
             void setMeteoPoints(const std::vector<std::vector<Crit3DMeteoPoint *> > &meteoPoints);
 
-            Crit3DMeteoPoint meteoPoint(unsigned row, unsigned col);
-            Crit3DMeteoPoint* meteoPointPointer(unsigned row, unsigned col);
+            Crit3DMeteoPoint& meteoPoint(unsigned row, unsigned col) const;
+            Crit3DMeteoPoint* meteoPointPointer(unsigned row, unsigned col) const;
 
             void setActive(unsigned int row, unsigned int col, bool active);
 
@@ -120,14 +113,18 @@
 
             void initMeteoPoints(int nRow, int nCol);
 
-            void fillMeteoPoint(unsigned int row, unsigned int col, const std::string &code, const std::string &name, int height, bool active);
+            void fillMeteoPoint(unsigned int row, unsigned int col, const std::string &code, const std::string &name,
+                                const std::string &dataset, int height, bool active, double &utmx, double &utmy);
             void fillCurrentDailyValue(Crit3DDate date, meteoVariable variable, Crit3DMeteoSettings *meteoSettings);
             void fillCurrentHourlyValue(Crit3DDate date, int hour, int minute, meteoVariable variable);
             void fillCurrentMonthlyValue(Crit3DDate date, meteoVariable variable);
 
             bool findMeteoPointFromId(unsigned *row, unsigned *col, const std::string &code);
             bool existsMeteoPointFromId(const std::string& id);
-            bool getMeteoPointActiveId(int row, int col, std::string *id);
+
+            bool isMeteoPointActive(int row, int col) const;
+            bool getMeteoPointActiveId(int row, int col, std::string &id) const;
+
             bool getLatFromId(std::string id, double* lat);
             bool getLatLonFromId(std::string id, double* lat, double* lon);
             bool getXYZFromId(std::string id, double* x, double* y, double* z);
@@ -142,13 +139,22 @@
             void spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute, gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab);
             double spatialAggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab);
 
+            void assignGridProxyValues(gis::Crit3DRasterGrid* myRaster);
+            void assignCellProxyValues(unsigned row, unsigned col, gis::Crit3DRasterGrid* myRaster, bool excludeNoData);
+
+            void assignGridGlocalWeightValues(gis::Crit3DRasterGrid* myRaster, int areaIndex);
+            double computeAggrCellGlocalWeightValue(unsigned row, unsigned col, gis::Crit3DRasterGrid* myRaster, bool excludeNoData);
+
             bool getIsElabValue() const;
             void setIsElabValue(bool isElabValue);
 
             void saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<int> > &meteoGridRow, std::vector<std::vector<int> > &meteoGridCol);
 
+            void computeRelativeHumidityFromTd(const Crit3DDate myDate, const int myHour);
             void computeWindVectorHourly(const Crit3DDate myDate, const int myHour);
-            void computeHourlyDerivedVariables(Crit3DTime dateTime);
+            void fixDailyThermalConsistency(const Crit3DDate myDate);
+            void computeHourlyDerivedVar(Crit3DTime dateTime, meteoVariable myVar, bool useNetRad);
+            void computeDailyDerivedVar(Crit3DDate date, meteoVariable myVar, Crit3DMeteoSettings &meteoSettings);
 
     private:
 

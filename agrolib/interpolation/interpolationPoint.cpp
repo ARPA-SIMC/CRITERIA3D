@@ -28,13 +28,13 @@
 #include "gis.h"
 #include "commonConstants.h"
 
+
 Crit3DInterpolationDataPoint::Crit3DInterpolationDataPoint()
 {
     index = NODATA;
     isActive = false;
     isMarked = false;
 
-    distance = NODATA;
     value = NODATA;
     regressionWeight = NODATA;
 
@@ -46,7 +46,7 @@ Crit3DInterpolationDataPoint::Crit3DInterpolationDataPoint()
     proxyValues.clear();
 }
 
-float Crit3DInterpolationDataPoint::getProxyValue(unsigned int pos)
+float Crit3DInterpolationDataPoint::getProxyValue(unsigned int pos) const
 {
     if (pos < proxyValues.size())
         return proxyValues[pos];

@@ -29,7 +29,6 @@
 #include "statistics.h"
 #include "math.h"
 
-
 Crit3DMeteoGridStructure::Crit3DMeteoGridStructure()
 {    
 }
@@ -197,16 +196,17 @@ Crit3DMeteoGrid::~Crit3DMeteoGrid()
 
 bool Crit3DMeteoGrid::createRasterGrid()
 {
-
     if (_gridStructure.isUTM())
     {
         dataMeteoGrid.header->cellSize = _gridStructure.header().dx;
+        dataMeteoGrid.header->invCellSize = 1.0 / dataMeteoGrid.header->cellSize;
         dataMeteoGrid.header->llCorner.x = _gridStructure.header().llCorner.longitude;
         dataMeteoGrid.header->llCorner.y = _gridStructure.header().llCorner.latitude;
     }
     else
     {
         dataMeteoGrid.header->cellSize = NODATA;
+        dataMeteoGrid.header->invCellSize = NODATA;
         dataMeteoGrid.header->llCorner.x = NODATA;
         dataMeteoGrid.header->llCorner.y = NODATA;
     }
@@ -233,12 +233,12 @@ std::vector<std::vector<Crit3DMeteoPoint *> > Crit3DMeteoGrid::meteoPoints() con
     return _meteoPoints;
 }
 
-Crit3DMeteoPoint Crit3DMeteoGrid::meteoPoint(unsigned row, unsigned col)
+Crit3DMeteoPoint& Crit3DMeteoGrid::meteoPoint(unsigned row, unsigned col) const
 {
     return *(_meteoPoints[row][col]);
 }
 
-Crit3DMeteoPoint* Crit3DMeteoGrid::meteoPointPointer(unsigned row, unsigned col)
+Crit3DMeteoPoint* Crit3DMeteoGrid::meteoPointPointer(unsigned row, unsigned col) const
 {
     return _meteoPoints[row][col];
 }
@@ -277,11 +277,12 @@ void Crit3DMeteoGrid::setActive(unsigned int row,unsigned int col, bool active)
 
 
 // for visualization raster
-void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const std::string& code, const std::string& name, int height, bool active)
+void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const std::string& code, const std::string& name,
+                                     const std::string& dataset, int height, bool active, double& utmx, double& utmy)
 {
-
     _meteoPoints[row][col]->id = code;
     _meteoPoints[row][col]->name = name;
+    _meteoPoints[row][col]->dataset = dataset;
     _meteoPoints[row][col]->point.z = height;
     _meteoPoints[row][col]->active = active;
 
@@ -291,7 +292,7 @@ void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const s
         {
             _meteoPoints[row][col]->point.utm.x = _gridStructure.header().llCorner.longitude + _gridStructure.header().dx * (col + 0.5);
             _meteoPoints[row][col]->point.utm.y = _gridStructure.header().llCorner.latitude + _gridStructure.header().dy * (row + 0.5);
-            gis::utmToLatLon(_gisSettings.utmZone, _gisSettings.startLocation.latitude, _meteoPoints[row][col]->point.utm.x, _meteoPoints[row][col]->point.utm.y, &(_meteoPoints[row][col]->latitude), &(_meteoPoints[row][col]->longitude));
+            gis::utmToLatLon(_gisSettings.utmZone, _gisSettings.startLocation.latitude, _meteoPoints[row][col]->point.utm.x, _meteoPoints[row][col]->point.utm.y, &(_meteoPoints[row][col]->latitude), &(_meteoPoints[row][col]->longitude));    
         }
         else
         {
@@ -304,6 +305,9 @@ void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const s
             _meteoPoints[row][col]->point.utm.x = utmPoint.x;
             _meteoPoints[row][col]->point.utm.y = utmPoint.y;
         }
+
+        utmx = _meteoPoints[row][col]->point.utm.x;
+        utmy = _meteoPoints[row][col]->point.utm.y;
     }
 }
 
@@ -435,11 +439,9 @@ void Crit3DMeteoGrid::setGisSettings(const gis::Crit3DGisSettings &gisSettings)
 
 bool Crit3DMeteoGrid::findMeteoPointFromId(unsigned* row, unsigned* col, const std::string& id)
 {
-    unsigned i,j;
-
-    for (i = 0; i < unsigned(_gridStructure.header().nrRows); i++)
+    for (int i = 0; i < _gridStructure.header().nrRows; i++)
     {
-        for (j = 0; j < unsigned(_gridStructure.header().nrCols); j++)
+        for (int j = 0; j < _gridStructure.header().nrCols; j++)
         {
             if (_meteoPoints[i][j]->id == id)
             {
@@ -451,6 +453,7 @@ bool Crit3DMeteoGrid::findMeteoPointFromId(unsigned* row, unsigned* col, const s
     }
     return false;
 }
+
 
 bool Crit3DMeteoGrid::existsMeteoPointFromId(const std::string& id)
 {
@@ -526,9 +529,9 @@ bool Crit3DMeteoGrid::getXYZFromId(std::string id, double* x, double* y, double*
     return false;
 }
 
+
 bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
 {
-
     double dx = _gridStructure.header().dx;
     double dy = _gridStructure.header().dy;
     double latitude, longitude;
@@ -582,23 +585,35 @@ bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
     return false;
 }
 
-bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string* id)
-{
-    if (row < _gridStructure.header().nrRows && col < _gridStructure.header().nrCols)
-    {
-        if (_meteoPoints[row][col]->active)
-        {
-            *id = _meteoPoints[row][col]->id;
-            return true;
-        }
 
+bool Crit3DMeteoGrid::isMeteoPointActive(int row, int col) const
+{
+    if (row >= 0 && row < _gridStructure.header().nrRows && col >= 0 && col < _gridStructure.header().nrCols)
+    {
+        return _meteoPoints[row][col]->active;
     }
+
     return false;
 }
 
+
+bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string &id) const
+{
+    if (row >= 0 && row < _gridStructure.header().nrRows && col >= 0 && col < _gridStructure.header().nrCols)
+    {
+        if (_meteoPoints[row][col]->active)
+        {
+            id = _meteoPoints[row][col]->id;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 bool Crit3DMeteoGrid::isActiveMeteoPointFromId(const std::string& id)
 {
-
     for (int row = 0; row < _gridStructure.header().nrRows; row++)
     {
         for (int col = 0; col < _gridStructure.header().nrCols; col++)
@@ -609,8 +624,10 @@ bool Crit3DMeteoGrid::isActiveMeteoPointFromId(const std::string& id)
             }
         }
     }
+
     return false;
 }
+
 
 bool Crit3DMeteoGrid::findFirstActiveMeteoPoint(std::string* id, int* row, int* col)
 {
@@ -767,6 +784,259 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
     }
 }
 
+void Crit3DMeteoGrid::assignGridProxyValues(gis::Crit3DRasterGrid* myRaster)
+{
+    bool excludeNoData = true;
+
+    for (unsigned row = 0; row < unsigned(_gridStructure.header().nrRows); row++)
+        for (unsigned col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
+            if (_meteoPoints[row][col]->active)
+                assignCellProxyValues(row, col, myRaster, excludeNoData);
+
+    return;
+}
+
+void Crit3DMeteoGrid::assignCellProxyValues(unsigned row, unsigned col, gis::Crit3DRasterGrid* myRaster, bool excludeNoData)
+{
+
+    gis::Crit3DUtmPoint utmLL, utmUR;
+    gis::Crit3DUtmPoint utmPoint;
+    gis::Crit3DUtmPoint v[4];
+    std::vector<float> aggrProxyValues;
+
+    if (_gridStructure.isTIN())
+    {
+        //TO DO
+    }
+    else
+    {
+        if (_gridStructure.isUTM())
+        {
+            utmLL.x = _meteoPoints[row][col]->point.utm.x - (_gridStructure.header().dx / 2) + (myRaster->header->cellSize / 2);
+            utmUR.x = _meteoPoints[row][col]->point.utm.x + (_gridStructure.header().dx / 2);
+            utmLL.y = _meteoPoints[row][col]->point.utm.y - (_gridStructure.header().dy / 2) + (myRaster->header->cellSize / 2);
+            utmUR.y = _meteoPoints[row][col]->point.utm.y + (_gridStructure.header().dy / 2);
+
+            for (double x = utmLL.x; x < utmUR.x; x=x+myRaster->header->cellSize)
+            {
+                for (double y = utmLL.y; x < utmUR.y; y=y+myRaster->header->cellSize)
+                {
+                    if (!excludeNoData || gis::getValueFromXY(*myRaster, x, y) != myRaster->header->flag )
+                    {
+                        aggrProxyValues.push_back(gis::getValueFromXY(*myRaster, x, y));
+                    }
+                }
+            }
+        }
+        else
+        {
+
+            gis::Crit3DGeoPoint pointLatLon0;
+            gis::Crit3DGeoPoint pointLatLon;
+            gis::Crit3DLatLonHeader latLonHeader;
+            double utmX, utmY;
+
+            pointLatLon0.latitude = _gridStructure.header().llCorner.latitude + row * _gridStructure.header().dy;
+            pointLatLon0.longitude = _gridStructure.header().llCorner.longitude + col * _gridStructure.header().dx;
+            gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon0, &utmPoint);
+            v[0] = utmPoint;
+
+            pointLatLon.latitude = pointLatLon0.latitude + _gridStructure.header().dy;
+            pointLatLon.longitude = pointLatLon0.longitude;
+            gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
+            v[1] = utmPoint;
+
+            pointLatLon.latitude = pointLatLon0.latitude + _gridStructure.header().dy;
+            pointLatLon.longitude = pointLatLon0.longitude + _gridStructure.header().dx;
+            gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
+            v[2] = utmPoint;
+
+            pointLatLon.latitude = pointLatLon0.latitude;
+            pointLatLon.longitude = pointLatLon0.longitude + _gridStructure.header().dx;
+            gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
+            v[3] = utmPoint;
+
+            utmLL.x = MINVALUE(v[0].x, v[1].x);
+            utmLL.y = MINVALUE(v[0].y, v[3].y);
+            utmUR.x = MAXVALUE(v[2].x, v[3].x);
+            utmUR.y = MAXVALUE(v[1].y, v[2].y);
+
+            latLonHeader.llCorner.latitude = pointLatLon0.latitude;
+            latLonHeader.llCorner.longitude = pointLatLon0.longitude;
+            latLonHeader.dx = _gridStructure.header().dx;
+            latLonHeader.dy = _gridStructure.header().dy;
+            latLonHeader.nrRows = 1;
+            latLonHeader.nrCols = 1;
+
+            gis::Crit3DRasterCell rasterLL, rasterUR;
+
+            myRaster->getRowCol( utmLL.x, utmLL.y, rasterLL.row, rasterLL.col);
+            myRaster->getRowCol(utmUR.x, utmUR.y, rasterUR.row, rasterUR.col);
+
+            if ( ((rasterUR.row >= 0) && (rasterUR.row < myRaster->header->nrRows)) || ((rasterLL.row >= 0) && (rasterLL.row < myRaster->header->nrRows))
+                || ((rasterUR.col >= 0) && (rasterUR.col < myRaster->header->nrCols)) || ((rasterLL.col >= 0) && ( rasterLL.col < myRaster->header->nrCols)))
+            {
+                for (int rasterRow = rasterUR.row; rasterRow <= rasterLL.row; rasterRow++)
+                {
+                    for (int rasterCol = rasterLL.col; rasterCol <= rasterUR.col; rasterCol++)
+                    {
+                        gis::getUtmXYFromRowCol(*(myRaster->header), rasterRow, rasterCol, &utmX, &utmY);
+                        gis::getLatLonFromUtm(_gisSettings, utmX, utmY, &pointLatLon.latitude, &pointLatLon.longitude);
+
+                        if (pointLatLon.isInsideGrid(latLonHeader))
+                        {
+                            if (!excludeNoData || myRaster->getValueFromRowCol(rasterRow, rasterCol) != myRaster->header->flag )
+                            {
+                                aggrProxyValues.push_back(myRaster->getValueFromRowCol(rasterRow, rasterCol));
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+        float aggrValue = 0;
+        if (! aggrProxyValues.empty())
+        {
+            for (int k = 0; k < (int)aggrProxyValues.size(); k++)
+            {
+                aggrValue += aggrProxyValues[k];
+            }
+            _meteoPoints[row][col]->proxyValues.push_back(aggrValue/aggrProxyValues.size());
+        }
+        else
+        {
+            aggrValue = NODATA;
+            _meteoPoints[row][col]->proxyValues.push_back(aggrValue);
+        }
+
+
+    }
+}
+
+void Crit3DMeteoGrid::assignGridGlocalWeightValues(gis::Crit3DRasterGrid* myRaster, int areaIndex)
+{
+    bool excludeNoData = true;
+
+    for (unsigned row = 0; row < unsigned(_gridStructure.header().nrRows); row++)
+        for (unsigned col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
+            if (_meteoPoints[row][col]->active)
+            {
+                double weight = computeAggrCellGlocalWeightValue(row, col, myRaster, excludeNoData);
+
+                if (! isEqual(weight, NODATA))
+                    _meteoPoints[row][col]->glocalWeights[areaIndex] = (float)weight;
+            }
+
+    return;
+}
+
+
+double Crit3DMeteoGrid::computeAggrCellGlocalWeightValue(unsigned row, unsigned col, gis::Crit3DRasterGrid* myRaster, bool excludeNoData)
+{
+    if (_gridStructure.isTIN())
+    {
+        //TO DO
+        return NODATA;
+    }
+
+    gis::Crit3DUtmPoint utmLL, utmUR;
+    std::vector<float> aggrWeightValues;
+
+    if (_gridStructure.isUTM())
+    {
+        utmLL.x = _meteoPoints[row][col]->point.utm.x - (_gridStructure.header().dx / 2) + (myRaster->header->cellSize / 2);
+        utmUR.x = _meteoPoints[row][col]->point.utm.x + (_gridStructure.header().dx / 2);
+        utmLL.y = _meteoPoints[row][col]->point.utm.y - (_gridStructure.header().dy / 2) + (myRaster->header->cellSize / 2);
+        utmUR.y = _meteoPoints[row][col]->point.utm.y + (_gridStructure.header().dy / 2);
+
+        for (double x = utmLL.x; x < utmUR.x; x += myRaster->header->cellSize)
+            for (double y = utmLL.y; x < utmUR.y; y += myRaster->header->cellSize)
+                if (! excludeNoData || gis::getValueFromXY(*myRaster, x, y) != myRaster->header->flag )
+                    aggrWeightValues.push_back(gis::getValueFromXY(*myRaster, x, y));
+    }
+    else
+    {
+        gis::Crit3DUtmPoint utmPoint;
+        gis::Crit3DUtmPoint v[4];
+        gis::Crit3DGeoPoint pointLatLon0;
+        gis::Crit3DGeoPoint pointLatLon;
+        gis::Crit3DLatLonHeader latLonHeader;
+        double utmX, utmY;
+
+        pointLatLon0.latitude = _gridStructure.header().llCorner.latitude + row * _gridStructure.header().dy;
+        pointLatLon0.longitude = _gridStructure.header().llCorner.longitude + col * _gridStructure.header().dx;
+        gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon0, &utmPoint);
+        v[0] = utmPoint;
+
+        pointLatLon.latitude = pointLatLon0.latitude + _gridStructure.header().dy;
+        pointLatLon.longitude = pointLatLon0.longitude;
+        gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
+        v[1] = utmPoint;
+
+        pointLatLon.latitude = pointLatLon0.latitude + _gridStructure.header().dy;
+        pointLatLon.longitude = pointLatLon0.longitude + _gridStructure.header().dx;
+        gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
+        v[2] = utmPoint;
+
+        pointLatLon.latitude = pointLatLon0.latitude;
+        pointLatLon.longitude = pointLatLon0.longitude + _gridStructure.header().dx;
+        gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
+        v[3] = utmPoint;
+
+        utmLL.x = MINVALUE(v[0].x, v[1].x);
+        utmLL.y = MINVALUE(v[0].y, v[3].y);
+        utmUR.x = MAXVALUE(v[2].x, v[3].x);
+        utmUR.y = MAXVALUE(v[1].y, v[2].y);
+
+        latLonHeader.llCorner.latitude = pointLatLon0.latitude;
+        latLonHeader.llCorner.longitude = pointLatLon0.longitude;
+        latLonHeader.dx = _gridStructure.header().dx;
+        latLonHeader.dy = _gridStructure.header().dy;
+        latLonHeader.nrRows = 1;
+        latLonHeader.nrCols = 1;
+
+        gis::Crit3DRasterCell rasterLL, rasterUR;
+
+        myRaster->getRowCol( utmLL.x, utmLL.y, rasterLL.row, rasterLL.col);
+        myRaster->getRowCol(utmUR.x, utmUR.y, rasterUR.row, rasterUR.col);
+
+        if ( ((rasterUR.row >= 0) && (rasterUR.row < myRaster->header->nrRows)) || ((rasterLL.row >= 0) && (rasterLL.row < myRaster->header->nrRows))
+            || ((rasterUR.col >= 0) && (rasterUR.col < myRaster->header->nrCols)) || ((rasterLL.col >= 0) && ( rasterLL.col < myRaster->header->nrCols)))
+        {
+            for (int rasterRow = rasterUR.row; rasterRow <= rasterLL.row; rasterRow++)
+            {
+                for (int rasterCol = rasterLL.col; rasterCol <= rasterUR.col; rasterCol++)
+                {
+                    gis::getUtmXYFromRowCol(*(myRaster->header), rasterRow, rasterCol, &utmX, &utmY);
+                    gis::getLatLonFromUtm(_gisSettings, utmX, utmY, &pointLatLon.latitude, &pointLatLon.longitude);
+
+                    if (pointLatLon.isInsideGrid(latLonHeader))
+                    {
+                        if (!excludeNoData || myRaster->getValueFromRowCol(rasterRow, rasterCol) != myRaster->header->flag )
+                        {
+                            aggrWeightValues.push_back(myRaster->getValueFromRowCol(rasterRow, rasterCol));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (aggrWeightValues.empty())
+        return NODATA;
+
+    double aggrValue = 0;
+    for (int k = 0; k < (int)aggrWeightValues.size(); k++)
+    {
+        aggrValue += aggrWeightValues[k];
+    }
+
+    return float(aggrValue / aggrWeightValues.size());
+}
+
+
 void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin, bool isHourly, bool isDaily, bool isMonthly)
 {
     int nrDays = dateIni.daysTo(dateFin) + 1;
@@ -793,6 +1063,27 @@ void Crit3DMeteoGrid::emptyGridData(Crit3DDate dateIni, Crit3DDate dateFin)
         }
 }
 
+void Crit3DMeteoGrid::computeRelativeHumidityFromTd(const Crit3DDate myDate, const int myHour)
+{
+    float t,td,rh;
+
+    for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
+        for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
+        {
+            if (_meteoPoints[row][col]->active)
+            {
+                t = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, airTemperature);
+                td = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, airDewTemperature);
+
+                if (! isEqual(t, NODATA) && ! isEqual(td, NODATA))
+                {
+                    rh = relHumFromTdew(td, t);
+                    _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, airRelHumidity, rh);
+                }
+            }
+        }
+}
+
 void Crit3DMeteoGrid::computeWindVectorHourly(const Crit3DDate myDate, const int myHour)
 {
     float intensity = NODATA, direction = NODATA;
@@ -801,15 +1092,41 @@ void Crit3DMeteoGrid::computeWindVectorHourly(const Crit3DDate myDate, const int
     for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
         for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
         {
-            u = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorX);
-            v = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorY);
-
-            if (! isEqual(u, NODATA) && ! isEqual(v, NODATA))
+            if (_meteoPoints[row][col]->active)
             {
-                if (computeWindPolar(u, v, &intensity, &direction))
+                u = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorX);
+                v = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorY);
+
+                if (! isEqual(u, NODATA) && ! isEqual(v, NODATA))
                 {
-                    _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, windVectorIntensity, intensity);
-                    _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, windVectorDirection, direction);
+                    if (computeWindPolar(u, v, &intensity, &direction))
+                    {
+                        _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, windVectorIntensity, intensity);
+                        _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, windVectorDirection, direction);
+                    }
+                }
+            }
+        }
+}
+
+void Crit3DMeteoGrid::fixDailyThermalConsistency(const Crit3DDate myDate)
+{
+    float tmin = NODATA, tmax = NODATA;
+
+    for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
+        for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
+        {
+            if (_meteoPoints[row][col]->active)
+            {
+                tmin = _meteoPoints[row][col]->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
+                tmax = _meteoPoints[row][col]->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+
+                if (! isEqual(tmin, NODATA) && ! isEqual(tmax, NODATA))
+                {
+                    if (tmin > tmax)
+                    {
+                        _meteoPoints[row][col]->setMeteoPointValueD(myDate, dailyAirTemperatureMin, float(tmax - 0.1));
+                    }
                 }
             }
         }
@@ -970,6 +1287,7 @@ void Crit3DMeteoGrid::setLastDate(const Crit3DDate &lastDate)
     _lastDate = lastDate;
 }
 
+
 void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<int> > &meteoGridRow, std::vector<std::vector<int> > &meteoGridCol)
 {
     float value;
@@ -977,19 +1295,19 @@ void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::v
     int myRow, myCol;
     for (int row = 0; row < zoneGrid->header->nrRows; row++)
     {
-
         for (int col = 0; col < zoneGrid->header->nrCols; col++)
         {
             value = zoneGrid->value[row][col];
             if (value != zoneGrid->header->flag)
             {
                 zoneGrid->getXY(row, col, x, y);
-                if (!_gridStructure.isUTM())
+                if (! _gridStructure.isUTM())
                 {
                     double utmX = x;
                     double utmY = y;
-                    gis::getLatLonFromUtm(_gisSettings, utmX, utmY, &y, &x);
-                    gis::getGridRowColFromXY(_gridStructure.header(), x, y, &myRow, &myCol);
+                    double lat, lon;
+                    gis::getLatLonFromUtm(_gisSettings, utmX, utmY, &lat, &lon);
+                    gis::getRowColFromLonLat(_gridStructure.header(), lon, lat, &myRow, &myCol);
                 }
                 else
                 {
@@ -1004,13 +1322,13 @@ void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::v
                         meteoGridCol[row][col] = myCol;
                     }
                 }
-
             }
         }
     }
 }
 
-void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime)
+
+void Crit3DMeteoGrid::computeHourlyDerivedVar(Crit3DTime dateTime, meteoVariable myVar, bool useNetRad)
 {
 
     for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
@@ -1019,7 +1337,22 @@ void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime)
         {
             if (_meteoPoints[row][col]->active)
             {
-                _meteoPoints[row][col]->computeDerivedVariables(dateTime);
+                _meteoPoints[row][col]->computeHourlyDerivedVar(dateTime, myVar, useNetRad);
+            }
+        }
+    }
+}
+
+void Crit3DMeteoGrid::computeDailyDerivedVar(Crit3DDate date, meteoVariable myVar, Crit3DMeteoSettings& meteoSettings)
+{
+
+    for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
+    {
+        for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
+        {
+            if (_meteoPoints[row][col]->active)
+            {
+                _meteoPoints[row][col]->computeDailyDerivedVar(date, myVar, meteoSettings);
             }
         }
     }

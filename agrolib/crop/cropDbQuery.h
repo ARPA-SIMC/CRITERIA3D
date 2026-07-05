@@ -6,21 +6,22 @@
 
     bool getCropIdList(const QSqlDatabase &dbCrop, QList<QString>& cropIdList, QString& errorStr);
 
-    QString getIdCropFromName(const QSqlDatabase &dbCrop, QString cropName, QString& errorStr);
+    bool getCropListFromType(const QSqlDatabase &dbCrop, const QString &cropType,
+                             QList<QString> &cropList, QString &errorStr);
 
-    QString getIdCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField,
-                             QString idCropClass, QString& errorStr);
+    QString getIdCropFromName(const QSqlDatabase &dbCrop, const QString &cropName, QString& errorStr);
 
-    QString getIdCropFromField(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField,
-                          int cropId, QString& errorStr);
+    QString getIdCropFromClass(const QSqlDatabase &dbCrop, const QString &cropClassTable,
+                               const QString &cropClassField, const QString &idCropClass, QString &errorStr);
 
-    float getIrriRatioFromCropClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField,
-                                QString idCropClass, QString& errorStr);
+    QString getIdCropFromField(const QSqlDatabase &dbCrop, const QString &cropClassTable,
+                               const QString &cropIdField, int cropIdNumber, QString &errorStr);
 
-    float getIrriRatioFromCropId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField,
-                         int cropId, QString& errorStr);
+    float getIrriRatioFromCropClass(const QSqlDatabase &dbCrop, const QString &cropClassTable,
+                                    const QString &cropClassField, const QString &idCropClass, QString& errorStr);
 
-    bool getCropListFromType(const QSqlDatabase &dbCrop, QString cropType, QList<QString>& cropList, QString& errorStr);
+    float getIrriRatioFromCropId(const QSqlDatabase &dbCrop, const QString &cropClassTable,
+                                 const QString &cropIdField, int cropId, QString &errorStr);
 
 
 #endif // CROPDBQUERY_H

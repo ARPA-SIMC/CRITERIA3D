@@ -28,9 +28,10 @@
         Q_OBJECT
 
         public:
-            Crit3DSoilWidget();
+            Crit3DSoilWidget(const QString &imgPath);
+            ~Crit3DSoilWidget();
 
-            void setDbSoil(QSqlDatabase dbOpened, QString soilCode);
+            void setDbSoil(QSqlDatabase &dbOpened, const QString &soilCode);
 
         private:
             QComboBox soilListComboBox;
@@ -80,6 +81,7 @@
             constexpr static const double heightTriangle = 314.0;
 
             void setFittingMenu();
+            bool initializeSoils();
 
             void on_actionOpenSoilDB();
             void on_actionSave();

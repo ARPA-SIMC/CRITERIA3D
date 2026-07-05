@@ -12,6 +12,7 @@
 
     #include "kriging.h"
 
+
     /*! global variables */
     static short mode;
     static int dim;

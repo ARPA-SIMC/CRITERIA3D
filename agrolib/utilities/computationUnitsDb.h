@@ -10,7 +10,7 @@
     #include <QSqlDatabase>
     #include <vector>
 
-class QSqlDatabase;
+    class QSqlDatabase;
 
     class Crit1DCompUnit
     {
@@ -18,6 +18,7 @@ class QSqlDatabase;
         QString idCase;
         QString idCropClass;
         QString idCrop;
+        QString idWaterTable;
 
         QString idMeteo;
         QString idForecast;
@@ -42,17 +43,18 @@ class QSqlDatabase;
         ComputationUnitsDB(QString dbname, QString &error);
         ~ComputationUnitsDB();
 
-        bool writeListToCompUnitsTable(QList<QString> idCase, QList<QString> idCrop, QList<QString> idMeteo,
-                                   QList<QString> idSoil, QList<double> hectares, QString &error);
+        bool writeListToCompUnitsTable(const QList<QString> &idCase, const QList<QString> &idCrop,
+                                       const QList<QString> &idMeteo, const QList<QString> &idSoil,
+                                       const QList<QString> &idWaterTable,
+                                       const QList<double> &hectares, QString &errorStr);
 
-        bool readComputationUnitList(std::vector<Crit1DCompUnit> &compUnitList, QString &error);
+        bool readComputationUnitList(std::vector<Crit1DCompUnit> &unitList, QString &errorStr);
 
     private:
-        QSqlDatabase db;
+        QSqlDatabase _db;
     };
 
-
-    bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &compUnitList, QString &error);
+    bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &unitList, QString &errorStr);
 
 
 #endif // COMPUTATIONUNITSDB_H

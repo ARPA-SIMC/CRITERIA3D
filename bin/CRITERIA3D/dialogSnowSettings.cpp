@@ -9,7 +9,7 @@ DialogSnowSettings::DialogSnowSettings(QWidget *parent) : QDialog(parent)
     QGridLayout *layoutSettings = new QGridLayout();
     QHBoxLayout *layoutOk = new QHBoxLayout();
 
-    QLabel *rainfallThreshold = new QLabel(tr("All rainfall at temperature [°C] > "));
+    QLabel *rainfallThresholdLabel = new QLabel(tr("All rainfall at temperature [°C] > "));
     rainfallThresholdValue = new QLineEdit();
     rainfallThresholdValue->setFixedWidth(70);
 
@@ -52,7 +52,14 @@ DialogSnowSettings::DialogSnowSettings(QWidget *parent) : QDialog(parent)
     soilAlbedoValue->setValidator(doubleAlbedoVal);
     soilAlbedoValue->setFixedWidth(70);
 
-    layoutSettings->addWidget(rainfallThreshold, 0 , 0);
+    QLabel *dampingDepth = new QLabel(tr("Snow surface damping depth [m] "));
+    snowDampingDepthValue = new QLineEdit();
+    QDoubleValidator* doubleDampingDepthVal = new QDoubleValidator(0.0, 1.0, 2, snowDampingDepthValue);
+    doubleDampingDepthVal->setNotation(QDoubleValidator::StandardNotation);
+    snowDampingDepthValue->setValidator(doubleAlbedoVal);
+    snowDampingDepthValue->setFixedWidth(70);
+
+    layoutSettings->addWidget(rainfallThresholdLabel, 0 , 0);
     layoutSettings->addWidget(rainfallThresholdValue, 0 , 1);
     layoutSettings->addWidget(snowThreshold, 1 , 0);
     layoutSettings->addWidget(snowThresholdValue, 1 , 1);
@@ -64,6 +71,8 @@ DialogSnowSettings::DialogSnowSettings(QWidget *parent) : QDialog(parent)
     layoutSettings->addWidget(vegetationHeightValue, 4 , 1);
     layoutSettings->addWidget(soilAlbedo, 5 , 0);
     layoutSettings->addWidget(soilAlbedoValue, 5 , 1);
+    layoutSettings->addWidget(dampingDepth, 6 , 0);
+    layoutSettings->addWidget(snowDampingDepthValue, 6 , 1);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
                                          | QDialogButtonBox::Cancel);
@@ -134,13 +143,13 @@ bool DialogSnowSettings::checkWrongValues()
 {
     bool ok;
 
-    double rainfallThreshold = QLocale().toDouble(rainfallThresholdValue->text(), &ok);
+    double _rainfallThreshold = QLocale().toDouble(rainfallThresholdValue->text(), &ok);
     if (!ok)
     {
         QMessageBox::information(nullptr, "Wrong value", "Max. temperature with snow value is not a number");
         return false;
     }
-    if ((rainfallThreshold < 0.0) || (rainfallThreshold > 4.0))
+    if ((_rainfallThreshold < 0.0) || (_rainfallThreshold > 4.0))
     {
         QMessageBox::information(nullptr, "Wrong value", "Max. temperature with snow should be in [0:4]");
         return false;
@@ -268,4 +277,14 @@ double DialogSnowSettings::getSoilAlbedoValue() const
 void DialogSnowSettings::setSoilAlbedoValue(double value)
 {
     soilAlbedoValue->setText(QLocale().toString(value));
+}
+
+double DialogSnowSettings::getSnowDampingDepthValue() const
+{
+    return QLocale().toDouble(snowDampingDepthValue->text());
+}
+
+void DialogSnowSettings::setSnowDampingDepthValue(double value)
+{
+    snowDampingDepthValue->setText(QLocale().toString(value));
 }

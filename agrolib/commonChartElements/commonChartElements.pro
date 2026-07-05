@@ -2,11 +2,11 @@
 #
 #   common elements used with Qt Charts library
 #
-#   This project is part of agrolib distribution
+#   This project is part of ARPAE agrolib distribution
 #
 #------------------------------------------------------
 
-QT  += gui widgets charts
+QT  += widgets
 
 TEMPLATE = lib
 CONFIG += staticlib

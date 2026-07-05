@@ -24,7 +24,7 @@
         Q_OBJECT
 
     private:
-        QString errorStr;
+        QString _errorStr;
 
     public:
         explicit Crit3DMeteoPointsDbHandler();
@@ -32,16 +32,16 @@
         explicit Crit3DMeteoPointsDbHandler(QString provider_, QString host_, QString dbname_, int port_, QString user_, QString pass_);
 
         ~Crit3DMeteoPointsDbHandler();
-        void dbManager();
 
-        QString getDbName() { return _db.databaseName(); }
-        QSqlDatabase getDb() const { return _db; }
+        QString getDbName() const { return _db.databaseName(); }
+        QSqlDatabase &getDb() { return _db; }
         void setDb(const QSqlDatabase &db) { _db = db; }
-        QString getErrorString() { return errorStr; }
-        void setErrorString(QString str) { errorStr = str; }
+        QString getErrorString() const { return _errorStr; }
+        void setErrorString(QString str) { _errorStr = str; }
 
-        QString getDatasetURL(QString dataset); 
+        QString getDatasetURL(QString dataset, bool &isOk);
         bool setAndOpenDb(QString dbname_);
+        bool openNewConnection(QSqlDatabase &myDb, const QString &dbName, const QString &connectionName);
 
         QList<QString> getAllDatasetsList();
         QList<QString> getDatasetsActive();
@@ -50,30 +50,44 @@
 
         QDateTime getFirstDate(frequencyType frequency);
         QDateTime getLastDate(frequencyType frequency);
-        QDateTime getFirstDate(frequencyType frequency, std::string idMeteoPoint);
-        QDateTime getLastDate(frequencyType frequency, std::string idMeteoPoint);
+        QDateTime getFirstDate(frequencyType frequency, const std::string& idMeteoPoint);
+        QDateTime getLastDate(frequencyType frequency, const std::string& idMeteoPoint);
 
-        bool existData(Crit3DMeteoPoint *meteoPoint, frequencyType myFreq);
-        bool deleteData(QString pointCode, frequencyType myFreq, QDate first, QDate last);
-        bool deleteData(QString pointCode, frequencyType myFreq, QList<meteoVariable> varList, QDate first, QDate last);
-        bool deleteAllData(frequencyType myFreq);
-        bool writePointProperties(Crit3DMeteoPoint* pointProp);
+        bool hasData(frequencyType frequency, const std::string &idMeteoPoint) const;
+
+        bool existTable(const Crit3DMeteoPoint &meteoPoint, frequencyType myFrequency);
+        bool existTable(const QSqlDatabase &myDb, const Crit3DMeteoPoint &meteoPoint, frequencyType myFrequency);
+
+        bool deleteData(const QString& pointCode, frequencyType frequency, const QDate& firstDate, const QDate& lastDate);
+        bool deleteData(const QString& pointCode, frequencyType frequency, const QList<meteoVariable>& varList,
+                        const QDate& firstDate, const QDate& lastDate);
+        bool deleteAllData(frequencyType frequency);
+
+        bool writePointProperties(const Crit3DMeteoPoint &pointProp);
         bool updatePointProperties(const QList<QString> &columnList, const QList<QString> &valueList);
-        bool updatePointPropertiesGivenId(QString id, QList<QString> columnList, QList<QString> valueList);
+        bool updatePointPropertiesGivenId(const QString& idStr, const QList<QString>& columnList, QList<QString> &valueList);
+
         bool getPropertiesFromDb(QList<Crit3DMeteoPoint>& meteoPointsList,
                                  const gis::Crit3DGisSettings& gisSettings, QString& errorString);
-        bool getPropertiesGivenId(QString id, Crit3DMeteoPoint* meteoPoint,
-                                                const gis::Crit3DGisSettings& gisSettings, QString& errorString);
-        bool loadDailyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint *meteoPoint);
-        std::vector<float> loadDailyVar(QString *myError, meteoVariable variable,
-                                        Crit3DDate dateStart, Crit3DDate dateEnd,
-                                        QDate* firstDateDB, Crit3DMeteoPoint *meteoPoint);
+        bool getPropertiesGivenId(const QString &id, Crit3DMeteoPoint &meteoPoint,
+                                  const gis::Crit3DGisSettings& gisSettings, QString& errorString);
 
-        bool loadHourlyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint *meteoPoint);
+        bool loadDailyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint);
+        bool loadDailyData(const QSqlDatabase &myDb, const Crit3DDate &firstDate, const Crit3DDate &lastDate,
+                           Crit3DMeteoPoint &meteoPoint);
 
-        std::vector<float> loadHourlyVar(QString *myError, meteoVariable variable,
-                                         Crit3DDate dateStart, Crit3DDate dateEnd,
-                                         QDateTime* firstDateDB, Crit3DMeteoPoint *meteoPoint);
+        std::vector<float> loadDailyVar(meteoVariable variable, const Crit3DDate &dateStart,
+                                        const Crit3DDate &dateEnd, const QString& idStr, QDate &firstDateDB);
+
+        std::vector<float> exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable,
+                                            QString id, QDateTime myFirstTime, QDateTime myLastTime, std::vector<QString> &dateStr);
+
+        bool loadHourlyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint);
+        bool loadHourlyData(const QSqlDatabase &myDb, const Crit3DDate &firstDate, const Crit3DDate &lastDate,
+                            Crit3DMeteoPoint &meteoPoint);
+
+        std::vector<float> loadHourlyVar(meteoVariable variable, const QString& meteoPointId, const QDateTime& startTime,
+                                         const QDateTime& endTime, QDateTime &firstDateDB, QString &myError);
 
         bool loadVariableProperties();
         bool getFieldList(const QString &tableName, QList<QString> &fieldList);
@@ -86,7 +100,7 @@
         QString getNewDataEntry(int pos, const QList<QString>& dataStr, const QString& dateTimeStr,
                             const QString& idVarStr, meteoVariable myVar,
                             int* nrMissingData, int* nrWrongData, Crit3DQuality* dataQuality);
-        bool importHourlyMeteoData(QString fileNameComplete, bool deletePreviousData, QString *log);
+        bool importHourlyMeteoData(const QString &fileNameComplete, bool deletePreviousData, QString &log);
 
         bool writeDailyDataList(const QString &pointCode, const QList<QString> &listEntries, QString& log);
         bool writeHourlyDataList(const QString &pointCode, const QList<QString> &listEntries, QString& log);
@@ -94,6 +108,7 @@
         bool setAllPointsActive();
         bool setAllPointsNotActive();
         bool setActiveStatePointList(const QList<QString> &pointList, bool activeState);
+        bool isActivePoint(const QString &pointId);
 
         bool deleteAllPointsFromIdList(const QList<QString> &pointList);
         bool deleteAllPointsFromGeoPointList(const QList<gis::Crit3DGeoPoint>& pointList);
@@ -106,10 +121,11 @@
         QList<QString> getRegionList();
         QList<QString> getStateList();
         QList<QString> getDatasetList();
-        bool setActiveStateIfCondition(bool activeState, QString condition);
+        bool setActiveStateIfCondition(bool activeState, const QString &condition);
+        bool getPointListWithCriteria(QList<QString> &pointsList, const QString &condition);
         bool setOrogCode(QString id, int orogCode);
         QList<QString> getJointStations(const QString& idPoint);
-        bool setJointStations(const QString& idPoint, QList<QString> stationsList);
+        bool setJointStations(const QString& idPoint, const QList<QString> &stationsList);
         QString getNameGivenId(QString id);
         double getAltitudeGivenId(QString id);
 

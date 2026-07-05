@@ -15,7 +15,7 @@
         short blue;
 
         Crit3DColor();
-        Crit3DColor(short,short,short);
+        Crit3DColor(short, short, short);
     };
 
     class Crit3DColorScale {
@@ -23,8 +23,11 @@
     private:
         unsigned int _nrColors, _nrKeyColors;
         std::vector<Crit3DColor> color;
-        float _minimum, _maximum;
-        bool _isRangeBlocked;
+        double _minimum, _maximum;
+        bool _isFixedRange;
+        bool _isHideMinimum;
+        bool _isHideZero;
+        bool _isTransparent;
         int _classification;
 
     public:
@@ -38,23 +41,35 @@
         unsigned int nrColors() { return _nrColors; }
         unsigned int nrKeyColors() { return _nrKeyColors; }
 
-        float minimum() { return _minimum; }
-        void setMinimum(float min) { _minimum = min; }
+        double minimum() { return _minimum; }
+        void setMinimum(double min) { _minimum = min; }
 
-        float maximum() { return _maximum; }
-        void setMaximum(float max) { _maximum = max; }
+        double maximum() { return _maximum; }
+        void setMaximum(double max) { _maximum = max; }
 
-        Crit3DColor* getColor(float myValue);
-        unsigned int getColorIndex(float myValue);
+        Crit3DColor* getColor(double myValue);
+        unsigned int getColorIndex(double myValue) const;
 
         bool setRange(float minimum, float maximum);
-        void setRangeBlocked(bool blocked) { _isRangeBlocked = blocked; }
-        bool isRangeBlocked() { return _isRangeBlocked; }
+
+        void setFixedRange(bool fixedRange) { _isFixedRange = fixedRange; }
+        bool isFixedRange() { return _isFixedRange; }
+
+        void setHideMinimum(bool isHideMinimum) { _isHideMinimum = isHideMinimum; }
+        bool isHideMinimum() { return _isHideMinimum; }
+
+        void setTransparent(bool transparent) { _isTransparent = transparent; }
+        bool isTransparent() { return _isTransparent; }
+
+        void setHideZero(bool isHideZero) { _isHideZero = isHideZero; }
+        bool isHideZero() { return _isHideZero; }
     };
 
     bool setDefaultScale(Crit3DColorScale* myScale);
+    bool setRandomColors(Crit3DColorScale* myScale);
     bool setDTMScale(Crit3DColorScale* myScale);
     bool setTemperatureScale(Crit3DColorScale* myScale);
+    bool setSlopeStabilityScale(Crit3DColorScale* myScale);
     bool setAnomalyScale(Crit3DColorScale* myScale);
     bool setPrecipitationScale(Crit3DColorScale* myScale);
     bool setRelativeHumidityScale(Crit3DColorScale* myScale);
@@ -69,5 +84,6 @@
     bool setSurfaceWaterScale(Crit3DColorScale* myScale);
     bool setLAIScale(Crit3DColorScale* myScale);
 
+    void mixColors(const Crit3DColor &backColor, const Crit3DColor &foreColor, Crit3DColor &outColor, float alpha);
 
 #endif // CRIT3DCOLOR_H

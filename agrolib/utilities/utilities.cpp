@@ -2,7 +2,10 @@
 #include "commonConstants.h"
 #include "crit3dDate.h"
 #include "math.h"
+#include "qjsonobject.h"
 
+#include <QJsonDocument>
+#include <QJsonArray>
 #include <QVariant>
 #include <QSqlDriver>
 #include <QSqlRecord>
@@ -10,15 +13,16 @@
 #include <QDir>
 #include <QDirIterator>
 #include <QTextStream>
+#include <QTimeZone>
 
 
-QList<QString> getFields(QSqlDatabase* db_, QString tableName)
+QList<QString> getFields(QSqlDatabase* dbPointer, QString tableName)
 {
-    QSqlDriver* driver_ = db_->driver();
-    QSqlRecord record_ = driver_->record(tableName);
+    QSqlDriver* driver = dbPointer->driver();
+    QSqlRecord record = driver->record(tableName);
     QList<QString> fieldList;
-    for (int i=0; i < record_.count(); i++)
-        fieldList.append(record_.fieldName(i));
+    for (int i=0; i < record.count(); i++)
+        fieldList.append(record.fieldName(i));
 
     return fieldList;
 }
@@ -53,30 +57,32 @@ bool fieldExists(const QSqlQuery &query, const QString fieldName)
 }
 
 
-// return boolean (false if recordset is not valid)
-bool getValue(QVariant myRs)
+// return boolean record (false if recordset is not valid)
+bool getValue(const QVariant &myRs)
 {
-    if (! myRs.isValid() || myRs.isNull()) return false;
+    if (! myRs.isValid() || myRs.isNull())
+        return false;
 
-    if (myRs == "" || myRs == "NULL") return false;
+    if (myRs == "" || myRs == "NULL")
+        return false;
 
     return myRs.toBool();
 }
 
 
-bool getValue(QVariant myRs, int* myValue)
+bool getValue(const QVariant &myRs, int* value)
 {
-    *myValue = NODATA;
+    *value = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull()) return false;
-    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan")
+        return false;
 
     bool isOk;
-    *myValue = myRs.toInt(&isOk);
+    *value = myRs.toInt(&isOk);
 
     if (! isOk)
     {
-        *myValue = NODATA;
+        *value = NODATA;
         return false;
     }
 
@@ -84,19 +90,19 @@ bool getValue(QVariant myRs, int* myValue)
 }
 
 
-bool getValue(QVariant myRs, float* myValue)
+bool getValue(const QVariant &myRs, float* value)
 {
-    *myValue = NODATA;
+    *value = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull()) return false;
-    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan")
+        return false;
 
     bool isOk;
-    *myValue = myRs.toFloat(&isOk);
+    *value = myRs.toFloat(&isOk);
 
     if (! isOk)
     {
-        *myValue = NODATA;
+        *value = NODATA;
         return false;
     }
 
@@ -104,19 +110,19 @@ bool getValue(QVariant myRs, float* myValue)
 }
 
 
-bool getValue(QVariant myRs, double* myValue)
+bool getValue(const QVariant &myRs, double* value)
 {
-    *myValue = NODATA;
+    *value = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull()) return false;
-    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan")
+        return false;
 
     bool isOk;
-    *myValue = myRs.toDouble(&isOk);
+    *value = myRs.toDouble(&isOk);
 
     if (! isOk)
     {
-        *myValue = NODATA;
+        *value = NODATA;
         return false;
     }
 
@@ -124,45 +130,47 @@ bool getValue(QVariant myRs, double* myValue)
 }
 
 
-bool getValue(QVariant myRs, QDate* myValue)
+bool getValue(const QVariant &myRs, QString* valueStr)
+{
+    *valueStr = "";
+    if (! myRs.isValid() || myRs.isNull())
+        return false;
+    if (myRs == "NULL")
+        return false;
+
+    *valueStr = myRs.toString();
+    return true;
+}
+
+
+bool getValue(const QVariant &myRs, QDate* date)
+{
+    if (myRs.isNull() || myRs == "")
+        return false;
+
+    *date = myRs.toDate();
+    return date->isValid();
+}
+
+
+bool getValue(const QVariant &myRs, QDateTime* dateTime)
+{
+    if (myRs.isNull() || myRs == "")
+        return false;
+
+    *dateTime = myRs.toDateTime();
+    dateTime->setTimeZone(QTimeZone::utc());
+
+    return dateTime->isValid();
+}
+
+
+bool getValueCrit3DTime(const QVariant &myRs, Crit3DTime* dateTime)
 {
     if (myRs.isNull())
         return false;
-    else
-    {
-        if (myRs == "")
-             return false;
-        else
-            *myValue = myRs.toDate();
-    }
 
-    return true;
-}
-
-bool getValue(QVariant myRs, QDateTime* myValue)
-{
-    if (myRs.isNull())
-        return false;
-    else
-    {
-        if (myRs == "")
-             return false;
-        else
-            *myValue = myRs.toDateTime();
-    }
-
-    return true;
-}
-
-
-bool getValue(QVariant myRs, QString* myValue)
-{
-    *myValue = "";
-    if (! myRs.isValid() || myRs.isNull()) return false;
-    if (myRs == "NULL") return false;
-
-    *myValue = myRs.toString();
-    return true;
+    return dateTime->setFromISOString(myRs.toString().toStdString());
 }
 
 
@@ -209,20 +217,19 @@ Crit3DTime getCrit3DTime(const QDate& t, int hour)
 
 QDate getQDate(const Crit3DDate& d)
 {
-    QDate myDate = QDate(d.year, d.month, d.day);
-    return myDate;
+    return QDate(d.year, d.month, d.day);
 }
 
 
-QDateTime getQDateTime(const Crit3DTime& t)
+QDateTime getQDateTime(const Crit3DTime &t)
 {
-    QDate myDate = QDate(t.date.year, t.date.month, t.date.day);
+    QDateTime dateTime;
+    dateTime.setTimeZone(QTimeZone::utc());
 
-    QDateTime myDateTime;
-    myDateTime.setTimeSpec(Qt::UTC);
-    myDateTime.setDate(myDate);
-    myDateTime.setTime(QTime(0,0,0,0));
-    return myDateTime.addSecs(t.time);
+    dateTime.setDate(QDate(t.date.year, t.date.month, t.date.day));
+    dateTime.setTime(QTime(0,0,0,0));
+
+    return dateTime.addSecs(t.time);
 }
 
 
@@ -303,11 +310,11 @@ void intervalDecade(int decade, int year, int* dayStart, int* dayEnd, int* month
     else
     {
         *dayStart = 21;
-        QDate temp(year, *month, 1);
-        *dayEnd = temp.daysInMonth();
+        QDate firstDateMonth(year, *month, 1);
+        *dayEnd = firstDateMonth.daysInMonth();
     }
-
 }
+
 
 int getSeasonFromDate(QDate date)
 {
@@ -445,6 +452,16 @@ std::vector <double> StringListToDouble(QList<QString> myList)
     return myVector;
 }
 
+std::vector<int> StringListToInt(QList<QString> myList)
+{
+    std::vector <int> myVector;
+    myVector.resize(unsigned(myList.size()));
+    for (unsigned i=0; i < unsigned(myList.size()); i++)
+        myVector[i] = myList[int(i)].toInt();
+
+    return myVector;
+}
+
 QStringList FloatVectorToStringList(std::vector <float> myVector)
 {
     QList<QString> myList;
@@ -459,6 +476,15 @@ QStringList DoubleVectorToStringList(std::vector <double> myVector)
     QList<QString> myList;
     for (unsigned i=0; i < unsigned(myVector.size()); i++)
         myList.push_back(QString::number(double(myVector[i])));
+
+    return myList;
+}
+
+QStringList IntVectorToStringList(std::vector <int> myVector)
+{
+    QList<QString> myList;
+    for (unsigned i=0; i < unsigned(myVector.size()); i++)
+        myList.push_back(QString::number(int(myVector[i])));
 
     return myList;
 }
@@ -479,12 +505,13 @@ bool removeDirectory(QString myPath)
 }
 
 
-bool searchDocPath(QString* docPath)
+bool searchDocPath(QString& docPath)
 {
-    *docPath = "";
+    docPath = "";
 
     QString myPath = QDir::currentPath();
     QString myRoot = QDir::rootPath();
+
     // only for win: application can run on a different drive (i.e. D:\)
     QString winRoot = myPath.left(3);
 
@@ -502,9 +529,10 @@ bool searchDocPath(QString* docPath)
 
         myPath = QFileInfo(myPath).dir().absolutePath();
     }
-    if (! isFound) return false;
+    if (! isFound)
+        return false;
 
-    *docPath = QDir::cleanPath(myPath) + "/DOC/";
+    docPath = QDir::cleanPath(myPath) + "/DOC/";
     return true;
 }
 
@@ -537,6 +565,7 @@ bool searchDataPath(QString* dataPath)
     *dataPath = QDir::cleanPath(myPath) + "/DATA/";
     return true;
 }
+
 
 void clearDir( const QString path )
 {
@@ -573,7 +602,7 @@ QList<QString> readListSingleColumn(QString fileName, QString& error)
     }
     else
     {
-        error = "Error opening list file: " + fileName;
+        error = "Wrong file format (must be a text file): " + fileName;
     }
 
     return myList;
@@ -659,4 +688,44 @@ bool parseCSV(const QString &csvFileName, QList<QString> &csvFields, QList<QList
 
     myFile.close();
     return true;
+}
+
+bool writeJson(const QString & ancestor, const std::vector <QString> &fieldNames, const std::vector <QString> dataType, const std::vector <std::vector <QString>> &values, const QString & jsonFilename)
+{
+    QJsonObject content;
+    QJsonArray records;
+    QJsonObject recordObject;
+
+    bool isFloat = false;
+
+    for (int i=0; i < int(values.size()); i++)
+    {
+        if (values[i].size() != fieldNames.size() || values[i].size() != dataType.size()) return false;
+
+        recordObject.empty();
+        for (int j=0; j < int(values[i].size()); j++)
+        {
+            if (dataType[j] == "float")
+                recordObject.insert(fieldNames[j], values[i][j].toFloat(&isFloat));
+            else
+                recordObject.insert(fieldNames[j], values[i][j]);
+        }
+
+        records.push_back(recordObject);
+    }
+
+    content.insert(ancestor, records);
+
+    QJsonDocument doc(content);
+    QByteArray bytes = doc.toJson(QJsonDocument::Indented);
+    QFile file(jsonFilename);
+    if(file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ))
+    {
+        QTextStream iStream( &file );
+        iStream << bytes;
+        file.close();
+        return true;
+    }
+    else
+        return false;
 }

@@ -14,22 +14,43 @@
         #include "interpolationPoint.h"
     #endif
 
-    bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, Crit3DTime myTime,
-                   Crit3DInterpolationSettings* spatialQualityInterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *myClimate, bool checkSpatial);
+bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints,
+               const Crit3DTime &myTime, Crit3DInterpolationSettings &spatialQualityInterpolationSettings,
+               Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* climateParameters, bool checkSpatial, std::string &errorStr);
 
-    bool checkAndPassDataToInterpolation(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* meteoPoints,
-                                         int nrMeteoPoints, Crit3DTime myTime, Crit3DInterpolationSettings *SQinterpolationSettings,
-                                         Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *myClimate,
-                                         std::vector<Crit3DInterpolationDataPoint> &myInterpolationPoints,
-                                         bool checkSpatial);
+bool checkAndPassDataToInterpolation(Crit3DQuality* myQuality, meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints,
+                                     const Crit3DTime &myTime, Crit3DInterpolationSettings &SQinterpolationSettings,
+                                     Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings *meteoSettings,
+                                     Crit3DClimateParameters *climateParameters, std::vector<Crit3DInterpolationDataPoint> &interpolationPoints,
+                                     bool checkSpatial, std::string &errorStr);
 
-    bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
-                             std::vector<Crit3DInterpolationDataPoint> &myInterpolationPoints, Crit3DInterpolationSettings* mySettings);
+    bool passDataToInterpolation(const std::vector<Crit3DMeteoPoint> &meteoPoints,
+                                 std::vector<Crit3DInterpolationDataPoint> &myInterpolationPoints,
+                                 Crit3DInterpolationSettings &interpolationSettings);
 
-    bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
-                          std::vector <Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* settings, Crit3DMeteoSettings* meteoSettings, bool excludeOutsideDem, bool excludeSupplemental);
+    bool computeResiduals(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints,
+                          const std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
+                          Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings* meteoSettings,
+                          bool excludeOutsideDem, bool excludeSupplemental);
 
-    float computeErrorCrossValidation(meteoVariable myVar, Crit3DMeteoPoint *myPoints, int nrMeteoPoints, const Crit3DTime& myTime, Crit3DMeteoSettings *meteoSettings);
+    bool computeResidualsLocalDetrending(meteoVariable myVar, const Crit3DTime &myTime, std::vector<Crit3DMeteoPoint> &meteoPoints,
+                                         std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
+                                         Crit3DInterpolationSettings &interpolationSettings,
+                                         Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* climateParameters,
+                                         bool excludeOutsideDem, bool excludeSupplemental);
 
+    bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea &myArea, int elevationPos,
+                                          std::vector<Crit3DMeteoPoint> &meteoPoints, std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
+                                          Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings* meteoSettings,
+                                          bool excludeOutsideDem, bool excludeSupplemental);
+
+    float computeErrorCrossValidation(const std::vector<Crit3DMeteoPoint> &meteoPoints);
+
+    bool spatialQualityControl(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints,
+                               Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings* meteoSettings,
+                               Crit3DClimateParameters* climateParameters, const Crit3DTime &myTime, std::string &errorStr);
+
+    float getSpatialThresholdVar(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
+                                 float value, float stdDev, int nrStdDev, float avgDeltaZ, float minDistance);
 
 #endif // SPATIALCONTROL_H

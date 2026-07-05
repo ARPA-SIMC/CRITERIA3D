@@ -11,6 +11,7 @@ Crit3DLandUnit::Crit3DLandUnit()
     description = "Default land use";
     idCrop = "FALLOW";
     idLandUse = "FALLOW";
+    landUseType = LANDUSE_FALLOW;
 
     roughness = 0.05;
     pond = 0.002;
@@ -48,7 +49,18 @@ bool loadLandUnitList(const QSqlDatabase &dbCrop, std::vector<Crit3DLandUnit> &l
         landUnitList[i].name = query.value("name").toString();
         landUnitList[i].description = query.value("description").toString();
         landUnitList[i].idCrop = query.value("id_crop").toString();
-        landUnitList[i].idLandUse = query.value("id_landuse").toString();
+        landUnitList[i].idLandUse = query.value("id_landuse").toString().toUpper();
+
+        auto search = MapLandUseFromString.find(landUnitList[i].idLandUse.toStdString());
+        if (search != MapLandUseFromString.end())
+        {
+            landUnitList[i].landUseType = MapLandUseFromString.at(landUnitList[i].idLandUse.toStdString());
+        }
+        else
+        {
+            errorStr = QString("%1 is not a valid landUse type" ).arg(landUnitList[i].idLandUse);
+            landUnitList[i].landUseType = LANDUSE_FALLOW;
+        }
 
         landUnitList[i].roughness = query.value("roughness").toDouble();
         landUnitList[i].pond = query.value("pond").toDouble();
@@ -58,14 +70,4 @@ bool loadLandUnitList(const QSqlDatabase &dbCrop, std::vector<Crit3DLandUnit> &l
     while( query.next() );
 
     return true;
-}
-
-
-int getLandUnitIndex(const std::vector<Crit3DLandUnit> &landUnitList, int idLandUnit)
-{
-    for (int index = 0; index < landUnitList.size(); index++)
-        if (landUnitList[index].id == idLandUnit)
-            return index;
-
-    return NODATA;
 }

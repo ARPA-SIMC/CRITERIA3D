@@ -22,7 +22,8 @@
     ftomei@arpae.it
 */
 
-/*! TestSolarRadiation
+/*!
+ *  \brief TestSolarRadiation
  * compute a map of global solar irradiance (clear sky)
  * for a specified date/time,
  * input: a Digital Elevation Model (ESRI .flt)
@@ -30,11 +31,80 @@
 
 #include <QCoreApplication>
 #include <QDir>
-#include "iostream"
+#include <iostream>
+
 #include "commonConstants.h"
 #include "gis.h"
 #include "radiationSettings.h"
 #include "solarRadiation.h"
+
+
+bool searchDefaultPath(QString inputPath, QString* outputPath);
+
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    std::cout << "\nTEST Solar Radiation library" << std::endl;
+    std::cout << "Compute a map of global solar irradiance (clear sky)" << std::endl;
+
+    // GIS SETTINGS (UTM zone, time zone)
+    gis::Crit3DGisSettings gisSettings;
+    gisSettings.utmZone = 32;
+    gisSettings.timeZone = 1;
+
+    // DATETIME (UTC time)
+    Crit3DDate myDate(1, 7, 2018);
+    int myHour = 12;
+
+    std::cout << "UTM zone: " << gisSettings.utmZone << std::endl;
+    std::cout << "Date: " << myDate.toISOString() << " hour: " << myHour << " UTC" << std::endl;
+
+    // Digital Elevation Model
+    QString path;
+    QString appPath = a.applicationDirPath() + "/";
+    if (! searchDefaultPath(appPath, &path)) return -1;
+    std::string inputFileName = path.toStdString() + + "DEM/dem_ravone";
+
+    gis::Crit3DRasterGrid DEM;
+    std::string errorStr;
+    if (gis::readEsriGrid(inputFileName, &DEM, errorStr))
+        std::cout << "\nDEM = " << inputFileName << std::endl;
+    else
+    {
+        std::cout << "errorStr in reading:" << inputFileName << std::endl << errorStr << std::endl;
+        return 0;
+    }
+
+    // SET RADIATION SETTINGS (deafult trasmissivity = 0.75)
+    Crit3DRadiationSettings* radSettings = new Crit3DRadiationSettings();
+    radSettings->setGisSettings(&gisSettings);
+
+    // INITIALIZE RADIATION MAPS
+    Crit3DRadiationMaps* radMaps = new Crit3DRadiationMaps(DEM, gisSettings);
+
+    int mySeconds = HOUR_SECONDS * myHour;
+    Crit3DTime myTime(myDate, mySeconds);
+
+    std::cout << "\nComputing..." << std::endl;
+
+    // COMPUTE POTENTIAL GLOBAL RADIATION MAPS
+    if (radiation::computeRadiationDEM(radSettings, DEM, radMaps, myTime))
+        std::cout << "\nGlobal solar irradiance (clear sky) computed." << std::endl;
+    else
+        std::cout << "errorStr in compute radiation." << std::endl << std::endl;
+
+    //SAVE OUTPUT
+    std::string otputFileName;
+    otputFileName = path.toStdString() + PATH_OUTPUT + "globalRadiation";
+    if (gis::writeEsriGrid(otputFileName, radMaps->globalRadiationMap, errorStr))
+        std::cout << "Map saved in: " << otputFileName << std::endl;
+    else
+        std::cout << "errorStr in writing:" << otputFileName << std::endl << errorStr << std::endl;
+
+    return a.exec();
+}
 
 
 bool searchDefaultPath(QString inputPath, QString* outputPath)
@@ -65,70 +135,5 @@ bool searchDefaultPath(QString inputPath, QString* outputPath)
 
     *outputPath = QDir::cleanPath(myPath) + "/DATA/";
     return true;
-}
-
-
-int main(int argc, char *argv[])
-{
-    QCoreApplication a(argc, argv);
-
-    std::cout << "\nTEST Solar Radiation library" << std::endl;
-    std::cout << "Compute a map of global solar irradiance (clear sky)" << std::endl;
-
-    // GIS SETTINGS (UTM zone, time zone)
-    gis::Crit3DGisSettings* gisSettings = new gis::Crit3DGisSettings();
-    gisSettings->utmZone = 32;
-    gisSettings->timeZone = 1;
-
-    // DATETIME (UTC time)
-    Crit3DDate* myDate = new Crit3DDate(1, 7, 2018);
-    int myHour = 12;
-
-    std::cout << "UTM zone: " << gisSettings->utmZone << std::endl;
-    std::cout << "Date: " << myDate->toStdString() << " hour: " << myHour << " UTC" << std::endl;
-
-    // Digital Elevation Model
-    QString path;
-    QString appPath = a.applicationDirPath() + "/";
-    if (! searchDefaultPath(appPath, &path)) return -1;
-    std::string inputFileName = path.toStdString() + + "DEM/dem_ravone";
-
-    gis::Crit3DRasterGrid* DEM = new gis::Crit3DRasterGrid();
-    std::string* error = new std::string();
-    if (gis::readEsriGrid(inputFileName, DEM, error))
-        std::cout << "\nDEM = " << inputFileName << std::endl;
-    else
-    {
-        std::cout << "Error in reading:" << inputFileName << std::endl << *error << std::endl;
-        return 0;
-    }
-
-    // SET RADIATION SETTINGS
-    Crit3DRadiationSettings* radSettings = new Crit3DRadiationSettings();
-    radSettings->setGisSettings(gisSettings);
-
-    // INITIALIZE RADIATION MAPS (deafult trasmissivity = 0.75)
-    Crit3DRadiationMaps* radMaps = new Crit3DRadiationMaps(*DEM, *gisSettings);
-
-    int mySeconds = HOUR_SECONDS * myHour;
-    Crit3DTime* myTime = new Crit3DTime(*myDate, mySeconds);
-
-    std::cout << "\nComputing..." << std::endl;
-
-    // COMPUTE POTENTIAL GLOBAL RADIATION MAPS
-    if (radiation::computeRadiationGrid(radSettings, *DEM, radMaps, *myTime))
-        std::cout << "\nGlobal solar irradiance (clear sky) computed." << std::endl;
-    else
-        std::cout << "Error in compute radiation." << std::endl << std::endl;
-
-    //SAVE OUTPUT
-    std::string otputFileName;
-    otputFileName = path.toStdString() + PATH_OUTPUT + "globalRadiation";
-    if (gis::writeEsriGrid(otputFileName, radMaps->globalRadiationMap, error))
-        std::cout << "Map saved in: " << otputFileName << std::endl;
-    else
-        std::cout << "Error in writing:" << otputFileName << std::endl << *error << std::endl;
-
-    return a.exec();
 }
 

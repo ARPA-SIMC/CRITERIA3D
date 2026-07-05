@@ -2,6 +2,7 @@
 #include "basicMath.h"
 #include "meteo.h"
 #include "meteoMaps.h"
+#include "gis.h"
 
 
 Crit3DDailyMeteoMaps::Crit3DDailyMeteoMaps(const gis::Crit3DRasterGrid& DEM)
@@ -101,6 +102,8 @@ bool Crit3DDailyMeteoMaps::computeHSET0Map(gis::Crit3DGisSettings* gisSettings, 
 
 bool Crit3DDailyMeteoMaps::fixDailyThermalConsistency()
 {
+    // da migliorare!
+
     if (! mapDailyTMax->isLoaded || ! mapDailyTMin->isLoaded) return true;
     if ( mapDailyTMax->getMapTime() != mapDailyTMin->getMapTime()) return true;
 

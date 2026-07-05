@@ -28,6 +28,9 @@
         double getSoilAlbedoValue() const;
         void setSoilAlbedoValue(double value);
 
+        double getSnowDampingDepthValue() const;
+        void setSnowDampingDepthValue(double value);
+
         bool checkEmptyValues();
         bool checkWrongValues();
         void accept();
@@ -39,6 +42,7 @@
         QLineEdit *surfaceThickValue;
         QLineEdit *vegetationHeightValue;
         QLineEdit *soilAlbedoValue;
+        QLineEdit *snowDampingDepthValue;
     };
 
 #endif // DIALOGSNOWSETTINGS_H
