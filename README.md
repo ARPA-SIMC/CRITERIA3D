@@ -4,7 +4,7 @@
 [![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora44.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
 
 ## Overview
-**CRITERIA‑3D** is a three-dimensional hydrological model designed for small catchments.   
+**CRITERIA‑3D** is a three dimensional agro-hydrological model designed for small catchments.   
 
 It includes a numerical solution for three-dimensional water flow in the soil, coupled surface and subsurface flow, meteorological data interpolation, radiation budget, crop development and crop water uptake, slope stability analysis.  
 It needs hourly meteo data as input (air temperature, precipitation, solar irradiance, air relative humidity, wind speed).   
@@ -61,6 +61,9 @@ Build it the same way
 #### ⚠️ Important Tips
 - Always build MapGraphics.pro first, then the main project.
 - For both projects, go to **Projects → Build Settings** in Qt Creator and **uncheck “Shadow build”**. This prevents common compilation errors.
+
+#### Compilation on Linux
+see https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/fedora/SPECS/CRITERIA3D.spec for build RPM on Fedora.
 
 #### 3️⃣ Run CRITERIA-3D  
 
