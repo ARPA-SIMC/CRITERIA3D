@@ -6,20 +6,21 @@
 ## Overview
 **CRITERIA‑3D** is a three-dimensional hydrological model designed for small catchments.   
 
-It includes a numerical solution for three-dimensional water and heat flow in the soil, coupled surface and subsurface flow, meteorological data interpolation, radiation budget, crop development and crop water uptake, slope stability analysis.  
+It includes a numerical solution for three-dimensional water flow in the soil, coupled surface and subsurface flow, meteorological data interpolation, radiation budget, crop development and crop water uptake, slope stability analysis.  
 It needs hourly meteo data as input (air temperature, precipitation, solar irradiance, air relative humidity, wind speed).   
 
 See [last release](https://github.com/ARPA-SIMC/CRITERIA3D/releases) to download precompiled binaries.
 
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/ravone.png)
+figure 1: Case study of the Ravone creek catchment (Bologna, Italy)
 
 ## Key Features
 - 3D water flow simulation in both surface and subsurface layers.
+- hourly meteorological data interpolation
 - radiation budget
 - canopy development and water uptake
 - snow accumulation and melt model
 - slope stability analysis
-- hourly meteorological data interpolation
 
 ## Applications
 CRITERIA‑3D can be used by:
@@ -34,14 +35,16 @@ For scientific background and model formulation, see [CRITERIA‑3D model descri
 CRITERIA is operational at [Arpae](https://www.arpae.it/it/temi-ambientali/meteo/scopri-di-piu/strumenti-di-modellistica/criteria/criteria-modello-di-bilancio-idrico) Emilia-Romagna. It has been used in several international projects (Vintage, Highlander, Arcadia) and it is reported in the [International Soil Modeling Consortium](https://soil-modeling.org/resources-links/model-portal/criteria).
 
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/CRITERIA3D.png)
+figure 2: Screenshot of the CRITERIA-3D interface
 
 ## Step-by-Step Compilation Guide
 #### 1️⃣ Install required software
 
 Make sure you have:  
+- **c++ compiler**
 - **Qt 5.x or later**  
 - **QtCharts module** (install with Qt)  
-- **Qt5 Compatibility module** (Only for Qt 6.x)
+- **Qt5 Compatibility module** (Qt 6.x or later)
 
 Also, install **Qt Creator** (the IDE for building Qt projects).
 
@@ -71,7 +74,6 @@ Surface water flow is described by the two-dimensional parabolic approximation o
 Water fluxes equations may be coupled with the heat flux equations, which include diffusive, latent and advective terms. Atmospheric data (net irradiance, air temperature and relative humidity, wind speed) could be used as top boundary conditions.
 
 
-
 ## Authors
 - Fausto Tomei      
 - Gabriele Antolini 
@@ -85,9 +87,14 @@ Water fluxes equations may be coupled with the heat flux equations, which includ
 ## Contacts
 - ftomei@arpae.it   (CRITERIA3D)
 - gantolini@arpae.it  (VINE3D)
-- gsannino@arpae.it (slope stability)
-- avolta@arpae.it  (grapevine)
+- gsannino@arpae.it (slope stability model)
+- avolta@arpae.it  (grapevine model)
 - ctoscano@arpae.it (hydrall model)
+
+## How to cite
+- Bittelli, M., Tomei, F., Pistocchi, A., Flury, M., Boll, J., Brooks, E. S., & Antolini, G. (2010). Development and testing of a physically based, three-dimensional model of surface and subsurface hydrology. Advances in Water Resources, 33(1), 106-122.
+- Bittelli, M., Pistocchi, A., Tomei, F., Roggero, P. P., Orsini, R., Toderi, M., ... & Flury, M. (2011). CRITERIA-3D: a mechanistic model for surface and subsurface hydrology for small catchments. In Soil hydrology, land use and agriculture: measurement and modelling (pp. 253-265). Wallingford UK: CAB International.
+- Sannino, G., Tomei, F., Bittelli, M., Meisina, C., Bordoni, M., & Valentino, R. (2025). A three-dimensional agro-hydrological model for predictive analysis of shallow landslides: CRITERIA-3D. Engineering Geology, 352, 108073.
 
 ## License
 CRITERIA-3D has been developed under contract issued by [ARPAE Hydro-Meteo-Climate Service](https://github.com/ARPA-SIMC), Emilia-Romagna, Italy.  
