@@ -67,14 +67,14 @@ Build it the same way
 - Always build MapGraphics.pro first, then the main project.
 - For both projects, go to **Projects → Build Settings** in Qt Creator and **uncheck “Shadow build”**. This prevents common compilation errors.
 
-#### Command-line compilation (Fedora)
-See [CRITERIA3D.spec](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/fedora/SPECS/CRITERIA3D.spec) for compile and build RPM on Fedora/Linux.
-
 #### 3️⃣ Run CRITERIA-3D  
 
 After successful compilation:  
 Locate the executable in the build folder  
 Run it directly from Qt Creator or your system file explorer.
+
+#### Command-line compilation (Fedora)
+See [CRITERIA3D.spec](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/fedora/SPECS/CRITERIA3D.spec) for compile and build RPM on Fedora/Linux.
 
 ## soilFluxes3D library 
 agrolib/soilFluxed3D is a numerical solution of flow equations of water and heat in the soil, in a three-dimensional domain.  
