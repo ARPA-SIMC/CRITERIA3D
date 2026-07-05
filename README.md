@@ -12,7 +12,7 @@ It needs hourly meteo data as input (air temperature, precipitation, solar irrad
 See [last release](https://github.com/ARPA-SIMC/CRITERIA3D/releases) to download precompiled binaries.
 
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/ravone.png)
-figure 1: Case study of the Ravone creek catchment (Bologna, Italy)
+Case study of the Ravone creek catchment (Bologna, Italy)
 
 ## Key Features
 - 3D water flow simulation in both surface and subsurface layers.
@@ -40,13 +40,13 @@ CRITERIA is operational at [Arpae](https://www.arpae.it/it/temi-ambientali/meteo
 - Sannino, G., Tomei, F., Bittelli, M., Meisina, C., Bordoni, M., & Valentino, R. (2025). A three-dimensional agro-hydrological model for predictive analysis of shallow landslides: CRITERIA-3D. Engineering Geology, 352, 108073.
 
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/CRITERIA3D.png)
-figure 2: Screenshot of the CRITERIA-3D interface
+Screenshot of the CRITERIA-3D interface
 
 ## Step-by-Step Compilation Guide
 #### 1️⃣ Install required software
 
 Make sure you have:  
-- **c++ compiler**
+- **C++ compiler**
 - **Qt 5.x or later**  
 - **QtCharts module** (install with Qt)  
 - **Qt5 Compatibility module** (Qt 6.x or later)
@@ -73,7 +73,7 @@ After successful compilation:
 Locate the executable in the build folder  
 Run it directly from Qt Creator or your system file explorer.
 
-#### Command-line compilation (Fedora)
+### Command-line compilation (Fedora)
 See [CRITERIA3D.spec](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/fedora/SPECS/CRITERIA3D.spec) for compile and build RPM on Fedora/Linux.
 
 ## soilFluxes3D library 
