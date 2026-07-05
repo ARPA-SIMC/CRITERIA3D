@@ -34,6 +34,11 @@ For scientific background and model formulation, see [CRITERIA‑3D model descri
 
 CRITERIA is operational at [Arpae](https://www.arpae.it/it/temi-ambientali/meteo/scopri-di-piu/strumenti-di-modellistica/criteria/criteria-modello-di-bilancio-idrico) Emilia-Romagna. It has been used in several international projects (Vintage, Highlander, Arcadia) and it is reported in the [International Soil Modeling Consortium](https://soil-modeling.org/resources-links/model-portal/criteria).
 
+### How to cite
+- Bittelli, M., Tomei, F., Pistocchi, A., Flury, M., Boll, J., Brooks, E. S., & Antolini, G. (2010). Development and testing of a physically based, three-dimensional model of surface and subsurface hydrology. Advances in Water Resources, 33(1), 106-122.
+- Bittelli, M., Pistocchi, A., Tomei, F., Roggero, P. P., Orsini, R., Toderi, M., ... & Flury, M. (2011). CRITERIA-3D: a mechanistic model for surface and subsurface hydrology for small catchments. In Soil hydrology, land use and agriculture: measurement and modelling (pp. 253-265). Wallingford UK: CAB International.
+- Sannino, G., Tomei, F., Bittelli, M., Meisina, C., Bordoni, M., & Valentino, R. (2025). A three-dimensional agro-hydrological model for predictive analysis of shallow landslides: CRITERIA-3D. Engineering Geology, 352, 108073.
+
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/CRITERIA3D.png)
 figure 2: Screenshot of the CRITERIA-3D interface
 
@@ -62,8 +67,8 @@ Build it the same way
 - Always build MapGraphics.pro first, then the main project.
 - For both projects, go to **Projects → Build Settings** in Qt Creator and **uncheck “Shadow build”**. This prevents common compilation errors.
 
-#### Compilation on Linux
-see https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/fedora/SPECS/CRITERIA3D.spec for compile and build RPM on Fedora.
+### Command-line compilation (Fedora)
+See [CRITERIA3D.spec](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/fedora/SPECS/CRITERIA3D.spec) for compile and build RPM on Fedora/Linux.
 
 #### 3️⃣ Run CRITERIA-3D  
 
@@ -94,10 +99,6 @@ Water fluxes equations may be coupled with the heat flux equations, which includ
 - avolta@arpae.it  (grapevine model)
 - ctoscano@arpae.it (hydrall model)
 
-## How to cite
-- Bittelli, M., Tomei, F., Pistocchi, A., Flury, M., Boll, J., Brooks, E. S., & Antolini, G. (2010). Development and testing of a physically based, three-dimensional model of surface and subsurface hydrology. Advances in Water Resources, 33(1), 106-122.
-- Bittelli, M., Pistocchi, A., Tomei, F., Roggero, P. P., Orsini, R., Toderi, M., ... & Flury, M. (2011). CRITERIA-3D: a mechanistic model for surface and subsurface hydrology for small catchments. In Soil hydrology, land use and agriculture: measurement and modelling (pp. 253-265). Wallingford UK: CAB International.
-- Sannino, G., Tomei, F., Bittelli, M., Meisina, C., Bordoni, M., & Valentino, R. (2025). A three-dimensional agro-hydrological model for predictive analysis of shallow landslides: CRITERIA-3D. Engineering Geology, 352, 108073.
 
 ## License
 CRITERIA-3D has been developed under contract issued by [ARPAE Hydro-Meteo-Climate Service](https://github.com/ARPA-SIMC), Emilia-Romagna, Italy.  
