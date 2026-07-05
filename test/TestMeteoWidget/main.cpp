@@ -5,8 +5,6 @@
 #include "utilities.h"
 #include "dbMeteoPointsHandler.h"
 
-#include <iostream>
-
 
 int main(int argc, char *argv[])
 {
@@ -15,9 +13,7 @@ int main(int argc, char *argv[])
 
     QString dbFileName = openDBDialog.getOpenFileName(nullptr, ("Open meteopoint db"), "", ("SQLite files (*.db)"));
     if (dbFileName.isEmpty())
-    {
         return 0;
-    }
 
     Crit3DMeteoPointsDbHandler mpHandler(dbFileName);
     mpHandler.loadVariableProperties();
