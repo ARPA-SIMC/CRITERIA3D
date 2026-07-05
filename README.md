@@ -63,7 +63,7 @@ Build it the same way
 - For both projects, go to **Projects → Build Settings** in Qt Creator and **uncheck “Shadow build”**. This prevents common compilation errors.
 
 #### Compilation on Linux
-see https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/fedora/SPECS/CRITERIA3D.spec for build RPM on Fedora.
+see https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/fedora/SPECS/CRITERIA3D.spec for compile and build RPM on Fedora.
 
 #### 3️⃣ Run CRITERIA-3D  
 
