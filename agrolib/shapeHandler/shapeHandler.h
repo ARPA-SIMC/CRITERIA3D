@@ -31,7 +31,8 @@
 
     public:
         Crit3DShapeHandler();
-        ~Crit3DShapeHandler();
+
+        ~Crit3DShapeHandler() { close(); }
 
         std::string errorString;
 

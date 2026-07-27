@@ -759,28 +759,32 @@ double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit1DLayer> &soi
  * \return total transpiration and layerTranspiration vector [mm]
  * or percentage of water stress (if returnWaterStress = true)
  */
-double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vector<soil::Crit1DLayer> &soilLayers,
-                                        double& waterStress, double& waterExcessStress)
+double Crit3DCrop::computeTranspiration(const double maxTranspiration, const std::vector<soil::Crit1DLayer> &soilLayers,
+                                        double& transpStressOnly, double& transpExcessOnly)
 {
-    // check
+    // checks
     if (idCrop.empty() || ! isLiving)
         return 0.0;
+
     if (roots.rootDepth <= roots.rootDepthMin)
         return 0.0;
+
     if (roots.firstRootLayer == NODATA)
         return 0.0;
+
     if (maxTranspiration < EPSILON)
         return 0.0;
+
+    transpStressOnly = 0.0;                         // [mm] actual transpiration with only water scarsity stress
+    transpExcessOnly = 0.0;                         // [mm] actual transpiration with only water surplus stress
+
+    double totRootDensityWithoutStress = 0.0;       // [-]
+    double redistribution = 0.0;                    // [mm]
 
     double thetaWP;                                 // [m3 m-3] volumetric water content at Wilting Point
     double cropWP;                                  // [mm] wilting point specific for crop
     double waterSurplusThreshold;                   // [mm] water surplus stress threshold
     double waterScarcityThreshold;                  // [mm] water scarcity stress threshold
-
-    double transpStressOnly = 0.0;                  // [mm] actual transpiration with only water scarsity stress
-    double transpExcessOnly = 0.0;                  // [mm] actual transpiration with only water surplus stress
-    double totRootDensityWithoutStress = 0.0;       // [-]
-    double redistribution = 0.0;                    // [mm]
 
     // water surplus stress [-]
     const double WSS = isWaterSurplusResistant() ? 0.0 : 0.5;
@@ -883,9 +887,6 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
             }
         }
     }
-
-    waterStress = 1 - (transpStressOnly  / maxTranspiration);
-    waterExcessStress = 1 - (transpExcessOnly / maxTranspiration);
 
     double actualTranspiration = 0;
     for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; ++i)
