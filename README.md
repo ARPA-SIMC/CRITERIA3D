@@ -22,6 +22,7 @@ _Case study of the Ravone creek catchment (Bologna, Italy)_
 
 ## Key Features
 - Three-dimensional water flow
+- Parallel numerical solver based on OpenMP
 - Fully coupled surface–subsurface flow simulation
 - Hourly meteorological data interpolation
 - Surface radiation budget
