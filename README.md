@@ -40,7 +40,7 @@ _Case study of the Ravone creek catchment (Bologna, Italy)_
 _Screenshot of the CRITERIA-3D interface_
 
 ## soilFluxes3D library 
-The `agrolib/soilFluxes3D` library implements a fully coupled numerical solution for three-dimensional water and heat transport in soil. Parallel implementations are available for both multi-core CPUs (OpenMP) and NVIDIA GPUs (CUDA).
+The `agrolib/soilFluxes3D` library (shared with [Criteria-1D](https://github.com/ARPA-SIMC/CRITERIA1D) model) implements a fully coupled numerical solution for three-dimensional water and heat transport in soil. Parallel implementations are available for both multi-core CPUs (OpenMP) and NVIDIA GPUs (CUDA).
 
 Features include:
 - 3D Richards equation for unsaturated flow
@@ -67,7 +67,8 @@ CRITERIA is operational at [Arpae](https://www.arpae.it/it/temi-ambientali/meteo
 ## Repository structure
 
 CRITERIA3D/  
-├─ agrolib/        Core numerical libraries  
+├─ agrolib/        Core libraries (shared with [Criteria-1D](https://github.com/ARPA-SIMC/CRITERIA1D) and [PRAGA](https://github.com/ARPA-SIMC/PRAGA))  
+├─ src/            Criteria-3D specific libraries  
 ├─ DATA/           Templates and sample projects  
 ├─ DOC/            Documentation  
 ├─ MapGraphics/    GUI library  
