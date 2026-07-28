@@ -6,7 +6,7 @@
 # CRITERIA-3D
 CRITERIA-3D is an open-source agro-hydrological model for simulating water flow, crop water use, and slope stability in small to medium-sized catchments.
 
-Its fully three-dimensional numerical solver is parallelized for modern hardware, supporting both shared-memory multi-core CPUs (OpenMP) and NVIDIA GPUs (CUDA). The model also includes meteorological interpolation, radiation modelling, crop development, root water uptake, snow processes, and slope stability analysis.
+Its fully three-dimensional numerical solver is parallelized for shared-memory multi-core CPUs (OpenMP) and NVIDIA GPUs (CUDA). The model also includes meteorological interpolation, radiation modelling, crop development, root water uptake, snow processes, and slope stability analysis.
 
 The model requires hourly meteorological data as input, including:
 - air temperature
@@ -21,27 +21,35 @@ See [latest release](https://github.com/ARPA-SIMC/CRITERIA3D/releases) to downlo
 _Case study of the Ravone creek catchment (Bologna, Italy)_
 
 ## Key Features
-- fully coupled 3D surface–subsurface flow
-- parallel CPU (OpenMP) and GPU (CUDA) numerical solver
-- surface radiation budget
-- transient crop canopy development and root water uptake
-- snow accumulation and melt model
-- slope stability analysis
-- hourly meteorological data interpolation
-- empirical soil cracking model
+
+- Fully coupled 3D surface–subsurface water flow
+- Parallel numerical solver for multi-core CPUs (OpenMP) and NVIDIA GPUs (CUDA)
+- Transient crop canopy development and root water uptake
+- Hourly meteorological data interpolation
+- Surface radiation budget
+- Snow accumulation and melt
+- Slope stability analysis
+- Empirical soil cracking model
+
+> **Note**
+>
+> Crop water uptake is simulated as part of the three-dimensional soil water balance. For dedicated irrigation scheduling and crop water requirement applications, see [CRITERIA-1D](https://github.com/ARPA-SIMC/CRITERIA1D).
 
 ## Applications
-- watershed hydrology and water balance studies
-- simulation of nature based solutions 
-- landslide susceptibility and slope stability assessment
-- climate change impact studies
-- research on coupled surface–subsurface hydrological processes
+
+- Watershed hydrology and water balance studies
+- Flood simulation and flood risk assessment
+- Landslide susceptibility and slope stability assessment
+- Climate change impact studies
+- Evaluation of nature-based solutions
+- Research on coupled surface–subsurface hydrological processes
+
 
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/CRITERIA3D.png)
 _Screenshot of the CRITERIA-3D interface_
 
 ## soilFluxes3D library 
-The `agrolib/soilFluxes3D` library (shared with [Criteria-1D](https://github.com/ARPA-SIMC/CRITERIA1D) model) implements a fully coupled numerical solution for three-dimensional water and heat transport in soil. Parallel implementations are available for both multi-core CPUs (OpenMP) and NVIDIA GPUs (CUDA).
+The `agrolib/soilFluxes3D` library (shared with the [Criteria-1D](https://github.com/ARPA-SIMC/CRITERIA1D) model) implements a fully coupled numerical solution for three-dimensional water and heat transport in soil. Parallel implementations are available for both multi-core CPUs (OpenMP) and NVIDIA GPUs (CUDA).
 
 Features include:
 - 3D Richards equation for unsaturated flow
@@ -122,7 +130,7 @@ Make sure the following software is installed:
 >
 > - Always build **MapGraphics** before building the main project.
 > - For both projects, open **Projects → Build Settings** in Qt Creator and disable **Shadow build**. This prevents common compilation errors.
-> - To build the GPU solver, uncomment `CONFIG += CUDA_CONFIG` in `agrolib/parallel.pri`.
+> - To build the GPU solver, uncomment `CONFIG += CUDA_CONFIG` in `agrolib/parallel.pri`. By default CRITERIA-3D is compiled with the OpenMP CPU solver.
 
 
 ### 3️⃣ Install and Run CRITERIA-3D
@@ -156,7 +164,7 @@ After successfully compiling the project:
 
 ### Command-Line Compilation (Fedora)
 
-For command-line compilation and RPM package creation on Fedora, see the `fedora/SPECS/CRITERIA3D.spec` file.
+Fedora packages can be built using the provided RPM specification: `fedora/SPECS/CRITERIA3D.spec`
 
 ## Authors
 - Fausto Tomei      
