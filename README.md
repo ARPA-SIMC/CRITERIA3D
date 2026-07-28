@@ -4,12 +4,9 @@
 [![fedora44](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora44.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
 
 # CRITERIA-3D
-Open-source 3D agro-hydrological modelling software.
-
-## Overview
 CRITERIA-3D is an open-source agro-hydrological model for simulating water flow, crop water use, and slope stability in small to medium-sized catchments.
 
-It combines a fully three-dimensional numerical solution of soil water flow with meteorological interpolation, radiation modelling, crop development, root water uptake, snow processes, and slope stability analysis.
+Its fully three-dimensional numerical solution of soil water flow is parallelized using OpenMP to efficiently exploit multi-core processors. The model also includes meteorological interpolation, radiation modelling, crop development, root water uptake, snow processes, and slope stability analysis.
 
 The model requires hourly meteorological data as input, including:
 - air temperature
