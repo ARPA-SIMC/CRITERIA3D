@@ -21,20 +21,21 @@ See [latest release](https://github.com/ARPA-SIMC/CRITERIA3D/releases) to downlo
 _Case study of the Ravone creek catchment (Bologna, Italy)_
 
 ## Key Features
-- Fully coupled 3D surface–subsurface flow
-- Parallel CPU (OpenMP) and GPU (CUDA) numerical solver
-- Hourly meteorological data interpolation
-- Surface radiation budget
-- Crop canopy development and root water uptake
-- Snow accumulation and melt
-- Slope stability analysis
+- fully coupled 3D surface–subsurface flow
+- parallel CPU (OpenMP) and GPU (CUDA) numerical solver
+- surface radiation budget
+- transient crop canopy development and root water uptake
+- snow accumulation and melt model
+- slope stability analysis
+- hourly meteorological data interpolation
+- empirical soil cracking model
 
 ## Applications
-- Watershed hydrology and water balance studies
-- Agricultural water management
-- Landslide susceptibility and slope stability assessment
-- Climate change impact studies
-- Research on coupled surface–subsurface hydrological processes
+- watershed hydrology and water balance studies
+- simulation of nature based solutions 
+- landslide susceptibility and slope stability assessment
+- climate change impact studies
+- research on coupled surface–subsurface hydrological processes
 
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/CRITERIA3D.png)
 _Screenshot of the CRITERIA-3D interface_
