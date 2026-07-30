@@ -30,6 +30,7 @@ _Case study of the Ravone creek catchment (Bologna, Italy)_
 - Snow accumulation and melt
 - Slope stability analysis
 - Empirical soil cracking model
+- Biomass allocation in forestry (HYDRALL model, in development)
 
 > **Note**
 >
