@@ -6,14 +6,14 @@
 # CRITERIA-3D
 CRITERIA-3D is an open-source agro-hydrological model for simulating water flow, crop water use, and slope stability in small to medium-sized catchments.
 
-Its fully three-dimensional numerical solver is parallelized for shared-memory multi-core CPUs (OpenMP) and NVIDIA GPUs (CUDA). The model also includes meteorological interpolation, radiation modelling, crop development, root water uptake, snow processes, and slope stability analysis.
+Its fully three-dimensional numerical solver is parallelized for shared-memory multi-core CPUs (OpenMP) or NVIDIA GPUs (CUDA). The model also includes meteorological interpolation, radiation modelling, crop development, root water uptake, snow processes, and slope stability analysis.
 
 The model requires hourly meteorological data as input, including:
-- air temperature
-- precipitation
-- solar irradiance
-- relative humidity
-- wind speed
+- air temperature (°C)
+- precipitation (mm)
+- solar irradiance (W m-2)
+- relative humidity (%)
+- wind speed (m s-1)
 
 See [latest release](https://github.com/ARPA-SIMC/CRITERIA3D/releases) to download precompiled binaries.
 
