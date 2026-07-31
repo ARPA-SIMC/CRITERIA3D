@@ -117,69 +117,104 @@ std::vector <std::vector<int>> computeMatrixAnalysisRaster(const Crit3DShapeHand
 }
 
 
-bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shapeVal,
+bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, const Crit3DShapeHandler& shapeVal,
                           const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
                           const std::string &valField, const std::string &valFieldOutput,
                           const std::string &aggregationType, double threshold, std::string& errorStr)
 {
+    // check dimensions
+    const size_t nrRefShapes = shapeRef.getShapeCount();
+    const size_t nrValShapes = shapeVal.getShapeCount();
+
+    if(matrix.size() != nrRefShapes || vectorNull.size() != nrRefShapes)
+    {
+        errorStr = "Error in matrix or vector dimension.";
+        return false;
+    }
+    for (const auto& row : matrix)
+    {
+        if (row.size() != nrValShapes)
+        {
+            errorStr = "Error in matrix dimensions.";
+            return false;
+        }
+    }
+
+    // check aggregation type
+    const bool isAvg = aggregationType == "AVG";
+    const bool isMin = aggregationType == "MIN";
+    const bool isMax = aggregationType == "MAX";
+
+    if (! (isAvg || isMin || isMax))
+    {
+        errorStr = "Unknown aggregation type: " + aggregationType;
+        return false;
+    }
+
     // check if valField exists
-    int fieldIndex = shapeVal.getDBFFieldIndex(valField.c_str());
+    const int fieldIndex = shapeVal.getDBFFieldIndex(valField.c_str());
     if (fieldIndex == -1)
     {
         errorStr = shapeVal.getFilepath() + " has not field called " + valField.c_str();
         return false;
     }
 
-    // add new field to shapeRef
-    DBFFieldType fieldType = shapeVal.getFieldType(fieldIndex);
-    // limit of 10 characters for valFieldOutput
-    shapeRef.addField(valFieldOutput.c_str(), fieldType, shapeVal.nWidthField(fieldIndex), shapeVal.nDecimalsField(fieldIndex));
+    // check DBF field type
+    const DBFFieldType fieldType = shapeVal.getFieldType(fieldIndex);
+    if (! (fieldType == FTInteger || fieldType == FTDouble))
+    {
+        errorStr = "Unsupported DBF field type.";
+        return false;
+    }
 
-    unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
-    unsigned int nrValShapes = unsigned(shapeVal.getShapeCount());
-    double value = 0;
-    double currentValue = 0;
-    double sumValues = 0;
+    // preload values
+    std::vector<double> values(nrValShapes);
+    for (size_t col = 0; col < nrValShapes; ++col)
+        values[col] = shapeVal.getNumericValue(static_cast<int>(col), fieldIndex);
+
+    // aggregation cycle
     std::vector<int> validPoints(nrRefShapes, 0);
     std::vector<double> aggregationValues(nrRefShapes, NODATA);
 
-    for (unsigned int row = 0; row < nrRefShapes; row++)
+    for (size_t row = 0; row < nrRefShapes; ++row)
     {
-        sumValues = 0;
-        currentValue = NODATA;
+        double currentValue = NODATA;
+        double sumValues = 0.0;
+        bool isFirstValue = true;
 
-        for (unsigned int col = 0; col < nrValShapes; col++)
+        for (size_t col = 0; col < nrValShapes; ++col)
         {
-            int nrPoints = int(matrix[row][unsigned(col)]);
-            if (nrPoints > 0)
+            const int nrPoints = matrix[row][col];
+            if (nrPoints <= 0)
+                continue;
+
+            const double value = values[col];
+
+            if (isEqual(value, NODATA))
             {
-                value = shapeVal.getNumericValue(signed(col), fieldIndex);
+                vectorNull[row] += nrPoints;
+            }
+            else
+            {
+                validPoints[row] += nrPoints;
 
-                if (isEqual(value, NODATA))
+                if (isFirstValue)
                 {
-                    vectorNull[row] += nrPoints;
+                    currentValue = value;
+                    isFirstValue = false;
                 }
-                else
+
+                if (isAvg)
                 {
-                    validPoints[row] += nrPoints;
-
-                    if (int(currentValue) == NODATA)
-                    {
-                        currentValue = value;
-                    }
-
-                    if (aggregationType == "AVG")
-                    {
-                        sumValues += nrPoints*value;
-                    }
-                    else if (aggregationType == "MIN")
-                    {
-                        currentValue = MINVALUE(value, currentValue);
-                    }
-                    else if (aggregationType == "MAX")
-                    {
-                        currentValue = MAXVALUE(value, currentValue);
-                    }
+                    sumValues += nrPoints * value;
+                }
+                else if (isMin)
+                {
+                    currentValue = MINVALUE(value, currentValue);
+                }
+                else if (isMax)
+                {
+                    currentValue = MAXVALUE(value, currentValue);
                 }
             }
         }
@@ -188,7 +223,9 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
         bool isValid = false;
         if (validPoints[row] > 0)
         {
-            double validPercentage = double(validPoints[row]) / double(validPoints[row] + vectorNull[row]);
+            double validPercentage = double(validPoints[row])
+                                     / double(validPoints[row] + vectorNull[row]);
+
             if (validPercentage >= threshold)
                 isValid = true;
         }
@@ -200,36 +237,151 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
         }
         else
         {
-            if (aggregationType == "AVG")
+            if (isAvg)
             {
                 aggregationValues[row] = sumValues / validPoints[row];
             }
-            else if (aggregationType == "MIN" || aggregationType == "MAX")
+            else if (isMin || isMax)
             {
                 aggregationValues[row] = currentValue;
             }
         }
     }
 
-    // save aggregation values: each row of matrix is a shape of shapeRef
-    double valueToSave = 0.0;
-    for (unsigned int shapeIndex = 0; shapeIndex < nrRefShapes; shapeIndex++)
+    // add output field to shapeRef
+    if (! shapeRef.addField(valFieldOutput.c_str(), fieldType, shapeVal.nWidthField(fieldIndex),
+                           shapeVal.nDecimalsField(fieldIndex)))
     {
-        valueToSave = aggregationValues[shapeIndex];
-        int fieldIndex = shapeRef.getDBFFieldIndex(valFieldOutput.c_str());
-        if (fieldIndex == -1)
-        {
-            errorStr = "Wrong shape field name: " + valFieldOutput;
-            return false;
-        }
+        errorStr = "Error writing field: " + valFieldOutput;
+        return false;
+    }
+
+    const int outputFieldIndex = shapeRef.getDBFFieldIndex(valFieldOutput.c_str());
+    if (outputFieldIndex == -1)
+    {
+        errorStr = "Wrong shape field name: " + valFieldOutput;
+        return false;
+    }
+
+    // save aggregation values: each row of matrix is a shape of shapeRef
+    for (size_t shapeIndex = 0; shapeIndex < nrRefShapes; ++shapeIndex)
+    {
+        const double valueToSave = aggregationValues[shapeIndex];
 
         if (fieldType == FTInteger)
         {
-            shapeRef.writeIntAttribute(int(shapeIndex), fieldIndex, int(valueToSave));
+            shapeRef.writeIntAttribute(int(shapeIndex), outputFieldIndex, int(valueToSave));
         }
         else if (fieldType == FTDouble)
         {
-            shapeRef.writeDoubleAttribute(int(shapeIndex), fieldIndex, valueToSave);
+            shapeRef.writeDoubleAttribute(int(shapeIndex), outputFieldIndex, valueToSave);
+        }
+    }
+
+    return true;
+}
+
+
+bool zonalStatisticsVector( const std::vector<std::vector<int>>& matrix, const std::vector<int>& vectorNull,
+                            const std::vector<double>& values, const std::string& aggregationType,
+                            double threshold, std::vector<double>& outputValues, std::string& errorStr)
+{
+    // check dimensions
+    const size_t nrRefShapes = matrix.size();
+    const size_t nrValShapes = values.size();
+
+    if (vectorNull.size() != nrRefShapes)
+    {
+        errorStr = "Error in vectorNull dimension.";
+        return false;
+    }
+
+    for (const auto& row : matrix)
+    {
+        if (row.size() != nrValShapes)
+        {
+            errorStr = "Error in matrix dimensions.";
+            return false;
+        }
+    }
+
+    // check aggregation type
+    const bool isAvg = aggregationType == "AVG";
+    const bool isMin = aggregationType == "MIN";
+    const bool isMax = aggregationType == "MAX";
+
+    if (! (isAvg || isMin || isMax))
+    {
+        errorStr = "Unknown aggregation type: " + aggregationType;
+        return false;
+    }
+
+    // initialize output with NODATA
+    outputValues.assign(nrRefShapes, NODATA);
+
+    // aggregation cycle
+    for (size_t row = 0; row < nrRefShapes; ++row)
+    {
+        double currentValue = NODATA;
+        double sumValues = 0.0;
+        int validPoints = 0;
+        int nullPoints = vectorNull[row];
+        bool isFirstValue = true;
+
+        for (size_t col = 0; col < nrValShapes; ++col)
+        {
+            const int nrPoints = matrix[row][col];
+            if (nrPoints <= 0)
+                continue;
+
+            const double value = values[col];
+
+            if (isEqual(value, NODATA))
+            {
+                nullPoints += nrPoints;
+            }
+            else
+            {
+                validPoints += nrPoints;
+
+                if (isFirstValue)
+                {
+                    currentValue = value;
+                    isFirstValue = false;
+                }
+
+                if (isAvg)
+                {
+                    sumValues += nrPoints * value;
+                }
+                else if (isMin)
+                {
+                    currentValue = MINVALUE(value, currentValue);
+                }
+                else if (isMax)
+                {
+                    currentValue = MAXVALUE(value, currentValue);
+                }
+            }
+        }
+
+        if (validPoints == 0)
+            continue;
+
+        const double validFraction =
+            double(validPoints) /
+            double(validPoints + nullPoints);
+
+        if (validFraction >= threshold)
+        {
+            if (isAvg)
+            {
+                outputValues[row] = sumValues / validPoints;
+            }
+            else // min and max
+            {
+                outputValues[row] = currentValue;
+            }
         }
     }
 

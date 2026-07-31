@@ -13,7 +13,7 @@
     #include "shapeHandler.h"
     #include "crit3dDate.h"
 
-    #define CRITERIA_OUTPUT_VERSION "v2.0.3 (2026)"
+    #define CRITERIA_OUTPUT_VERSION "v2.0.4 (2026)"
 
     #define ERROR_MISSINGPARAMETERS -900
     #define ERROR_WRONGPARAMETER -901
@@ -40,6 +40,7 @@
     #define ERROR_NETCDF -75
     #define ERROR_ZONAL_STATISTICS_SHAPE -80
     #define ERROR_MAPS -85
+    #define ERROR_DTX -90
     #define ERROR_MISSING_GDAL -100
 
 
@@ -108,6 +109,8 @@
 
         void initialize();
         void closeProject();
+
+        int fail(int errorType, const QString &errorString);
 
         int initializeProject(const QString &settingsFileName, const QString &operationStr,
                               const QDate &_dateComputation, bool isLog);

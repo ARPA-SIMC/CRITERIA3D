@@ -1,105 +1,193 @@
-[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/rocky9.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
-[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/rocky10.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
-[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora42.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
-[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora44.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
+[![rocky9](https://simc.arpae.it/moncic-ci/CRITERIA3D/rocky9.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
+[![rocky10](https://simc.arpae.it/moncic-ci/CRITERIA3D/rocky10.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
+[![fedora42](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora42.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
+[![fedora44](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora44.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
 
-## Overview
-**CRITERIA‑3D** is a three dimensional agro-hydrological model designed for small catchments.   
+# CRITERIA-3D
+CRITERIA-3D is an open-source agro-hydrological model for simulating water flow, crop water use, and slope stability in small to medium-sized catchments.
 
-It includes a numerical solution for three-dimensional water flow in the soil, coupled surface and subsurface flow, meteorological data interpolation, radiation budget, crop development and crop water uptake, slope stability analysis.  
-It needs hourly meteo data as input (air temperature, precipitation, solar irradiance, air relative humidity, wind speed).   
+Its fully three-dimensional numerical solver is parallelized for shared-memory multi-core CPUs (OpenMP) or NVIDIA GPUs (CUDA). The model also includes meteorological interpolation, radiation modelling, crop development, root water uptake, snow processes, and slope stability analysis.
 
-See [last release](https://github.com/ARPA-SIMC/CRITERIA3D/releases) to download precompiled binaries.
+The model requires hourly meteorological data as input, including:
+- air temperature (°C)
+- precipitation (mm)
+- solar irradiance (W m-2)
+- relative humidity (%)
+- wind speed (m s-1)
+
+See [latest release](https://github.com/ARPA-SIMC/CRITERIA3D/releases) to download precompiled binaries.
 
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/ravone.png)
-Case study of the Ravone creek catchment (Bologna, Italy)
+_Case study of the Ravone creek catchment (Bologna, Italy)_
 
 ## Key Features
-- 3D water flow simulation in both surface and subsurface layers.
-- hourly meteorological data interpolation
-- radiation budget
-- canopy development and water uptake
-- snow accumulation and melt model
-- slope stability analysis
+
+- Fully coupled 3D surface–subsurface water flow
+- Parallel numerical solver for multi-core CPUs (OpenMP) and NVIDIA GPUs (CUDA)
+- Transient crop canopy development and root water uptake
+- Hourly meteorological data interpolation
+- Surface radiation budget
+- Snow accumulation and melt
+- Slope stability analysis
+- Empirical soil cracking model
+- Biomass allocation in forestry (HYDRALL model, in development)
+
+> **Note**
+>
+> Crop water uptake is simulated as part of the three-dimensional soil water balance. For dedicated irrigation scheduling and crop water requirement applications, see [CRITERIA-1D](https://github.com/ARPA-SIMC/CRITERIA1D).
 
 ## Applications
-CRITERIA‑3D can be used by:
-- Hydrologists and environmental engineers for catchment water balance studies.
-- Researchers analyzing surface-subsurface interactions and hydrological processes.
-- Civil planners for land management and flood risk assessment.
+
+- Watershed hydrology and water balance studies
+- Flood simulation and flood risk assessment
+- Landslide susceptibility and slope stability assessment
+- Climate change impact studies
+- Evaluation of nature-based solutions
+- Research on coupled surface–subsurface hydrological processes
+
+
+![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/CRITERIA3D.png)
+_Screenshot of the CRITERIA-3D interface_
+
+## soilFluxes3D library 
+The `agrolib/soilFluxes3D` library (shared with the [Criteria-1D](https://github.com/ARPA-SIMC/CRITERIA1D) model) implements a fully coupled numerical solution for three-dimensional water and heat transport in soil. Parallel implementations are available for both multi-core CPUs (OpenMP) and NVIDIA GPUs (CUDA).
+
+Features include:
+- 3D Richards equation for unsaturated flow
+- 3D Darcy equation for saturated flow
+- 2D Saint-Venant surface runoff
+- Integrated finite difference discretization
+- Coupled heat transport
+- Multiple hydraulic boundary conditions
+ 
+Surface water flow is described by the two-dimensional parabolic approximation of the St. Venant equation, using Manning’s equation of motion. Subsurface water flow is described by the three-dimensional Richards’ equation for the unsaturated zone and by three-dimensional Darcy’s law for the saturated zone, using an integrated finite difference formulation. The available boundary conditions are surface runoff, culvert runoff, free drainage (lateral or deep) and prescribed total potential. The water flow equations may be coupled with the heat transport equations, which include diffusive, latent and advective terms. Atmospheric variables (net irradiance, air temperature, relative humidity and wind speed) can be used as upper boundary conditions.
 
 ## Documentation & References
-Detailed technical documentation is available in the `DOC` folder.
-For scientific background and model formulation, see [CRITERIA‑3D model description](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/CRITERIA3D.pdf)  
+- Model description [(PDF)](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/CRITERIA3D.pdf)  
+
+- The user manual (draft) is available in the `DOC` directory.
 
 CRITERIA is operational at [Arpae](https://www.arpae.it/it/temi-ambientali/meteo/scopri-di-piu/strumenti-di-modellistica/criteria/criteria-modello-di-bilancio-idrico) Emilia-Romagna. It has been used in several international projects (Vintage, Highlander, Arcadia) and it is reported in the [International Soil Modeling Consortium](https://soil-modeling.org/resources-links/model-portal/criteria).
 
 ### How to cite
-- Bittelli, M., Tomei, F., Pistocchi, A., Flury, M., Boll, J., Brooks, E. S., & Antolini, G. (2010). Development and testing of a physically based, three-dimensional model of surface and subsurface hydrology. Advances in Water Resources, 33(1), 106-122.
-- Bittelli, M., Pistocchi, A., Tomei, F., Roggero, P. P., Orsini, R., Toderi, M., ... & Flury, M. (2011). CRITERIA-3D: a mechanistic model for surface and subsurface hydrology for small catchments. In Soil hydrology, land use and agriculture: measurement and modelling (pp. 253-265). Wallingford UK: CAB International.
-- Sannino, G., Tomei, F., Bittelli, M., Meisina, C., Bordoni, M., & Valentino, R. (2025). A three-dimensional agro-hydrological model for predictive analysis of shallow landslides: CRITERIA-3D. Engineering Geology, 352, 108073.
+1. Bittelli, M., Tomei, F., Pistocchi, A., Flury, M., Boll, J., Brooks, E. S., & Antolini, G. (2010). Development and testing of a physically based, three-dimensional model of surface and subsurface hydrology. Advances in Water Resources, 33(1), 106-122.
+2. Bittelli, M., Pistocchi, A., Tomei, F., Roggero, P. P., Orsini, R., Toderi, M., ... & Flury, M. (2011). CRITERIA-3D: a mechanistic model for surface and subsurface hydrology for small catchments. In Soil hydrology, land use and agriculture: measurement and modelling (pp. 253-265). Wallingford UK: CAB International.
+3. Sannino, G., Tomei, F., Bittelli, M., Meisina, C., Bordoni, M., & Valentino, R. (2025). A three-dimensional agro-hydrological model for predictive analysis of shallow landslides: CRITERIA-3D. Engineering Geology, 352, 108073.
 
-![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/CRITERIA3D.png)
-Screenshot of the CRITERIA-3D interface
+## Repository structure
+
+CRITERIA3D/  
+├─ agrolib/        Core libraries (shared with [Criteria-1D](https://github.com/ARPA-SIMC/CRITERIA1D) and [PRAGA](https://github.com/ARPA-SIMC/PRAGA))  
+├─ src/            Criteria-3D specific libraries  
+├─ DATA/           Templates and sample projects  
+├─ DOC/            Documentation  
+├─ MapGraphics/    GUI library  
+├─ bin/            Applications  
+└─ ..
+
+## Requirements
+
+| Component | Version |
+|-----------|---------|
+| C++ | C++17 |
+| Qt | 5.15 or later |
+| Build system | qmake |
+| Platforms | Windows, Linux, macOS |
 
 ## Step-by-Step Compilation Guide
-#### 1️⃣ Install required software
 
-Make sure you have:  
-- **C++ compiler**
-- **Qt 5.x or later**  
-- **QtCharts module** (install with Qt)  
-- **Qt5 Compatibility module** (Qt 6.x or later)
+### 1️⃣ Install the Required Software
 
-Also, install **Qt Creator** (the IDE for building Qt projects).
+The project uses qmake and can be built with Qt Creator on Windows, Linux and macOS.
 
-#### 2️⃣ Build projects in Qt Creator  
+Make sure the following software is installed:
 
-Open and build the **MapGraphics** (GUI) project:    
-`\MapGraphics\MapGraphics.pro`  
-Go to Build → Build Project
+- A C++ compiler
+- Qt 5.x or later
+- Qt Charts module (included with Qt)
+- Qt5 Compatibility module (required for Qt 6.x or later)
+- Qt Creator (recommended IDE for building Qt projects)
+- NVIDIA CUDA Toolkit (optional, required to build the GPU solver)
 
-Open and build the **main** project:  
-`\bin\Makeall_CRITERIA3D\Makeall_CRITERIA3D.pro`  
-Build it the same way
+> **Note**
+>
+> By default, CRITERIA-3D is built with the multi-core CPU solver (OpenMP). GPU acceleration is optional and can be enabled by installing the NVIDIA CUDA Toolkit and activating the `CUDA_CONFIG` build option.
 
-#### ⚠️ Important Tips
-- Always build MapGraphics.pro first, then the main project.
-- For both projects, go to **Projects → Build Settings** in Qt Creator and **uncheck “Shadow build”**. This prevents common compilation errors.
+### 2️⃣ Build the Projects in Qt Creator
 
-#### 3️⃣ Run CRITERIA-3D  
+1. Open the **MapGraphics** project:
+   ```
+   MapGraphics/MapGraphics.pro
+   ```
+2. Build the project using **Build → Build Project**.
 
-After successful compilation:  
-Locate the executable in the build folder  
-Run it directly from Qt Creator or your system file explorer.
+3. Open the main project:
+   ```
+   bin/Makeall_CRITERIA3D/Makeall_CRITERIA3D.pro
+   ```
+4. Build it in the same way.
 
-### Command-line compilation (Fedora)
-See [CRITERIA3D.spec](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/fedora/SPECS/CRITERIA3D.spec) for compile and build RPM on Fedora/Linux.
+> **Important**
+>
+> - Always build **MapGraphics** before building the main project.
+> - For both projects, open **Projects → Build Settings** in Qt Creator and disable **Shadow build**. This prevents common compilation errors.
+> - To build the GPU solver, uncomment `CONFIG += CUDA_CONFIG` in `agrolib/parallel.pri`. By default CRITERIA-3D is compiled with the OpenMP CPU solver.
 
-## soilFluxes3D library 
-agrolib/soilFluxes3D is a numerical solution of flow equations of water and heat in the soil, in a three-dimensional domain.  
-Surface water flow is described by the two-dimensional parabolic approximation of the St. Venant equation, using Manning’s equation of motion. Subsurface water flow is described by the three-dimensional Richards’ equation for the unsaturated zone and by three-dimensional Darcy’s law for the saturated zone, using an integrated finite difference formulation. The available boundary conditions are surface runoff, culvert runoff, free drainage (lateral or deep) and prescribed total potential.  
-Water fluxes equations may be coupled with the heat flux equations, which include diffusive, latent and advective terms. Atmospheric data (net irradiance, air temperature and relative humidity, wind speed) could be used as top boundary conditions.
 
+### 3️⃣ Install and Run CRITERIA-3D
+
+After successfully compiling the project:
+
+1. Create a directory named `CRITERIA3D` containing the following subdirectories:
+   ```
+   CRITERIA3D/
+   ├── bin/
+   ├── DATA/
+   └── DOC/
+   ```
+
+2. Copy the compiled executable from the build directory to `CRITERIA3D/bin`.
+
+3. **Windows only:** open the `bin` directory and run:
+   ```bash
+   windeployqt CRITERIA3D.exe
+   ```
+
+4. Copy the `DATA/TEMPLATE` and `DATA/SETTINGS` directories from the repository into `CRITERIA3D/DATA`.
+
+5. Create the directory `CRITERIA3D/DATA/PROJECT` and copy one of the sample projects (for example, `DATA/PROJECT/Montue`) from the repository.
+
+6. Copy the entire contents of the repository's `DOC` directory into `CRITERIA3D/DOC`.
+
+7. **Linux / macOS only:** define the environment variable `CRITERIA3D_HOME` and set it to the path of `CRITERIA3D/DATA`.
+
+8. Run `CRITERIA3D` from the `bin` directory.
+
+### Command-Line Compilation (Fedora)
+
+Fedora packages can be built using the provided RPM specification: `fedora/SPECS/CRITERIA3D.spec`
 
 ## Authors
 - Fausto Tomei      
-- Gabriele Antolini 
-- Antonio Volta
+- Gabriele Antolini
 - Laura Costantini
-- Giada Sannino
+- Antonio Volta
+- Caterina Toscano
+  
+### Contributors
 - Alberto Pistocchi  
 - Marco Bittelli
-- Caterina Toscano  
+- Giada Sannino
 
-## Contacts
+### Contacts
 - ftomei@arpae.it   (CRITERIA3D)
 - gantolini@arpae.it  (VINE3D)
-- gsannino@arpae.it (slope stability model)
 - avolta@arpae.it  (grapevine model)
 - ctoscano@arpae.it (hydrall model)
-
+- gsannino@arpae.it (slope stability model)
 
 ## License
-CRITERIA-3D has been developed under contract issued by [ARPAE Hydro-Meteo-Climate Service](https://github.com/ARPA-SIMC), Emilia-Romagna, Italy.  
-The executables (*CRITERIA3D, VINE3D*) are released under the terms of the GNU GPL license, libreries (*agrolib*) are released under the the terms of GNU LGPL license.
+CRITERIA-3D is developed by ARPAE Hydro-Meteo-Climate Service (Emilia-Romagna, Italy).  
+The applications (`CRITERIA3D`, `VINE3D`) are distributed under the GNU GPL license.
+The `agrolib` libraries are distributed under the GNU LGPL license.  
+See the `LICENSE` and `COPYING.LESSER` files for the complete license terms.

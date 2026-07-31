@@ -39,12 +39,6 @@ Crit3DShapeHandler::Crit3DShapeHandler()
 { }
 
 
-Crit3DShapeHandler::~Crit3DShapeHandler()
-{
-    close();
-}
-
-
 void Crit3DShapeHandler::close()
 {
     if (m_handle)
