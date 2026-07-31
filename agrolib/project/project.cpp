@@ -3888,22 +3888,20 @@ QString Project::getCompleteFileName(QString fileName, QString secondaryPath)
 }
 
 
-QString Project::getRelativePath(QString fileName) const
+QString Project::getRelativePath(const QString& fileName) const
 {
-    if (! fileName.isEmpty() && fileName.at(0) != '.' && getFilePath(fileName) != "")
+    if (fileName.isEmpty() || fileName.startsWith('.') || getFilePath(fileName).isEmpty())
     {
-        QDir projectDir(getProjectPath());
-        QString relativePath = projectDir.relativeFilePath(fileName);
-        if (relativePath != fileName)
-        {
-            fileName = relativePath;
-            if (fileName.at(0) != '.')
-            {
-                fileName = "./" + relativePath;
-            }
-        }
+        return fileName;
     }
-    return fileName;
+
+    QDir projectDir(getProjectPath());
+    QString relativePath = projectDir.relativeFilePath(fileName);
+
+    if (! relativePath.startsWith('.'))
+        relativePath.prepend("./");
+
+    return relativePath;
 }
 
 
@@ -4081,6 +4079,29 @@ void Project::saveProjectSettings()
 
     projectSettings->sync();
 }
+
+
+void Project::saveProjectSingleValue(const QString &fieldStr, const QString &valueStr)
+{
+    if (fieldStr.isEmpty())
+        return;
+
+    projectSettings->beginGroup("project");
+
+        if (fieldStr == "output_points")
+        {
+            outputPointsFileName = valueStr;
+            projectSettings->setValue("output_points", getRelativePath(outputPointsFileName));
+        }
+        else if (fieldStr == "output_db")
+        {
+            currentDbOutputFileName = valueStr;
+            projectSettings->setValue("output_db", getRelativePath(currentDbOutputFileName));
+        }
+
+    projectSettings->endGroup();
+}
+
 
 void Project::saveRadiationParameters()
 {

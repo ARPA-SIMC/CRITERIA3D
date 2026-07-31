@@ -3447,6 +3447,9 @@ void MainWindow::on_actionLoad_OutputPoints_triggered()
     }
 
     addOutputPointsGUI();
+
+    // TODO chiedere all'utente
+    myProject.saveProjectSingleValue("output_points", fileName);
 }
 
 

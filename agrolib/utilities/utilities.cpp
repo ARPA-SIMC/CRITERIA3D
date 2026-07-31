@@ -235,22 +235,7 @@ QDateTime getQDateTime(const Crit3DTime &t)
 
 QString getFileName(const QString &fileNameComplete)
 {
-    QString c;
-    QString fileName = "";
-    for (int i = fileNameComplete.length()-1; i >= 0; i--)
-    {
-        c = fileNameComplete.mid(i,1);
-        if ((c != "\\") && (c != "/"))
-        {
-            fileName = c + fileName;
-        }
-        else
-        {
-            return fileName;
-        }
-    }
-
-    return fileName;
+    return QFileInfo(fileNameComplete).fileName();
 }
 
 
