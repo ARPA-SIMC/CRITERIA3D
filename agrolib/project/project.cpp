@@ -1336,60 +1336,65 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
 }
 
 
-bool Project::newOutputPointsDB(QString dbName)
+bool Project::newOutputPointsDB(const QString &dbName)
 {
-    if (dbName == "") return false;
+    if (dbName.isEmpty())
+        return false;
 
     closeOutputPointsDB();
-    currentDbOutputFileName = dbName;
 
-    dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
-    QFile outputDb(dbName);
-    if (outputDb.exists())
+    const QString dbFileName = getCompleteFileName(dbName, PATH_OUTPUT);
+
+    if (QFile::exists(dbFileName) && !QFile::remove(dbFileName))
     {
-        if (!outputDb.remove())
-        {
-            logError("Failed to remove existing output db.");
-            currentDbOutputFileName = "";
-            return false;
-        }
+        logError(tr("Failed to remove existing output database:\n%1")
+                     .arg(dbFileName));
+        return false;
     }
 
-    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbName);
-    if (outputPointsDbHandler->getErrorString() != "")
+    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbFileName);
+
+    if (! outputPointsDbHandler->getErrorString().isEmpty())
     {
-        logError("Function newOutputPointsDB:\n" + dbName + "\n" + outputPointsDbHandler->getErrorString());
+        logError("Function newOutputPointsDB:\n"
+                + dbFileName + "\n"
+                + outputPointsDbHandler->getErrorString());
         closeOutputPointsDB();
         return false;
     }
 
+    currentDbOutputFileName = dbName;
     return true;
 }
 
 
-bool Project::loadOutputPointsDB(QString dbName)
+bool Project::loadOutputPointsDB(const QString &dbName)
 {
-    if (dbName == "")
+    if (dbName.isEmpty())
         return false;
+
+    const QString dbFileName = getCompleteFileName(dbName, PATH_OUTPUT);
 
     closeOutputPointsDB();
 
-    currentDbOutputFileName = dbName;
-    dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
-    if (! QFile(dbName).exists())
+    if (! QFile::exists(dbFileName))
     {
-        logError("Output points db does not exists:\n" + dbName);
+        logError(tr("Output points database does not exist:\n%1")
+                     .arg(dbFileName));
         return false;
     }
 
-    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbName);
-    if (outputPointsDbHandler->getErrorString() != "")
+    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbFileName);
+    if (! outputPointsDbHandler->getErrorString().isEmpty())
     {
-        logError("Function loadOutputPointsDB:\n" + dbName + "\n" + outputPointsDbHandler->getErrorString());
+        logError("Function loadOutputPointsDB:\n"
+                 + dbFileName + "\n"
+                 + outputPointsDbHandler->getErrorString());
         closeOutputPointsDB();
         return false;
     }
 
+    currentDbOutputFileName = dbFileName;
     return true;
 }
 
@@ -3867,24 +3872,21 @@ float Project::meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeI
 }
 
 
-QString Project::getCompleteFileName(QString fileName, QString secondaryPath)
+QString Project::getCompleteFileName(const QString& inputFileName, const QString& secondaryPath) const
 {
-    if (fileName.isEmpty()) return fileName;
+    if (inputFileName.isEmpty())
+        return inputFileName;
 
-    if (getFilePath(fileName) == "")
-    {
-        QString completeFileName = this->getDefaultPath() + secondaryPath + fileName;
-        return QDir().cleanPath(completeFileName);
-    }
-    else if (fileName.at(0) == '.')
-    {
-        QString completeFileName = this->getProjectPath() + fileName;
-        return QDir().cleanPath(completeFileName);
-    }
-    else
-    {
-        return fileName;
-    }
+    // relative path
+    if (inputFileName.startsWith('.'))
+        return QDir::cleanPath(getProjectPath() + inputFileName);
+
+    // only filename: default path
+    if (QFileInfo(inputFileName).fileName() == inputFileName)
+        return QDir::cleanPath(getDefaultPath() + secondaryPath + inputFileName);
+
+    // absolute path
+    return inputFileName;
 }
 
 

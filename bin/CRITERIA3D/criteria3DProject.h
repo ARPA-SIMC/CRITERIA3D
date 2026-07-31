@@ -36,7 +36,7 @@
     {
 
     private:
-        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState,
+        bool _saveOutputRaster, _saveDailyState, _saveEndOfRunState,
              _saveYearlyState, _saveMonthlyState;
 
         void clear3DProject();
@@ -114,7 +114,6 @@
         void setSaveOutputRaster(bool isSave);
         bool isSaveOutputRaster();
 
-        void setSaveOutputPoints(bool isSave);
         bool isSaveOutputPoints();
 
         bool loadCriteria3DProject(const QString &fileName);

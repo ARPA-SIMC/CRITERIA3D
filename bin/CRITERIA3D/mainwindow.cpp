@@ -146,8 +146,8 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.setSaveYearlyState(false);
     myProject.setSaveMonthlyState(false);
 
-    myProject.setSaveOutputPoints(false);
     myProject.setComputeOnlyPoints(false);
+
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
     ui->action_parallel_computing->setChecked(myProject.isParallelComputing());
@@ -3419,38 +3419,41 @@ void MainWindow::on_actionLoad_OutputPoints_triggered()
 
 void MainWindow::on_actionOutputDB_new_triggered()
 {
-    QString dbName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getProjectPath() + PATH_OUTPUT, tr("DB files (*.db)"));
-    if (dbName == "") return;
+    QString dbFileName = QFileDialog::getSaveFileName(this, tr("Save as"),
+                                                  myProject.getProjectPath() + PATH_OUTPUT,
+                                                  tr("DB files (*.db)"));
 
-    myProject.newOutputPointsDB(dbName);
+    if (! myProject.newOutputPointsDB(dbFileName))
+        return;
+
+    // set on project file
+    QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Output DB"),
+                                                              tr("Do you want to set this file as the project's output database?"),
+                                                              QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
+    {
+        myProject.saveProjectField("output_db", dbFileName);
+    }
 }
 
 
 void MainWindow::on_actionOutputDB_open_triggered()
 {
-    QString dbName = QFileDialog::getOpenFileName(this, tr("Open output db"), myProject.getProjectPath() + PATH_OUTPUT, tr("DB files (*.db)"));
+    QString dbFileName = QFileDialog::getOpenFileName(this, tr("Open output db"),
+                                                  myProject.getProjectPath() + PATH_OUTPUT,
+                                                  tr("DB files (*.db)"));
 
-    if (dbName == "")
+    if (! myProject.loadOutputPointsDB(dbFileName))
         return;
 
-    if (myProject.loadOutputPointsDB(dbName))
-        if (! myProject.outputPointsFileName.isEmpty())
-        {
-            myProject.setSaveOutputPoints(true);
-            ui->flagOutputPoints_save_output->setChecked(true);
-        }
-}
-
-
-void MainWindow::on_flagOutputPoints_save_output_toggled(bool isChecked)
-{
-    if (isChecked && myProject.outputPointsDbHandler == nullptr)
+    // set on project file
+    QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Output DB"),
+                                                              tr("Do you want to set this file as the project's output database?"),
+                                                              QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
     {
-        myProject.logError("Open or create a new output DB before.");
-        isChecked = false;
+        myProject.saveProjectField("output_db", dbFileName);
     }
-    myProject.setSaveOutputPoints(isChecked);
-    ui->flagOutputPoints_save_output->setChecked(isChecked);
 }
 
 

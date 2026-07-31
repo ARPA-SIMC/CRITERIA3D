@@ -48,7 +48,6 @@
 Crit3DProject::Crit3DProject() : Project3D()
 {
     _saveOutputRaster = false;
-    _saveOutputPoints = false;
     _saveDailyState = false;
     _saveEndOfRunState = false;
     _saveYearlyState = false;
@@ -1369,15 +1368,13 @@ bool Crit3DProject::isSaveOutputRaster()
     return _saveOutputRaster;
 }
 
-void Crit3DProject::setSaveOutputPoints(bool isSave)
-{
-    _saveOutputPoints = isSave;
-}
-
-// true if at least one point is active
+// true if at least one output point is active
 bool Crit3DProject::isSaveOutputPoints()
 {
-    if (! _saveOutputPoints || outputPoints.empty())
+    if (currentDbOutputFileName.isEmpty())
+        return false;
+
+    if (outputPoints.empty())
         return false;
 
     for (unsigned int i = 0; i < outputPoints.size(); i++)
@@ -1446,9 +1443,7 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
         loadTreeCoverMap(treeCoverMapFileName);
 
     if (! currentDbOutputFileName.isEmpty())
-    if (loadOutputPointsDB(currentDbOutputFileName))
-        if (! outputPointsFileName.isEmpty())
-            setSaveOutputPoints(true);
+        loadOutputPointsDB(currentDbOutputFileName);
 
     QString projectName = getProjectName();
     if (projectName != "" && projectName != "default")
