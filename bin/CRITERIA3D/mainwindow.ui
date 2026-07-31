@@ -3408,14 +3408,6 @@
     <string>Hide map</string>
    </property>
   </action>
-  <action name="flagOutputPoints_save_output">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Save output on points</string>
-   </property>
-  </action>
   <action name="flagCompute_only_points">
    <property name="checkable">
     <bool>true</bool>

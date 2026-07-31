@@ -148,7 +148,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     myProject.setComputeOnlyPoints(false);
 
-    ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
     ui->action_parallel_computing->setChecked(myProject.isParallelComputing());
     ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
@@ -967,7 +966,6 @@ void MainWindow::on_actionOpenProject_triggered()
         myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
     }
 
-    ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
 
     myProject.showEachTimeStep = ui->actionCriteria3D_update_subHourly->isChecked();
@@ -3456,19 +3454,16 @@ void MainWindow::on_actionOutputDB_open_triggered()
     }
 }
 
-
 void MainWindow::on_flagCompute_only_points_toggled(bool isChecked)
 {
     myProject.setComputeOnlyPoints(isChecked);
 }
-
 
 void MainWindow::on_actionOutputPoints_add_triggered()
 {
     if (myProject.addOutputPoint())
         addOutputPointsGUI();
 }
-
 
 void MainWindow::on_flagView_values_toggled(bool isChecked)
 {

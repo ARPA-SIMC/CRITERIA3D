@@ -1319,6 +1319,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
     return true;
 }
 
+
 void Crit3DProject::updateETAndPrecMaps()
 {
     int nrRows = DEM.header->nrRows;
@@ -1353,33 +1354,20 @@ void Crit3DProject::updateETAndPrecMaps()
                 else
                     monthlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
             }
-
         }
     }
 }
 
-void Crit3DProject::setSaveOutputRaster(bool isSave)
-{
-    _saveOutputRaster = isSave;
-}
-
-bool Crit3DProject::isSaveOutputRaster()
-{
-    return _saveOutputRaster;
-}
 
 // true if at least one output point is active
-bool Crit3DProject::isSaveOutputPoints()
+bool Crit3DProject::isSaveOutputPoints() const
 {
-    if (currentDbOutputFileName.isEmpty())
+    if (currentDbOutputFileName.isEmpty() || outputPoints.empty())
         return false;
 
-    if (outputPoints.empty())
-        return false;
-
-    for (unsigned int i = 0; i < outputPoints.size(); i++)
+    for (const auto& point : outputPoints)
     {
-        if (outputPoints[i].active)
+        if (point.active)
             return true;
     }
 

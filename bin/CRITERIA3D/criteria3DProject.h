@@ -111,10 +111,15 @@
         void setSaveMonthlyState(bool isSave) {_saveMonthlyState = isSave;}
         bool isSaveMonthlyState() {return _saveMonthlyState;}
 
-        void setSaveOutputRaster(bool isSave);
-        bool isSaveOutputRaster();
+        void setSaveOutputRaster(bool isSave) {
+            _saveOutputRaster = isSave;
+        }
 
-        bool isSaveOutputPoints();
+        bool isSaveOutputRaster() const {
+            return _saveOutputRaster;
+        }
+
+        bool isSaveOutputPoints() const;
 
         bool loadCriteria3DProject(const QString &fileName);
         bool loadCriteria3DParameters();
