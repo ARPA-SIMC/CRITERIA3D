@@ -53,6 +53,8 @@
     QList<QString> readListSingleColumn(QString fileName, QString& error);
 
     bool removeDirectory(QString myPath);
+
+    bool searchPath(const QString &strPath, const QString &basePath, QString &outputPath);
     bool searchDocPath(QString &docPath);
     bool searchDataPath(QString* dataPath);
 

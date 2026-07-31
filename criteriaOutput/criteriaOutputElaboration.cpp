@@ -25,15 +25,17 @@ int computeAllDtxUnit(const QSqlDatabase &db, const QString &idCase, QString &er
     bool insertTD30Col = true;
     bool insertTD90Col = true;
     bool insertTD180Col = true;
+
     QString statement = QString("PRAGMA table_info(`%1`)").arg(idCase);
     QString name;
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement))
     {
         errorStr = qry.lastError().text();
         return ERROR_DBCLIMATE;
     }
+
     qry.first();
-    if (!qry.isValid())
+    if (! qry.isValid())
     {
         errorStr = qry.lastError().text();
         return ERROR_DBCLIMATE ;
@@ -66,6 +68,7 @@ int computeAllDtxUnit(const QSqlDatabase &db, const QString &idCase, QString &er
             return ERROR_DBCLIMATE;
         }
     }
+
     if (insertTD90Col)
     {
         statement = QString("ALTER TABLE `%1` ADD COLUMN DT90 REAL").arg(idCase);
@@ -75,6 +78,7 @@ int computeAllDtxUnit(const QSqlDatabase &db, const QString &idCase, QString &er
             return ERROR_DBCLIMATE;
         }
     }
+
     if (insertTD180Col)
     {
         statement = QString("ALTER TABLE `%1` ADD COLUMN DT180 REAL").arg(idCase);
@@ -88,7 +92,7 @@ int computeAllDtxUnit(const QSqlDatabase &db, const QString &idCase, QString &er
     // check if table is full (skip otherwise)
     qry.prepare("SELECT * FROM " + idCase);
     qry.exec();
-    if (!qry.first())
+    if (! qry.first())
     {
         return CRIT1D_OK;
     }
@@ -98,23 +102,19 @@ int computeAllDtxUnit(const QSqlDatabase &db, const QString &idCase, QString &er
     std::vector<double> dt30;
     int myResult = computeAllDtxPeriod(db, idCase, 30, dt30, errorStr);
     if (myResult != CRIT1D_OK)
-    {
         return myResult;
-    }
+
     // compute DTX90
     std::vector<double> dt90;
     myResult = computeAllDtxPeriod(db, idCase, 90, dt90, errorStr);
     if (myResult != CRIT1D_OK)
-    {
         return myResult;
-    }
+
     // compute DTX180
     std::vector<double> dt180;
     myResult = computeAllDtxPeriod(db, idCase, 180, dt180, errorStr);
     if (myResult != CRIT1D_OK)
-    {
         return myResult;
-    }
 
     // write data
     if (dt30.size() > 0)
@@ -129,49 +129,64 @@ int computeAllDtxUnit(const QSqlDatabase &db, const QString &idCase, QString &er
 }
 
 
-int computeAllDtxPeriod(const QSqlDatabase &db, const QString &idCase, unsigned int period, std::vector<double>& dtx, QString& errorStr)
+int computeAllDtxPeriod(const QSqlDatabase &db, const QString &idCase, unsigned int period,
+                        std::vector<double>& dtx, QString& errorStr)
 {
-    // read all data
+    if (period == 0)
+    {
+        errorStr = "Invalid period: zero";
+        return ERROR_DTX;
+    }
+
+    // check TR_S
+    QSqlRecord rec = db.record(idCase);
+    bool hasTrs = rec.indexOf("TR_S") >= 0;
+
+    // if TR_S is present, it takes precedence
+    const QString transpField = hasTrs ? "TR_S" : "TRANSP";
+
+    const QString statement = QString("SELECT TRANSP_MAX, %1 FROM `%2` ORDER BY DATE")
+                                        .arg(transpField, idCase);
+
     QSqlQuery qry(db);
-    QString statement = QString("SELECT TRANSP_MAX, TRANSP FROM `%1`").arg(idCase);
-
-    // errorStr check
-    if(!qry.exec(statement))
+    if(! qry.exec(statement))
     {
         errorStr = qry.lastError().text();
-        return ERROR_OUTPUT_VARIABLES;
-    }
-    qry.first();
-    if (!qry.isValid())
-    {
-        errorStr = qry.lastError().text();
-        return ERROR_OUTPUT_VARIABLES ;
+        return ERROR_DTX;
     }
 
-    // compute daily tranpiration deficit
+    if (! qry.next())
+    {
+        errorStr = "No data found";
+        return ERROR_DTX;
+    }
+
+    // compute daily transpiration deficit
     std::vector<double> dailyDt;
     double transpMax, transpReal;
     do
     {
         getValue(qry.value("TRANSP_MAX"), &transpMax);
-        getValue(qry.value("TRANSP"), &transpReal);
-
-        if ((int(transpMax) != int(NODATA)) && (int(transpReal) != int(NODATA)))
-        {
-            dailyDt.push_back(transpMax - transpReal);
-        }
+        if (hasTrs)
+            getValue(qry.value("TR_S"), &transpReal);
         else
+            getValue(qry.value("TRANSP"), &transpReal);
+
+        if (isEqual(transpMax, NODATA) || isEqual(transpReal, NODATA))
         {
             dailyDt.push_back(NODATA);
         }
+        else
+        {
+            dailyDt.push_back(std::max(0.0, transpMax - transpReal));
+        }
     }
     while (qry.next());
-    qry.clear();
 
     // compute DTX
     // it assumes that data are complete (no missing dates)
     dtx.resize(dailyDt.size());
-    for (unsigned long i = 0; i < dtx.size(); i++)
+    for (size_t i = 0; i < dtx.size(); i++)
     {
         if (i < period-1)
         {
@@ -181,19 +196,18 @@ int computeAllDtxPeriod(const QSqlDatabase &db, const QString &idCase, unsigned 
         {
             dtx[i] = 0;
             unsigned j = 0;
-            while (j < period && int(dailyDt[i-j]) != int(NODATA))
+            while (j < period && !isEqual(dailyDt[i-j], NODATA))
             {
                 dtx[i] += dailyDt[i-j];
                 j++;
             }
 
-            if (j < period && int(dailyDt[i-j]) == int(NODATA))
+            if (j < period)
             {
                 dtx[i] = NODATA;
             }
         }
     }
-    dailyDt.clear();
 
     return CRIT1D_OK;
 }
@@ -310,7 +324,6 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
     QDate firstDate, lastDate;
     std::vector<float> resultVector;
 
-    double result = NODATA;
     int periodTDX = NODATA;
     nrMissingData = 0;
 
@@ -331,8 +344,7 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
             if (outputVariable.nrDays[i].isEmpty())
             {
                 // if nrDays is missing write NODATA
-                result = NODATA;
-                resultList.append(QString::number(result));
+                resultList.append(QString::number(NODATA));
                 continue;
             }
             else
@@ -392,12 +404,13 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
 
         // QUERY
         // All cases except DTX
+        double queryResult = NODATA;
         if (varName.left(2) != "DT")
         {
             int selectRes = selectSimpleVar(dbData, idCase, varName, computation, firstDate, lastDate, irriRatio, resultVector, errorStr);
             if (selectRes == ERROR_DB_INCOMPLETE_DATA)
             {
-                result = NODATA;
+                queryResult = NODATA;
                 ++nrMissingData;
             }
             else if(selectRes != CRIT1D_OK)
@@ -406,7 +419,7 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
             }
             else
             {
-                result = double(resultVector[0]);
+                queryResult = double(resultVector[0]);
             }
         }
         else
@@ -423,7 +436,7 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
             // check errors in computeDTX
             if (DTXRes == ERROR_DB_INCOMPLETE_DATA)
             {
-                result = NODATA;
+                queryResult = NODATA;
                 ++nrMissingData;
             }
             else if (DTXRes != CRIT1D_OK)
@@ -432,13 +445,13 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
             }
             else
             {
-                result = double(resultVector[0]);
+                queryResult = double(resultVector[0]);
             }
         }
 
-        if (isEqual(result, NODATA))
+        if (isEqual(queryResult, NODATA))
         {
-            resultList.append(QString::number(result));
+            resultList.append(QString::number(queryResult));
         }
         else
         {
@@ -449,17 +462,17 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
                 QString varName = outputVariable.varNameList[i];
                 if (varName == "FRACTION_AW" || varName.left(3) == "FAW" || varName.left(3) == "SWI")
                 {
-                    resultList.append(QString::number(result,'f', 3));
+                    resultList.append(QString::number(queryResult,'f', 3));
                 }
                 else
                 {
-                    resultList.append(QString::number(result,'f', 1));
+                    resultList.append(QString::number(queryResult,'f', 1));
                 }
             }
             else
             {
                 // first parameter for  climate analysis (threshold)
-                if (outputVariable.param1[i] != NODATA && result < outputVariable.param1[i])
+                if (outputVariable.param1[i] != NODATA && queryResult < outputVariable.param1[i])
                 {
                     // skip climate analysis
                     resultList.append(QString::number(NODATA));
@@ -537,7 +550,7 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
                             {
                                 allYearsVector.insert(std::end(allYearsVector), std::begin(resultVector), std::end(resultVector));
                             }
-                            year = year+1;
+                            year++;
                         }
 
                         resultVector.clear();
@@ -553,8 +566,8 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
                             {
                                 // compute percentile
                                 bool sortValues = true;
-                                result = double(sorting::percentileRank(allYearsVector, float(result), sortValues));
-                                resultList.append(QString::number(result,'f',1));
+                                double percentile = double(sorting::percentileRank(allYearsVector, float(queryResult), sortValues));
+                                resultList.append(QString::number(percentile,'f',1));
                             }
                         }
                     }
@@ -569,7 +582,7 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
     if (! outputFile.open(QIODevice::ReadWrite | QIODevice::Append))
     {
         errorStr = "Open failure: " + csvFileName;
-        return false;
+        return ERROR_PARSERCSV;
     }
 
     QTextStream out(&outputFile);
