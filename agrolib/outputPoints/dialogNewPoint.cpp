@@ -175,81 +175,112 @@ void DialogNewPoint::getHeightFromDEM()
 
 void DialogNewPoint::done(int res)
 {
-    if (res) // ok
+    // cancel or reject
+    if (res != QDialog::Accepted)
     {
-        if (id.text().isEmpty())
-        {
-            QMessageBox::information(nullptr, "Missing id point ", "Insert id point");
-            return;
-        }
-        if (idList.contains(id.text()))
-        {
-            QMessageBox::information(nullptr, "Change id point", "id point already used.");
-            return;
-        }
-
-        if (lat.text().isEmpty())
-        {
-            QMessageBox::information(nullptr, "Missing latitude ", "Insert latitude");
-            return;
-        }
-        else if (lat.text().toDouble() < -90 || lat.text().toDouble() > 90)
-        {
-            QMessageBox::information(nullptr, "Invalid latitude ", "Insert a value between -90 and 90");
-            return;
-        }
-        if (lon.text().isEmpty())
-        {
-            QMessageBox::information(nullptr, "Missing longitude ", "Insert longitude");
-            return;
-        }
-        else if (lon.text().toDouble() < -180 || lon.text().toDouble() > 180)
-        {
-            QMessageBox::information(nullptr, "Invalid longitude ", "Insert a value between -180 and 180");
-            return;
-        }
-        if (height.text().isEmpty())
-        {
-            QMessageBox::information(nullptr, "Missing height ", "Insert height");
-            return;
-        }
-
-        if (DEMpointer->isLoaded)
-        {
-            float demValue;
-            if (utmx.text().isEmpty() || utmy.text().isEmpty())
-            {
-                gis::Crit3DGeoPoint point(lat.text().toDouble(), lon.text().toDouble());
-                gis::Crit3DUtmPoint utmPoint;
-                gis::getUtmFromLatLon(gisSettings.utmZone, point, &utmPoint);
-                demValue = gis::getValueFromXY(*DEMpointer, utmPoint.x, utmPoint.y);
-            }
-            else
-            {
-                demValue = gis::getValueFromXY(*DEMpointer, utmx.text().toDouble(), utmy.text().toDouble());
-            }
-
-            if (demValue != DEMpointer->header->flag)
-            {
-                if ((height.text().toDouble() < demValue) || (height.text().toDouble() > demValue+2))
-                {
-                    QMessageBox::StandardButton reply;
-                    reply = QMessageBox::question(this, "Are you sure?" ,
-                                                  "DEM elevation in this point is different: " + QString::number(demValue),
-                                                  QMessageBox::Yes|QMessageBox::No);
-                    if (reply == QMessageBox::No)
-                    {
-                        return;
-                    }
-                }
-            }
-        }
-        QDialog::done(QDialog::Accepted);
+        QDialog::done(res);
         return;
     }
-    else    // cancel, close or exc was pressed
+
+    if (id.text().isEmpty())
     {
-        QDialog::done(QDialog::Rejected);
+        QMessageBox::information(this, "Missing ID", "Insert point ID");
         return;
     }
+
+    if (idList.contains(id.text()))
+    {
+        QMessageBox::information(this, "Duplicate ID", "ID is already used.");
+        return;
+    }
+
+    if (lat.text().isEmpty())
+    {
+        QMessageBox::information(this, "Missing latitude ", "Insert latitude");
+        return;
+    }
+
+    bool ok = false;
+    const double latitude = lat.text().toDouble(&ok);
+    if (!ok)
+    {
+        QMessageBox::information(this,
+                                 tr("Invalid latitude"),
+                                 tr("Please enter a valid numeric latitude."));
+        return;
+    }
+
+    if (latitude > 90.0 || latitude < -90.0)
+    {
+        QMessageBox::information(this, "Invalid latitude ", "Insert a value between -90 and 90");
+        return;
+    }
+
+    if (lon.text().isEmpty())
+    {
+        QMessageBox::information(this, "Missing longitude ", "Insert longitude");
+        return;
+    }
+
+    const double longitude = lon.text().toDouble(&ok);
+    if (!ok)
+    {
+        QMessageBox::information(this,
+                                 tr("Invalid longitude"),
+                                 tr("Please enter a valid numeric longitude."));
+        return;
+    }
+
+    if (longitude > 180.0 || longitude < -180.0)
+    {
+        QMessageBox::information(this, "Invalid longitude ", "Insert a value between -180 and 180");
+        return;
+    }
+
+    if (height.text().isEmpty())
+    {
+        QMessageBox::information(this, "Missing height ", "Insert height");
+        return;
+    }
+
+    const double pointHeight = height.text().toDouble(&ok);
+    if (!ok)
+    {
+        QMessageBox::information(this,
+                                 tr("Invalid height"),
+                                 tr("Please enter a valid numeric height."));
+        return;
+    }
+
+    if (DEMpointer->isLoaded)
+    {
+        float demValue;
+        if (utmx.text().isEmpty() || utmy.text().isEmpty())
+        {
+            gis::Crit3DGeoPoint point(latitude, longitude);
+            gis::Crit3DUtmPoint utmPoint;
+            gis::getUtmFromLatLon(gisSettings.utmZone, point, &utmPoint);
+            demValue = gis::getValueFromXY(*DEMpointer, utmPoint.x, utmPoint.y);
+        }
+        else
+        {
+            demValue = gis::getValueFromXY(*DEMpointer, utmx.text().toDouble(), utmy.text().toDouble());
+        }
+
+        if (! isEqual(demValue, DEMpointer->header->flag))
+        {
+            if (pointHeight < (demValue - 0.5) || pointHeight > (demValue + 2.0))
+            {
+                QMessageBox::StandardButton reply;
+                reply = QMessageBox::question(this, tr("Are you sure?"),
+                                              tr("The entered elevation differs from the DEM elevation (%1 m).")
+                                              .arg(demValue, 0, 'f', 1),
+                                              QMessageBox::Yes|QMessageBox::No);
+                if (reply == QMessageBox::No)
+                    return;
+            }
+        }
+    }
+
+    QDialog::done(QDialog::Accepted);
 }

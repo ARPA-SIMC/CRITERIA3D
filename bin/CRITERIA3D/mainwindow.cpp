@@ -3343,52 +3343,77 @@ void MainWindow::on_actionOutputPoints_delete_selected_triggered()
 
 void MainWindow::on_actionOutputPoints_newFile_triggered()
 {
-    if (!myProject.outputPoints.empty())
+    if (! myProject.outputPoints.empty())
     {
         QMessageBox::StandardButton closeBox;
-        closeBox = QMessageBox::question(this, "close output points" ,
-                                      "existing output points will be closed",
+        closeBox = QMessageBox::question(this, tr("close output points list"),
+                                      tr("The current output points list will be closed."),
                                       QMessageBox::Yes|QMessageBox::No);
-        if (closeBox == QMessageBox::Yes)
-        {
-            resetOutputPointMarkers();
-
-        }
-        else
-        {
+        if (closeBox != QMessageBox::Yes)
             return;
-        }
+
+        resetOutputPointMarkers();
     }
 
-    QString csvName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getProjectPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
-    if (csvName == "")
+    // select csv filename
+    QString csvFileName = QFileDialog::getSaveFileName(this, tr("Save as"),
+                                                       myProject.getProjectPath(),
+                                                       tr("csv files (*.csv)"));
+    if (csvFileName.isEmpty())
+        return;
+
+    // open csv file (clean previous data with WriteOnly)
+    QFile csvFile(csvFileName);
+    if (! csvFile.open(QIODevice::WriteOnly | QIODevice::Text))
     {
+        myProject.logError(tr("Failed to open csv file."));
         return;
     }
 
-    QFile csvFile(csvName);
-    if (csvFile.exists())
-    {
-        if (!csvFile.remove())
-        {
-            myProject.logError("Failed to remove existing csv file.");
-            return;
-        }
-    }
+    // write header
+    QTextStream outStream(&csvFile);
+    outStream << "id,latitude,longitude,height,active\n";
+    csvFile.close();
 
-    if (csvFile.open(QIODevice::ReadWrite))
+    // load as current output point list
+    if (! myProject.loadOutputPointList(csvFileName))
+        return;
+
+    // set on project file
+    QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Output points list"),
+                                        tr("Do you want to set this file as the project's output points list?"),
+                                        QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
     {
-        QTextStream outStream(&csvFile);
-        outStream << "id, latitude, longitude, height, active" << "\n";
-        csvFile.close();
+        myProject.saveProjectField("output_points", csvFileName);
     }
-    else
+}
+
+
+void MainWindow::on_actionLoad_OutputPoints_triggered()
+{
+    QString csvFileName = QFileDialog::getOpenFileName(this, tr("Open output point list"),
+                                                    myProject.getProjectPath(),
+                                                    tr("csv files (*.csv)"));
+    if (csvFileName.isEmpty())
+        return;
+
+    if (! myProject.loadOutputPointList(csvFileName))
     {
-        myProject.logError("Failed to open csv file.");
+        resetOutputPointMarkers();
         return;
     }
 
-    myProject.loadOutputPointList(csvName);
+    addOutputPointsGUI();
+
+    // set on project file
+    QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Output points list"),
+                                        tr("Do you want to set this file as the project's output points list?"),
+                                        QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
+    {
+        myProject.saveProjectField("output_points", csvFileName);
+    }
 }
 
 
@@ -3432,24 +3457,6 @@ void MainWindow::on_flagOutputPoints_save_output_toggled(bool isChecked)
 void MainWindow::on_flagCompute_only_points_toggled(bool isChecked)
 {
     myProject.setComputeOnlyPoints(isChecked);
-}
-
-
-void MainWindow::on_actionLoad_OutputPoints_triggered()
-{
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open output point list"), myProject.getProjectPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
-    if (fileName == "") return;
-
-    if (! myProject.loadOutputPointList(fileName))
-    {
-        resetOutputPointMarkers();
-        return;
-    }
-
-    addOutputPointsGUI();
-
-    // TODO chiedere all'utente
-    myProject.saveProjectSingleValue("output_points", fileName);
 }
 
 
