@@ -4081,7 +4081,7 @@ void Project::saveProjectSettings()
 }
 
 
-void Project::saveProjectSingleValue(const QString &fieldStr, const QString &valueStr)
+void Project::saveProjectField(const QString &fieldStr, const QString &valueStr)
 {
     if (fieldStr.isEmpty())
         return;
@@ -5232,7 +5232,7 @@ bool Project::loadOutputPointList(QString fileName)
         return false;
     }
 
-    if (!loadOutputPointListCsv(csvFileName, outputPoints, gisSettings.utmZone, errorString))
+    if (! loadOutputPointListCsv(csvFileName, outputPoints, gisSettings.utmZone, errorString))
     {
         logError("Error importing output list: " + errorString);
         errorString.clear();
@@ -5242,9 +5242,10 @@ bool Project::loadOutputPointList(QString fileName)
     return true;
 }
 
+
 bool Project::writeOutputPointList(QString fileName)
 {
-    if (fileName == "")
+    if (fileName.isEmpty())
     {
         logError("Missing csv filename");
         return false;
@@ -5257,7 +5258,7 @@ bool Project::writeOutputPointList(QString fileName)
         return false;
     }
 
-    if (!writeOutputPointListCsv(csvFileName, outputPoints, errorString))
+    if (! writeOutputPointListCsv(csvFileName, outputPoints, errorString))
     {
         logError("Error writing output list to csv: " + errorString);
         errorString.clear();
@@ -5266,6 +5267,7 @@ bool Project::writeOutputPointList(QString fileName)
 
     return true;
 }
+
 
 void Project::setComputeOnlyPoints(bool value)
 {

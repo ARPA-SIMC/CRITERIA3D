@@ -177,7 +177,7 @@
         void saveProject();
         void saveProjectLocation();
         void saveProjectSettings();
-        void saveProjectSingleValue(const QString &fieldStr, const QString &valueStr);
+        void saveProjectField(const QString &fieldStr, const QString &valueStr);
         void saveAllParameters();
         void saveGenericParameters();
         void saveInterpolationParameters();
