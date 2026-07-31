@@ -1025,23 +1025,22 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
     if (maxDepth < MIN_FINE_LAYER_DEPTH)
         return precipitation;
 
-    // compute the volume of voids
-    const double stepDepth = 0.05;          // [m]
-    double currentDepth = stepDepth;        // [m]
-    double voidsVolumeSum = 0;              // [m3 m-3]
+    const int indexFlag = int(indexMap.at(0).header->flag);
 
-    std::vector<double> voidVolumeList(nrLayers, 0);
+    // compute void volume for each soil layer
+    std::vector<double> voidVolumeList(nrLayers, 0.0);
+    double crackDepth = 0.0;                            // [m]
+    double voidsVolumeSum = 0;                          // [m3 m-3]
 
-    int nrOfData = 0;
-    while (currentDepth <= maxDepth)
+    // start from first subsurface layer
+    int layerIndex = 1;
+    while (layerIndex < nrLayers && layerDepth[layerIndex] <= maxDepth)
     {
-        const int layerIndex = getSoilLayerIndex(currentDepth);
-        if (layerIndex == NODATA)
+        const long nodeIndex = indexMap.at(layerIndex).value[row][col];
+        if (nodeIndex == indexFlag)
             break;
 
-        const long nodeIndex = indexMap.at(layerIndex).value[row][col];
-        if (nodeIndex == NODATA)
-            break;
+        const double currentDepth = layerDepth[layerIndex];       // [m]
 
         const int horizonIndex = soilList[soilIndex].getHorizonIndex(currentDepth);
         if (horizonIndex == NODATA)
@@ -1054,17 +1053,16 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
 
         const double currentVoidVolume = std::max(0.0, maxVWC - VWC);                           // [m3 m-3]
         voidVolumeList[layerIndex] = currentVoidVolume * soilFraction;                          // [m3 m-3]
-        voidsVolumeSum += currentVoidVolume * soilFraction;
+        voidsVolumeSum += voidVolumeList[layerIndex] * layerThickness[layerIndex];
 
-        ++nrOfData;
-
-        currentDepth += stepDepth;
+        crackDepth += layerThickness[layerIndex];
+        ++layerIndex;
     }
 
-    if (nrOfData == 0)
+    if (crackDepth == 0.0)
         return precipitation;
 
-    const double avgVoidVolume = voidsVolumeSum / nrOfData;     // [m3 m-3]
+    const double avgVoidVolume = voidsVolumeSum / crackDepth;            // [m3 m-3]
     if (avgVoidVolume <= MIN_VOID_VOLUME)
         return precipitation;
 
@@ -1091,7 +1089,7 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
             break;
 
         const long nodeIndex = indexMap.at(l).value[row][col];
-        if (nodeIndex != indexMap.at(l).header->flag)
+        if (nodeIndex != indexFlag)
         {
             const double layerThick_mm = layerThickness[l] * 1000;  // [mm]
 
@@ -1100,10 +1098,10 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
             double layerWater = layerThick_mm * storage;            // [mm]
             layerWater = std::min(layerWater, residualDownWater);
 
-            const double flow = area * (layerWater / 1000.);        // [m3 h-1]
+            const double flow = area * (layerWater / 1000.);        // [m3]
             const double flowRate = flow / 3600.;                   // [m3 s-1]
 
-            if (flowRate > 0.)
+            if (flowRate > 0.0)
             {
                 waterSinkSource[nodeIndex] += flowRate;             // [m3 s-1]
                 residualDownWater -= layerWater;                    // [mm]
@@ -3205,24 +3203,31 @@ bool Crit3DProject::writeOutputPointsData()
 }
 
 void Crit3DProject::appendCriteria3DOutputValue(criteria3DVariable myVar, int row, int col,
-                                                const std::vector<int> &depthList, std::vector<float> &outputList)
+                                                const std::vector<int>& depthList, std::vector<float>& outputList)
 {
-    for (unsigned int l = 0; l < depthList.size(); l++)
+    outputList.reserve(outputList.size() + depthList.size());
+
+    for (const int depthCm : depthList)
     {
-        float depth = depthList[l] * 0.01;                          // [cm] -> [m]
-        int layerIndex = getSoilLayerIndex(depth);
-        long nodeIndex = indexMap.at(layerIndex).value[row][col];
         float value = NODATA;
 
-        if (nodeIndex != indexMap.at(layerIndex).header->flag)
+        // [cm] -> [m]
+        const double depth = depthCm * 0.01;
+
+        const int layerIndex = getSoilLayerIndex(depth);
+
+        if (layerIndex != int(NODATA))
         {
-            if (myVar == factorOfSafety)
+            const auto& raster = indexMap.at(layerIndex);
+
+            const long nodeIndex = raster.value[row][col];
+
+            if (nodeIndex != raster.header->flag)
             {
-                value = computeFactorOfSafety(row, col, layerIndex);
-            }
-            else
-            {
-                value = getCriteria3DVar(myVar, nodeIndex);
+                if (myVar == factorOfSafety)
+                    value = computeFactorOfSafety(row, col, layerIndex);
+                else
+                    value = getCriteria3DVar(myVar, nodeIndex);
             }
         }
 

@@ -80,69 +80,118 @@ bool loadGeotechnicsParameters(const QSqlDatabase &dbSoil, std::vector<soil::Cri
 }
 
 
-bool loadVanGenuchtenParameters(const QSqlDatabase &dbSoil, std::vector<soil::Crit3DTextureClass> &textureClassList, QString &errorStr)
+bool loadVanGenuchtenParameters(const QSqlDatabase &dbSoil,
+                                std::vector<soil::Crit3DTextureClass> &textureClassList,
+                                QString &errorStr)
 {
-    QString queryString = "SELECT id_texture, texture, alpha, n, he, theta_r, theta_s, k_sat, l ";
-    queryString        += "FROM van_genuchten ORDER BY id_texture";
+    constexpr int expectedTextureClasses = 12;
 
-    QSqlQuery query = dbSoil.exec(queryString);
-
-    query.last();
-    int tableSize = query.at() + 1;     //SQLITE doesn't support SIZE
-
-    if (tableSize == 0)
+    // check textureClassList
+    if (textureClassList.size() < expectedTextureClasses)
     {
-        errorStr = "Table van_genuchten\n" + query.lastError().text();
-        return false;
-    }
-    else if (tableSize != 12)
-    {
-        errorStr = "Table van_genuchten: wrong number of soil textures (must be 12)";
+        errorStr = "Texture class list is too small (12 classes required)";
         return false;
     }
 
-    //read values
-    int id, j;
-    float myValue;
-    query.first();
+    const QString queryString =
+        "SELECT id_texture, texture, alpha, n, he, theta_r, theta_s, k_sat, l "
+        "FROM van_genuchten ORDER BY id_texture";
+
+    QSqlQuery query(dbSoil);
+
+    if (! query.exec(queryString))
+    {
+        errorStr = "Table van_genuchten:\n" + query.lastError().text();
+        return false;
+    }
+
+    if (! query.last())
+    {
+        errorStr = "Table van_genuchten is empty";
+        return false;
+    }
+
+    const int tableSize = query.at() + 1;
+
+    if (tableSize != expectedTextureClasses)
+    {
+        errorStr = "Table van_genuchten: wrong number of soil textures "
+                   "(expected " + QString::number(expectedTextureClasses) + ")";
+        return false;
+    }
+
+    if (! query.first())
+    {
+        errorStr = "Unable to read first record from van_genuchten table";
+        return false;
+    }
+
     do
     {
-        bool isOk;
-        id = query.value(0).toInt(&isOk);
-        if (! isOk)
+        bool isOk = false;
+        const int id = query.value(0).toInt(&isOk);
+
+        if (!isOk)
         {
-            errorStr = "Table van_genuchten: \nWrong ID: " + query.value(0).toString();
+            errorStr = "Table van_genuchten:\nWrong texture ID: "
+                       + query.value(0).toString();
             return false;
         }
 
-        //check data
-        for (j = 2; j <= 8; j++)
-            if (! getValue(query.value(j), &myValue))
+        if (id < 0 || id >= static_cast<int>(textureClassList.size()))
+        {
+            errorStr = "Table van_genuchten:\nInvalid texture ID: "
+                       + QString::number(id);
+            return false;
+        }
+
+        // check required numeric values
+        double value;
+        for (int j = 2; j <= 8; j++)
+        {
+            if (! getValue(query.value(j), &value))
             {
-                errorStr = "Table van_genuchten: missing data in soil texture:" + QString::number(id);
+                errorStr = "Table van_genuchten: missing data in soil texture: "
+                           + QString::number(id);
                 return false;
             }
+        }
 
-        textureClassList[id].classNameUSDA = query.value(1).toString().toStdString();
-        textureClassList[id].vanGenuchten.alpha = query.value(2).toDouble();    //[kPa-1]
-        textureClassList[id].vanGenuchten.n = query.value(3).toDouble();
-        textureClassList[id].vanGenuchten.he = query.value(4).toDouble();       //[kPa]
+        const double alpha = query.value(2).toDouble();
+        const double n = query.value(3).toDouble();
+        const double he = query.value(4).toDouble();
 
-        double m = 1 - 1 / textureClassList[id].vanGenuchten.n;
-        textureClassList[id].vanGenuchten.m = m;
-        textureClassList[id].vanGenuchten.sc = pow(1.0 + pow(textureClassList[id].vanGenuchten.alpha
-                                        * textureClassList[id].vanGenuchten.he, textureClassList[id].vanGenuchten.n), -m);
+        if (n <= 1.0)
+        {
+            errorStr = "Table van_genuchten: invalid n parameter for texture "
+                       + QString::number(id);
+            return false;
+        }
 
-        textureClassList[id].vanGenuchten.thetaR = query.value(5).toDouble();
+        auto &texture = textureClassList[id];
 
-        //reference theta at saturation
-        textureClassList[id].vanGenuchten.refThetaS = query.value(6).toDouble();
-        textureClassList[id].vanGenuchten.thetaS = textureClassList[id].vanGenuchten.refThetaS;
+        texture.classNameUSDA = query.value(1).toString().toStdString();
 
-        textureClassList[id].waterConductivity.kSat = query.value(7).toDouble();
-        textureClassList[id].waterConductivity.l = query.value(8).toDouble();
+        texture.vanGenuchten.alpha = alpha;
+        texture.vanGenuchten.n = n;
+        texture.vanGenuchten.he = he;
 
-    } while(query.next());
+        // (fixed) m = 1 - 1/n
+        texture.vanGenuchten.m = 1.0 - 1.0 / n;
+
+        // correction factor for air entry pressure
+        texture.vanGenuchten.sc = std::pow(1.0 + std::pow(alpha * he, n), -texture.vanGenuchten.m);
+
+        texture.vanGenuchten.thetaR = query.value(5).toDouble();
+
+        // reference theta at saturation
+        texture.vanGenuchten.refThetaS = query.value(6).toDouble();
+        texture.vanGenuchten.thetaS = texture.vanGenuchten.refThetaS;
+
+        texture.waterConductivity.kSat = query.value(7).toDouble();
+        texture.waterConductivity.l = query.value(8).toDouble();
+    }
+    while (query.next());
 
     return true;
 }

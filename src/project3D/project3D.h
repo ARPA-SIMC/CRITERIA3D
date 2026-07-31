@@ -192,9 +192,10 @@
         bool loadSoilMap(const QString &fileName);
         bool loadTreeCoverMap(const QString &fileName);
 
-        double getSoilLayerTop(unsigned int i);
-        double getSoilLayerBottom(unsigned int i);
-        int getSoilLayerIndex(double depth);
+        double getSoilLayerTop(unsigned int i) const;
+        double getSoilLayerBottom(unsigned int i) const;
+        int getSoilLayerIndex(double depth) const;
+
         int getLandUnitFromUtm(double x, double y);
         int getLandUnitIdGeo(double lat, double lon);
         int getLandUnitIndexRowCol(int row, int col);
