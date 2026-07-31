@@ -177,6 +177,7 @@
         void saveProject();
         void saveProjectLocation();
         void saveProjectSettings();
+        void saveProjectSingleValue(const QString &fieldStr, const QString &valueStr);
         void saveAllParameters();
         void saveGenericParameters();
         void saveInterpolationParameters();
@@ -227,7 +228,7 @@
         void setCurrentVariable(meteoVariable variable) { _currentVariable = variable; }
         meteoVariable getCurrentVariable() const { return _currentVariable; }
 
-        QString getRelativePath(QString fileName) const;
+        QString getRelativePath(const QString &fileName) const;
         QString getCompleteFileName(QString fileName, QString secondaryPath);
 
         QString getCurrentTileMap() const { return _currentTileMap; }
