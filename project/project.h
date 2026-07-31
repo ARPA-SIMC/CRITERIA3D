@@ -229,7 +229,7 @@
         meteoVariable getCurrentVariable() const { return _currentVariable; }
 
         QString getRelativePath(const QString &fileName) const;
-        QString getCompleteFileName(QString fileName, QString secondaryPath);
+        QString getCompleteFileName(const QString& inputFileName, const QString& secondaryPath) const;
 
         QString getCurrentTileMap() const { return _currentTileMap; }
 
@@ -268,8 +268,8 @@
         bool deleteMeteoGridDB();
         bool loadAggregationDB(QString dbName);
         bool loadAggregationDBAsMeteoPoints(QString fileName);
-        bool loadOutputPointsDB(QString dbName);
-        bool newOutputPointsDB(QString dbName);
+        bool loadOutputPointsDB(const QString &dbName);
+        bool newOutputPointsDB(const QString &dbName);
         bool loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDate, bool showInfo);
         bool loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDateTime, bool showInfo);
         bool loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &lastDate, bool showInfo);
