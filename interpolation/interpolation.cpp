@@ -1036,7 +1036,7 @@ float inverseDistanceWeighted(const std::vector<Crit3DInterpolationDataPoint> &p
 
     for (std::size_t i = 0; i < nrPoints; ++i)
     {
-        if (distances[i] > 0.f)
+        if (distances[i] > EPSILON)
         {
             // weight inversely proportional to the cube of the distance
             double dist_km = static_cast<double>(distances[i]) / 10000.;
