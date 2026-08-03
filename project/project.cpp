@@ -1336,60 +1336,65 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
 }
 
 
-bool Project::newOutputPointsDB(QString dbName)
+bool Project::newOutputPointsDB(const QString &dbName)
 {
-    if (dbName == "") return false;
+    if (dbName.isEmpty())
+        return false;
 
     closeOutputPointsDB();
-    currentDbOutputFileName = dbName;
 
-    dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
-    QFile outputDb(dbName);
-    if (outputDb.exists())
+    const QString dbFileName = getCompleteFileName(dbName, PATH_OUTPUT);
+
+    if (QFile::exists(dbFileName) && !QFile::remove(dbFileName))
     {
-        if (!outputDb.remove())
-        {
-            logError("Failed to remove existing output db.");
-            currentDbOutputFileName = "";
-            return false;
-        }
+        logError(tr("Failed to remove existing output database:\n%1")
+                     .arg(dbFileName));
+        return false;
     }
 
-    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbName);
-    if (outputPointsDbHandler->getErrorString() != "")
+    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbFileName);
+
+    if (! outputPointsDbHandler->getErrorString().isEmpty())
     {
-        logError("Function newOutputPointsDB:\n" + dbName + "\n" + outputPointsDbHandler->getErrorString());
+        logError("Function newOutputPointsDB:\n"
+                + dbFileName + "\n"
+                + outputPointsDbHandler->getErrorString());
         closeOutputPointsDB();
         return false;
     }
 
+    currentDbOutputFileName = dbName;
     return true;
 }
 
 
-bool Project::loadOutputPointsDB(QString dbName)
+bool Project::loadOutputPointsDB(const QString &dbName)
 {
-    if (dbName == "")
+    if (dbName.isEmpty())
         return false;
+
+    const QString dbFileName = getCompleteFileName(dbName, PATH_OUTPUT);
 
     closeOutputPointsDB();
 
-    currentDbOutputFileName = dbName;
-    dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
-    if (! QFile(dbName).exists())
+    if (! QFile::exists(dbFileName))
     {
-        logError("Output points db does not exists:\n" + dbName);
+        logError(tr("Output points database does not exist:\n%1")
+                     .arg(dbFileName));
         return false;
     }
 
-    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbName);
-    if (outputPointsDbHandler->getErrorString() != "")
+    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbFileName);
+    if (! outputPointsDbHandler->getErrorString().isEmpty())
     {
-        logError("Function loadOutputPointsDB:\n" + dbName + "\n" + outputPointsDbHandler->getErrorString());
+        logError("Function loadOutputPointsDB:\n"
+                 + dbFileName + "\n"
+                 + outputPointsDbHandler->getErrorString());
         closeOutputPointsDB();
         return false;
     }
 
+    currentDbOutputFileName = dbFileName;
     return true;
 }
 
@@ -3867,43 +3872,38 @@ float Project::meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeI
 }
 
 
-QString Project::getCompleteFileName(QString fileName, QString secondaryPath)
+QString Project::getCompleteFileName(const QString& inputFileName, const QString& secondaryPath) const
 {
-    if (fileName.isEmpty()) return fileName;
+    if (inputFileName.isEmpty())
+        return inputFileName;
 
-    if (getFilePath(fileName) == "")
-    {
-        QString completeFileName = this->getDefaultPath() + secondaryPath + fileName;
-        return QDir().cleanPath(completeFileName);
-    }
-    else if (fileName.at(0) == '.')
-    {
-        QString completeFileName = this->getProjectPath() + fileName;
-        return QDir().cleanPath(completeFileName);
-    }
-    else
-    {
-        return fileName;
-    }
+    // relative path
+    if (inputFileName.startsWith('.'))
+        return QDir::cleanPath(getProjectPath() + inputFileName);
+
+    // only filename: default path
+    if (QFileInfo(inputFileName).fileName() == inputFileName)
+        return QDir::cleanPath(getDefaultPath() + secondaryPath + inputFileName);
+
+    // absolute path
+    return inputFileName;
 }
 
 
-QString Project::getRelativePath(QString fileName) const
+QString Project::getRelativePath(const QString& fileName) const
 {
-    if (! fileName.isEmpty() && fileName.at(0) != '.' && getFilePath(fileName) != "")
+    if (fileName.isEmpty() || fileName.startsWith('.') || getFilePath(fileName).isEmpty())
     {
-        QDir projectDir(getProjectPath());
-        QString relativePath = projectDir.relativeFilePath(fileName);
-        if (relativePath != fileName)
-        {
-            fileName = relativePath;
-            if (fileName.at(0) != '.')
-            {
-                fileName = "./" + relativePath;
-            }
-        }
+        return fileName;
     }
-    return fileName;
+
+    QDir projectDir(getProjectPath());
+    QString relativePath = projectDir.relativeFilePath(fileName);
+
+    if (! relativePath.startsWith('.'))
+        relativePath.prepend("./");
+
+    return relativePath;
 }
 
 
@@ -4081,6 +4081,29 @@ void Project::saveProjectSettings()
 
     projectSettings->sync();
 }
+
+
+void Project::saveProjectField(const QString &fieldStr, const QString &valueStr)
+{
+    if (fieldStr.isEmpty())
+        return;
+
+    projectSettings->beginGroup("project");
+
+        if (fieldStr == "output_points")
+        {
+            outputPointsFileName = valueStr;
+            projectSettings->setValue("output_points", getRelativePath(outputPointsFileName));
+        }
+        else if (fieldStr == "output_db")
+        {
+            currentDbOutputFileName = valueStr;
+            projectSettings->setValue("output_db", getRelativePath(currentDbOutputFileName));
+        }
+
+    projectSettings->endGroup();
+}
+
 
 void Project::saveRadiationParameters()
 {
@@ -5211,7 +5234,7 @@ bool Project::loadOutputPointList(QString fileName)
         return false;
     }
 
-    if (!loadOutputPointListCsv(csvFileName, outputPoints, gisSettings.utmZone, errorString))
+    if (! loadOutputPointListCsv(csvFileName, outputPoints, gisSettings.utmZone, errorString))
     {
         logError("Error importing output list: " + errorString);
         errorString.clear();
@@ -5221,9 +5244,10 @@ bool Project::loadOutputPointList(QString fileName)
     return true;
 }
 
+
 bool Project::writeOutputPointList(QString fileName)
 {
-    if (fileName == "")
+    if (fileName.isEmpty())
     {
         logError("Missing csv filename");
         return false;
@@ -5236,7 +5260,7 @@ bool Project::writeOutputPointList(QString fileName)
         return false;
     }
 
-    if (!writeOutputPointListCsv(csvFileName, outputPoints, errorString))
+    if (! writeOutputPointListCsv(csvFileName, outputPoints, errorString))
     {
         logError("Error writing output list to csv: " + errorString);
         errorString.clear();
@@ -5245,6 +5269,7 @@ bool Project::writeOutputPointList(QString fileName)
 
     return true;
 }
+
 
 void Project::setComputeOnlyPoints(bool value)
 {
