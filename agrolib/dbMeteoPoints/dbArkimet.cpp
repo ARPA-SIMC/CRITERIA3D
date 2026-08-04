@@ -253,7 +253,7 @@ void DbArkimet::deleteTmpTable()
 {
     QSqlQuery qry(_db);
 
-    qry.prepare("DROP TABLE TmpData");
+    qry.prepare("DROP TABLE IF EXISTS TmpData");
 
     if(! qry.exec() )
     {
@@ -282,15 +282,24 @@ void DbArkimet::appendTmpData(const QString &dateTimeStr, const QString &idPoint
 
 bool DbArkimet::saveDailyData()
 {
-    if (queryString == "")
+    if (queryString.isEmpty())
         return false;
 
     // insert data into tmpTable
-    _db.exec(queryString);
+    QSqlQuery query(_db);
+    if (! query.exec(queryString))
+    {
+        setErrorString(query.lastError().text());
+        return false;
+    }
 
     // query stations with data
-    QString statement = QString("SELECT DISTINCT id_point FROM TmpData");
-    QSqlQuery qryStations = _db.exec(statement);
+    QSqlQuery qryStations(_db);
+    if (! qryStations.exec("SELECT DISTINCT id_point FROM TmpData"))
+    {
+        setErrorString(qryStations.lastError().text());
+        return false;
+    }
 
     // create data stations list
     QList<QString> stations;
@@ -300,24 +309,29 @@ bool DbArkimet::saveDailyData()
     }
 
     // insert data
-    foreach (QString id_point, stations)
+    for (const QString &id_point : stations)
     {
-        QString tableName = id_point + "_D";
-        if (! _db.tables().contains(tableName))
+        const QString tableName = id_point + "_D";
+        if (! query.exec(QString("CREATE TABLE IF NOT EXISTS `%1` "
+                                "(date_time TEXT(20), "
+                                "id_variable INTEGER, "
+                                "value REAL, "
+                                "PRIMARY KEY(date_time, id_variable))")
+                                .arg(tableName)))
         {
-            statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
-                        "(date_time TEXT(20), id_variable INTEGER, value REAL, PRIMARY KEY(date_time, id_variable))").arg(tableName);
-            _db.exec(statement);
+            setErrorString(query.lastError().text());
+            return false;
         }
 
-        statement = QString("INSERT INTO `%1_D` ").arg(id_point);
-        statement += QString("SELECT date_time, id_variable, value FROM TmpData ");
-        statement += QString("WHERE id_point = %1").arg(id_point);
+        const QString statement = QString("INSERT INTO `%1` "
+                                "SELECT date_time, id_variable, value "
+                                "FROM TmpData "
+                                "WHERE id_point='%2'")
+                                .arg(tableName, id_point);
 
-        _db.exec(statement);
-        if (_db.lastError().type() != QSqlError::NoError)
+        if (! query.exec(statement))
         {
-            setErrorString(_db.lastError().text());
+            setErrorString(query.lastError().text());
             return false;
         }
     }
@@ -460,7 +474,7 @@ bool DbArkimet::readVmDataDaily(const QString &vmFileName, bool isPrec0024, QStr
         }
     }
 
-    if (! this->saveDailyData())
+    if (! saveDailyData())
     {
         errorString = this->getErrorString();
         return false;
