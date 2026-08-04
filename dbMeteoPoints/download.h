@@ -23,10 +23,12 @@
             void downloadMetadata(const QJsonObject &obj, int utmZone);
 
             bool downloadDailyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
-                                   QList<QString> &stations, QList<int> &variables, bool prec0024, QString &errorString);
+                                   QList<QString> &stations, QList<int> &variables,
+                                   bool prec0024, QString &errorString);
 
             bool downloadHourlyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
-                                    const QList<QString> &stationList, const QList<int> &varList, QString &errorString);
+                                    const QList<QString> &stationList, const QList<int> &varList,
+                                    QString &errorString);
 
             QString getErrorString() const { return _dbMeteo->getErrorString(); }
 

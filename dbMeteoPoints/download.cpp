@@ -385,6 +385,233 @@ bool Download::getPointPropertiesFromId(const QString &id, int utmZone, Crit3DMe
 
 
 bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
+                                 QList<QString> &stations, QList<int> &variables,
+                                 bool prec0024, QString &errorString)
+{
+    if (stations.isEmpty())
+        return true;
+
+    if (variables.isEmpty())
+    {
+        errorString = "No variables selected.";
+        return false;
+    }
+
+    // Variable properties
+    QList<VariablesList> variableList = _dbMeteo->getVariableProperties(variables);
+
+    if (variableList.isEmpty())
+    {
+        errorString = "Variable list is empty.";
+        return false;
+    }
+
+    QStringList idVar;
+    QHash<int,int> arkToVariable;
+
+    foreach (const VariablesList &var, variableList)
+    {
+        idVar << QString::number(var.id());
+        arkToVariable.insert(var.arkId(), var.id());
+    }
+
+    _dbMeteo->initStationsDailyTables(startDate, endDate, stations, idVar);
+
+    // Daily data are referenced at 00:00 of the following day
+    const QString refTime =
+        QString("reftime:>%1,<=%2")
+            .arg(startDate.toString("yyyy-MM-dd"),
+                 endDate.addDays(1).toString("yyyy-MM-dd"));
+
+    QString product = ";product: ";
+
+    for (int i = 0; i < variables.size(); ++i)
+    {
+        if (i > 0)
+            product += " or ";
+
+        product += QString("VM2,%1").arg(variables[i]);
+    }
+
+    bool isUrlOk = false;
+    QString datasetUrl = _dbMeteo->getDatasetURL(dataset, isUrlOk);
+
+    if (! isUrlOk)
+    {
+        errorString = _dbMeteo->getErrorString();
+        return false;
+    }
+
+    QNetworkAccessManager manager(this);
+
+    const int maxStationsPerRequest = 100;
+
+    for (int firstStation = 0;
+         firstStation < stations.size();
+         firstStation += maxStationsPerRequest)
+    {
+        //----------------------------------------------------------
+        // Build station query
+        //----------------------------------------------------------
+
+        QString area = ";area: ";
+
+        int lastStation = qMin(firstStation + maxStationsPerRequest,
+                               stations.size());
+
+        for (int i = firstStation; i < lastStation; ++i)
+        {
+            if (i > firstStation)
+                area += " or ";
+
+            area += "VM2," + stations[i];
+        }
+
+        //----------------------------------------------------------
+        // HTTP request
+        //----------------------------------------------------------
+
+        QNetworkRequest request(QUrl(datasetUrl + "/query"));
+        request.setRawHeader("Authorization", _authorization);
+        request.setHeader(QNetworkRequest::ContentTypeHeader,
+                          "application/x-www-form-urlencoded");
+
+        QUrlQuery postData;
+        postData.addQueryItem("style", "postprocess");
+        postData.addQueryItem("query", refTime + area + product);
+
+        QEventLoop loop;
+
+        QNetworkReply *reply =
+            manager.post(request,
+                         postData.toString(QUrl::FullyEncoded).toUtf8());
+
+        connect(reply, SIGNAL(finished()),
+                &loop, SLOT(quit()));
+
+        loop.exec();
+
+        if (reply->error() != QNetworkReply::NoError)
+        {
+            errorString = "Network error: " + reply->errorString();
+            delete reply;
+            return false;
+        }
+
+        //----------------------------------------------------------
+        // Temporary table
+        //----------------------------------------------------------
+
+        if (! _dbMeteo->createTmpTable())
+        {
+            errorString = _dbMeteo->getErrorString();
+            delete reply;
+            return false;
+        }
+
+        bool firstRecord = true;
+        bool hasData = false;
+
+        while (! reply->atEnd())
+        {
+            QString line = QString::fromUtf8(reply->readLine()).trimmed();
+
+            if (line.isEmpty())
+                continue;
+
+            QStringList fields = line.split(',');
+
+            if (fields.size() < 7)
+                continue;
+
+            hasData = true;
+
+            QString idPoint = fields[1];
+
+            if (idPoint.isEmpty())
+                continue;
+
+            QString flag = fields[6];
+
+            if (flag.startsWith('1') || flag.startsWith("054"))
+                continue;
+
+            QDate date =
+                QDate::fromString(fields[0].left(8), "yyyyMMdd").addDays(-1);
+
+            QString dateStr = date.toString("yyyy-MM-dd");
+
+            int arkId = fields[2].toInt();
+
+            //------------------------------------------------------
+            // Daily precipitation
+            //------------------------------------------------------
+
+            if (arkId == PREC_ID)
+            {
+                QString hour = fields[0].mid(8,2);
+
+                if ((prec0024 && hour != "00") ||
+                    (! prec0024 && hour != "08"))
+                    continue;
+            }
+
+            //------------------------------------------------------
+            // Value
+            //------------------------------------------------------
+
+            double value;
+
+            if (flag.startsWith('2'))
+                value = fields[4].toDouble();
+            else
+                value = fields[3].toDouble();
+
+            // W m-2 -> MJ m-2
+            if (arkId == RAD_ID)
+                value *= DAY_SECONDS / 1000000.0;
+
+            // knot -> m s-1
+            if (arkId == WINDMAX_ID)
+                value *= KNOT_TO_MS;
+
+            if (! arkToVariable.contains(arkId))
+                continue;
+
+            _dbMeteo->appendTmpData(dateStr,
+                                    idPoint,
+                                    QString::number(arkToVariable.value(arkId)),
+                                    QString::number(value),
+                                    firstRecord);
+
+            firstRecord = false;
+        }
+
+        delete reply;
+
+        //----------------------------------------------------------
+        // Save data
+        //----------------------------------------------------------
+
+        if (hasData)
+        {
+            if (! _dbMeteo->saveDailyData())
+            {
+                _dbMeteo->deleteTmpTable();
+                errorString = _dbMeteo->getErrorString();
+                return false;
+            }
+        }
+
+        _dbMeteo->deleteTmpTable();
+    }
+
+    return true;
+}
+
+
+/*
+bool Download::downloadDailyData_old(const QDate &startDate, const QDate &endDate, const QString &dataset,
                                  QList<QString> &stations, QList<int> &variables, bool prec0024, QString &errorString)
 {
     // variable properties
@@ -540,6 +767,7 @@ bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, c
     _dbMeteo->deleteTmpTable();
     return true;
 }
+*/
 
 
 bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
