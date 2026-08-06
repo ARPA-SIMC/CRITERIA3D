@@ -762,6 +762,10 @@ double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit1DLayer> &soi
 double Crit3DCrop::computeTranspiration(const double maxTranspiration, const std::vector<soil::Crit1DLayer> &soilLayers,
                                         double& transpStressOnly, double& transpExcessOnly)
 {
+    // initialize
+    transpStressOnly = 0.0;                         // [mm] actual transpiration with only water scarsity stress
+    transpExcessOnly = 0.0;                         // [mm] actual transpiration with only water surplus stress
+
     // checks
     if (idCrop.empty() || ! isLiving)
         return 0.0;
@@ -774,9 +778,6 @@ double Crit3DCrop::computeTranspiration(const double maxTranspiration, const std
 
     if (maxTranspiration < EPSILON)
         return 0.0;
-
-    transpStressOnly = 0.0;                         // [mm] actual transpiration with only water scarsity stress
-    transpExcessOnly = 0.0;                         // [mm] actual transpiration with only water surplus stress
 
     double totRootDensityWithoutStress = 0.0;       // [-]
     double redistribution = 0.0;                    // [mm]
