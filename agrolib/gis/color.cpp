@@ -32,6 +32,7 @@
 #include "color.h"
 
 
+
 Crit3DColor::Crit3DColor()
 {
     red = 0;
@@ -162,22 +163,52 @@ unsigned int Crit3DColorScale::getColorIndex(double value) const
 
 bool setRandomColors(Crit3DColorScale* myScale)
 {
-    if (! myScale)
+    if (!myScale)
         return false;
 
     myScale->initialize(64, 64);
 
+    constexpr double goldenRatio = 0.618033988749895;
+
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dist(0, 255);
+    std::uniform_real_distribution<double> startDist(0.0, 1.0);
+
+    double hue = startDist(gen);
 
     for (size_t i = 0; i < myScale->keyColor.size(); ++i)
     {
-        int r = dist(gen);
-        int g = dist(gen);
-        int b = dist(gen);
+        hue += goldenRatio;
+        hue -= std::floor(hue);
 
-        myScale->keyColor[i] = Crit3DColor(r, g, b);
+        // HSV -> RGB
+        constexpr double s = 0.90;
+        constexpr double v = 0.95;
+
+        const double h = hue * 6.0;
+        const int sector = static_cast<int>(std::floor(h));
+        const double f = h - sector;
+
+        const double p = v * (1.0 - s);
+        const double q = v * (1.0 - s * f);
+        const double t = v * (1.0 - s * (1.0 - f));
+
+        double r, g, b;
+
+        switch (sector % 6)
+        {
+        case 0: r = v; g = t; b = p; break;
+        case 1: r = q; g = v; b = p; break;
+        case 2: r = p; g = v; b = t; break;
+        case 3: r = p; g = q; b = v; break;
+        case 4: r = t; g = p; b = v; break;
+        default:r = v; g = p; b = q; break;
+        }
+
+        myScale->keyColor[i] = Crit3DColor(
+            static_cast<int>(255.0 * r),
+            static_cast<int>(255.0 * g),
+            static_cast<int>(255.0 * b));
     }
 
     return myScale->classify();

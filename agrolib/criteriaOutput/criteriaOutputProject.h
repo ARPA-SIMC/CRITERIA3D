@@ -13,7 +13,7 @@
     #include "shapeHandler.h"
     #include "crit3dDate.h"
 
-    #define CRITERIA_OUTPUT_VERSION "v2.0.4 (2026)"
+    #define CRITERIA_OUTPUT_VERSION "v2.0.5 (2026)"
 
     #define ERROR_MISSINGPARAMETERS -900
     #define ERROR_WRONGPARAMETER -901
@@ -39,6 +39,7 @@
     #define ERROR_SHAPEFILE -70
     #define ERROR_NETCDF -75
     #define ERROR_ZONAL_STATISTICS_SHAPE -80
+    #define ERROR_RASTERIZE -81
     #define ERROR_MAPS -85
     #define ERROR_DTX -90
     #define ERROR_MISSING_GDAL -100
@@ -130,12 +131,15 @@
         bool initializeCsvOutputFile();
         bool getAllDbVariable();
         bool getDbDataDates(QDate &firstDate, QDate &lastDate);
+
         int createCsvFileFromGUI(const QDate &dateComputation, const QString &csvFileName);
+
         int createShapeFileFromGUI();
 
         bool convertShapeToNetcdf(Crit3DShapeHandler &shapeHandler, const std::string outputFileName,
-                                  const std::string field, const std::string variableName, const std::string variableUnit,
-                                  double cellSize, const Crit3DDate &computationDate, int nrDays);
+                                  const std::string fieldName, const std::string variableName,
+                                  const std::string variableUnit, double cellSize,
+                                  const Crit3DDate &computationDate, int nrDays);
     };
 
 
