@@ -1,6 +1,7 @@
 #include <float.h>
 #include <math.h>
 #include <limits>
+#include <stdint.h>
 
 #include "commonConstants.h"
 #include "basicMath.h"
