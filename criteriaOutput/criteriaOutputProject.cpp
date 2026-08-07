@@ -1,4 +1,5 @@
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "gis.h"
 #include "criteriaOutputProject.h"
 #include "criteriaOutputElaboration.h"
@@ -895,12 +896,14 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
     logger.writeInfo("Reference shape to raster...");
     gis::Crit3DRasterGrid rasterRef;
     initializeRasterFromShape(shapeRef, rasterRef, cellSize);
-    fillRasterWithShapeNumber(rasterRef, shapeRef);
+    if (! fillRasterWithShapeIndex(rasterRef, shapeRef))
+        return fail(ERROR_RASTERIZE, "Error in fillRasterWithShapeIndex");
 
     logger.writeInfo("Values shape to raster...");
     gis::Crit3DRasterGrid rasterVal;
     initializeRasterFromShape(shapeVal, rasterVal, cellSize);
-    fillRasterWithShapeNumber(rasterVal, shapeVal);
+    if (! fillRasterWithShapeIndex(rasterVal, shapeVal))
+        return fail(ERROR_RASTERIZE, "Error in fillRasterWithShapeIndex");
 
     logger.writeInfo("Matrix Analysis...");
     std::vector <int> vectorNull;
@@ -1036,8 +1039,9 @@ int CriteriaOutputProject::createNetcdf()
 
 
 bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandler, const std::string outputFileName,
-                                                 const std::string field, const std::string variableName, const std::string variableUnit,
-                                                 double cellSize, const Crit3DDate &computationDate, int nrDays)
+                                                 const std::string fieldName, const std::string variableName,
+                                                 const std::string variableUnit, double cellSize,
+                                                 const Crit3DDate &computationDate, int nrDays)
 {
     if (! shapeHandler.getIsWGS84())
     {
@@ -1047,7 +1051,12 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
 
     // rasterize shape
     gis::Crit3DRasterGrid tmpRaster;
-    if (! rasterizeShape(shapeHandler, tmpRaster, field, cellSize))
+    constexpr bool useReferenceRaster = false;
+    constexpr int sampleGrid = 1;
+    constexpr double threshold = 0.5;
+
+    if (! rasterizeShape(nullptr, tmpRaster, shapeHandler, fieldName, cellSize,
+                        sampleGrid, threshold, useReferenceRaster))
     {
         projectError = "Error in rasterize shape.";
         return false;
@@ -1056,51 +1065,55 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
     // set UTM zone and emisphere
     gis::Crit3DGisSettings gisSettings;
     gisSettings.utmZone = shapeHandler.getUtmZone();
-    double sign = 1;
-    if (! shapeHandler.getIsNorth()) sign = -1;
-    gisSettings.startLocation.latitude = sign * abs(gisSettings.startLocation.latitude);
+
+    if (! shapeHandler.getIsNorth())
+        gisSettings.startLocation.latitude *= -1;
 
     // convert to lat lon raster
     gis::Crit3DLatLonHeader latLonHeader;
     gis::getGeoExtentsFromUTMHeader(gisSettings, tmpRaster.header, &latLonHeader);
 
-    // initialize data raster (only for values)
+    // Initialize output raster
     gis::Crit3DRasterGrid dataRaster;
     dataRaster.header->nrRows = latLonHeader.nrRows;
     dataRaster.header->nrCols = latLonHeader.nrCols;
     dataRaster.header->flag = latLonHeader.flag;
     dataRaster.header->llCorner.y = latLonHeader.llCorner.latitude;
     dataRaster.header->llCorner.x = latLonHeader.llCorner.longitude;
+    // average geographic resolution
     dataRaster.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
     dataRaster.header->invCellSize = 1.0 / dataRaster.header->cellSize;
     dataRaster.initializeGrid(latLonHeader.flag);
 
-    // assign lat lon values
-    double lat, lon, x, y;
-    int utmRow, utmCol;
+    // resample raster onto geographic grid
     for (int row = 0; row < latLonHeader.nrRows; row++)
     {
         for (int col = 0; col < latLonHeader.nrCols; col++)
         {
+            double lat, lon, x, y;
             gis::getLatLonFromRowCol(latLonHeader, row, col, &lat, &lon);
             gis::latLonToUtmForceZone(gisSettings.utmZone, lat, lon, &x, &y);
-            if (! gis::isOutOfGridXY(x, y, tmpRaster.header))
-            {
-                gis::getRowColFromXY(*(tmpRaster.header), x, y, &utmRow, &utmCol);
-                float value = tmpRaster.getValueFromRowCol(utmRow, utmCol);
-                if (int(value) != int(tmpRaster.header->flag))
-                {
-                    dataRaster.value[row][col] = value;
-                }
-            }
+
+            if (gis::isOutOfGridXY(x, y, tmpRaster.header))
+                continue;
+
+            int utmRow, utmCol;
+            gis::getRowColFromXY(*(tmpRaster.header), x, y, &utmRow, &utmCol);
+            const float value = tmpRaster.getValueFromRowCol(utmRow, utmCol);
+            if (! isEqual(value, tmpRaster.header->flag))
+                dataRaster.value[row][col] = value;
         }
     }
 
     // create netcdf
     NetCDFHandler netCDF;
-    netCDF.createNewFile(outputFileName);
+    if (! netCDF.createNewFile(outputFileName))
+    {
+        projectError = "Error creating netcdf file.";
+        return false;
+    }
 
-    std::string title = projectName.toStdString();
+    const std::string title = projectName.toStdString();
 
     if (! netCDF.writeMetadata(latLonHeader, title, variableName, variableUnit,
                                 computationDate, nrDays, NODATA, NODATA))

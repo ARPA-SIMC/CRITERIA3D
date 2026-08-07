@@ -333,88 +333,86 @@ int RasterUtmObject::getCurrentStep(const gis::Crit3DRasterWindow& rasterWindow)
 
 bool RasterUtmObject::drawRaster(QPainter* painter)
 {
-    if (! _rasterPointer || ! _rasterPointer->isLoaded)
+    if (!_rasterPointer || !_rasterPointer->isLoaded)
         return false;
 
     gis::Crit3DRasterWindow rasterWindow;
-    if (! getCurrentWindow(&rasterWindow))
+    if (!getCurrentWindow(&rasterWindow))
     {
         _rasterPointer->minimum = NODATA;
         _rasterPointer->maximum = NODATA;
         return false;
     }
 
-    // dynamic color scale
-    if (! _rasterPointer->colorScale->isFixedRange())
+    auto* raster = _rasterPointer;
+    auto* colorScale = raster->colorScale;
+
+    if (! colorScale->isFixedRange())
     {
-        gis::updateColorScale(_rasterPointer, rasterWindow);
-        roundColorScale(_rasterPointer->colorScale, 4, true);
+        gis::updateColorScale(raster, rasterWindow);
+        roundColorScale(colorScale, 4, true);
     }
 
     const int step = getCurrentStep(rasterWindow);
 
-    const float flag = _rasterPointer->header->flag;
-    const double minimum = _rasterPointer->colorScale->minimum();
-    const bool isHideMinimum = _rasterPointer->colorScale->isHideMinimum();
-    const bool isHideZero = _rasterPointer->colorScale->isHideZero();
-    const int lastRow = _rasterPointer->header->nrRows - 1;
-    const int lastCol = _rasterPointer->header->nrCols - 1;
+    const float flag = raster->header->flag;
+    const double minimum = colorScale->minimum();
+    const bool hideMinimum = colorScale->isHideMinimum();
+    const bool hideZero = colorScale->isHideZero();
 
-    // draw
+    const int lastRow = raster->header->nrRows - 1;
+    const int lastCol = raster->header->nrCols - 1;
+
+    const auto& values = raster->value;
+    const auto& lat = _latRaster.value;
+    const auto& lon = _lonRaster.value;
+
     painter->setPen(Qt::NoPen);
-    QPointF geoPoint[4];
+
     QPointF pixel[4];
+
+    Crit3DColor* lastColor = nullptr;
+
     for (int row1 = rasterWindow.v[0].row; row1 <= rasterWindow.v[1].row; row1 += step)
     {
         int row2 = std::min(row1 + step, lastRow);
-        const int rowCenter = (row1 + row2) * 0.5;
-        // latlon raster have one extra cell
         if (row2 == row1)
-            row2++;
+            ++row2;
+
+        const int rowCenter = (row1 + row2) * 0.5;
 
         for (int col1 = rasterWindow.v[0].col; col1 <= rasterWindow.v[1].col; col1 += step)
         {
             int col2 = std::min(col1 + step, lastCol);
-            const int colCenter = (col1 + col2) * 0.5;
-            // latlon raster have one extra cell
             if (col2 == col1)
-                col2++;
+                ++col2;
 
-            const float value = _rasterPointer->value[rowCenter][colCenter];
+            const int colCenter = (col1 + col2) * 0.5;
 
-            // check NODATA value (transparent)
-            if (isEqual(value, flag) || isEqual(value, NODATA))
+            const float value = values[rowCenter][colCenter];
+
+            if (isEqual(value, flag) ||
+                isEqual(value, NODATA) ||
+                (hideMinimum && value < minimum) ||
+                (hideZero && value < 0.01f))
+            {
                 continue;
+            }
 
-            // check minimum (transparent)
-            if (isHideMinimum && value < minimum)
-                continue;
+            Crit3DColor* color = colorScale->getColor(value);
 
-            // check zero (transparent)
-            if (isHideZero && value < 0.01)
-                continue;
+            if (color != lastColor)
+            {
+                painter->setBrush(QColor(color->red,
+                                         color->green,
+                                         color->blue));
+                lastColor = color;
+            }
 
-            // set color
-            Crit3DColor* myColor = _rasterPointer->colorScale->getColor(value);
-            const QColor myQColor = QColor(myColor->red, myColor->green, myColor->blue);
-            painter->setBrush(myQColor);
-
-            // set polygon
-            geoPoint[0].setX(_lonRaster.value[row1][col1]);
-            geoPoint[0].setY(_latRaster.value[row1][col1]);
-            pixel[0] = getPixel(geoPoint[0]);
-
-            geoPoint[1].setX(_lonRaster.value[row1][col2]);
-            geoPoint[1].setY(_latRaster.value[row1][col2]);
-            pixel[1] = getPixel(geoPoint[1]);
-
-            geoPoint[2].setX(_lonRaster.value[row2][col2]);
-            geoPoint[2].setY(_latRaster.value[row2][col2]);
-            pixel[2] = getPixel(geoPoint[2]);
-
-            geoPoint[3].setX(_lonRaster.value[row2][col1]);
-            geoPoint[3].setY(_latRaster.value[row2][col1]);
-            pixel[3] = getPixel(geoPoint[3]);
+            pixel[0] = getPixel(QPointF(lon[row1][col1], lat[row1][col1]));
+            pixel[1] = getPixel(QPointF(lon[row1][col2], lat[row1][col2]));
+            pixel[2] = getPixel(QPointF(lon[row2][col2], lat[row2][col2]));
+            pixel[3] = getPixel(QPointF(lon[row2][col1], lat[row2][col1]));
 
             painter->drawPolygon(pixel, 4);
         }

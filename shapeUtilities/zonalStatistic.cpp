@@ -76,7 +76,7 @@ std::vector <std::vector<int>> computeMatrixAnalysisRaster(const Crit3DShapeHand
     // create reference raster from shapefile (same header of rasterVal)
     gis::Crit3DRasterGrid rasterRef;
     rasterRef.initializeGrid(*(rasterVal.header));
-    fillRasterWithShapeNumber(rasterRef, shapeRef);
+    fillRasterWithShapeIndex(rasterRef, shapeRef);
 
     // analysis matrix
     vectorNull.clear();
