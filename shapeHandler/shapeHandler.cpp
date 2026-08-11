@@ -666,7 +666,26 @@ void Crit3DShapeHandler::packSHP(std::string newFile)
     SHPClose(hSHP);
 }
 
+const std::vector<unsigned int>& Crit3DShapeHandler::getHoles(int shapeNumber, int partNumber) const
+{
+    static const std::vector<unsigned int> emptyVector;
 
+    if (shapeNumber < 0 || shapeNumber >= static_cast<int>(holes.size()))
+    {
+        return emptyVector;
+    }
+
+    const auto& shapeHoles = holes[static_cast<size_t>(shapeNumber)];
+
+    if (partNumber < 0 || partNumber >= static_cast<int>(shapeHoles.size()))
+    {
+        return emptyVector;
+    }
+
+    return shapeHoles[static_cast<size_t>(partNumber)];
+}
+
+/*
 std::vector<unsigned int> Crit3DShapeHandler::getHoles(int shapeNumber, int partNumber) const
 {
     if (shapeNumber > m_count || partNumber > int(holes[shapeNumber].size()))
@@ -676,7 +695,7 @@ std::vector<unsigned int> Crit3DShapeHandler::getHoles(int shapeNumber, int part
     }
 
     return holes[unsigned(shapeNumber)][unsigned(partNumber)];
-}
+}*/
 
 
 

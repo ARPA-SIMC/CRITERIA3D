@@ -283,7 +283,7 @@
         bool replaceRasterValues(const Crit3DRasterGrid* refRaster, const Crit3DRasterGrid* maskRaster, Crit3DRasterGrid* outputRaster);
 
         bool cropRaster(const Crit3DRasterGrid *inputRaster, Crit3DRasterGrid *outputRaster,
-                        int zoneNumber, const Crit3DGeoPoint &geo1, const Crit3DGeoPoint &geo2);
+                        int zoneNumber, const Crit3DGeoPoint &topLeft, const Crit3DGeoPoint &bottomRight);
 
         bool computeLatLonMaps(const gis::Crit3DRasterGrid& rasterGrid,
                                gis::Crit3DRasterGrid* latMap, gis::Crit3DRasterGrid* lonMap,
