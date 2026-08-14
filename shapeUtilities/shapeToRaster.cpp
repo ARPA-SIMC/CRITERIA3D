@@ -33,7 +33,7 @@ bool initializeRasterFromShape(const Crit3DShapeHandler &shapeHandler, gis::Crit
     for (int i = 0; i < nrShape; i++)
     {
         shapeHandler.getShape(i, object);
-        const auto bounds = object.getBounds();
+        const auto& bounds = object.getBounds();
 
         xmin = std::min(xmin, bounds.xmin);
         ymin = std::min(ymin, bounds.ymin);
@@ -75,7 +75,7 @@ bool fillRasterWithShapeIndex(gis::Crit3DRasterGrid &raster, const Crit3DShapeHa
     {
         shapeHandler.getShape(shapeIndex, object);
 
-        Box<double> bounds = object.getBounds();
+        const auto& bounds = object.getBounds();
 
         int r0, r1, c0, c1;
         gis::getRowColFromXY(header, bounds.xmin, bounds.ymax, &r0, &c0);
@@ -191,7 +191,7 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
 
         int r0, r1, c0, c1;
 
-        const Box<double> bounds = object.getBounds();
+        const auto& bounds = object.getBounds();
 
         gis::getRowColFromXY(header, bounds.xmin, bounds.ymax, &r0, &c0);
         gis::getRowColFromXY(header, bounds.xmax, bounds.ymin, &r1, &c1);
