@@ -3307,45 +3307,93 @@ bool Crit3DMeteoGridDbHandler::saveListDailyDataEnsemble(QString &errorStr, cons
                                                          const QDate &date, meteoVariable meteoVar,
                                                          const QList<float> &values)
 {
+    if (! date.isValid())
+    {
+        errorStr = "Invalid date.";
+        return false;
+    }
+
+    if (meteoPointID.isEmpty())
+    {
+        errorStr = "Invalid meteo point ID.";
+        return false;
+    }
+
+    if (values.isEmpty())
+    {
+        errorStr = "Empty ensemble values.";
+        return false;
+    }
+
     QSqlQuery qry(_db);
-    QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
-    int varCode = getDailyVarCode(meteoVar);
 
-    QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
-                                "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), MemberNr int(11), PRIMARY KEY(%2,VariableCode,MemberNr))").arg(tableD, _tableDaily.fieldTime);
+    const QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
 
-    qry.exec(statement);
-    statement = QString("DELETE FROM `%1` WHERE %2 = DATE('%3') AND VariableCode = '%4'")
-                    .arg(tableD, _tableDaily.fieldTime, date.toString("yyyy-MM-dd")).arg(varCode);
-    if(! qry.exec(statement) )
+    const int varCode = getDailyVarCode(meteoVar);
+
+    // Create table
+    QString statement =
+        QString("CREATE TABLE IF NOT EXISTS `%1` "
+                "(%2 date, "
+                "VariableCode tinyint(3) UNSIGNED, "
+                "Value float(6,1), "
+                "MemberNr int(11), "
+                "PRIMARY KEY(%2,VariableCode,MemberNr))")
+            .arg(tableD, _tableDaily.fieldTime);
+
+    if (! qry.exec(statement))
     {
         errorStr = qry.lastError().text();
         return false;
     }
-    else
+
+    // Remove existing ensemble for this date and variable
+    statement = QString("DELETE FROM `%1` "
+                        "WHERE %2 = DATE('%3') "
+                        "AND VariableCode = '%4'")
+                        .arg(tableD, _tableDaily.fieldTime, date.toString("yyyy-MM-dd"))
+                        .arg(varCode);
+
+    if (! qry.exec(statement))
     {
-        statement =  QString(("INSERT INTO `%1` (%2, VariableCode, Value, MemberNr) VALUES "))
+        errorStr = qry.lastError().text();
+        return false;
+    }
+
+    // Insert ensemble values
+    statement = QString("INSERT INTO `%1` "
+                        "(%2, VariableCode, Value, MemberNr) VALUES ")
                         .arg(tableD, _tableDaily.fieldTime);
-        for (int i = 0; i < values.size(); i++)
-        {
-            float value = values[i];
-            QString valueStr = QString("'%1'").arg(value);
 
-            if (isEqual(value, NODATA))
-                valueStr = "NULL";
+    for (int i = 0; i < values.size(); ++i)
+    {
+        const float value = values[i];
 
-            int memberNr = values.size() - i;  // reverse order
+        // QMultiMap::values() returns equal-key values in reverse
+        // insertion order, therefore restore the original member number.
+        const int memberNr = values.size() - i;
 
-            statement += QString(" ('%1','%2',%3,'%4'),").arg(date.toString("yyyy-MM-dd")).arg(varCode).arg(valueStr).arg(memberNr);
-        }
+        QString valueStr;
 
-        statement = statement.left(statement.length() - 1);
+        if (isEqual(value, NODATA))
+            valueStr = "NULL";
+        else
+            valueStr = QString::number(value, 'f', 1);
 
-        if(! qry.exec(statement))
-        {
-            errorStr = qry.lastError().text();
-            return false;
-        }
+        statement += QString("('%1','%2',%3,'%4'),")
+                            .arg(date.toString("yyyy-MM-dd"))
+                            .arg(varCode)
+                            .arg(valueStr)
+                            .arg(memberNr);
+    }
+
+    // Remove final comma
+    statement.chop(1);
+
+    if (! qry.exec(statement))
+    {
+        errorStr = qry.lastError().text();
+        return false;
     }
 
     return true;
@@ -3354,26 +3402,48 @@ bool Crit3DMeteoGridDbHandler::saveListDailyDataEnsemble(QString &errorStr, cons
 
 bool Crit3DMeteoGridDbHandler::cleanDailyOldData(QString &errorStr, const QDate &myDate)
 {
-    QSqlQuery qry(_db);
-    QString statement = QString("SHOW TABLES LIKE '%1%%2'").arg(_tableDaily.prefix, _tableDaily.postFix);
-    if(! qry.exec(statement))
+    const QString statement = QString("SHOW TABLES LIKE '%1%%2'")
+                                .arg(_tableDaily.prefix, _tableDaily.postFix);
+
+    QSqlQuery tablesQuery(_db);
+
+    if (! tablesQuery.exec(statement))
     {
-        errorStr = qry.lastError().text();
+        errorStr = tablesQuery.lastError().text();
         return false;
     }
-    else
+
+    if (! _db.transaction())
     {
-        while( qry.next() )
+        errorStr = _db.lastError().text();
+        return false;
+    }
+
+    QSqlQuery deleteQuery(_db);
+
+    const QString dateString = myDate.toString("yyyy-MM-dd");
+
+    while (tablesQuery.next())
+    {
+        const QString tableName = tablesQuery.value(0).toString();
+
+        const QString deleteStatement =
+            QString("DELETE FROM `%1` WHERE `%2` < '%3'")
+                    .arg(tableName, _tableDaily.fieldTime, dateString);
+
+        if (! deleteQuery.exec(deleteStatement))
         {
-            QString tableName = qry.value(0).toString();
-            statement = QString("DELETE FROM `%1` WHERE %2 < DATE('%3')")
-                                        .arg(tableName, _tableDaily.fieldTime, myDate.toString("yyyy-MM-dd"));
-            if(! qry.exec(statement))
-            {
-                errorStr = qry.lastError().text();
-                return false;
-            }
+            errorStr = deleteQuery.lastError().text();
+            _db.rollback();
+            return false;
         }
+    }
+
+    if (! _db.commit())
+    {
+        errorStr = _db.lastError().text();
+        _db.rollback();
+        return false;
     }
 
     return true;
