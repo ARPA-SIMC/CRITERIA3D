@@ -1675,29 +1675,25 @@ namespace gis
     }
 
 
-    float closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem)
+    double closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem)
     {
-        int row, col;
-        float closestDistanceFromGrid;
-        float distance;
-        double gridX, gridY;
-        float demValue;
-
-        demValue = gis::getValueFromXY(dem, myPoint.utm.x, myPoint.utm.y);
+        float demValue = gis::getValueFromXY(dem, myPoint.utm.x, myPoint.utm.y);
         if (! isEqual(demValue, dem.header->flag))
         {
-            return 0;
+            return 0.0;
         }
 
-        closestDistanceFromGrid = NODATA;
-        for (row = 0; row < dem.header->nrRows; row++)
+        double closestDistanceFromGrid = NODATA;
+        for (int row = 0; row < dem.header->nrRows; ++row)
         {
-            for (col = 0; col < dem.header->nrCols; col++)
+            for (int col = 0; col < dem.header->nrCols; ++col)
             {
-                if (!isEqual(dem.getValueFromRowCol(row,col), dem.header->flag))
+                if (! isEqual(dem.getValueFromRowCol(row,col), dem.header->flag))
                 {
+                    double gridX, gridY;
                     dem.getXY(row, col, gridX, gridY);
-                    distance = computeDistance(float(gridX), float(gridY), float(myPoint.utm.x), float(myPoint.utm.y));
+
+                    const double distance = computeDistance(gridX, gridY, myPoint.utm.x, myPoint.utm.y);
                     if (isEqual(closestDistanceFromGrid, NODATA) || distance < closestDistanceFromGrid)
                     {
                         closestDistanceFromGrid = distance;
@@ -1705,6 +1701,7 @@ namespace gis
                 }
             }
         }
+
         return closestDistanceFromGrid;
     }
 

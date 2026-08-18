@@ -4918,7 +4918,7 @@ bool Project::setActiveStateSelectedPoints(bool isActive)
         return false;
     }
 
-    if (!meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive))
+    if (! meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive))
     {
         logError("Failed to activate/deactivate selected points:\n" + meteoPointsDbHandler->getErrorString());
         return false;
@@ -4938,7 +4938,7 @@ bool Project::setActiveStatePointList(QString fileName, bool isActive)
         return false;
     }
 
-    if (!meteoPointsDbHandler->setActiveStatePointList(pointList, isActive))
+    if (! meteoPointsDbHandler->setActiveStatePointList(pointList, isActive))
     {
         logError("Failed to activate/deactivate point list:\n" + meteoPointsDbHandler->getErrorString());
         return false;
@@ -4959,6 +4959,65 @@ bool Project::setActiveStatePointList(QString fileName, bool isActive)
 }
 
 
+bool Project::setPointsWithDemDistance(const QString& operation, double value, QList<QString>& pointList)
+{
+    if(! DEM.isLoaded)
+    {
+        logError("No DEM open");
+        return false;
+    }
+
+    pointList.clear();
+    setProgressBar("Checking distance...", int(meteoPoints.size()));
+
+    for (size_t i = 0; i < meteoPoints.size(); ++i)
+    {
+        updateProgressBar(int(i));
+        if(! meteoPoints[i].active)
+        {
+            double distance = gis::closestDistanceFromGrid(meteoPoints[i].point, DEM);
+            if (operation == "=")
+            {
+                if (isEqual(distance, value))
+                {
+                    pointList.append(QString::fromStdString(meteoPoints[i].id));
+                }
+            }
+            else if (operation == "!=")
+            {
+                if (! isEqual(distance, value))
+                {
+                    pointList.append(QString::fromStdString(meteoPoints[i].id));
+                }
+            }
+            else if (operation == ">")
+            {
+                if (distance > value)
+                {
+                    pointList.append(QString::fromStdString(meteoPoints[i].id));
+                }
+            }
+            else if (operation == "<")
+            {
+                if (distance < value)
+                {
+                    pointList.append(QString::fromStdString(meteoPoints[i].id));
+                }
+            }
+        }
+    }
+    closeProgressBar();
+
+    if (pointList.isEmpty())
+    {
+        logWarning("No points fit your requirements.");
+        return false;
+    }
+
+    return true;
+}
+
+
 bool Project::setActiveStateWithCriteria(bool isActive)
 {
     if (meteoPointsDbHandler == nullptr)
@@ -4971,86 +5030,43 @@ bool Project::setActiveStateWithCriteria(bool isActive)
     if (dialogPointSelection.result() != QDialog::Accepted)
         return false;
 
-    QString selection = dialogPointSelection.getSelection();
-    QString operation = dialogPointSelection.getOperation();
-    QString item = dialogPointSelection.getItem();
-    QString condition;
+    const QString selection = dialogPointSelection.getSelection();
+    const QString operation = dialogPointSelection.getOperation();
+    const QString item = dialogPointSelection.getItem();
 
-    if (operation != "Like")
-    {
-        condition = selection + " " + operation + " '" +item +"'";
-    }
-    else
+    QString condition;
+    if (operation == "Like")
     {
         condition = selection + " " + operation + " '%" +item +"%'";
     }
-
-    if (selection != "DEM distance [m]")
-    {
-        meteoPointsDbHandler->setActiveStateIfCondition(isActive, condition);
-    }
     else
     {
-        if(!DEM.isLoaded)
-        {
-            logError("No DEM open");
+        condition = selection + " " + operation + " '" +item +"'";
+    }
+
+    if (selection == "DEM distance [m]")
+    {
+        const double distance = item.toDouble();
+        QList<QString> pointList;
+        if (! setPointsWithDemDistance(operation, distance, pointList))
             return false;
-        }
 
-        QList<QString> points;
-        setProgressBar("Checking distance...", (int)meteoPoints.size());
-
-        for (size_t i = 0; i < meteoPoints.size(); i++)
-        {
-            updateProgressBar(int(i));
-            if(! meteoPoints[i].active)
-            {
-                float distance = gis::closestDistanceFromGrid(meteoPoints[i].point, DEM);
-                if (operation == "=")
-                {
-                    if (isEqual(distance, item.toFloat()))
-                    {
-                        points.append(QString::fromStdString(meteoPoints[i].id));
-                    }
-                }
-                else if (operation == "!=")
-                {
-                    if (! isEqual(distance, item.toFloat()))
-                    {
-                        points.append(QString::fromStdString(meteoPoints[i].id));
-                    }
-                }
-                else if (operation == ">")
-                {
-                    if (distance > item.toFloat())
-                    {
-                        points.append(QString::fromStdString(meteoPoints[i].id));
-                    }
-                }
-                else if (operation == "<")
-                {
-                    if (distance < item.toFloat())
-                    {
-                        points.append(QString::fromStdString(meteoPoints[i].id));
-                    }
-                }
-            }
-        }
-        closeProgressBar();
-
-        if (points.isEmpty())
-        {
-            logError("No points fit your requirements.");
-            return false;
-        }
-        if (!meteoPointsDbHandler->setActiveStatePointList(points, isActive))
+        if (! meteoPointsDbHandler->setActiveStatePointList(pointList, isActive))
         {
             logError("Failed to activate/deactivate points selected:\n" + meteoPointsDbHandler->getErrorString());
             return false;
         }
     }
 
-    return true;
+    /*
+    if (selection == "value")
+    {
+        const float value = item.toFloat();
+        return setActivePointsWithValue(operation, value, isActive);
+    }
+    */
+
+    return meteoPointsDbHandler->setActiveStateIfCondition(isActive, condition);
 }
 
 

@@ -22,6 +22,7 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(QString type, bool isSelect
     selectionMode.addItem("dataset");
     selectionMode.addItem("name");
     selectionMode.addItem("id_point");
+    selectionMode.addItem("value");
     selectionMode.addItem("altitude");
     selectionMode.addItem("DEM distance [m]");
     selectionMode.addItem("orog_code");
@@ -137,7 +138,9 @@ void DialogSelectionMeteoPoint::selectionModeChanged()
         editItems.setVisible(true);
         itemFromList = false;
     }
-    else if (selectionMode.currentText() == "altitude" || selectionMode.currentText() == "DEM distance [m]")
+    else if (selectionMode.currentText() == "altitude"
+               || selectionMode.currentText() == "DEM distance [m]"
+               || selectionMode.currentText() == "value")
     {
         selectionOperation.addItem("=");
         selectionOperation.addItem("!=");
@@ -182,10 +185,11 @@ QString DialogSelectionMeteoPoint::getItem()
 
 void DialogSelectionMeteoPoint::done(bool res)
 {
-
     if(res)  // ok was pressed
     {
-        if (selectionMode.currentText() == "altitude" || selectionMode.currentText() == "DEM distance [m]")
+        if (selectionMode.currentText() == "altitude"
+            || selectionMode.currentText() == "DEM distance [m]"
+            || selectionMode.currentText() == "value")
         {
             // value should be a number
             bool ok;
