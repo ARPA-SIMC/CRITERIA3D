@@ -1756,7 +1756,55 @@ bool Crit3DMeteoPointsDbHandler::isActivePoint(const QString& pointId)
 }
 
 
-bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& pointList, bool activeState)
+bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString> &pointList, bool activeState)
+{
+    _errorStr.clear();
+
+    QStringList idList;
+    idList.reserve(pointList.size());
+
+    for (const QString &id : pointList)
+    {
+        if (! id.isEmpty())
+            idList.append(id);
+    }
+
+    if (idList.isEmpty())
+        return true;
+
+    QStringList placeholders;
+    placeholders.fill("?", idList.size());
+
+    const QString sqlStr =
+        "UPDATE point_properties "
+        "SET is_active = ? "
+        "WHERE id_point IN (" + placeholders.join(",") + ")";
+
+    QSqlQuery qry(_db);
+
+    if (! qry.prepare(sqlStr))
+    {
+        _errorStr = qry.lastError().text();
+        return false;
+    }
+
+    qry.addBindValue(activeState ? 1 : 0);
+
+    for (const QString &id : idList)
+        qry.addBindValue(id);
+
+    if (! qry.exec())
+    {
+        _errorStr = qry.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+
+/*
+bool Crit3DMeteoPointsDbHandler::setActiveStatePointList_old(const QList<QString>& pointList, bool activeState)
 {
     _errorStr = "";
     QString idList = "";
@@ -1775,7 +1823,7 @@ bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& p
     sqlStr+= " WHERE id_point IN (" + idList + ")";
 
     QSqlQuery qry(_db);
-    if( !qry.exec(sqlStr))
+    if(! qry.exec(sqlStr))
     {
         _errorStr = qry.lastError().text();
         return false;
@@ -1783,6 +1831,7 @@ bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& p
 
     return true;
 }
+*/
 
 
 bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromIdList(const QList<QString>& pointList)

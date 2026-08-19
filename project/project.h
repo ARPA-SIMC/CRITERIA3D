@@ -337,9 +337,10 @@
         bool setSelectedStatePointList(QString fileName, bool isSelect, bool isShowVariable);
         bool selectPointList(const QList<QString> &pointList, bool isSelect, bool isShowVariable);
 
-        bool setPointsWithDemDistance(const QString& operation, double value, QList<QString>& pointsList);
-        bool setActiveStateWithCriteria(bool isActive);
-        bool setSelectedStateWithCriteria(bool isSelect, bool isShowVariable);
+        bool selectPointsWithDemDistance(const QString& operation, double value, QList<QString>& pointList);
+        bool selectPointsWithValues(const QString& operation, double threshold, QList<QString>& pointList);
+        bool activePointsWithCriteria(bool isActive);
+        bool selectPointsWithCriteria(bool isSelect, bool isShowVariable);
 
         bool setMarkedFromPointList(QString fileName, bool isAdd);
         bool setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoints);

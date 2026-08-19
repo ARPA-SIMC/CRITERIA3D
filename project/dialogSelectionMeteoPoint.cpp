@@ -9,8 +9,7 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(QString type, bool isSelect
     stateList = meteoPointsDbHandler->getStateList();
     datasetList = meteoPointsDbHandler->getDatasetList();
 
-    setWindowTitle("Select");
-    setMinimumWidth(400);
+    setMinimumWidth(600);
     QVBoxLayout mainLayout;
     QHBoxLayout selectionLayout;
     QHBoxLayout buttonLayout;
@@ -22,14 +21,15 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(QString type, bool isSelect
     selectionMode.addItem("dataset");
     selectionMode.addItem("name");
     selectionMode.addItem("id_point");
-    selectionMode.addItem("value");
     selectionMode.addItem("altitude");
+    selectionMode.addItem("current value");
     selectionMode.addItem("DEM distance [m]");
     selectionMode.addItem("orog_code");
     selectionLayout.addWidget(&selectionMode);
 
     selectionOperation.addItem("=");
     selectionOperation.addItem("!=");
+    selectionOperation.setMaximumWidth(100);
     selectionLayout.addWidget(&selectionOperation);
 
     selectionItems.addItems(municipalityList);
@@ -46,16 +46,28 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(QString type, bool isSelect
     if (_type.toUpper() == "ACTIVE")
     {
         if (_isSelect)
+        {
             activeButton.setText("Activate");
+            setWindowTitle("Activate points");
+        }
         else
+        {
             activeButton.setText("Deactivate");
+            setWindowTitle("Deactivate points");
+        }
     }
     else if (_type.toUpper() == "SELECT")
     {
         if (_isSelect)
+        {
             activeButton.setText("Select");
+            setWindowTitle("Select points");
+        }
         else
+        {
             activeButton.setText("Deselect");
+            setWindowTitle("Deselect points");
+        }
     }
 
     activeButton.setCheckable(true);
@@ -140,7 +152,7 @@ void DialogSelectionMeteoPoint::selectionModeChanged()
     }
     else if (selectionMode.currentText() == "altitude"
                || selectionMode.currentText() == "DEM distance [m]"
-               || selectionMode.currentText() == "value")
+               || selectionMode.currentText() == "current value")
     {
         selectionOperation.addItem("=");
         selectionOperation.addItem("!=");
@@ -189,7 +201,7 @@ void DialogSelectionMeteoPoint::done(bool res)
     {
         if (selectionMode.currentText() == "altitude"
             || selectionMode.currentText() == "DEM distance [m]"
-            || selectionMode.currentText() == "value")
+            || selectionMode.currentText() == "current value")
         {
             // value should be a number
             bool ok;
