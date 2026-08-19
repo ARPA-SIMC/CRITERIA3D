@@ -79,7 +79,7 @@
         double getNumericValue(int shapeNumber, int fieldPos) const;
         std::string getStringValue(int shapeNumber, const std::string &fieldName) const;
 
-        std::vector<unsigned int> getHoles(int shapeNumber, int partNumber) const;
+        const std::vector<unsigned int> &getHoles(int shapeNumber, int partNumber) const;
 
         int getShapeIndexfromPoint(double utmX, double utmY) const;
 

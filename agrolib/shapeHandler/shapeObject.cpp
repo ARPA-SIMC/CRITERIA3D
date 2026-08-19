@@ -70,7 +70,96 @@ void ShapeObject::destroy()
 }
 
 
-void ShapeObject::assign(const SHPObject* obj)
+void ShapeObject::assign(const SHPObject *obj)
+{
+    if (obj == nullptr)
+        return;
+
+    if (index >= 0)
+        destroy();
+
+    index = obj->nShapeId;
+    type = obj->nSHPType;
+    vertexCount = static_cast<unsigned int>(obj->nVertices);
+
+    // Copy vertices
+    if (vertexCount > 0)
+    {
+        vertices = new Point<double>[vertexCount];
+
+        for (unsigned int i = 0; i < vertexCount; ++i)
+        {
+            vertices[i].set(obj->padfX[i], obj->padfY[i]);
+        }
+    }
+
+    // Shape bounds
+    bounds.xmin = obj->dfXMin;
+    bounds.xmax = obj->dfXMax;
+    bounds.ymin = obj->dfYMin;
+    bounds.ymax = obj->dfYMax;
+
+    // Parts
+    partCount = static_cast<unsigned int>(obj->nParts);
+    parts.reserve(partCount);
+
+    for (unsigned int partIndex = 0; partIndex < partCount; ++partIndex)
+    {
+        Part part;
+
+        part.type = obj->panPartType[partIndex];
+        part.offset = static_cast<unsigned int>(
+            obj->panPartStart[partIndex]);
+
+        if (partIndex + 1 < partCount)
+        {
+            part.length = static_cast<unsigned int>(
+                obj->panPartStart[partIndex + 1] -
+                obj->panPartStart[partIndex]);
+        }
+        else
+        {
+            part.length = vertexCount - part.offset;
+        }
+
+        // According to the Shapefile polygon convention:
+        // clockwise rings are exterior rings,
+        // counter-clockwise rings are holes.
+        part.hole = !isClockWise(part);
+
+        // Initialize part bounds
+        part.boundsPart.xmin = bounds.xmax;
+        part.boundsPart.xmax = bounds.xmin;
+        part.boundsPart.ymin = bounds.ymax;
+        part.boundsPart.ymax = bounds.ymin;
+
+        // Compute part bounds
+        const unsigned int end = part.offset + part.length;
+
+        for (unsigned int vertexIndex = part.offset;
+             vertexIndex < end;
+             ++vertexIndex)
+        {
+            part.boundsPart.xmin =
+                MINVALUE(part.boundsPart.xmin, obj->padfX[vertexIndex]);
+
+            part.boundsPart.xmax =
+                MAXVALUE(part.boundsPart.xmax, obj->padfX[vertexIndex]);
+
+            part.boundsPart.ymin =
+                MINVALUE(part.boundsPart.ymin, obj->padfY[vertexIndex]);
+
+            part.boundsPart.ymax =
+                MAXVALUE(part.boundsPart.ymax, obj->padfY[vertexIndex]);
+        }
+
+        parts.push_back(part);
+    }
+}
+
+
+/*
+void ShapeObject::assign_old(const SHPObject* obj)
 {
     if (obj != nullptr)
     {
@@ -151,6 +240,7 @@ void ShapeObject::assign(const SHPObject* obj)
         }
     }
 }
+*/
 
 
 void ShapeObject::assign(const ShapeObject& other)
@@ -197,51 +287,55 @@ unsigned long ShapeObject::getVertexCount() const
 
 const Point<double>* ShapeObject::getVertices() const
 {
-    return const_cast<const Point<double>*>(vertices);
+    return vertices;
 }
 
-Point<double> ShapeObject::getVertex(unsigned int index) const
+const Point<double>& ShapeObject::getVertex(unsigned int index) const
 {
     return vertices[index];
 }
 
-Box<double> ShapeObject::getBounds() const
+const Box<double>& ShapeObject::getBounds() const
 {
     return bounds;
 }
 
-std::vector<ShapeObject::Part> ShapeObject::getParts() const
+const std::vector<ShapeObject::Part>& ShapeObject::getParts() const
 {
     return parts;
 }
 
-ShapeObject::Part ShapeObject::getPart(unsigned int indexPart) const
+const ShapeObject::Part& ShapeObject::getPart(unsigned int partIndex) const
 {
-    return parts[indexPart];
+    return parts[partIndex];
 }
 
 
 double ShapeObject::getTotalArea() const
 {
-    double sumArea = 0.0;
+    double totalArea = 0.0;
 
     for (unsigned int i = 0; i < parts.size(); ++i)
     {
-        auto currentPart = getPart(i);
-        sumArea += std::abs(polygonArea(currentPart));
+        const Part &part = getPart(i);
+
+        if (part.hole)
+            totalArea -= std::abs(polygonArea(part));
+        else
+            totalArea += std::abs(polygonArea(part));
     }
 
-    return sumArea;
+    return totalArea;
 }
 
 
-double ShapeObject::polygonArea(Part& part) const
+double ShapeObject::polygonArea(const Part& part) const
 {
     double area = 0.0;
     unsigned long i, j;
 
-    unsigned long offSet = part.offset;
-    unsigned long length = part.length;
+    const unsigned long offSet = part.offset;
+    const unsigned long length = part.length;
 
     for (i = 0; i < length; i++)
     {
@@ -253,100 +347,103 @@ double ShapeObject::polygonArea(Part& part) const
 }
 
 
-bool ShapeObject::isClockWise(Part &part) const
+bool ShapeObject::isClockWise(const Part &part) const
 {
     return polygonArea(part) < 0;
 }
 
 
-bool ShapeObject::isHole(unsigned int n) const
+// ray casting / even-odd rule
+bool ShapeObject::pointInPart(double x, double y, unsigned int partIndex) const
 {
-    return getPart(n).hole;
-}
+    const Part &part = getPart(partIndex);
 
-
-bool ShapeObject::pointInPart(double x, double y, unsigned int indexPart) const
-{
-    Part part = getPart(indexPart);
-
-    if (x < part.boundsPart.xmin || x > part.boundsPart.xmax
-            || y < part.boundsPart.ymin || y > part.boundsPart.ymax)
+    if (x < part.boundsPart.xmin || x > part.boundsPart.xmax ||
+        y < part.boundsPart.ymin || y > part.boundsPart.ymax)
     {
         return false;
     }
 
-    unsigned long offSet = part.offset;
-    unsigned long length = part.length;
-    unsigned long last = offSet + length - 1;
+    // A polygon part must contain at least three vertices.
+    if (part.length < 3)
+        return false;
 
-    bool  oddNodes = false;
+    const unsigned long offset = part.offset;
+    const unsigned long last = offset + part.length - 1;
+
+    bool oddNodes = false;
     unsigned long j = last;
-    for (unsigned long i = offSet; i <= last; i++)
+
+    for (unsigned long i = offset; i <= last; ++i)
     {
-        if (((vertices[i].y < y && vertices[j].y >= y) || (vertices[j].y < y && vertices[i].y >= y))
-            &&  (vertices[i].x <= x || vertices[j].x <= x))
+        const auto &vertexI = vertices[i];
+        const auto &vertexJ = vertices[j];
+
+        if ( ((vertexI.y < y && vertexJ.y >= y) || (vertexJ.y < y && vertexI.y >= y))
+            && (vertexI.x <= x || vertexJ.x <= x) )
         {
-            oddNodes^=(vertices[i].x+(y-vertices[i].y)/(vertices[j].y-vertices[i].y)*(vertices[j].x-vertices[i].x) < x);
+            oddNodes ^= (vertexI.x + (y - vertexI.y) /
+                        (vertexJ.y - vertexI.y) * (vertexJ.x - vertexI.x) < x);
         }
-        j=i;
+
+        j = i;
     }
 
     return oddNodes;
 }
 
 
-// --------------------------------------------------------------
-// WARNING: if the test point is on the border of the polygon,
-// this algorithm will deliver unpredictable results
-// --------------------------------------------------------------
 bool ShapeObject::pointInPolygon(double x, double y) const
 {
-    if (x < bounds.xmin || x > bounds.xmax || y < bounds.ymin || y > bounds.ymax)
+    // WARNING: if the test point is on the border of the polygon,
+    // this algorithm may deliver unpredictable results
+
+    if (x < bounds.xmin || x > bounds.xmax
+        || y < bounds.ymin || y > bounds.ymax)
     {
         return false;
     }
 
-    unsigned int nParts = getPartCount();
+    const unsigned int nParts = getPartCount();
 
-    // check first the holes
-    for (unsigned int indexPart = 0; indexPart < nParts; indexPart++)
+    // Check first the holes
+    // A point inside a hole is not inside the polygon
+    for (unsigned int partIndex  = 0; partIndex < nParts; ++partIndex)
     {
-        Part part = getPart(indexPart);
-        if (part.hole)
-        {
-            if (pointInPart(x, y, indexPart)) return false;
-        }
+        const Part& part = getPart(partIndex);
+
+        if (part.hole && pointInPart(x, y, partIndex))
+            return false;
     }
 
-    for (unsigned int indexPart = 0; indexPart < nParts; indexPart++)
+    for (unsigned int partIndex  = 0; partIndex < nParts; ++partIndex)
     {
-        Part part = getPart(indexPart);
-        if (! part.hole)
-        {
-            if (pointInPart(x, y, indexPart)) return true;
-        }
+        const Part& part = getPart(partIndex);
+
+        if (!part.hole && pointInPart(x, y, partIndex))
+            return true;
     }
 
     return false;
 }
 
 
-int ShapeObject::getIndexPart(double x, double y) const
+int ShapeObject::getOuterPartIndex(double x, double y) const
 {
-    if (x < bounds.xmin || x > bounds.xmax || y < bounds.ymin || y > bounds.ymax)
+    if (x < bounds.xmin || x > bounds.xmax ||
+        y < bounds.ymin || y > bounds.ymax)
     {
         return NODATA;
     }
 
-    unsigned int nrParts = getPartCount();
-    for (unsigned int indexPart = 0; indexPart < nrParts; indexPart++)
+    const unsigned int nrParts = getPartCount();
+
+    for (unsigned int partIndex = 0; partIndex < nrParts; ++partIndex)
     {
-        Part part = getPart(indexPart);
-        if (! part.hole)
-        {
-            if (pointInPart(x, y, indexPart))
-                return int(indexPart);
-        }
+        const Part &part = getPart(partIndex);
+
+        if (!part.hole && pointInPart(x, y, partIndex))
+            return static_cast<int>(partIndex);
     }
 
     return NODATA;

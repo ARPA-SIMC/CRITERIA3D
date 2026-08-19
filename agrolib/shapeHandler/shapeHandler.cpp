@@ -81,6 +81,120 @@ bool Crit3DShapeHandler::open(const std::string &filename, bool isWrite)
 {
     close();
 
+    const char *access = isWrite ? "r+b" : "rb";
+
+    m_handle = SHPOpen(filename.c_str(), access);
+    if (m_handle == nullptr)
+    {
+        errorString = "failed to open .shp file";
+        return false;
+    }
+
+    m_dbf = DBFOpen(filename.c_str(), access);
+    if (m_dbf == nullptr)
+    {
+        errorString = "failed to open .dbf file";
+        close();
+        return false;
+    }
+
+    SHPGetInfo(m_handle, &m_count, &m_type, m_minBound, m_maxBound);
+    m_fields = m_dbf->nFields;
+
+    if (m_count <= 0)
+    {
+        errorString = "Wrong shapefile (no shapes)";
+        close();
+        return false;
+    }
+
+    m_filepath = filename;
+
+    // Read DBF fields
+    std::vector<char> fieldName(XBASE_FLDNAME_LEN_READ + 1);
+
+    m_fieldsList.clear();
+    m_fieldsTypeList.clear();
+    m_fieldsList.reserve(m_fields);
+    m_fieldsTypeList.reserve(m_fields);
+
+    for (int i = 0; i < m_fields; ++i)
+    {
+        const DBFFieldType fieldType =
+            DBFGetFieldInfo(m_dbf, i, fieldName.data(), nullptr, nullptr);
+
+        m_fieldsList.emplace_back(fieldName.data());
+        m_fieldsTypeList.push_back(fieldType);
+    }
+
+    // Read projection information
+    std::filesystem::path prjPath(filename);
+    prjPath.replace_extension(".prj");
+
+    isWGS84Proj(prjPath.string());
+    setUTMzone(prjPath.string());
+
+    // Save holes inside their containing exterior parts
+    ShapeObject shape;
+
+    m_parts = 0;
+    m_holes = 0;
+
+    holes.clear();
+    holes.resize(static_cast<unsigned int>(m_count));
+
+    for (int shapeIndex = 0; shapeIndex < m_count; ++shapeIndex)
+    {
+        if (!getShape(shapeIndex, shape))
+            continue;
+
+        const auto &shapeParts = shape.getParts();
+        const unsigned int nrParts = shape.getPartCount();
+
+        m_parts += nrParts;
+        holes[shapeIndex].resize(nrParts);
+
+        for (unsigned int partIndex = 0;
+             partIndex < nrParts;
+             ++partIndex)
+        {
+            const auto &part = shapeParts[partIndex];
+
+            if (!part.hole)
+                continue;
+
+            // Use the first vertex of the hole to find its containing
+            // exterior part.
+            const unsigned long offset = part.offset;
+
+            if (offset >= shape.getVertexCount())
+                continue;
+
+            const auto &point = shape.getVertex(static_cast<unsigned int>(offset));
+
+            const int outerPartIndex = shape.getOuterPartIndex(point.x, point.y);
+
+            if (outerPartIndex == NODATA || outerPartIndex < 0 ||
+                static_cast<unsigned int>(outerPartIndex) >= nrParts)
+            {
+                continue;
+            }
+
+            holes[shapeIndex][static_cast<unsigned int>(outerPartIndex)].push_back(partIndex);
+
+            ++m_holes;
+        }
+    }
+
+    return true;
+}
+
+
+/*
+bool Crit3DShapeHandler::open_old(const std::string &filename, bool isWrite)
+{
+    close();
+
     std::string pszAccess = "rb";   // default: only read
     if (isWrite)
         pszAccess = "r+b";          // read/write
@@ -160,8 +274,8 @@ bool Crit3DShapeHandler::open(const std::string &filename, bool isWrite)
                 unsigned long offset = shapeParts[j].offset;
                 if (offset < myShape.getVertexCount())
                 {
-                    Point<double> point = myShape.getVertex(offset);
-                    int index = myShape.getIndexPart(point.x, point.y);
+                    const auto& point = myShape.getVertex(offset);
+                    int index = myShape.getOuterPartIndex(point.x, point.y);
                     if (index != NODATA && index >= 0 && static_cast<unsigned>(index) < nrParts)
                     {
                         holes[i][index].push_back(j);
@@ -174,6 +288,7 @@ bool Crit3DShapeHandler::open(const std::string &filename, bool isWrite)
 
     return true;
 }
+*/
 
 
 bool Crit3DShapeHandler::getBounds(double &xMin, double &yMin, double &xMax, double &yMax) const
@@ -306,10 +421,14 @@ bool Crit3DShapeHandler::setUTMzone(const std::string &prjFileName)
 
 bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape) const
 {
-    if ((m_handle == nullptr) || (m_dbf == nullptr))
+    if (m_handle == nullptr || m_dbf == nullptr
+        || index < 0 || index >= m_count)
         return false;
 
     SHPObject *obj = SHPReadObject(m_handle, index);
+    if (obj == nullptr)
+        return false;
+
     shape.assign(obj);
     SHPDestroyObject(obj);
 
@@ -666,7 +785,26 @@ void Crit3DShapeHandler::packSHP(std::string newFile)
     SHPClose(hSHP);
 }
 
+const std::vector<unsigned int>& Crit3DShapeHandler::getHoles(int shapeNumber, int partNumber) const
+{
+    static const std::vector<unsigned int> emptyVector;
 
+    if (shapeNumber < 0 || shapeNumber >= static_cast<int>(holes.size()))
+    {
+        return emptyVector;
+    }
+
+    const auto& shapeHoles = holes[static_cast<size_t>(shapeNumber)];
+
+    if (partNumber < 0 || partNumber >= static_cast<int>(shapeHoles.size()))
+    {
+        return emptyVector;
+    }
+
+    return shapeHoles[static_cast<size_t>(partNumber)];
+}
+
+/*
 std::vector<unsigned int> Crit3DShapeHandler::getHoles(int shapeNumber, int partNumber) const
 {
     if (shapeNumber > m_count || partNumber > int(holes[shapeNumber].size()))
@@ -676,7 +814,7 @@ std::vector<unsigned int> Crit3DShapeHandler::getHoles(int shapeNumber, int part
     }
 
     return holes[unsigned(shapeNumber)][unsigned(partNumber)];
-}
+}*/
 
 
 

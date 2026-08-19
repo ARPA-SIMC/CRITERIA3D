@@ -47,9 +47,6 @@
     #include <vector>
 
 
-    /*!
-     * \brief The RasterObject class
-     */
     class RasterUtmObject : public MapGraphicsObject
     {
         Q_OBJECT
