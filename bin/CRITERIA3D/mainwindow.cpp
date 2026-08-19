@@ -2993,7 +2993,7 @@ void MainWindow::on_actionPoints_deactivate_from_point_list_triggered()
 
 void MainWindow::on_actionPoints_activate_with_criteria_triggered()
 {
-    if (myProject.setActiveStateWithCriteria(true))
+    if (myProject.activePointsWithCriteria(true))
     {
         // reload meteoPoint, point properties table is changed
         QString dbName = myProject.dbPointsFileName;
@@ -3005,7 +3005,7 @@ void MainWindow::on_actionPoints_activate_with_criteria_triggered()
 
 void MainWindow::on_actionPoints_deactivate_with_criteria_triggered()
 {
-    if (myProject.setActiveStateWithCriteria(false))
+    if (myProject.activePointsWithCriteria(false))
     {
         // reload meteoPoint, point properties table is changed
         QString dbName = myProject.dbPointsFileName;
