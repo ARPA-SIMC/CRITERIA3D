@@ -2381,8 +2381,15 @@ bool Crit3DProject::saveRothCState(const QString &currentStatePath)
         return false;
     }
 
+    if (!gis::writeEsriGrid((rothCPath+"/SOC").toStdString(), rothCModel.map.getSOC(), errorStr))
+    {
+        logError("Error saving soil organic carbon map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
     return true;
 }
+
 
 bool Crit3DProject::saveHydrallState(const QString &currentStatePath)
 {
@@ -2721,7 +2728,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, rothCModel.map.soilOrganicMatter, DEM.header, aggrAverage, 0.1f);
 
         processes.setComputeRothC(true);
-        this->isRothCInitialized = true;
+        isRothCInitialized = true;
     }
 
     //hydrall model

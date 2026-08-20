@@ -222,9 +222,6 @@ Crit3DRothCplusplus::Crit3DRothCplusplus()
 
 void Crit3DRothCplusplus::initialize()
 {
-    BICMapFolderName = "";
-    temperatureMapFolderName = "";
-
     //TODO qui inizializzazione dei pool, per ora come fare? Inizializzato su python, copiato i pool all'equilibrio
     decomposablePlantMatter = 0.14547;
     resistantPlantMatter = 5.67812;
