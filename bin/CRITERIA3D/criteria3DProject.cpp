@@ -2419,13 +2419,13 @@ bool Crit3DProject::saveRothCState(const QString &currentStatePath)
         return false;
     }
 
-    if (!gis::writeEsriGrid((rothCPath+"/monthlyET0").toStdString(), monthlyET0, errorStr))
+    if (!gis::writeEsriGrid((rothCPath+"/monthlyET0").toStdString(), &monthlyET0, errorStr))
     {
         logError("Error saving monthly ET0 map: " + QString::fromStdString(errorStr));
         return false;
     }
 
-    if (!gis::writeEsriGrid((rothCPath+"/monthlyPrec").toStdString(), monthlyPrec, errorStr))
+    if (!gis::writeEsriGrid((rothCPath+"/monthlyPrec").toStdString(), &monthlyPrec, errorStr))
     {
         logError("Error saving monthly prec map: " + QString::fromStdString(errorStr));
         return false;
