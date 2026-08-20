@@ -1275,9 +1275,15 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
                 return false;
             }
 
-            //rothC maps update must be done hourly, otherwise ETReal data are not stored
+            // RothC maps update must be done hourly, otherwise ETReal data are not stored
             if (processes.computeRothC || processes.computeHydrall)
-                updateETAndPrecMaps();
+            {
+                if (! updateETAndPrecMaps())
+                {
+                    logError();
+                    return false;
+                }
+            }
 
             // output points
             if (isSaveOutputPoints() && currentSeconds == 3600)
@@ -1327,12 +1333,36 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 }
 
 
-void Crit3DProject::updateETAndPrecMaps()
+bool Crit3DProject::updateETAndPrecMaps()
 {
-    int nrRows = DEM.header->nrRows;
-    int nrCols = DEM.header->nrCols;
+    // check
+    if (processes.computeHydrall)
+    {
+        if (hydrallMaps.yearlyET0 == nullptr || hydrallMaps.yearlyPrec == nullptr)
+        {
+            errorString = "Missing yealy maps for Hydrall";
+            return false;
+        }
 
-    for (int row = 0; row < nrRows; row++) //valuta se usare surfaceIndex o cosa
+        if (! hydrallMaps.yearlyET0->isLoaded || ! hydrallMaps.yearlyPrec->isLoaded)
+        {
+            errorString = "Missing yealy maps for Hydrall";
+            return false;
+        }
+    }
+    if (processes.computeRothC)
+    {
+        if (! monthlyET0.isLoaded || ! monthlyPrec.isLoaded)
+        {
+            errorString = "Missing monthly maps for RothC";
+            return false;
+        }
+    }
+
+    const int nrRows = DEM.header->nrRows;
+    const int nrCols = DEM.header->nrCols;
+
+    for (int row = 0; row < nrRows; row++)  //valuta se usare surfaceIndex o cosa
     {
         for (int col = 0; col < nrCols; col++)
         {
@@ -1363,6 +1393,8 @@ void Crit3DProject::updateETAndPrecMaps()
             }
         }
     }
+
+    return true;
 }
 
 
@@ -2387,6 +2419,18 @@ bool Crit3DProject::saveRothCState(const QString &currentStatePath)
         return false;
     }
 
+    if (!gis::writeEsriGrid((rothCPath+"/monthlyET0").toStdString(), monthlyET0, errorStr))
+    {
+        logError("Error saving monthly ET0 map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((rothCPath+"/monthlyPrec").toStdString(), monthlyPrec, errorStr))
+    {
+        logError("Error saving monthly prec map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
     return true;
 }
 
@@ -2673,7 +2717,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         totalMassBalanceError = 0.;
     }
 
-    //rothC model
+    // RothC model
     QString rothCPath = statePath + "/rothC";
     QDir rothCDir(rothCPath);
     gis::Crit3DRasterGrid *tmpRaster = new gis::Crit3DRasterGrid();
@@ -2726,6 +2770,24 @@ bool Crit3DProject::loadModelState(QString statePath)
             return false;
         }
         gis::resampleGrid(*tmpRaster, rothCModel.map.soilOrganicMatter, DEM.header, aggrAverage, 0.1f);
+
+        fileName = rothCPath.toStdString() + "/monthlyET0";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong RothC monthly ET0 map:\n" + QString::fromStdString(errorStr);
+            monthlyET0.isLoaded = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, &monthlyET0, DEM.header, aggrAverage, 0.1f);
+
+        fileName = rothCPath.toStdString() + "/monthlyPrec";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong RothC monthly Prec map:\n" + QString::fromStdString(errorStr);
+            monthlyPrec.isLoaded = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, &monthlyPrec, DEM.header, aggrAverage, 0.1f);
 
         processes.setComputeRothC(true);
         isRothCInitialized = true;

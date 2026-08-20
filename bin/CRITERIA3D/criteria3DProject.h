@@ -86,7 +86,7 @@
         bool loadRothCBICMaps();
         double getRothCClayContent(int soilIndex);
         double getRothCYield(int row, int col);
-        void updateETAndPrecMaps();
+        bool updateETAndPrecMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
 
         void clearHydrallMaps();
