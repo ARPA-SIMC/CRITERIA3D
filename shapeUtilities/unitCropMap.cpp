@@ -23,21 +23,21 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
         return false;
     }
 
-    // create reference and value raster
-    gis::Crit3DRasterGrid rasterRef;
-    gis::Crit3DRasterGrid rasterVal;
-    initializeRasterFromShape(shapeUCM, rasterRef, cellSize);
-    initializeRasterFromShape(shapeUCM, rasterVal, cellSize);
-
     //FormInfo formInfo;
 
-    // CROP (reference shape)
+    // Unit Crop Map (reference shape)
     //if (showInfo) formInfo.start("[1/8] Rasterize crop (reference)...", 0);
-    fillRasterWithShapeNumber(rasterRef, shapeUCM);
+    gis::Crit3DRasterGrid rasterRef;
+    initializeRasterFromShape(shapeUCM, rasterRef, cellSize);
+    if (! fillRasterWithShapeIndex(rasterRef, shapeUCM))
+        return false;
 
-    // meteo grid
+    // meteo grid (value shape)
     //if (showInfo) formInfo.setText("[2/8] Rasterize meteo grid...");
-    fillRasterWithShapeNumber(rasterVal, shapeMeteo);
+    gis::Crit3DRasterGrid rasterVal;
+    initializeRasterFromShape(shapeMeteo, rasterVal, cellSize);
+    if (! fillRasterWithShapeIndex(rasterVal, shapeMeteo))
+        return false;
 
     //if (showInfo) formInfo.setText("[3/8] Compute matrix crop/meteo...");
     std::vector <int> vectorNull;
@@ -50,7 +50,8 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
     if (isOk)
     {
         //if (showInfo) formInfo.setText("[5/8] Rasterize soil...");
-        fillRasterWithShapeNumber(rasterVal, shapeSoil);
+        if (! fillRasterWithShapeIndex(rasterVal, shapeSoil))
+            return false;
 
         //if (showInfo) formInfo.setText("[6/8] Compute matrix crop/soil...");
         matrix = computeMatrixAnalysis(shapeUCM, shapeSoil, rasterRef, rasterVal, vectorNull);

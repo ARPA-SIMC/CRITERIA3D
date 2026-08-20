@@ -109,8 +109,8 @@
 
         double getCropWaterDeficit(const std::vector<soil::Crit1DLayer> & soilLayers);
 
-        double computeTranspiration(double maxTranspiration, const std::vector<soil::Crit1DLayer>& soilLayers,
-                                    double& waterStress, double &waterExcessStress);
+        double computeTranspiration(const double maxTranspiration, const std::vector<soil::Crit1DLayer>& soilLayers,
+                                    double& transpStressOnly, double& transpExcessOnly);
     };
 
 

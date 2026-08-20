@@ -1336,60 +1336,65 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
 }
 
 
-bool Project::newOutputPointsDB(QString dbName)
+bool Project::newOutputPointsDB(const QString &dbName)
 {
-    if (dbName == "") return false;
+    if (dbName.isEmpty())
+        return false;
 
     closeOutputPointsDB();
-    currentDbOutputFileName = dbName;
 
-    dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
-    QFile outputDb(dbName);
-    if (outputDb.exists())
+    const QString dbFileName = getCompleteFileName(dbName, PATH_OUTPUT);
+
+    if (QFile::exists(dbFileName) && !QFile::remove(dbFileName))
     {
-        if (!outputDb.remove())
-        {
-            logError("Failed to remove existing output db.");
-            currentDbOutputFileName = "";
-            return false;
-        }
+        logError(tr("Failed to remove existing output database:\n%1")
+                     .arg(dbFileName));
+        return false;
     }
 
-    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbName);
-    if (outputPointsDbHandler->getErrorString() != "")
+    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbFileName);
+
+    if (! outputPointsDbHandler->getErrorString().isEmpty())
     {
-        logError("Function newOutputPointsDB:\n" + dbName + "\n" + outputPointsDbHandler->getErrorString());
+        logError("Function newOutputPointsDB:\n"
+                + dbFileName + "\n"
+                + outputPointsDbHandler->getErrorString());
         closeOutputPointsDB();
         return false;
     }
 
+    currentDbOutputFileName = dbName;
     return true;
 }
 
 
-bool Project::loadOutputPointsDB(QString dbName)
+bool Project::loadOutputPointsDB(const QString &dbName)
 {
-    if (dbName == "")
+    if (dbName.isEmpty())
         return false;
+
+    const QString dbFileName = getCompleteFileName(dbName, PATH_OUTPUT);
 
     closeOutputPointsDB();
 
-    currentDbOutputFileName = dbName;
-    dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
-    if (! QFile(dbName).exists())
+    if (! QFile::exists(dbFileName))
     {
-        logError("Output points db does not exists:\n" + dbName);
+        logError(tr("Output points database does not exist:\n%1")
+                     .arg(dbFileName));
         return false;
     }
 
-    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbName);
-    if (outputPointsDbHandler->getErrorString() != "")
+    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbFileName);
+    if (! outputPointsDbHandler->getErrorString().isEmpty())
     {
-        logError("Function loadOutputPointsDB:\n" + dbName + "\n" + outputPointsDbHandler->getErrorString());
+        logError("Function loadOutputPointsDB:\n"
+                 + dbFileName + "\n"
+                 + outputPointsDbHandler->getErrorString());
         closeOutputPointsDB();
         return false;
     }
 
+    currentDbOutputFileName = dbFileName;
     return true;
 }
 
@@ -3867,43 +3872,38 @@ float Project::meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeI
 }
 
 
-QString Project::getCompleteFileName(QString fileName, QString secondaryPath)
+QString Project::getCompleteFileName(const QString& inputFileName, const QString& secondaryPath) const
 {
-    if (fileName.isEmpty()) return fileName;
+    if (inputFileName.isEmpty())
+        return inputFileName;
 
-    if (getFilePath(fileName) == "")
-    {
-        QString completeFileName = this->getDefaultPath() + secondaryPath + fileName;
-        return QDir().cleanPath(completeFileName);
-    }
-    else if (fileName.at(0) == '.')
-    {
-        QString completeFileName = this->getProjectPath() + fileName;
-        return QDir().cleanPath(completeFileName);
-    }
-    else
-    {
-        return fileName;
-    }
+    // relative path
+    if (inputFileName.startsWith('.'))
+        return QDir::cleanPath(getProjectPath() + inputFileName);
+
+    // only filename: default path
+    if (QFileInfo(inputFileName).fileName() == inputFileName)
+        return QDir::cleanPath(getDefaultPath() + secondaryPath + inputFileName);
+
+    // absolute path
+    return inputFileName;
 }
 
 
-QString Project::getRelativePath(QString fileName) const
+QString Project::getRelativePath(const QString& fileName) const
 {
-    if (! fileName.isEmpty() && fileName.at(0) != '.' && getFilePath(fileName) != "")
+    if (fileName.isEmpty() || fileName.startsWith('.') || getFilePath(fileName).isEmpty())
     {
-        QDir projectDir(getProjectPath());
-        QString relativePath = projectDir.relativeFilePath(fileName);
-        if (relativePath != fileName)
-        {
-            fileName = relativePath;
-            if (fileName.at(0) != '.')
-            {
-                fileName = "./" + relativePath;
-            }
-        }
+        return fileName;
     }
-    return fileName;
+
+    QDir projectDir(getProjectPath());
+    QString relativePath = projectDir.relativeFilePath(fileName);
+
+    if (! relativePath.startsWith('.'))
+        relativePath.prepend("./");
+
+    return relativePath;
 }
 
 
@@ -4081,6 +4081,29 @@ void Project::saveProjectSettings()
 
     projectSettings->sync();
 }
+
+
+void Project::saveProjectField(const QString &fieldStr, const QString &valueStr)
+{
+    if (fieldStr.isEmpty())
+        return;
+
+    projectSettings->beginGroup("project");
+
+        if (fieldStr == "output_points")
+        {
+            outputPointsFileName = valueStr;
+            projectSettings->setValue("output_points", getRelativePath(outputPointsFileName));
+        }
+        else if (fieldStr == "output_db")
+        {
+            currentDbOutputFileName = valueStr;
+            projectSettings->setValue("output_db", getRelativePath(currentDbOutputFileName));
+        }
+
+    projectSettings->endGroup();
+}
+
 
 void Project::saveRadiationParameters()
 {
@@ -4895,7 +4918,7 @@ bool Project::setActiveStateSelectedPoints(bool isActive)
         return false;
     }
 
-    if (!meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive))
+    if (! meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive))
     {
         logError("Failed to activate/deactivate selected points:\n" + meteoPointsDbHandler->getErrorString());
         return false;
@@ -4915,7 +4938,7 @@ bool Project::setActiveStatePointList(QString fileName, bool isActive)
         return false;
     }
 
-    if (!meteoPointsDbHandler->setActiveStatePointList(pointList, isActive))
+    if (! meteoPointsDbHandler->setActiveStatePointList(pointList, isActive))
     {
         logError("Failed to activate/deactivate point list:\n" + meteoPointsDbHandler->getErrorString());
         return false;
@@ -4936,7 +4959,57 @@ bool Project::setActiveStatePointList(QString fileName, bool isActive)
 }
 
 
-bool Project::setActiveStateWithCriteria(bool isActive)
+bool Project::selectPointsWithDemDistance(const QString& operation, double value, QList<QString>& pointList)
+{
+    if(! DEM.isLoaded)
+    {
+        logError(ERROR_STR_MISSING_DEM);
+        return false;
+    }
+
+    pointList.clear();
+
+    for (size_t i = 0; i < meteoPoints.size(); ++i)
+    {
+        const double distance = gis::closestDistanceFromGrid(meteoPoints[i].point, DEM);
+        const QString idString = QString::fromStdString(meteoPoints[i].id);
+
+        if ( (operation == ">" && distance > value)
+             || (operation == "<" && distance < value)
+             || (operation == "=" && isEqual(distance, value))
+             || (operation == "!=" && ! isEqual(distance, value)) )
+        {
+            pointList.append(idString);
+        }
+    }
+
+    return true;
+}
+
+
+bool Project::selectPointsWithValues(const QString& operation, double threshold, QList<QString>& pointList)
+{
+    pointList.clear();
+
+    for (size_t i = 0; i < meteoPoints.size(); ++i)
+    {
+        const double value = meteoPoints[i].currentValue;
+        const QString idString = QString::fromStdString(meteoPoints[i].id);
+
+        if ( (operation == ">" && value > threshold)
+             || (operation == "<" && value < threshold)
+             || (operation == "=" && isEqual(value, threshold))
+             || (operation == "!=" && ! isEqual(value, threshold)) )
+        {
+            pointList.append(idString);
+        }
+    }
+
+    return true;
+}
+
+
+bool Project::activePointsWithCriteria(bool isActive)
 {
     if (meteoPointsDbHandler == nullptr)
     {
@@ -4944,87 +5017,154 @@ bool Project::setActiveStateWithCriteria(bool isActive)
         return false;
     }
 
-    DialogSelectionMeteoPoint dialogPointSelection("Active", isActive, meteoPointsDbHandler);
+    DialogSelectionMeteoPoint dialogPointSelection("active", isActive, meteoPointsDbHandler);
+
     if (dialogPointSelection.result() != QDialog::Accepted)
         return false;
 
-    QString selection = dialogPointSelection.getSelection();
-    QString operation = dialogPointSelection.getOperation();
-    QString item = dialogPointSelection.getItem();
+    const QString selection = dialogPointSelection.getSelection();
+    const QString operation = dialogPointSelection.getOperation();
+    const QString item = dialogPointSelection.getItem();
+
+    if (selection == "DEM distance [m]")
+    {
+        bool ok = false;
+        const double distance = item.toDouble(&ok);
+
+        if (!ok)
+        {
+            logWarning("Invalid DEM distance.");
+            return false;
+        }
+
+        QList<QString> pointList;
+
+        if (! selectPointsWithDemDistance(operation, distance, pointList))
+            return false;
+
+        if (! meteoPointsDbHandler->setActiveStatePointList(pointList, isActive))
+        {
+            logError("Failed to activate/deactivate points selected:\n"
+                     + meteoPointsDbHandler->getErrorString());
+            return false;
+        }
+
+        return true;
+    }
+
+    if (selection == "current value")
+    {
+        logWarning("Operations involving values are permitted only within the selection.");
+        return false;
+    }
+
     QString condition;
 
-    if (operation != "Like")
+    if (operation == "Like")
     {
-        condition = selection + " " + operation + " '" +item +"'";
+        condition = selection + " " +
+                    operation + " '%" +
+                    item + "%'";
     }
     else
     {
-        condition = selection + " " + operation + " '%" +item +"%'";
+        condition = selection + " " +
+                    operation + " '" +
+                    item + "'";
     }
 
-    if (selection != "DEM distance [m]")
+    if (! meteoPointsDbHandler->setActiveStateIfCondition(isActive, condition))
     {
-        meteoPointsDbHandler->setActiveStateIfCondition(isActive, condition);
+        logError( "Failed to activate/deactivate points:\n"
+                  + meteoPointsDbHandler->getErrorString());
+        return false;
+    }
+
+    return true;
+}
+
+
+bool Project::selectPointsWithCriteria(bool isSelect, bool isShowVariable)
+{
+    if (! meteoPointsLoaded)
+    {
+        logError(ERROR_STR_MISSING_DB);
+        return false;
+    }
+
+    DialogSelectionMeteoPoint dialogPointSelection("select", isSelect, meteoPointsDbHandler);
+
+    if (dialogPointSelection.result() != QDialog::Accepted)
+        return false;
+
+    const QString selection = dialogPointSelection.getSelection();
+    const QString operation = dialogPointSelection.getOperation();
+    const QString item = dialogPointSelection.getItem();
+
+    QList<QString> pointList;
+
+    if (selection == "DEM distance [m]")
+    {
+        bool ok = false;
+        const double distance = item.toDouble(&ok);
+
+        if (!ok)
+        {
+            logWarning("Invalid DEM distance.");
+            return false;
+        }
+
+        if (! selectPointsWithDemDistance(operation, distance, pointList))
+            return false;
+    }
+    else if (selection == "current value")
+    {
+        bool ok = false;
+        const float threshold = item.toFloat(&ok);
+
+        if (!ok)
+        {
+            logWarning("Invalid value threshold.");
+            return false;
+        }
+
+        if (! selectPointsWithValues(operation, threshold, pointList))
+            return false;
     }
     else
     {
-        if(!DEM.isLoaded)
+        QString condition;
+
+        if (operation == "Like")
         {
-            logError("No DEM open");
-            return false;
+            condition = selection + " " +
+                        operation + " '%" +
+                        item + "%'";
+        }
+        else
+        {
+            condition = selection + " " +
+                        operation + " '" +
+                        item + "'";
         }
 
-        QList<QString> points;
-        setProgressBar("Checking distance...", (int)meteoPoints.size());
-
-        for (size_t i = 0; i < meteoPoints.size(); i++)
+        if (! meteoPointsDbHandler->getPointListWithCriteria(pointList, condition))
         {
-            updateProgressBar(int(i));
-            if(! meteoPoints[i].active)
-            {
-                float distance = gis::closestDistanceFromGrid(meteoPoints[i].point, DEM);
-                if (operation == "=")
-                {
-                    if (isEqual(distance, item.toFloat()))
-                    {
-                        points.append(QString::fromStdString(meteoPoints[i].id));
-                    }
-                }
-                else if (operation == "!=")
-                {
-                    if (! isEqual(distance, item.toFloat()))
-                    {
-                        points.append(QString::fromStdString(meteoPoints[i].id));
-                    }
-                }
-                else if (operation == ">")
-                {
-                    if (distance > item.toFloat())
-                    {
-                        points.append(QString::fromStdString(meteoPoints[i].id));
-                    }
-                }
-                else if (operation == "<")
-                {
-                    if (distance < item.toFloat())
-                    {
-                        points.append(QString::fromStdString(meteoPoints[i].id));
-                    }
-                }
-            }
-        }
-        closeProgressBar();
-
-        if (points.isEmpty())
-        {
-            logError("No points fit your requirements.");
+            logError(meteoPointsDbHandler->getErrorString());
             return false;
         }
-        if (!meteoPointsDbHandler->setActiveStatePointList(points, isActive))
-        {
-            logError("Failed to activate/deactivate points selected:\n" + meteoPointsDbHandler->getErrorString());
-            return false;
-        }
+    }
+
+    if (pointList.isEmpty())
+    {
+        logWarning("No point matches your requirements.");
+        return false;
+    }
+
+    if (! selectPointList(pointList, isSelect, isShowVariable))
+    {
+        logWarning("No points to select/deselect");
+        return false;
     }
 
     return true;
@@ -5211,7 +5351,7 @@ bool Project::loadOutputPointList(QString fileName)
         return false;
     }
 
-    if (!loadOutputPointListCsv(csvFileName, outputPoints, gisSettings.utmZone, errorString))
+    if (! loadOutputPointListCsv(csvFileName, outputPoints, gisSettings.utmZone, errorString))
     {
         logError("Error importing output list: " + errorString);
         errorString.clear();
@@ -5221,9 +5361,10 @@ bool Project::loadOutputPointList(QString fileName)
     return true;
 }
 
+
 bool Project::writeOutputPointList(QString fileName)
 {
-    if (fileName == "")
+    if (fileName.isEmpty())
     {
         logError("Missing csv filename");
         return false;
@@ -5236,7 +5377,7 @@ bool Project::writeOutputPointList(QString fileName)
         return false;
     }
 
-    if (!writeOutputPointListCsv(csvFileName, outputPoints, errorString))
+    if (! writeOutputPointListCsv(csvFileName, outputPoints, errorString))
     {
         logError("Error writing output list to csv: " + errorString);
         errorString.clear();
@@ -5245,6 +5386,7 @@ bool Project::writeOutputPointList(QString fileName)
 
     return true;
 }
+
 
 void Project::setComputeOnlyPoints(bool value)
 {
@@ -6372,108 +6514,6 @@ bool Project::selectPointList(const QList<QString> &pointList, bool isSelect, bo
     }
 
     return (nrPoints > 0);
-}
-
-
-bool Project::setSelectedStateWithCriteria(bool isSelect, bool isShowVariable)
-{
-    if (! meteoPointsLoaded)
-    {
-        logError(ERROR_STR_MISSING_DB);
-        return false;
-    }
-
-    DialogSelectionMeteoPoint dialogPointSelection("Select", isSelect, meteoPointsDbHandler);
-    if (dialogPointSelection.result() != QDialog::Accepted)
-        return false;
-
-    QString selection = dialogPointSelection.getSelection();
-    QString operation = dialogPointSelection.getOperation();
-    QString item = dialogPointSelection.getItem();
-
-    QString condition;
-    QList<QString> pointsList;
-
-    if (operation == "Like")
-    {
-        condition = selection + " " + operation + " '%" + item + "%'";
-    }
-    else
-    {
-        condition = selection + " " + operation + " '" + item + "'";
-    }
-
-    if (selection != "DEM distance [m]")
-    {
-        if (! meteoPointsDbHandler->getPointListWithCriteria(pointsList, condition))
-        {
-            logError(meteoPointsDbHandler->getErrorString());
-            return false;
-        }
-    }
-    else
-    {
-        if (! DEM.isLoaded)
-        {
-            logError(ERROR_STR_MISSING_DEM);
-            return false;
-        }
-
-        setProgressBar("Checking distance...", (int)meteoPoints.size());
-
-        for (size_t i = 0; i < meteoPoints.size(); i++)
-        {
-            updateProgressBar(int(i));
-            if (meteoPoints[i].selected)
-                continue;
-
-            float distance = gis::closestDistanceFromGrid(meteoPoints[i].point, DEM);
-            if (operation == "=")
-            {
-                if (isEqual(distance, item.toFloat()))
-                {
-                    pointsList.append(QString::fromStdString(meteoPoints[i].id));
-                }
-            }
-            else if (operation == "!=")
-            {
-                if (! isEqual(distance, item.toFloat()))
-                {
-                    pointsList.append(QString::fromStdString(meteoPoints[i].id));
-                }
-            }
-            else if (operation == ">")
-            {
-                if (distance > item.toFloat())
-                {
-                    pointsList.append(QString::fromStdString(meteoPoints[i].id));
-                }
-            }
-            else if (operation == "<")
-            {
-                if (distance < item.toFloat())
-                {
-                    pointsList.append(QString::fromStdString(meteoPoints[i].id));
-                }
-            }
-        }
-
-        closeProgressBar();
-    }
-
-    if (pointsList.isEmpty())
-    {
-        logWarning("No point matches your requirements.");
-        return false;
-    }
-
-    if (! selectPointList(pointsList, isSelect, isShowVariable))
-    {
-        logWarning("No points to select");
-        return false;
-    }
-
-    return true;
 }
 
 

@@ -1,4 +1,5 @@
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "gis.h"
 #include "criteriaOutputProject.h"
 #include "criteriaOutputElaboration.h"
@@ -404,7 +405,7 @@ bool CriteriaOutputProject::readSettings()
         outputAggrCsvFileName += ".csv";
     }
 
-    if (outputAggrCsvFileName == outputCsvFileName)
+    if (!outputCsvFileName.isEmpty() && outputAggrCsvFileName == outputCsvFileName)
     {
         projectError = "'aggregation_output' is equal to 'csv_output'";
         return false;
@@ -527,19 +528,16 @@ int CriteriaOutputProject::createCsvFile()
 
     logger.writeInfo("Write csv...");
 
-    // write output
-    QString idCase;
-    QString idCropClass;
-    int step = std::max(1, int(compUnitList.size() * 0.01));
-
     // list of data tables
     QList<QString> dataTables = dbData.tables();
 
+    // write output
+    int step = std::max(1, int(compUnitList.size() * 0.01));
     int totalMissingData = 0;
     for (unsigned int i=0; i < compUnitList.size(); i++)
     {
-        idCase = compUnitList[i].idCase;
-        idCropClass = compUnitList[i].idCropClass;
+        const QString idCase = compUnitList[i].idCase;
+        const QString idCropClass = compUnitList[i].idCropClass;
 
         int nrMissingData;
         myResult = writeCsvOutputUnit(idCase, idCropClass, dataTables, dbData, dbCrop, dbClimateData,
@@ -794,10 +792,17 @@ int CriteriaOutputProject::createShapeFile()
 #endif
 
 
+int CriteriaOutputProject::fail(int errorType, const QString& errorString)
+{
+    projectError = errorString;
+    return errorType;
+}
+
+
 /*! \brief createAggregationFile
  *  create aggregation (shapefile and .csv file)
  *  \param isReorder: enable/disable csv reorder
- *  \return CRIT1D_OK if aggregation is ok
+ *  \return CRIT1D_OK if aggregation is ok, error othewise
  */
 int CriteriaOutputProject::createAggregationFile(bool isReorder)
 {
@@ -805,9 +810,11 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
 
     // check aggregation file
     QString aggregationPath = getFilePath(outputAggrCsvFileName);
-    if (! QDir(aggregationPath).exists())
+
+    if (! QDir(aggregationPath).exists() &&
+        ! QDir().mkpath(aggregationPath))
     {
-        QDir().mkdir(aggregationPath);
+        return fail(ERROR_WRONGPARAMETER, "Cannot create directory: " + aggregationPath);
     }
 
     if (QFile(outputAggrCsvFileName).exists())
@@ -817,51 +824,36 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
     }
 
     if (aggregationShapeField.isNull() || aggregationShapeField.isEmpty())
-    {
-        projectError = "Missing aggregation shape field.";
-        return ERROR_SETTINGS_MISSINGDATA;
-    }
+        return fail(ERROR_SETTINGS_MISSINGDATA, "Missing aggregation shape_field");
 
     // check aggregation cell size
-    bool ok;
-    int cellSize = aggregationCellSize.toInt(&ok, 10);
-    if (! ok)
-    {
-        projectError = "Invalid aggregation_cellsize: " + aggregationCellSize;
-        return ERROR_WRONGPARAMETER;
-    }
+    bool isNumber;
+    const int cellSize = aggregationCellSize.toInt(&isNumber, 10);
+    if (! isNumber)
+        return fail(ERROR_WRONGPARAMETER, "Invalid aggregation_cellsize: " + aggregationCellSize);
 
     // check aggregation threshold
-    double threshold = aggregationThreshold.toDouble(&ok);
-    if (! ok)
-    {
-        projectError = "Invalid aggregation_threshold: " + aggregationThreshold;
-        return ERROR_WRONGPARAMETER;
-    }
+    double threshold = aggregationThreshold.toDouble(&isNumber);
+    if (! isNumber)
+        return fail(ERROR_WRONGPARAMETER, "Invalid aggregation_threshold: " + aggregationThreshold);
+
     if ((threshold < 0) || (threshold > 1))
-    {
-        projectError = "Invalid aggregation_threshold (must be between 0 and 1): " + aggregationThreshold;
-        return ERROR_WRONGPARAMETER;
-    }
+        return fail(ERROR_WRONGPARAMETER, "Invalid aggregation_threshold (must be between 0 and 1): " + aggregationThreshold);
 
     // check shapefile
     if (! QFile(outputShapeFileName).exists())
     {
         // create shapefile
         int result = createShapeFile();
+
         if (result != CRIT1D_OK)
-        {
             return result;
-        }
     }
 
     Crit3DShapeHandler shapeVal, shapeRef;
 
     if (! shapeVal.open(outputShapeFileName.toStdString(), false))
-    {
-        projectError = "Load shapefile failed: " + outputShapeFileName;
-        return ERROR_SHAPEFILE;
-    }
+        return fail(ERROR_SHAPEFILE, "Load shapefile failed: " + outputShapeFileName);
 
     QFileInfo aggrFileInfo(outputAggrCsvFileName);
     QString outputAggrShapePath = outputShapeFilePath + "/" + aggrFileInfo.baseName();
@@ -869,56 +861,33 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
     logger.writeInfo("Aggregation shapefile: " + aggregationShapeFileName);
 
     if (! QFile(aggregationShapeFileName).exists())
-    {
-        projectError = aggregationShapeFileName + " not exists";
-        return ERROR_SHAPEFILE;
-    }
+        return fail(ERROR_SHAPEFILE, aggregationShapeFileName + " not exists.");
 
     QString outputAggrShapeFileName = cloneShapeFile(aggregationShapeFileName, outputAggrShapePath);
     if (outputAggrShapeFileName.isEmpty())
-    {
-        projectError = "Error creating shapefile: " + outputAggrShapePath;
-        return ERROR_SHAPEFILE;
-    }
+        return fail(ERROR_SHAPEFILE,  "Error creating shapefile: " + outputAggrShapePath);
 
     if (! shapeRef.open(outputAggrShapeFileName.toStdString(), true))
-    {
-        projectError = "Load shapefile failed: " + outputAggrShapeFileName;
-        return ERROR_SHAPEFILE;
-    }
+        return fail(ERROR_SHAPEFILE,  "Load shapefile failed: " + outputAggrShapeFileName);
 
     // check shape type
     if (shapeRef.getTypeString() != shapeVal.getTypeString() || shapeRef.getTypeString() != "2D Polygon" )
-    {
-        projectError = "shape type error: not 2D Polygon type" ;
-        return ERROR_SHAPEFILE;
-    }
+        return fail(ERROR_SHAPEFILE, "wrong shapefile: only 2D Polygon is accepted");
 
     // check proj
     if (shapeRef.getIsWGS84() == false)
-    {
-        projectError = QString::fromStdString(shapeRef.getFilepath()) +  " projection error: not WGS84" ;
-        return ERROR_SHAPEFILE;
-    }
+        return fail(ERROR_SHAPEFILE, QString::fromStdString(shapeRef.getFilepath()) +  " projection error: not WGS84");
+
     if (shapeVal.getIsWGS84() == false)
-    {
-        projectError = QString::fromStdString(shapeVal.getFilepath()) + " projection error: not WGS84" ;
-        return ERROR_SHAPEFILE;
-    }
+        return fail(ERROR_SHAPEFILE, QString::fromStdString(shapeVal.getFilepath()) + " projection error: not WGS84");
 
     // check utm zone
     if (shapeRef.getUtmZone() != shapeVal.getUtmZone())
-    {
-        projectError = "Different utm zones in the shapefiles" ;
-        return ERROR_SHAPEFILE;
-    }
+        return fail(ERROR_SHAPEFILE, "Shapefiles have different utm zones.");
 
     // parser aggregation list
     if (! aggregationVariable.parserAggregationVariable(aggregationListFileName, projectError))
-    {
-        projectError = "Open failure: " + aggregationListFileName + "\n" + projectError;
-        return ERROR_ZONAL_STATISTICS_SHAPE;
-    }
+        return fail(ERROR_ZONAL_STATISTICS_SHAPE, "Error in : " + aggregationListFileName + "\n" + projectError);
 
     logger.writeInfo("output shapefile: " + outputAggrShapeFileName);
     logger.writeInfo("output csv file: " + outputAggrCsvFileName);
@@ -927,12 +896,14 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
     logger.writeInfo("Reference shape to raster...");
     gis::Crit3DRasterGrid rasterRef;
     initializeRasterFromShape(shapeRef, rasterRef, cellSize);
-    fillRasterWithShapeNumber(rasterRef, shapeRef);
+    if (! fillRasterWithShapeIndex(rasterRef, shapeRef))
+        return fail(ERROR_RASTERIZE, "Error in fillRasterWithShapeIndex");
 
     logger.writeInfo("Values shape to raster...");
     gis::Crit3DRasterGrid rasterVal;
     initializeRasterFromShape(shapeVal, rasterVal, cellSize);
-    fillRasterWithShapeNumber(rasterVal, shapeVal);
+    if (! fillRasterWithShapeIndex(rasterVal, shapeVal))
+        return fail(ERROR_RASTERIZE, "Error in fillRasterWithShapeIndex");
 
     logger.writeInfo("Matrix Analysis...");
     std::vector <int> vectorNull;
@@ -967,8 +938,6 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
 
     rasterRef.clear();
     rasterVal.clear();
-    vectorNull.clear();
-    matrix.clear();
     shapeVal.close();
 
     if (! isOk)
@@ -983,12 +952,12 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
                                        aggregationShapeField, projectError);
     shapeRef.close();
 
-    if (result == CRIT1D_OK)
+    if (result != CRIT1D_OK)
+        return result;
+
+    if (isReorder)
     {
-        if (isReorder)
-        {
-            return orderCsvByField(outputAggrCsvFileName, "ZONE ID", projectError);
-        }
+        return orderCsvByField(outputAggrCsvFileName, "ZONE ID", projectError);
     }
 
     return result;
@@ -1070,8 +1039,9 @@ int CriteriaOutputProject::createNetcdf()
 
 
 bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandler, const std::string outputFileName,
-                                                 const std::string field, const std::string variableName, const std::string variableUnit,
-                                                 double cellSize, const Crit3DDate &computationDate, int nrDays)
+                                                 const std::string fieldName, const std::string variableName,
+                                                 const std::string variableUnit, double cellSize,
+                                                 const Crit3DDate &computationDate, int nrDays)
 {
     if (! shapeHandler.getIsWGS84())
     {
@@ -1081,7 +1051,12 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
 
     // rasterize shape
     gis::Crit3DRasterGrid tmpRaster;
-    if (! rasterizeShape(shapeHandler, tmpRaster, field, cellSize))
+    constexpr bool useReferenceRaster = false;
+    constexpr int sampleGrid = 1;
+    constexpr double threshold = 0.5;
+
+    if (! rasterizeShape(nullptr, tmpRaster, shapeHandler, fieldName, cellSize,
+                        sampleGrid, threshold, useReferenceRaster))
     {
         projectError = "Error in rasterize shape.";
         return false;
@@ -1090,51 +1065,55 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
     // set UTM zone and emisphere
     gis::Crit3DGisSettings gisSettings;
     gisSettings.utmZone = shapeHandler.getUtmZone();
-    double sign = 1;
-    if (! shapeHandler.getIsNorth()) sign = -1;
-    gisSettings.startLocation.latitude = sign * abs(gisSettings.startLocation.latitude);
+
+    if (! shapeHandler.getIsNorth())
+        gisSettings.startLocation.latitude *= -1;
 
     // convert to lat lon raster
     gis::Crit3DLatLonHeader latLonHeader;
     gis::getGeoExtentsFromUTMHeader(gisSettings, tmpRaster.header, &latLonHeader);
 
-    // initialize data raster (only for values)
+    // Initialize output raster
     gis::Crit3DRasterGrid dataRaster;
     dataRaster.header->nrRows = latLonHeader.nrRows;
     dataRaster.header->nrCols = latLonHeader.nrCols;
     dataRaster.header->flag = latLonHeader.flag;
     dataRaster.header->llCorner.y = latLonHeader.llCorner.latitude;
     dataRaster.header->llCorner.x = latLonHeader.llCorner.longitude;
+    // average geographic resolution
     dataRaster.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
     dataRaster.header->invCellSize = 1.0 / dataRaster.header->cellSize;
     dataRaster.initializeGrid(latLonHeader.flag);
 
-    // assign lat lon values
-    double lat, lon, x, y;
-    int utmRow, utmCol;
+    // resample raster onto geographic grid
     for (int row = 0; row < latLonHeader.nrRows; row++)
     {
         for (int col = 0; col < latLonHeader.nrCols; col++)
         {
+            double lat, lon, x, y;
             gis::getLatLonFromRowCol(latLonHeader, row, col, &lat, &lon);
             gis::latLonToUtmForceZone(gisSettings.utmZone, lat, lon, &x, &y);
-            if (! gis::isOutOfGridXY(x, y, tmpRaster.header))
-            {
-                gis::getRowColFromXY(*(tmpRaster.header), x, y, &utmRow, &utmCol);
-                float value = tmpRaster.getValueFromRowCol(utmRow, utmCol);
-                if (int(value) != int(tmpRaster.header->flag))
-                {
-                    dataRaster.value[row][col] = value;
-                }
-            }
+
+            if (gis::isOutOfGridXY(x, y, tmpRaster.header))
+                continue;
+
+            int utmRow, utmCol;
+            gis::getRowColFromXY(*(tmpRaster.header), x, y, &utmRow, &utmCol);
+            const float value = tmpRaster.getValueFromRowCol(utmRow, utmCol);
+            if (! isEqual(value, tmpRaster.header->flag))
+                dataRaster.value[row][col] = value;
         }
     }
 
     // create netcdf
     NetCDFHandler netCDF;
-    netCDF.createNewFile(outputFileName);
+    if (! netCDF.createNewFile(outputFileName))
+    {
+        projectError = "Error creating netcdf file.";
+        return false;
+    }
 
-    std::string title = projectName.toStdString();
+    const std::string title = projectName.toStdString();
 
     if (! netCDF.writeMetadata(latLonHeader, title, variableName, variableUnit,
                                 computationDate, nrDays, NODATA, NODATA))

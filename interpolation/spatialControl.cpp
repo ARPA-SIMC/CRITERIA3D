@@ -87,6 +87,11 @@ float getSpatialThresholdVar(meteoVariable myVar, Crit3DMeteoSettings* meteoSett
     {
         threshold = PREC_THRESHOLD;
     }
+    else if (myVar == dailyReferenceEvapotranspirationHS)
+    {
+        zWeight = avgDeltaZ / 100.f;
+        threshold = 1.f + zWeight + stdDev * nrStdDev;
+    }
     else
         threshold = stdDev * nrStdDev;
 

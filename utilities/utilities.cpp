@@ -235,22 +235,7 @@ QDateTime getQDateTime(const Crit3DTime &t)
 
 QString getFileName(const QString &fileNameComplete)
 {
-    QString c;
-    QString fileName = "";
-    for (int i = fileNameComplete.length()-1; i >= 0; i--)
-    {
-        c = fileNameComplete.mid(i,1);
-        if ((c != "\\") && (c != "/"))
-        {
-            fileName = c + fileName;
-        }
-        else
-        {
-            return fileName;
-        }
-    }
-
-    return fileName;
+    return QFileInfo(fileNameComplete).fileName();
 }
 
 
@@ -505,6 +490,34 @@ bool removeDirectory(QString myPath)
 }
 
 
+bool searchPath(const QString &strPath, const QString &basePath, QString &outputPath)
+{
+    outputPath.clear();
+
+    QString currentPath = basePath;
+    if (currentPath.isEmpty())
+        currentPath = QDir::currentPath();
+
+    const QString root = QDir(currentPath).rootPath();
+
+    while (true)
+    {
+        const QString candidatePath = QDir(currentPath).filePath(strPath);
+
+        if (QDir(candidatePath).exists())
+        {
+            outputPath = QDir::cleanPath(candidatePath);
+            return true;
+        }
+
+        if (currentPath == root)
+            return false;
+
+        currentPath = QFileInfo(currentPath).dir().absolutePath();
+    }
+}
+
+
 bool searchDocPath(QString& docPath)
 {
     docPath = "";
@@ -518,17 +531,18 @@ bool searchDocPath(QString& docPath)
     bool isFound = false;
     while (! isFound)
     {
+        if (myPath == myRoot || myPath == winRoot)
+            break;
+
         if (QDir(myPath + "/DOC").exists())
         {
             isFound = true;
             break;
         }
 
-        if (QDir::cleanPath(myPath) == myRoot || QDir::cleanPath(myPath) == winRoot)
-            break;
-
         myPath = QFileInfo(myPath).dir().absolutePath();
     }
+
     if (! isFound)
         return false;
 
@@ -543,24 +557,27 @@ bool searchDataPath(QString* dataPath)
 
     QString myPath = QDir::currentPath();
     QString myRoot = QDir::rootPath();
+
     // only for win: application can run on a different drive (i.e. D:\)
     QString winRoot = myPath.left(3);
 
     bool isFound = false;
     while (! isFound)
     {
+        if (myPath == myRoot || myPath == winRoot)
+            break;
+
         if (QDir(myPath + "/DATA").exists())
         {
             isFound = true;
             break;
         }
 
-        if (QDir::cleanPath(myPath) == myRoot || QDir::cleanPath(myPath) == winRoot)
-            break;
-
         myPath = QFileInfo(myPath).dir().absolutePath();
     }
-    if (! isFound) return false;
+
+    if (! isFound)
+        return false;
 
     *dataPath = QDir::cleanPath(myPath) + "/DATA/";
     return true;

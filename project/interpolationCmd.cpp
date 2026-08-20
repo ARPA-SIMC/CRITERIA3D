@@ -222,6 +222,7 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
     return true;
 }
 
+
 bool modifiedInterpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myDate, const gis::Crit3DRasterGrid& gridBase,
                                 gis::Crit3DRasterGrid *gridOut, QString &errorStr)
 {
