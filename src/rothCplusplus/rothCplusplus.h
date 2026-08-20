@@ -100,15 +100,15 @@ private:
 
 
 public:
-    gis::Crit3DRasterGrid* decomposablePlantMaterial; //[tC/ha]
-    gis::Crit3DRasterGrid* resistantPlantMaterial; //[tC/ha]
-    gis::Crit3DRasterGrid* microbialBiomass; //[tC/ha]
-    gis::Crit3DRasterGrid* humifiedOrganicMatter; //[tC/ha]
-    gis::Crit3DRasterGrid* inertOrganicMatter; //[tC/ha]
-    gis::Crit3DRasterGrid* soilOrganicMatter; //[tC/ha]
+    gis::Crit3DRasterGrid* decomposablePlantMaterial;   //[tC/ha]
+    gis::Crit3DRasterGrid* resistantPlantMaterial;      //[tC/ha]
+    gis::Crit3DRasterGrid* microbialBiomass;            //[tC/ha]
+    gis::Crit3DRasterGrid* humifiedOrganicMatter;       //[tC/ha]
+    gis::Crit3DRasterGrid* inertOrganicMatter;          //[tC/ha]
+    gis::Crit3DRasterGrid* soilOrganicMatter;           //[tC/ha]
 
-    std::vector<gis::Crit3DRasterGrid*> avgBIC;     //[mm?]
-    std::vector<gis::Crit3DRasterGrid*> avgTemp;    //[C°]
+    std::vector<gis::Crit3DRasterGrid*> avgBICMap;     //[mm]
+    std::vector<gis::Crit3DRasterGrid*> avgTempMap;    //[C°]
     bool isInitialized;
 
     gis::Crit3DRasterGrid* getDPM() { return decomposablePlantMaterial; }

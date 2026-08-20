@@ -4241,7 +4241,8 @@ void MainWindow::on_actioncumulated_yearly_precipitation_triggered()
 
 void MainWindow::on_actionInitialize_soil_carbon_content_triggered()
 {
-    if (myProject.processes.computeWater || myProject.processes.computeCrop || myProject.processes.computeHydrall || myProject.processes.computeSnow)
+    if (myProject.processes.computeWater || myProject.processes.computeCrop
+            || myProject.processes.computeHydrall || myProject.processes.computeSnow)
     {
         myProject.logError("Activate RothC and deactivate other processes to initialize soil carbon content.");
         myProject.clearRothCMaps();
@@ -4251,17 +4252,25 @@ void MainWindow::on_actionInitialize_soil_carbon_content_triggered()
     if (myProject.processes.computeRothC)
     {
         QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
-        myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
+        myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this,
+                                                tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
 
         if (myProject.rothCModel.BICMapFolderName.empty())
             return;
 
-        myProject.rothCModel.temperatureMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average temperature files"), defaultPath).toStdString();
+        myProject.rothCModel.temperatureMapFolderName = QFileDialog::getExistingDirectory(this,
+                                                        tr("Open folder with monthly average temperature files"), defaultPath).toStdString();
 
         if (myProject.rothCModel.temperatureMapFolderName.empty())
             return;
 
-
+        // save paths in settings file
+        myProject.parametersSettings->beginGroup("RothC");
+            myProject.parametersSettings->setValue("BICMapsPath",
+                                                   QString::fromStdString(myProject.rothCModel.BICMapFolderName));
+            myProject.parametersSettings->setValue("temperatureMapsPath",
+                                                   QString::fromStdString(myProject.rothCModel.temperatureMapFolderName));
+        myProject.parametersSettings->endGroup();
 
         if (! myProject.initializeRothC())
         {

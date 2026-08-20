@@ -153,6 +153,7 @@ bool Crit3DProject::initializeHydrallConversionVector()
     return true;
 }
 
+
 bool Crit3DProject::initializeRothC()
 {
     rothCModel.initialize();
@@ -162,7 +163,9 @@ bool Crit3DProject::initializeRothC()
     monthlyPrec.initializeGrid(*(DEM.header));
 
     if (! mapLast30DaysTAvg.isLoaded)
+    {
         mapLast30DaysTAvg.initializeGrid(*DEM.header);
+    }
 
     if (! processes.computeCrop)
     {
@@ -185,7 +188,6 @@ bool Crit3DProject::initializeRothC()
             }
         }
     }
-
 
     logInfo("Initializing RothC maps...");
 
@@ -235,7 +237,6 @@ bool Crit3DProject::initializeRothC()
             rothCModel.map.microbialBiomass->value[row][col] = rothCModel.getBIO();
             rothCModel.map.inertOrganicMatter->value[row][col] = rothCModel.getIOM();
             rothCModel.map.soilOrganicMatter->value[row][col] = rothCModel.getSOC();
-
         }
     }
 
@@ -244,7 +245,6 @@ bool Crit3DProject::initializeRothC()
         rothCModel.isInitializing = true;
 
         loadRothCBICMaps();
-
     }
 
     isRothCInitialized = true;
@@ -253,7 +253,9 @@ bool Crit3DProject::initializeRothC()
     return true;
 }
 
-//initializing soil carbon content without interpolating meteo data. using data of temperature and BIC averaged over the last 24 years
+
+// initializing soil carbon content without interpolating meteo data.
+// using data of temperature and BIC averaged over the last 24 years
 bool Crit3DProject::initializeRothCSoilCarbonContent()
 {
     rothCModel.isInitializing = true;
@@ -275,14 +277,15 @@ bool Crit3DProject::initializeRothCSoilCarbonContent()
             rothCModel.setInputC(getRothCYield(row, col));
 
             rothCModel.setStateVariables(row, col);
-            rothCModel.initializeRothCSoilCarbonContent(rothCModel.map.getAvgTempVector(row, col), rothCModel.map.getAvgBICVector(row, col));
+            rothCModel.initializeRothCSoilCarbonContent(rothCModel.map.getAvgTempVector(row, col),
+                                                        rothCModel.map.getAvgBICVector(row, col));
             rothCModel.getStateVariables(row, col);
-
         }
     }
 
     return true;
 }
+
 
 double Crit3DProject::getRothCYield(int row, int col)
 {
@@ -307,45 +310,50 @@ double Crit3DProject::getRothCYield(int row, int col)
 
     return 0.1; //TODO: CROP..........
 
-
 }
 
 
 bool Crit3DProject::loadRothCTempMaps()
 {
-    std::string errorStr;
-    gis::Crit3DRasterGrid raster;
-    std::string fileNamePath;
+    const QString folderName = QString::fromStdString(rothCModel.temperatureMapFolderName);
 
+    QDir myDir(folderName);
+    if (! myDir.exists())
+    {
+        logError("Temperature map directory does not exist: " + folderName);
+        return false;
+    }
 
-
-    QDir myDir = QDir(QString::fromStdString(rothCModel.temperatureMapFolderName));
     myDir.setNameFilters(QStringList("*.flt"));
     QList<QString> fileList = myDir.entryList();
 
     if (fileList.size() != 12)
     {
-        errorStr = "Insufficient number of files.";
-        logError("Average temperature maps load from directory " + QString::fromStdString(rothCModel.temperatureMapFolderName) + " failed.\n" + QString::fromStdString(errorStr));
+        logError("Average temperature maps load from directory " + folderName + " failed.\n"
+                 + "Insufficient number of files.");
         return false;
     }
 
     for (unsigned int i = 0; i < 12; i++)
     {
-        fileNamePath = rothCModel.temperatureMapFolderName + "/" + fileList[i].toStdString();
+        const std::string fileNamePath = rothCModel.temperatureMapFolderName + "/" + fileList[i].toStdString();
+
+        std::string errorStr;
+        gis::Crit3DRasterGrid raster;
         if (! gis::openRaster(fileNamePath, &raster, gisSettings.utmZone, errorStr))
         {
             logError("Average temperature map load failed: " + fileList[i] + "\n" + QString::fromStdString(errorStr));
             return false;
         }
 
-        gis::resampleGrid(raster, rothCModel.map.avgTemp[i], DEM.header, aggrPrevailing, 0);
+        gis::resampleGrid(raster, rothCModel.map.avgTempMap[i], DEM.header, aggrPrevailing, 0);
     }
-    logInfo("Average temperature maps loaded from directory " + QString::fromStdString(rothCModel.temperatureMapFolderName));
+
+    logInfo("Average temperature maps loaded from directory: " + folderName);
 
     return true;
-
 }
+
 
 bool Crit3DProject::loadRothCBICMaps()
 {
@@ -373,12 +381,13 @@ bool Crit3DProject::loadRothCBICMaps()
             return false;
         }
 
-        gis::resampleGrid(raster, rothCModel.map.avgBIC[i], DEM.header, aggrPrevailing, 0);
+        gis::resampleGrid(raster, rothCModel.map.avgBICMap[i], DEM.header, aggrPrevailing, 0);
     }
     logInfo("Average BIC maps loaded from directory " + QString::fromStdString(rothCModel.BICMapFolderName));
 
     return true;
 }
+
 
 double Crit3DProject::getRothCClayContent(int soilIndex)
 {
@@ -1451,6 +1460,19 @@ bool Crit3DProject::loadCriteria3DParameters()
 
     Q_FOREACH (QString group, parametersSettings->childGroups())
     {
+        if (group == "RothC")
+        {
+            parametersSettings->beginGroup(group);
+
+            if (parametersSettings->contains("BICMapsPath") && !parametersSettings->value("BICMapsPath").toString().isEmpty())
+                rothCModel.BICMapFolderName = parametersSettings->value("BICMapsPath").toString().toStdString();
+
+            if (parametersSettings->contains("temperatureMapsPath") && !parametersSettings->value("temperatureMapsPath").toString().isEmpty())
+                rothCModel.temperatureMapFolderName = parametersSettings->value("temperatureMapsPath").toString().toStdString();
+
+            parametersSettings->endGroup();
+        }
+
         if (group == "snow")
         {
             parametersSettings->beginGroup(group);
@@ -2815,6 +2837,15 @@ bool Crit3DProject::loadModelState(QString statePath)
             return false;
         }
         gis::resampleGrid(*tmpRaster, hydrallMaps.carbonStock, DEM.header, aggrAverage, 0.1f);
+
+        fileName = hydrallPath.toStdString() + "/outputC";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall C soil map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.outputC, DEM.header, aggrAverage, 0.1f);
 
         initializeHydrallConversionVector();
 

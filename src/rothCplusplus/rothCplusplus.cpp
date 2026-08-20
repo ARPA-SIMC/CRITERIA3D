@@ -77,14 +77,14 @@ void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     _depthMap = new gis::Crit3DRasterGrid;
     _clayMap = new gis::Crit3DRasterGrid;
 
-    avgBIC.resize(12);
-    avgTemp.resize(12);
+    avgBICMap.resize(12);
+    avgTempMap.resize(12);
 
     for (unsigned int i = 0; i < 12; i++)
-        avgBIC[i] = new gis::Crit3DRasterGrid;
+        avgBICMap[i] = new gis::Crit3DRasterGrid;
 
     for (unsigned int i = 0; i < 12; i++)
-        avgTemp[i] = new gis::Crit3DRasterGrid;
+        avgTempMap[i] = new gis::Crit3DRasterGrid;
 
     decomposablePlantMaterial->initializeGrid(DEM);
     resistantPlantMaterial->initializeGrid(DEM);
@@ -97,10 +97,10 @@ void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     _clayMap->initializeGrid(DEM);
 
     for (unsigned int i = 0; i < 12; i++)
-        avgBIC[i]->initializeGrid(DEM);
+        avgBICMap[i]->initializeGrid(DEM);
 
     for (unsigned int i = 0; i < 12; i++)
-        avgTemp[i]->initializeGrid(DEM);
+        avgTempMap[i]->initializeGrid(DEM);
 }
 
 
@@ -130,17 +130,17 @@ void Crit3DRothCplusplusMaps::clear()
     if (_clayMap != nullptr)
         _clayMap->clear();
 
-    for (unsigned int i = 0; i < avgBIC.size(); i++)
-        if (avgBIC[i]!= nullptr)
-            avgBIC[i]->clear();
+    for (unsigned int i = 0; i < avgBICMap.size(); i++)
+        if (avgBICMap[i]!= nullptr)
+            avgBICMap[i]->clear();
 
-    avgBIC.clear();
+    avgBICMap.clear();
 
-    for (unsigned int i = 0; i < avgTemp.size(); i++)
-        if (avgTemp[i]!= nullptr)
-            avgTemp[i]->clear();
+    for (unsigned int i = 0; i < avgTempMap.size(); i++)
+        if (avgTempMap[i]!= nullptr)
+            avgTempMap[i]->clear();
 
-    avgTemp.clear();
+    avgTempMap.clear();
 }
 
 
@@ -165,16 +165,16 @@ double Crit3DRothCplusplusMaps::getDepth(int row, int col)
 
 double Crit3DRothCplusplusMaps::getAvgBIC(int row, int col, int month)
 {
-    if (month < int(avgBIC.size()))
-        return avgBIC[month]->value[row][col];
+    if (month < int(avgBICMap.size()))
+        return avgBICMap[month]->value[row][col];
     else
         return NODATA;
 }
 
 double Crit3DRothCplusplusMaps::getAvgTemp(int row, int col, int month)
 {
-    if (month < int(avgTemp.size()))
-        return avgTemp[month]->value[row][col];
+    if (month < int(avgTempMap.size()))
+        return avgTempMap[month]->value[row][col];
     else
         return NODATA;
 }
@@ -184,7 +184,7 @@ std::vector<double> Crit3DRothCplusplusMaps::getAvgTempVector(int row, int col)
     std::vector<double> temp(12);
 
     for (unsigned int i = 0; i < 12; i++)
-        temp[i] = avgTemp[i]->getValueFromRowCol(row, col);
+        temp[i] = avgTempMap[i]->getValueFromRowCol(row, col);
 
     return temp;
 }
@@ -194,7 +194,7 @@ std::vector<double> Crit3DRothCplusplusMaps::getAvgBICVector(int row, int col)
     std::vector<double> temp(12);
 
     for (unsigned int i = 0; i < 12; i++)
-        temp[i] = avgBIC[i]->getValueFromRowCol(row, col);
+        temp[i] = avgBICMap[i]->getValueFromRowCol(row, col);
 
     return temp;
 }
@@ -222,6 +222,9 @@ Crit3DRothCplusplus::Crit3DRothCplusplus()
 
 void Crit3DRothCplusplus::initialize()
 {
+    BICMapFolderName = "";
+    temperatureMapFolderName = "";
+
     //TODO qui inizializzazione dei pool, per ora come fare? Inizializzato su python, copiato i pool all'equilibrio
     decomposablePlantMatter = 0.14547;
     resistantPlantMatter = 5.67812;
@@ -238,10 +241,10 @@ void Crit3DRothCplusplus::initialize()
     isUpdate = false;
 
     //todo
-    clay = NODATA;     //[%]
-    depth = NODATA;    //[cm]
-    SWC = NODATA; //[mm per depth]
-    // .. TODO
+    clay = NODATA;      // [%]
+    depth = NODATA;     // [cm]
+    SWC = NODATA;       // [mm per depth]
+    // .. TODO ??
     if (false)
     {
         std::ofstream myFile;
