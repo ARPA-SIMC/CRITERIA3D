@@ -1038,9 +1038,9 @@ int CriteriaOutputProject::createNetcdf()
 }
 
 
-bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandler, const std::string outputFileName,
-                                                 const std::string fieldName, const std::string variableName,
-                                                 const std::string variableUnit, double cellSize,
+bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandler, const std::string &outputFileName,
+                                                 const std::string &fieldName, const std::string &variableName,
+                                                 const std::string &variableUnit, double cellSize,
                                                  const Crit3DDate &computationDate, int nrDays)
 {
     if (! shapeHandler.getIsWGS84())
