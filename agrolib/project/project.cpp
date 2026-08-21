@@ -2195,7 +2195,7 @@ bool Project::loadProxyGrids()
             gis::Crit3DRasterGrid* proxyGrid = new gis::Crit3DRasterGrid;
             std::string myError;
             //resampling on DEM must be done only when interpolating on DEM or on grid with upscale from DEM option activated
-            /*if (DEM.isLoaded && gis::readEsriGrid(fileName.toStdString(), &proxyGrid, myError))
+            /*if (DEM.isLoaded && gis::readEsriGridFlt(fileName.toStdString(), &proxyGrid, myError))
             {
                 gis::Crit3DRasterGrid* resGrid = new gis::Crit3DRasterGrid();
                 gis::resampleGrid(proxyGrid, resGrid, DEM.header, aggrAverage, 0);
@@ -2208,7 +2208,7 @@ bool Project::loadProxyGrids()
                 return false;
             }*/
 
-            if (gis::readEsriGrid(fileName.toStdString(), proxyGrid, myError))
+            if (gis::readEsriGridFlt(fileName.toStdString(), proxyGrid, myError))
             {
                 //cambiare
                 myProxy->setGrid(proxyGrid);
@@ -2241,7 +2241,7 @@ bool Project::loadRadiationGrids()
         if (gridName != "")
         {
             grdLinke = new gis::Crit3DRasterGrid();
-            if (!gis::readEsriGrid(gridName, grdLinke, myError))
+            if (!gis::readEsriGridFlt(gridName, grdLinke, myError))
             {
                 logError("Error loading Linke grid " + QString::fromStdString(gridName));
                 return false;
@@ -2256,7 +2256,7 @@ bool Project::loadRadiationGrids()
         if (gridName != "")
         {
             grdAlbedo = new gis::Crit3DRasterGrid();
-            if (!gis::readEsriGrid(gridName, grdAlbedo, myError))
+            if (!gis::readEsriGridFlt(gridName, grdAlbedo, myError))
             {
                 logError("Error loading albedo grid " + QString::fromStdString(gridName));
                 return false;
@@ -2420,7 +2420,7 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         }
 
         meteoPoints[i].topographicDistance = new gis::Crit3DRasterGrid();
-        if (! gis::readEsriGrid(fileName, meteoPoints[i].topographicDistance, myError))
+        if (! gis::readEsriGridFlt(fileName, meteoPoints[i].topographicDistance, myError))
         {
             logError(QString::fromStdString(myError));
             return false;
@@ -2540,7 +2540,7 @@ bool Project::loadGlocalAreasMap()
     gis::Crit3DRasterGrid* macroAreasGrid = new gis::Crit3DRasterGrid();
 
     std::string myError;
-    if (gis::readEsriGrid(fileNameMap.toStdString(), macroAreasGrid, myError))
+    if (gis::readEsriGridFlt(fileNameMap.toStdString(), macroAreasGrid, myError))
         interpolationSettings.setMacroAreasMap(macroAreasGrid);
     else
     {
@@ -2651,7 +2651,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
         if (!QFile::exists(QString::fromStdString(fileName) + QString::number(i) + ".flt"))
             continue;
 
-        if (!readEsriGrid(fileName + std::to_string(i), macroAreasGrid, myError))
+        if (!gis::readEsriGridFlt(fileName + std::to_string(i), macroAreasGrid, myError))
         {
             macroAreasGrid->clear();
             errorString = "macroareas not found";
