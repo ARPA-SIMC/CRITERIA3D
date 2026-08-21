@@ -148,7 +148,7 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     if (nrGrids == 1)
     {
-        if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, myError))
+        if (! gis::readEsriGridFlt(gridNames[0].toStdString(), &tmpGrid, myError))
         {
             errorStr = QString::fromStdString(myError);
             return false;
@@ -178,13 +178,13 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     // load grids
     gis::Crit3DRasterGrid firstGrid, secondGrid;
-    if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, myError))
+    if (! gis::readEsriGridFlt(gridNames[first].toStdString(), &firstGrid, myError))
     {
         errorStr = QString::fromStdString(myError);
         return false;
     }
 
-    if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, myError))
+    if (! gis::readEsriGridFlt(gridNames[second].toStdString(), &secondGrid, myError))
     {
         errorStr = QString::fromStdString(myError);
         return false;
@@ -237,7 +237,7 @@ bool modifiedInterpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, Q
     //se non c'è serie ma solo una griglia avviene ricampionamento. ciò non deve accadere
     if (nrGrids == 1)
     {
-        if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, myError))
+        if (! gis::readEsriGridFlt(gridNames[0].toStdString(), &tmpGrid, myError))
         {
             errorStr = QString::fromStdString(myError);
             return false;
@@ -269,13 +269,13 @@ bool modifiedInterpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, Q
 
     // load grids
     gis::Crit3DRasterGrid firstGrid, secondGrid;
-    if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, myError))
+    if (! gis::readEsriGridFlt(gridNames[first].toStdString(), &firstGrid, myError))
     {
         errorStr = QString::fromStdString(myError);
         return false;
     }
 
-    if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, myError))
+    if (! gis::readEsriGridFlt(gridNames[second].toStdString(), &secondGrid, myError))
     {
         errorStr = QString::fromStdString(myError);
         return false;

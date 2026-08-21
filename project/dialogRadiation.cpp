@@ -308,7 +308,7 @@ void DialogRadiation::loadLinke()
     std::string fileName = qFileName.toStdString();
     std::string errorStr;
     linkeMap = new gis::Crit3DRasterGrid();
-    if (gis::readEsriGrid(fileName, linkeMap, errorStr))
+    if (gis::readEsriGridFlt(fileName, linkeMap, errorStr))
         editLinkeMap->setText(qFileName);
     else
         QMessageBox::information(nullptr, "Error", "Error opening " + qFileName);
@@ -323,7 +323,7 @@ void DialogRadiation::loadAlbedo()
     std::string fileName = qFileName.toStdString();
     std::string errorStr;
     albedoMap = new gis::Crit3DRasterGrid();
-    if (gis::readEsriGrid(fileName, albedoMap, errorStr))
+    if (gis::readEsriGridFlt(fileName, albedoMap, errorStr))
         editAlbedoMap->setText(qFileName);
     else
         QMessageBox::information(nullptr, "Error", "Error opening " + qFileName);

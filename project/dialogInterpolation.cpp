@@ -463,25 +463,29 @@ void ProxyDialog::changedProxy(bool savePrevious)
         _param4.setEnabled(false);
         _param5.setEnabled(false);
     }
-
 }
+
 
 void ProxyDialog::selectGridFile()
 {
     QString qFileName = QFileDialog::getOpenFileName();
-    if (qFileName == "") return;
-    qFileName = qFileName.left(qFileName.length()-4);
+    if (qFileName == "")
+        return;
 
-    std::string fileName = qFileName.toStdString();
-    std::string error_;
-    gis::Crit3DRasterGrid* grid_ = new gis::Crit3DRasterGrid();
-    if (gis::readEsriGrid(fileName, grid_, error_))
+    const std::string fileName = qFileName.toStdString();
+
+    std::string errorStr;
+    gis::Crit3DRasterGrid rasterGrid;
+
+    if (gis::openRaster(fileName, &rasterGrid, _project->gisSettings.utmZone, errorStr))
         _proxyGridName.setText(qFileName);
     else
-        QMessageBox::information(nullptr, "Error", "Error opening " + qFileName);
-
-    grid_ = nullptr;
+    {
+        QString errorString = "Error opening " + qFileName + "\n" + QString::fromStdString(errorStr);
+        QMessageBox::information(nullptr, "Error", errorString);
+    }
 }
+
 
 void ProxyDialog::listProxies()
 {
