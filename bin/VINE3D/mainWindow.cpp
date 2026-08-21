@@ -661,7 +661,7 @@ void MainWindow::on_actionVine3D_InitializeWaterBalance_triggered()
 {
     if (myProject.initialize3DModel())
     {
-        myProject.outputWaterBalanceMaps = new Crit3DWaterBalanceMaps(myProject.DEM);
+        myProject.outputWaterBalanceMaps = new Vine3DWaterBalanceMaps(myProject.DEM);
         QMessageBox::information(nullptr, "", "3D water fluxes initialized.");
     }
 }

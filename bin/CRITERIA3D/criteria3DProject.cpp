@@ -2616,7 +2616,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::Crit3DRasterGrid *tmpRaster = new gis::Crit3DRasterGrid();
 
         fileName = snowPath.toStdString() + "/SWE";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow SWE map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
@@ -2625,7 +2625,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, snowMaps.getSnowWaterEquivalentMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/AgeOfSnow";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow AgeOfSnow map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
@@ -2634,7 +2634,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, snowMaps.getAgeOfSnowMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/IceContent";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow IceContent map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
@@ -2643,7 +2643,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, snowMaps.getIceContentMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/InternalEnergy";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow InternalEnergy map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
@@ -2652,7 +2652,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, snowMaps.getInternalEnergyMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/LWContent";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow LWContent map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
@@ -2661,7 +2661,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, snowMaps.getLWContentMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/SnowSurfaceTemp";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow SurfaceTemp map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
@@ -2670,7 +2670,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, snowMaps.getSnowSurfaceTempMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/SurfaceInternalEnergy";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow SurfaceInternalEnergy map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
@@ -2688,7 +2688,7 @@ bool Crit3DProject::loadModelState(QString statePath)
     {
         gis::Crit3DRasterGrid myDegreeDaysMap;
         fileName = cropPath.toStdString() + "/degreeDays";
-        if (! gis::readEsriGrid(fileName, &myDegreeDaysMap, errorStr))
+        if (! gis::readEsriGridFlt(fileName, &myDegreeDaysMap, errorStr))
         {
             errorString = "Wrong degree days map:\n" + QString::fromStdString(errorStr);
             return false;
@@ -2727,7 +2727,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         rothCModel.map.initialize(DEM);
 
         fileName = rothCPath.toStdString() + "/DPM";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong RothC decomposable plant matter map:\n" + QString::fromStdString(errorStr);
             rothCModel.map.isInitialized = false;
@@ -2736,7 +2736,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, rothCModel.map.decomposablePlantMaterial, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/RPM";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong RothC resistant plant matter map:\n" + QString::fromStdString(errorStr);
             rothCModel.map.isInitialized = false;
@@ -2745,7 +2745,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, rothCModel.map.resistantPlantMaterial, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/BIO";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong RothC microbial biomass map:\n" + QString::fromStdString(errorStr);
             rothCModel.map.isInitialized = false;
@@ -2754,7 +2754,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, rothCModel.map.microbialBiomass, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/HUM";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong RothC humified organic matter map:\n" + QString::fromStdString(errorStr);
             rothCModel.map.isInitialized = false;
@@ -2763,7 +2763,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, rothCModel.map.humifiedOrganicMatter, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/SOC";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong RothC soil organic carbon map:\n" + QString::fromStdString(errorStr);
             rothCModel.map.isInitialized = false;
@@ -2772,7 +2772,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, rothCModel.map.soilOrganicMatter, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/monthlyET0";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong RothC monthly ET0 map:\n" + QString::fromStdString(errorStr);
             monthlyET0.isLoaded = false;
@@ -2781,7 +2781,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, &monthlyET0, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/monthlyPrec";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong RothC monthly Prec map:\n" + QString::fromStdString(errorStr);
             monthlyPrec.isLoaded = false;
@@ -2800,7 +2800,7 @@ bool Crit3DProject::loadModelState(QString statePath)
     if (hydrallDir.exists() && (! isProcessesDefined || isHydrallInitialized))
     {
         fileName = hydrallPath.toStdString() + "/treeNPP";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall tree net primary production map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2809,7 +2809,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, hydrallMaps.treeNetPrimaryProduction, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/understoreyNPP";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall understorey net primary production map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2818,7 +2818,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, hydrallMaps.understoreyNetPrimaryProduction, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/treeFoliage";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall tree foliage biomass map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2827,7 +2827,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, hydrallMaps.treeBiomassFoliage, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/treeRoot";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall tree root biomass map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2836,7 +2836,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, hydrallMaps.treeBiomassRoot, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/treeStand";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall tree sapwood biomass map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2845,7 +2845,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, hydrallMaps.treeBiomassSapwood, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/understoreyFoliage";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall understorey foliage biomass map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2854,7 +2854,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, hydrallMaps.understoreyBiomassFoliage, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/understoreyRoot";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall understorey root biomass map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2863,7 +2863,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, hydrallMaps.understoreyBiomassRoot, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/yearlyET0";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall yearly ET0 map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2872,7 +2872,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, hydrallMaps.yearlyET0, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/yearlyPrec";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall yearly prec map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2881,7 +2881,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, hydrallMaps.yearlyPrec, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/last30daysT";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall last 30 days average temperature map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2890,7 +2890,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, &mapLast30DaysTAvg, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/treeHeight";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall tree height map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2899,7 +2899,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, hydrallMaps.plantHeight, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/carbonStock";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall carbon stock map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2908,7 +2908,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         gis::resampleGrid(*tmpRaster, hydrallMaps.carbonStock, DEM.header, aggrAverage, 0.1f);
 
         fileName = hydrallPath.toStdString() + "/outputC";
-        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        if (! gis::readEsriGridFlt(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong hydrall C soil map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
@@ -2995,7 +2995,7 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
         std::string fileName = waterPath.toStdString() + "/WP_" + std::to_string(depthList[i]);
         std::string errorStr;
         gis::Crit3DRasterGrid *currentWaterPotentialMap = new gis::Crit3DRasterGrid();
-        if (! gis::readEsriGrid(fileName, currentWaterPotentialMap, errorStr))
+        if (! gis::readEsriGridFlt(fileName, currentWaterPotentialMap, errorStr))
         {
             errorString = "Wrong water potential map:\n" + QString::fromStdString(errorStr);
             return false;

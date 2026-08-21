@@ -2195,7 +2195,7 @@ bool Project3D::aggregateAndSaveDailyMap(meteoVariable myVar, aggregationMethod 
     for (Crit3DTime myTime = myTimeIni; myTime<=myTimeFin; myTime=myTime.addSeconds(myTimeStep))
     {
         QString hourlyFileName = getOutputNameHourly(myVar, getQDateTime(myTime));
-        if (gis::readEsriGrid((hourlyPath + hourlyFileName).toStdString(), myMap, myError))
+        if (gis::readEsriGridFlt((hourlyPath + hourlyFileName).toStdString(), myMap, myError))
         {
             if (myTime == myTimeIni)
             {
@@ -2853,7 +2853,7 @@ bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, gi
     QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime);
     std::string error;
 
-    if (gis::readEsriGrid(fileName.toStdString(), myGrid, error))
+    if (gis::readEsriGridFlt(fileName.toStdString(), myGrid, error))
         return true;
     else
         return false;
@@ -2866,7 +2866,7 @@ float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, 
     QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime);
     std::string error;
 
-    if (gis::readEsriGrid(fileName.toStdString(), myGrid, error))
+    if (gis::readEsriGridFlt(fileName.toStdString(), myGrid, error))
         if (myGrid->value[row][col] != myGrid->header->flag)
             return myGrid->value[row][col];
 

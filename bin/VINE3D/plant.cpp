@@ -361,7 +361,7 @@ bool loadPlantState(Vine3DProject* myProject, plantVariable myVar, QDate myDate,
     myFile.setFileName(fileName + ".hdr");
     if (! myFile.exists()) return false;
 
-    if (! gis::readEsriGrid(fileName.toStdString(), myMap, errorString))
+    if (! gis::readEsriGridFlt(fileName.toStdString(), myMap, errorString))
     {
         myProject->logError(QString::fromStdString(errorString));
         return false;

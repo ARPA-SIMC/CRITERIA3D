@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 
     gis::Crit3DRasterGrid DEM;
     std::string errorStr;
-    if (gis::readEsriGrid(inputFileName, &DEM, errorStr))
+    if (gis::readEsriGridFlt(inputFileName, &DEM, errorStr))
         std::cout << "\nDEM = " << inputFileName << std::endl;
     else
     {
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     std::cout << "\nComputing..." << std::endl;
 
     // COMPUTE POTENTIAL GLOBAL RADIATION MAPS
-    if (radiation::computeRadiationDEM(radSettings, DEM, radMaps, myTime))
+    if (radiation::computeRadiationDEM(radSettings, DEM, radMaps, myTime, false))
         std::cout << "\nGlobal solar irradiance (clear sky) computed." << std::endl;
     else
         std::cout << "errorStr in compute radiation." << std::endl << std::endl;

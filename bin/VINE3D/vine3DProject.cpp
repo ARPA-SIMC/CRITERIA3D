@@ -196,7 +196,7 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
 
     processes.setComputeWater(true);
 
-    outputWaterBalanceMaps = new Crit3DWaterBalanceMaps(DEM);
+    outputWaterBalanceMaps = new Vine3DWaterBalanceMaps(DEM);
 
     if (! initializeGrapevine())
     {
@@ -1259,7 +1259,7 @@ bool Vine3DProject::loadDailyMeteoMap(meteoVariable myDailyVar, QDate myDate)
     myFile.setFileName(myFileName + ".hdr");
     if (! myFile.exists()) return false;
 
-    if (!gis::readEsriGrid(myFileName.toStdString(), vine3DMapsD->getMapFromVar(myDailyVar), myError))
+    if (!gis::readEsriGridFlt(myFileName.toStdString(), vine3DMapsD->getMapFromVar(myDailyVar), myError))
     {
         logError(QString::fromStdString(myError));
         return false;
@@ -1569,6 +1569,55 @@ bool Vine3DProject::initializeGrapevine()
                                             layerDepth, layerThickness, soilLayerWithRoot, nrSoilLayersWithoutRoots,
                                             GAMMA_DISTRIBUTION, depthModeRootDensity, depthMeanRootDensity);
     }
+
+    return true;
+}
+
+
+// return map of available water content in the root zone [mm]
+bool Vine3DProject::getRootZoneAWCmap(gis::Crit3DRasterGrid* outputMap)
+{
+    if (outputMap == nullptr)
+        return false;
+
+    for (int row = 0; row < outputMap->header->nrRows; row++)
+        for (int col = 0; col < outputMap->header->nrCols; col++)
+        {
+            //initialize
+            outputMap->value[row][col] = outputMap->header->flag;
+
+            if (indexMap.at(0).value[row][col] != indexMap.at(0).header->flag)
+            {
+                double sumAWC = 0.0;
+                const int soilIndex = getSoilIndex(row, col);
+                int caseIndex = getModelCaseIndex(row,col);
+
+                if (soilIndex != NODATA && caseIndex != NODATA)
+                {
+                    for (unsigned int layer = 1; layer < nrLayers; layer++)
+                    {
+                        const long nodeIndex = indexMap.at(layer).value[row][col];
+
+                        if (nodeIndex != indexMap.at(layer).header->flag)
+                        {
+                            if (grapevine.getRootDensity(&(modelCases[caseIndex]), layer) > 0.0)
+                            {
+                                const double awc = soilFluxes3D::getNodeAvailableWaterContent(nodeIndex);  //[m3 m-3]
+                                if (awc != NODATA)
+                                {
+                                    const double thickness = layerThickness[layer] * 1000.0;    //[mm]
+                                    const int horizonIndex = soil::getHorizonIndex(soilList[soilIndex], layerDepth[layer]);
+                                    const double soilFraction = 1.0 - soilList[soilIndex].horizon[horizonIndex].coarseFragments;
+                                    sumAWC += (awc * thickness * soilFraction);                 //[mm]
+                                }
+                            }
+                        }
+                    }
+                }
+
+                outputMap->value[row][col] = sumAWC;
+            }
+        }
 
     return true;
 }

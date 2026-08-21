@@ -939,8 +939,10 @@ void MainWindow::on_actionLoad_DEM_triggered()
 {
     QString demPath = myProject.getDefaultPath() + PATH_DEM;
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Digital Elevation Model"), demPath,
-                                    tr("ESRI float (*.flt);; ESRI ascii (*.asc);; ENVI image (*.img)"));
-    if (fileName == "") return;
+                                    tr("ESRI float (*.flt);; ESRI ascii (*.asc);; "
+                                       "ESRI bil (*.bil);; ENVI image (*.img)"));
+    if (fileName == "")
+        return;
 
     clearRaster_GUI();
 
@@ -2002,7 +2004,8 @@ void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
 void MainWindow::on_actionLoad_soil_map_triggered()
 {
     QString soilPath = myProject.getDefaultPath() + PATH_SOIL;
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), soilPath, tr("ESRI float (*.flt);; ENVI image (*.img)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), soilPath,
+                                tr("ESRI float (*.flt);; ESRI bil (*.bil);; ENVI image (*.img)"));
     if (fileName == "") return;
 
     if (myProject.loadSoilMap(fileName))
@@ -3540,7 +3543,7 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
 void MainWindow::on_actionLoad_land_use_map_triggered()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open land use map"), "",
-                                                    tr("ESRI float (*.flt);; ENVI image (*.img)"));
+                                                    tr("ESRI float (*.flt);; ESRI bil (*.bil);; ENVI image (*.img)"));
     if (fileName == "") return;
 
     if (myProject.loadLandUseMap(fileName))

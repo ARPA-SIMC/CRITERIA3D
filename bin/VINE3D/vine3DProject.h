@@ -76,7 +76,7 @@
         Vine3DHourlyMaps* vine3DMapsH;
         Crit3DDailyMeteoMaps* vine3DMapsD;
 
-        Crit3DWaterBalanceMaps* outputWaterBalanceMaps;
+        Vine3DWaterBalanceMaps* outputWaterBalanceMaps;
         Crit3DStatePlantMaps* statePlantMaps;
         Crit3DOutputPlantMaps* outputPlantMaps;
 
@@ -150,6 +150,7 @@
         bool loadDailyMeteoMap(meteoVariable myDailyVar, QDate myDate);
 
         bool setSoilProfileCrop(int row, int col, Crit3DModelCase* modelCase);
+        bool getRootZoneAWCmap(gis::Crit3DRasterGrid* outputMap);
         bool assignIrrigation(Crit3DTime myTime);
         bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours, const QString& myOutputPath, bool saveOutput);
     };
