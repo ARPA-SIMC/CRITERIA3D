@@ -306,7 +306,7 @@ double Crit3DProject::getRothCYield(int row, int col)
         }
     }
 
-    return 0.1; //TODO: CROP..........
+    return 0.36; //Value for CROP taken from Soussana, 2004
 
 
 }
