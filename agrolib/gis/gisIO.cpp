@@ -60,19 +60,6 @@ struct RasterFileInfo
 };
 
 
-string trim(const string& str)
-{
-    const size_t first = str.find_first_not_of(" \t\r\n");
-
-    if (first == string::npos)
-        return "";
-
-    const size_t last = str.find_last_not_of(" \t\r\n");
-
-    return str.substr(first, last - first + 1);
-}
-
-
 string upperCase(const string& myStr)
 {
     string result = myStr;
@@ -104,68 +91,6 @@ string lowerCase(const string& myStr)
         });
 
     return result;
-}
-
-
-bool parseInt(const string& str, int& value)
-{
-    try
-    {
-        const string s = trim(str);
-
-        if (s.empty())
-            return false;
-
-        size_t pos = 0;
-        const int parsed = stoi(s, &pos);
-
-        if (pos != s.size())
-            return false;
-
-        value = parsed;
-        return true;
-    }
-    catch (...)
-    {
-        return false;
-    }
-}
-
-
-bool parseDouble(const string& str, double& value)
-{
-    try
-    {
-        const string s = trim(str);
-
-        if (s.empty())
-            return false;
-
-        size_t pos = 0;
-        const double parsed = stod(s, &pos);
-
-        if (pos != s.size())
-            return false;
-
-        value = parsed;
-        return true;
-    }
-    catch (...)
-    {
-        return false;
-    }
-}
-
-
-bool parseFloat(const string& str, float& value)
-{
-    double parsed;
-
-    if (!parseDouble(str, parsed))
-        return false;
-
-    value = static_cast<float>(parsed);
-    return true;
 }
 
 
@@ -669,8 +594,7 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
         {
             double valueDouble;
 
-            if (!parseDouble(value, valueDouble) ||
-                !isValidHeaderValue(valueDouble))
+            if (!parseDouble(value, valueDouble) || !isValidHeaderValue(valueDouble))
             {
                 errorStr = "Invalid XLLCORNER value.";
                 return false;
@@ -683,8 +607,7 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
         {
             double valueDouble;
 
-            if (!parseDouble(value, valueDouble) ||
-                !isValidHeaderValue(valueDouble))
+            if (!parseDouble(value, valueDouble) || !isValidHeaderValue(valueDouble))
             {
                 errorStr = "Invalid YLLCORNER value.";
                 return false;

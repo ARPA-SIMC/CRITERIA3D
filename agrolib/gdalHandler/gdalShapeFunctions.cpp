@@ -109,11 +109,21 @@ bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolu
     // create color map
     if (! paletteFileName.isEmpty())
     {
+        // set standard C locale (point as decimal separator)
+        const char* currentLocale = setlocale(LC_NUMERIC, nullptr);
+        const std::string savedLocale = currentLocale ? currentLocale : "C";
+
+        setlocale(LC_NUMERIC, "C");
+
         char *optionForDEM[] = {const_cast<char *>("-alpha"), nullptr};
         GDALDEMProcessingOptions *psOptions = GDALDEMProcessingOptionsNew(optionForDEM, nullptr);
 
         GDALDatasetH colorDataset = GDALDEMProcessing(strdup(fileNameColor.toStdString().c_str()), inputDataset, "color-relief",
                                                       strdup(paletteFileName.toStdString().c_str()), psOptions, &error);
+
+        // Restore locale
+        setlocale(LC_NUMERIC, savedLocale.c_str());
+
         if (colorDataset == nullptr || error != 0)
         {
             errorStr = "Error in coloring map (GDALDEMProcessing).";

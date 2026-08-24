@@ -27,6 +27,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <algorithm>
+#include <charconv>
+#include <string>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -536,5 +538,87 @@
 
             return res;
         }
+    }
+
+
+    std::string trim(const std::string& str)
+    {
+        const size_t first = str.find_first_not_of(" \t\r\n");
+
+        if (first == std::string::npos)
+            return "";
+
+        const size_t last = str.find_last_not_of(" \t\r\n");
+
+        return str.substr(first, last - first + 1);
+    }
+
+
+    bool parseInt(const std::string& str, int& value)
+    {
+        try
+        {
+            const std::string s = trim(str);
+
+            if (s.empty())
+                return false;
+
+            size_t pos = 0;
+            const int parsed = stoi(s, &pos);
+
+            if (pos != s.size())
+                return false;
+
+            value = parsed;
+            return true;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+
+    bool parseDouble(const std::string& str, double& value)
+    {
+        try
+        {
+            std::string s = trim(str);
+
+            if (s.empty())
+                return false;
+
+            // std::from_chars uses point as decimal separator
+            std::replace(s.begin(), s.end(), ',', '.');
+
+            double parsed = 0.0;
+
+            const char* first = s.data();
+            const char* last = first + s.size();
+
+            const auto result = std::from_chars(first, last, parsed);
+
+            if (result.ec != std::errc() || result.ptr != last)
+                return false;
+
+            value = parsed;
+            return true;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+
+    bool parseFloat(const std::string& str, float& value)
+    {
+        double parsed;
+
+        if (! parseDouble(str, parsed))
+            return false;
+
+        value = static_cast<float>(parsed);
+        return true;
     }
 
