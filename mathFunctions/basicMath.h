@@ -4,10 +4,10 @@
     #ifndef COMMONCONSTANTS_H
         #include "commonConstants.h"
     #endif
-    #ifndef _VECTOR_
-        #include <vector>
-    #endif
+
+    #include <vector>
     #include <math.h>
+    #include <string>
 
     #ifndef POWER4
         #define POWER4(x) ((x) * (x) * (x) * (x))
@@ -54,6 +54,11 @@
     double getCosDecimalDegree(double angle);
 
     double powerIntegerExponent(double base, int exponent);
+
+    std::string trim(const std::string& str);
+    bool parseInt(const std::string& str, int& value);
+    bool parseDouble(const std::string& str, double& value);
+    bool parseFloat(const std::string& str, float& value);
 
     namespace sorting
     {
