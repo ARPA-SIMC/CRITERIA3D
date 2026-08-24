@@ -36,7 +36,7 @@
     {
 
     private:
-        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState,
+        bool _saveOutputRaster, _saveDailyState, _saveEndOfRunState,
              _saveYearlyState, _saveMonthlyState;
 
         void clear3DProject();
@@ -86,7 +86,7 @@
         bool loadRothCBICMaps();
         double getRothCClayContent(int soilIndex);
         double getRothCYield(int row, int col);
-        void updateETAndPrecMaps();
+        bool updateETAndPrecMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
 
         void clearHydrallMaps();
@@ -111,11 +111,15 @@
         void setSaveMonthlyState(bool isSave) {_saveMonthlyState = isSave;}
         bool isSaveMonthlyState() {return _saveMonthlyState;}
 
-        void setSaveOutputRaster(bool isSave);
-        bool isSaveOutputRaster();
+        void setSaveOutputRaster(bool isSave) {
+            _saveOutputRaster = isSave;
+        }
 
-        void setSaveOutputPoints(bool isSave);
-        bool isSaveOutputPoints();
+        bool isSaveOutputRaster() const {
+            return _saveOutputRaster;
+        }
+
+        bool isSaveOutputPoints() const;
 
         bool loadCriteria3DProject(const QString &fileName);
         bool loadCriteria3DParameters();

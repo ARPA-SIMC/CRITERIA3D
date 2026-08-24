@@ -108,7 +108,7 @@
                            const std::string &variableName, const std::string &variableUnit,
                            const Crit3DDate &myDate, int nDays, int refYearStart, int refYearEnd);
 
-        bool writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid);
+        bool writeData_NoTime(const gis::Crit3DRasterGrid &dataGrid);
     };
 
 

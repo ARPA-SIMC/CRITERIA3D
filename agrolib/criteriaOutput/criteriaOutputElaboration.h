@@ -34,7 +34,8 @@
                    const QDate &firstDate, const QDate &lastDate, std::vector<float> &resultVector, QString &errorStr);
 
     int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, const QString &csvFileName, const QDate &dateComputation,
-                              const QList<QString> &outputVarName, const QString &shapeField, QString &errorStr);
+                              const QList<QString> &shapeVarName, const QList<QString> &outputVarName,
+                              const QString &shapeField, QString &errorStr);
 
     int orderCsvByField(const QString &csvFileName, const QString &field, QString &errorStr);
 

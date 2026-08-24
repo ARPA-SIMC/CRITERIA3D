@@ -123,8 +123,8 @@
             Crit3DRasterHeader();
 
             bool isEqualTo(const Crit3DRasterHeader& myHeader);
-
         };
+
 
         bool operator == (const Crit3DRasterHeader& myHeader1, const Crit3DRasterHeader& myHeader2);
 
@@ -263,13 +263,15 @@
         void utmToLatLon(int zoneNumber, double referenceLat, double utmEasting, double utmNorthing, double *lat, double *lon);
         bool isValidUtmTimeZone(int utmZone, int timeZone);
 
-        bool openRaster(std::string fileName, Crit3DRasterGrid *rasterGrid, int currentUtmZone, std::string &errorStr);
+        bool openRaster(const std::string fileName, Crit3DRasterGrid *rasterGrid, int currentUtmZone, std::string &errorStr);
 
-        bool readEsriGrid(const std::string &fileName, Crit3DRasterGrid* rasterGrid, std::string &errorStr);
+        bool readEsriGridFlt(const std::string &fileName, Crit3DRasterGrid* rasterGrid, std::string &errorStr);
         bool readEsriGridAscii(const std::string &fileName, gis::Crit3DRasterGrid *rasterGrid, std::string &errorStr);
-        bool writeEsriGrid(const std::string &fileName, Crit3DRasterGrid *rasterGrid, std::string &errorStr);
 
-        bool readEnviGrid(std::string fileName, Crit3DRasterGrid* rasterGrid, int currentUtmZone, std::string &errorStr);
+        bool readEsriGridBil(const std::string& fileName, Crit3DRasterGrid* rasterGrid, int currentUtmZone, std::string& errorStr);
+        bool readEnviGrid(const std::string fileName, Crit3DRasterGrid* rasterGrid, int currentUtmZone, std::string &errorStr);
+
+        bool writeEsriGrid(const std::string &fileName, Crit3DRasterGrid *rasterGrid, std::string &errorStr);
         bool writeEnviGrid(std::string fileName, int utmZone, Crit3DRasterGrid *rasterGrid, std::string &errorStr);
 
         bool mapAlgebra(Crit3DRasterGrid* myMap1, Crit3DRasterGrid* myMap2, Crit3DRasterGrid *outputMap, operationType myOperation);
@@ -283,7 +285,7 @@
         bool replaceRasterValues(const Crit3DRasterGrid* refRaster, const Crit3DRasterGrid* maskRaster, Crit3DRasterGrid* outputRaster);
 
         bool cropRaster(const Crit3DRasterGrid *inputRaster, Crit3DRasterGrid *outputRaster,
-                        int zoneNumber, const Crit3DGeoPoint &geo1, const Crit3DGeoPoint &geo2);
+                        int zoneNumber, const Crit3DGeoPoint &topLeft, const Crit3DGeoPoint &bottomRight);
 
         bool computeLatLonMaps(const gis::Crit3DRasterGrid& rasterGrid,
                                gis::Crit3DRasterGrid* latMap, gis::Crit3DRasterGrid* lonMap,
@@ -300,7 +302,7 @@
         float topographicDistance(float x1, float y1, float z1, float x2, float y2, float z2, float distance,
                                   const gis::Crit3DRasterGrid& dem);
         bool topographicDistanceMap(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap);
-        float closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem);
+        double closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem);
         bool compareGrids(const gis::Crit3DRasterGrid& first, const gis::Crit3DRasterGrid& second);
         void resampleGrid(const gis::Crit3DRasterGrid& oldGrid, gis::Crit3DRasterGrid* newGrid,
                           Crit3DRasterHeader* newHeader, aggregationMethod elab, float nodataRatioThreshold);

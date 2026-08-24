@@ -188,7 +188,6 @@
         void on_actionOutputDB_new_triggered();
         void on_actionOutputDB_open_triggered();
         void on_actionOutputPoints_delete_selected_triggered();
-        void on_flagOutputPoints_save_output_toggled(bool isChecked);
         void on_flagCompute_only_points_toggled(bool isChecked);
         void on_actionLoad_OutputPoints_triggered();
         void on_actionOutputPoints_add_triggered();

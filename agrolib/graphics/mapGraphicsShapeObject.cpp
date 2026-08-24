@@ -37,8 +37,8 @@ MapGraphicsShapeObject::MapGraphicsShapeObject(MapGraphicsView* _view, MapGraphi
 */
 QRectF MapGraphicsShapeObject::boundingRect() const
 {
-     return QRectF( -this->view->width() * 0.6, -this->view->height() * 0.6,
-                     this->view->width() * 1.2,  this->view->height() * 1.2);
+     return QRectF( -this->view->width() * 0.5, -this->view->height() * 0.5,
+                     this->view->width() * 1.0,  this->view->height() * 1.0);
 }
 
 
@@ -91,22 +91,31 @@ QPointF MapGraphicsShapeObject::getPixel(const LatLonPoint &geoPoint)
 }
 
 
-void MapGraphicsShapeObject::setPolygon(unsigned int i, unsigned int j, QPolygonF* polygon)
+void MapGraphicsShapeObject::setPolygon(unsigned int i,
+                                        unsigned int j,
+                                        QPolygonF* polygon)
 {
-    QPointF point, oldPoint;
+    if (polygon == nullptr)
+        return;
 
     polygon->clear();
-    unsigned long offset = shapeParts[i][j].offset;
-    unsigned long lenght = shapeParts[i][j].length;
 
-    for (unsigned long v = 0; v < lenght; v++)
+    const unsigned long offset = shapeParts[i][j].offset;
+    const unsigned long length = shapeParts[i][j].length;
+
+    bool hasPreviousPoint = false;
+    QPointF previousPoint;
+
+    for (unsigned long v = 0; v < length; ++v)
     {
-        j = offset + v;
-        point = getPixel(geoPoints[i][j]);
-        if (point != oldPoint)
+        const unsigned long vertexIndex = offset + v;
+        const QPointF point = getPixel(geoPoints[i][vertexIndex]);
+
+        if (!hasPreviousPoint || point != previousPoint)
         {
             polygon->append(point);
-            oldPoint = point;
+            previousPoint = point;
+            hasPreviousPoint = true;
         }
     }
 }
@@ -168,7 +177,7 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
             QPolygonF polygon;
             setPolygon(i, j, &polygon);
 
-            std::vector<unsigned int> myHoles = shapePointer->getHoles(i, j);
+            const std::vector<unsigned int>& myHoles = shapePointer->getHoles(i, j);
 
             if (myHoles.empty())
             {
@@ -196,14 +205,18 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
 
 bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
 {
-    if (shapePtr == nullptr) return false;
+    if (shapePtr == nullptr)
+        return false;
+
+    const int zoneNumber = shapePtr->getUtmZone();
+    if ((zoneNumber < 1) || (zoneNumber > 60))
+        return false;
+
+    clear();
+
     shapePointer = shapePtr;
 
     updateCenter();
-
-    double lat, lon;
-    ShapeObject myShape;
-    Box<double>* bounds;
 
     _nrShapes = unsigned(shapePointer->getShapeCount());
     shapeParts.resize(_nrShapes);
@@ -211,16 +224,13 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
     geoPoints.resize(_nrShapes);
     values.resize(_nrShapes);
 
-    double refLatitude = geoMap->referencePoint.latitude;
-
-    int zoneNumber = shapePtr->getUtmZone();
-    if ((zoneNumber < 1) || (zoneNumber > 60))
-    {
-        return false;
-    }
+    const double refLatitude = geoMap->referencePoint.latitude;
 
     for (unsigned int i = 0; i < _nrShapes; i++)
     {
+        ShapeObject myShape;
+        double lat, lon;
+
         shapePointer->getShape(int(i), myShape);
         shapeParts[i] = myShape.getParts();
 
@@ -233,7 +243,7 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
         for (unsigned int j = 0; j < nrParts; j++)
         {
             // bounds
-            bounds = &(shapeParts[i][j].boundsPart);
+            Box<double>* bounds = &(shapeParts[i][j].boundsPart);
             gis::utmToLatLon(zoneNumber, refLatitude, bounds->xmin, bounds->ymin, &lat, &lon);
             geoBounds[i][j].v0.lat = lat;
             geoBounds[i][j].v0.lon = lon;
@@ -355,16 +365,16 @@ void MapGraphicsShapeObject::clear()
 {
     setDrawing(false);
 
-    for (unsigned int i = 0; i < _nrShapes; i++)
-    {
-        shapeParts[i].clear();
-        geoBounds[i].clear();
-        geoPoints[i].clear();
-    }
-
     shapeParts.clear();
     geoBounds.clear();
     geoPoints.clear();
+    values.clear();
+    categories.clear();
 
     _nrShapes = 0;
+    _selectedShape = NODATA;
+
+    shapePointer = nullptr;
+
+    colorScale->setRange(NODATA, NODATA);
 }

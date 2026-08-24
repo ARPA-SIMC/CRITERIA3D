@@ -9,23 +9,23 @@
 #include <vector>
 
 
-Crit3DWaterBalanceMaps::Crit3DWaterBalanceMaps()
+Vine3DWaterBalanceMaps::Vine3DWaterBalanceMaps()
 {
     initialize();
 }
 
-Crit3DWaterBalanceMaps::Crit3DWaterBalanceMaps(const gis::Crit3DRasterGrid &myDEM)
+Vine3DWaterBalanceMaps::Vine3DWaterBalanceMaps(const gis::Crit3DRasterGrid &myDEM)
 {
     initializeWithDEM(myDEM);
 }
 
-void Crit3DWaterBalanceMaps::initialize()
+void Vine3DWaterBalanceMaps::initialize()
 {
     bottomDrainageMap = new gis::Crit3DRasterGrid;
     waterInflowMap = new gis::Crit3DRasterGrid;
 }
 
-void Crit3DWaterBalanceMaps::initializeWithDEM(const gis::Crit3DRasterGrid &myDEM)
+void Vine3DWaterBalanceMaps::initializeWithDEM(const gis::Crit3DRasterGrid &myDEM)
 {
     initialize();
     bottomDrainageMap->initializeGrid(myDEM);
@@ -33,7 +33,7 @@ void Crit3DWaterBalanceMaps::initializeWithDEM(const gis::Crit3DRasterGrid &myDE
 }
 
 
-gis::Crit3DRasterGrid* Crit3DWaterBalanceMaps::getMapFromVar(criteria3DVariable myVar)
+gis::Crit3DRasterGrid* Vine3DWaterBalanceMaps::getMapFromVar(criteria3DVariable myVar)
 {
     if (myVar == bottomDrainage)
         return bottomDrainageMap;
@@ -185,6 +185,7 @@ bool getCriteria3DVarMap(Vine3DProject* myProject, criteria3DVariable myVar,
     return true;
 }
 
+
 bool getSoilSurfaceMoisture(Vine3DProject* myProject, gis::Crit3DRasterGrid* outputMap, double lowerDepth)
 {
     int lastLayer;
@@ -216,11 +217,11 @@ bool getSoilSurfaceMoisture(Vine3DProject* myProject, gis::Crit3DRasterGrid* out
                     {
                         if (int(myProject->indexMap.at(size_t(layer)).value[row][col]) != int(myProject->indexMap.at(size_t(layer)).header->flag))
                         {
-                            waterContent = soilFluxes3D::getNodeWaterContent(nodeIndex);                        //[m^3 m^-3]
+                            waterContent = soilFluxes3D::getNodeWaterContent(nodeIndex);                    // [m^3 m^-3]
                             sumWater += waterContent * myProject->layerThickness.at(size_t(layer));
-                            wiltingPoint = getSoilVar(myProject, 0, layer, soil::soilWaterContentWP);       //[m^3 m^-3]
-                            minWater += wiltingPoint * myProject->layerThickness.at(size_t(layer));         //[m]
-                            saturation = getSoilVar(myProject, 0, layer, soil::soilWaterContentSat);        //[m^3 m^-3]
+                            wiltingPoint = getSoilVar(myProject, 0, layer, soil::soilWaterContentWP);       // [m^3 m^-3]
+                            minWater += wiltingPoint * myProject->layerThickness.at(size_t(layer));         // [m]
+                            saturation = getSoilVar(myProject, 0, layer, soil::soilWaterContentSat);        // [m^3 m^-3]
                             maxWater += saturation * myProject->layerThickness.at(size_t(layer));
                         }
                     }
@@ -230,53 +231,6 @@ bool getSoilSurfaceMoisture(Vine3DProject* myProject, gis::Crit3DRasterGrid* out
                 outputMap->value[row][col] = float(soilSurfaceMoisture);
             }
          }
-
-    return true;
-}
-
-// return map of available water content in the root zone [mm]
-bool getRootZoneAWCmap(Vine3DProject* myProject, gis::Crit3DRasterGrid* outputMap)
-{
-    long nodeIndex;
-    double awc, thickness, sumAWC;
-    int soilIndex, horizonIndex;
-
-    for (int row = 0; row < outputMap->header->nrRows; row++)
-        for (int col = 0; col < outputMap->header->nrCols; col++)
-        {
-            //initialize
-            outputMap->value[row][col] = outputMap->header->flag;
-
-            if (myProject->indexMap.at(0).value[row][col] != myProject->indexMap.at(0).header->flag)
-            {
-                sumAWC = 0.0;
-                soilIndex = myProject->getSoilIndex(row, col);
-                int caseIndex = myProject->getModelCaseIndex(row,col);
-
-                if (soilIndex != NODATA && caseIndex != NODATA)
-                {
-                    for (unsigned int layer = 1; layer < myProject->nrLayers; layer++)
-                    {
-                        nodeIndex = myProject->indexMap.at(layer).value[row][col];
-
-                        if (nodeIndex != myProject->indexMap.at(layer).header->flag)
-                        {
-                            if (myProject->grapevine.getRootDensity(&(myProject->modelCases[caseIndex]), layer) > 0.0)
-                            {
-                                awc = soilFluxes3D::getNodeAvailableWaterContent(nodeIndex);  //[m3 m-3]
-                                if (awc != NODATA)
-                                {
-                                    thickness = myProject->layerThickness[layer] * 1000.0;  //[mm]
-                                    horizonIndex = soil::getHorizonIndex(myProject->soilList[soilIndex], myProject->layerDepth[layer]);
-                                    sumAWC += (awc * thickness);         //[mm]
-                                }
-                            }
-                        }
-                    }
-                }
-                outputMap->value[row][col] = sumAWC;
-            }
-        }
 
     return true;
 }
@@ -383,7 +337,7 @@ bool saveWaterBalanceOutput(Vine3DProject* myProject, QDate myDate, criteria3DVa
     }
     else if(myVar == availableWaterContent)
     {
-        if (! getRootZoneAWCmap(myProject, myMap))
+        if (! myProject->getRootZoneAWCmap(myMap))
             return false;
     }
     else
@@ -419,7 +373,7 @@ bool loadWaterBalanceState(Vine3DProject* myProject, QDate myDate, QString state
     for (unsigned int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
     {
         myMapName = statePath + myPrefix + QString::number(layerIndex);
-        if (! gis::readEsriGrid(myMapName.toStdString(), &myMap, errorStr))
+        if (! gis::readEsriGridFlt(myMapName.toStdString(), &myMap, errorStr))
         {
             myProject->logError(QString::fromStdString(errorStr));
             return false;

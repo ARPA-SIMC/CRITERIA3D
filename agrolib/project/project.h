@@ -177,6 +177,7 @@
         void saveProject();
         void saveProjectLocation();
         void saveProjectSettings();
+        void saveProjectField(const QString &fieldStr, const QString &valueStr);
         void saveAllParameters();
         void saveGenericParameters();
         void saveInterpolationParameters();
@@ -227,8 +228,8 @@
         void setCurrentVariable(meteoVariable variable) { _currentVariable = variable; }
         meteoVariable getCurrentVariable() const { return _currentVariable; }
 
-        QString getRelativePath(QString fileName) const;
-        QString getCompleteFileName(QString fileName, QString secondaryPath);
+        QString getRelativePath(const QString &fileName) const;
+        QString getCompleteFileName(const QString& inputFileName, const QString& secondaryPath) const;
 
         QString getCurrentTileMap() const { return _currentTileMap; }
 
@@ -267,8 +268,8 @@
         bool deleteMeteoGridDB();
         bool loadAggregationDB(QString dbName);
         bool loadAggregationDBAsMeteoPoints(QString fileName);
-        bool loadOutputPointsDB(QString dbName);
-        bool newOutputPointsDB(QString dbName);
+        bool loadOutputPointsDB(const QString &dbName);
+        bool newOutputPointsDB(const QString &dbName);
         bool loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDate, bool showInfo);
         bool loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDateTime, bool showInfo);
         bool loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &lastDate, bool showInfo);
@@ -335,8 +336,12 @@
         bool setActiveStatePointList(QString fileName, bool isActive);
         bool setSelectedStatePointList(QString fileName, bool isSelect, bool isShowVariable);
         bool selectPointList(const QList<QString> &pointList, bool isSelect, bool isShowVariable);
-        bool setActiveStateWithCriteria(bool isActive);
-        bool setSelectedStateWithCriteria(bool isSelect, bool isShowVariable);
+
+        bool selectPointsWithDemDistance(const QString& operation, double value, QList<QString>& pointList);
+        bool selectPointsWithValues(const QString& operation, double threshold, QList<QString>& pointList);
+        bool activePointsWithCriteria(bool isActive);
+        bool selectPointsWithCriteria(bool isSelect, bool isShowVariable);
+
         bool setMarkedFromPointList(QString fileName, bool isAdd);
         bool setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoints);
         bool deleteMeteoPoints(const QList<QString>& pointList);

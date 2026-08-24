@@ -620,6 +620,7 @@ bool Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent
     return true;
 }
 
+// TODO rendere bool, controllare che le mappe siano isLoaded, altrimenti restituire false
 void Crit3DHydrall::setStateVariables(const Crit3DHydrallMaps &stateMap, int row, int col)
 {
     statePlant.treeNetPrimaryProduction = stateMap.treeNetPrimaryProduction->value[row][col];

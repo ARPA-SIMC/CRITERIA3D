@@ -15,6 +15,8 @@
 
     #define PREC_ID 250
     #define RAD_ID 706
+    #define WINDMAX_ID 635
+    #define KNOT_TO_MS 0.514444
 
     class DbArkimet : public Crit3DMeteoPointsDbHandler
     {

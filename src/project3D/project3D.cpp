@@ -1748,33 +1748,31 @@ bool Project3D::isWithinSoil(int soilIndex, double depth)
 
 
 // upper depth of soil layer [m]
-double Project3D::getSoilLayerTop(unsigned int i)
+double Project3D::getSoilLayerTop(unsigned int i) const
 {
-    return layerDepth[i] - layerThickness[i] / 2.0;
+    return layerDepth[i] - layerThickness[i] * 0.5;
 }
 
 // lower depth of soil layer [m]
-double Project3D::getSoilLayerBottom(unsigned int i)
+double Project3D::getSoilLayerBottom(unsigned int i) const
 {
-    return layerDepth[i] + layerThickness[i] / 2.0;
+    return layerDepth[i] + layerThickness[i] * 0.5;
 }
 
 
-// soil layer index from soildepth [m]
-int Project3D::getSoilLayerIndex(double depth)
+// soil layer index from soil depth [m]
+int Project3D::getSoilLayerIndex(double depth) const
 {
-    unsigned int layer = 0;
-    while (depth > getSoilLayerBottom(layer))
+    if (nrLayers == 0 || depth < 0)
+        return NODATA;
+
+    for (unsigned int layer = 0; layer < nrLayers; layer++)
     {
-        if (layer == nrLayers-1)
-        {
-            errorString = "Wrong soil depth.";
-            return NODATA;
-        }
-        layer++;
+        if (depth <= getSoilLayerBottom(layer))
+            return layer;
     }
 
-    return layer;
+    return NODATA;
 }
 
 
@@ -2197,7 +2195,7 @@ bool Project3D::aggregateAndSaveDailyMap(meteoVariable myVar, aggregationMethod 
     for (Crit3DTime myTime = myTimeIni; myTime<=myTimeFin; myTime=myTime.addSeconds(myTimeStep))
     {
         QString hourlyFileName = getOutputNameHourly(myVar, getQDateTime(myTime));
-        if (gis::readEsriGrid((hourlyPath + hourlyFileName).toStdString(), myMap, myError))
+        if (gis::readEsriGridFlt((hourlyPath + hourlyFileName).toStdString(), myMap, myError))
         {
             if (myTime == myTimeIni)
             {
@@ -2855,7 +2853,7 @@ bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, gi
     QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime);
     std::string error;
 
-    if (gis::readEsriGrid(fileName.toStdString(), myGrid, error))
+    if (gis::readEsriGridFlt(fileName.toStdString(), myGrid, error))
         return true;
     else
         return false;
@@ -2868,7 +2866,7 @@ float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, 
     QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime);
     std::string error;
 
-    if (gis::readEsriGrid(fileName.toStdString(), myGrid, error))
+    if (gis::readEsriGridFlt(fileName.toStdString(), myGrid, error))
         if (myGrid->value[row][col] != myGrid->header->flag)
             return myGrid->value[row][col];
 

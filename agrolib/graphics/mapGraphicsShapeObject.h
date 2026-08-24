@@ -77,6 +77,12 @@
          */
         explicit MapGraphicsShapeObject(MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
 
+        ~MapGraphicsShapeObject()
+        {
+            delete colorScale;
+            delete geoMap;
+        }
+
         Crit3DColorScale* colorScale;
 
         void updateCenter();

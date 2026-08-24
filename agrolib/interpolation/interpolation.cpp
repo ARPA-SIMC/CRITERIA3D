@@ -890,7 +890,7 @@ float shepardIdw(const std::vector <Crit3DInterpolationDataPoint>& myPoints, std
     radius_3 = radius / 3.;
     radius_27_4 = 6.75 / radius;
     for (i=0; i < nrValid; i++)
-        if (shepardDistances[i] > 0)
+        if (shepardDistances[i] > EPSILON)
         {
             if (shepardDistances[i] <= radius_3)
             {
@@ -973,7 +973,7 @@ float modifiedShepardIdw(const std::vector <Crit3DInterpolationDataPoint> &myPoi
     double weightSum = 0.0;
     for (std::size_t i=0; i < nrPoints; ++i)
     {
-        if (shepardDistances[i] > 0.0 && shepardDistances[i] <= radius)
+        if (shepardDistances[i] > EPSILON && shepardDistances[i] <= radius)
         {
             s[i] = (radius - shepardDistances[i]) / (radius * shepardDistances[i]);
             weightSum += s[i];
@@ -1036,7 +1036,7 @@ float inverseDistanceWeighted(const std::vector<Crit3DInterpolationDataPoint> &p
 
     for (std::size_t i = 0; i < nrPoints; ++i)
     {
-        if (distances[i] > 0.f)
+        if (distances[i] > EPSILON)
         {
             // weight inversely proportional to the cube of the distance
             double dist_km = static_cast<double>(distances[i]) / 10000.;

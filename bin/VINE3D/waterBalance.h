@@ -13,14 +13,14 @@
     class Vine3DProject;
 
 
-    class Crit3DWaterBalanceMaps
+    class Vine3DWaterBalanceMaps
     {
         public:
             gis::Crit3DRasterGrid* bottomDrainageMap;
             gis::Crit3DRasterGrid* waterInflowMap;
 
-            Crit3DWaterBalanceMaps();
-            Crit3DWaterBalanceMaps(const gis::Crit3DRasterGrid &myDEM);
+            Vine3DWaterBalanceMaps();
+            Vine3DWaterBalanceMaps(const gis::Crit3DRasterGrid &myDEM);
 
             void initialize();
             void initializeWithDEM(const gis::Crit3DRasterGrid &myDEM);
@@ -35,8 +35,6 @@
 
     bool getCriteria3DVarMap(Vine3DProject* myProject, criteria3DVariable myVar, int layerIndex,
                              gis::Crit3DRasterGrid* criteria3DMap);
-
-    bool getRootZoneAWCmap(Vine3DProject* myProject, gis::Crit3DRasterGrid* outputMap);
 
     bool getCriteria3DIntegrationMap(Vine3DProject* myProject, criteria3DVariable myVar,
                            double upperDepth, double lowerDepth, gis::Crit3DRasterGrid* criteria3DMap);

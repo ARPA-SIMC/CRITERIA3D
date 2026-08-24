@@ -146,9 +146,8 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.setSaveYearlyState(false);
     myProject.setSaveMonthlyState(false);
 
-    myProject.setSaveOutputPoints(false);
     myProject.setComputeOnlyPoints(false);
-    ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
+
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
     ui->action_parallel_computing->setChecked(myProject.isParallelComputing());
     ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
@@ -940,8 +939,10 @@ void MainWindow::on_actionLoad_DEM_triggered()
 {
     QString demPath = myProject.getDefaultPath() + PATH_DEM;
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Digital Elevation Model"), demPath,
-                                    tr("ESRI float (*.flt);; ESRI ascii (*.asc);; ENVI image (*.img)"));
-    if (fileName == "") return;
+                                    tr("ESRI float (*.flt);; ESRI ascii (*.asc);; "
+                                       "ESRI bil (*.bil);; ENVI image (*.img)"));
+    if (fileName == "")
+        return;
 
     clearRaster_GUI();
 
@@ -967,7 +968,6 @@ void MainWindow::on_actionOpenProject_triggered()
         myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
     }
 
-    ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
 
     myProject.showEachTimeStep = ui->actionCriteria3D_update_subHourly->isChecked();
@@ -2004,7 +2004,8 @@ void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
 void MainWindow::on_actionLoad_soil_map_triggered()
 {
     QString soilPath = myProject.getDefaultPath() + PATH_SOIL;
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), soilPath, tr("ESRI float (*.flt);; ENVI image (*.img)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), soilPath,
+                                tr("ESRI float (*.flt);; ESRI bil (*.bil);; ENVI image (*.img)"));
     if (fileName == "") return;
 
     if (myProject.loadSoilMap(fileName))
@@ -2995,7 +2996,7 @@ void MainWindow::on_actionPoints_deactivate_from_point_list_triggered()
 
 void MainWindow::on_actionPoints_activate_with_criteria_triggered()
 {
-    if (myProject.setActiveStateWithCriteria(true))
+    if (myProject.activePointsWithCriteria(true))
     {
         // reload meteoPoint, point properties table is changed
         QString dbName = myProject.dbPointsFileName;
@@ -3007,7 +3008,7 @@ void MainWindow::on_actionPoints_activate_with_criteria_triggered()
 
 void MainWindow::on_actionPoints_deactivate_with_criteria_triggered()
 {
-    if (myProject.setActiveStateWithCriteria(false))
+    if (myProject.activePointsWithCriteria(false))
     {
         // reload meteoPoint, point properties table is changed
         QString dbName = myProject.dbPointsFileName;
@@ -3343,119 +3344,129 @@ void MainWindow::on_actionOutputPoints_delete_selected_triggered()
 
 void MainWindow::on_actionOutputPoints_newFile_triggered()
 {
-    if (!myProject.outputPoints.empty())
+    if (! myProject.outputPoints.empty())
     {
         QMessageBox::StandardButton closeBox;
-        closeBox = QMessageBox::question(this, "close output points" ,
-                                      "existing output points will be closed",
+        closeBox = QMessageBox::question(this, tr("close output points list"),
+                                      tr("The current output points list will be closed."),
                                       QMessageBox::Yes|QMessageBox::No);
-        if (closeBox == QMessageBox::Yes)
-        {
-            resetOutputPointMarkers();
-
-        }
-        else
-        {
+        if (closeBox != QMessageBox::Yes)
             return;
-        }
+
+        resetOutputPointMarkers();
     }
 
-    QString csvName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getProjectPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
-    if (csvName == "")
+    // select csv filename
+    QString csvFileName = QFileDialog::getSaveFileName(this, tr("Save as"),
+                                                       myProject.getProjectPath(),
+                                                       tr("csv files (*.csv)"));
+    if (csvFileName.isEmpty())
+        return;
+
+    // open csv file (clean previous data with WriteOnly)
+    QFile csvFile(csvFileName);
+    if (! csvFile.open(QIODevice::WriteOnly | QIODevice::Text))
     {
+        myProject.logError(tr("Failed to open csv file."));
         return;
     }
 
-    QFile csvFile(csvName);
-    if (csvFile.exists())
-    {
-        if (!csvFile.remove())
-        {
-            myProject.logError("Failed to remove existing csv file.");
-            return;
-        }
-    }
+    // write header
+    QTextStream outStream(&csvFile);
+    outStream << "id,latitude,longitude,height,active\n";
+    csvFile.close();
 
-    if (csvFile.open(QIODevice::ReadWrite))
-    {
-        QTextStream outStream(&csvFile);
-        outStream << "id, latitude, longitude, height, active" << "\n";
-        csvFile.close();
-    }
-    else
-    {
-        myProject.logError("Failed to open csv file.");
-        return;
-    }
-
-    myProject.loadOutputPointList(csvName);
-}
-
-
-void MainWindow::on_actionOutputDB_new_triggered()
-{
-    QString dbName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getProjectPath() + PATH_OUTPUT, tr("DB files (*.db)"));
-    if (dbName == "") return;
-
-    myProject.newOutputPointsDB(dbName);
-}
-
-
-void MainWindow::on_actionOutputDB_open_triggered()
-{
-    QString dbName = QFileDialog::getOpenFileName(this, tr("Open output db"), myProject.getProjectPath() + PATH_OUTPUT, tr("DB files (*.db)"));
-
-    if (dbName == "")
+    // load as current output point list
+    if (! myProject.loadOutputPointList(csvFileName))
         return;
 
-    if (myProject.loadOutputPointsDB(dbName))
-        if (! myProject.outputPointsFileName.isEmpty())
-        {
-            myProject.setSaveOutputPoints(true);
-            ui->flagOutputPoints_save_output->setChecked(true);
-        }
-}
-
-
-void MainWindow::on_flagOutputPoints_save_output_toggled(bool isChecked)
-{
-    if (isChecked && myProject.outputPointsDbHandler == nullptr)
+    // set on project file
+    QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Output points list"),
+                                        tr("Do you want to set this file as the project's output points list?"),
+                                        QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
     {
-        myProject.logError("Open or create a new output DB before.");
-        isChecked = false;
+        myProject.saveProjectField("output_points", csvFileName);
     }
-    myProject.setSaveOutputPoints(isChecked);
-    ui->flagOutputPoints_save_output->setChecked(isChecked);
-}
-
-
-void MainWindow::on_flagCompute_only_points_toggled(bool isChecked)
-{
-    myProject.setComputeOnlyPoints(isChecked);
 }
 
 
 void MainWindow::on_actionLoad_OutputPoints_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open output point list"), myProject.getProjectPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
-    if (fileName == "") return;
+    QString csvFileName = QFileDialog::getOpenFileName(this, tr("Open output point list"),
+                                                    myProject.getProjectPath(),
+                                                    tr("csv files (*.csv)"));
+    if (csvFileName.isEmpty())
+        return;
 
-    if (! myProject.loadOutputPointList(fileName))
+    if (! myProject.loadOutputPointList(csvFileName))
     {
         resetOutputPointMarkers();
         return;
     }
 
     addOutputPointsGUI();
+
+    // set on project file
+    QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Output points list"),
+                                        tr("Do you want to set this file as the project's output points list?"),
+                                        QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
+    {
+        myProject.saveProjectField("output_points", csvFileName);
+    }
 }
 
+
+void MainWindow::on_actionOutputDB_new_triggered()
+{
+    QString dbFileName = QFileDialog::getSaveFileName(this, tr("Save as"),
+                                                  myProject.getProjectPath() + PATH_OUTPUT,
+                                                  tr("DB files (*.db)"));
+
+    if (! myProject.newOutputPointsDB(dbFileName))
+        return;
+
+    // set on project file
+    QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Output DB"),
+                                                              tr("Do you want to set this file as the project's output database?"),
+                                                              QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
+    {
+        myProject.saveProjectField("output_db", dbFileName);
+    }
+}
+
+
+void MainWindow::on_actionOutputDB_open_triggered()
+{
+    QString dbFileName = QFileDialog::getOpenFileName(this, tr("Open output db"),
+                                                  myProject.getProjectPath() + PATH_OUTPUT,
+                                                  tr("DB files (*.db)"));
+
+    if (! myProject.loadOutputPointsDB(dbFileName))
+        return;
+
+    // set on project file
+    QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Output DB"),
+                                                              tr("Do you want to set this file as the project's output database?"),
+                                                              QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
+    {
+        myProject.saveProjectField("output_db", dbFileName);
+    }
+}
+
+void MainWindow::on_flagCompute_only_points_toggled(bool isChecked)
+{
+    myProject.setComputeOnlyPoints(isChecked);
+}
 
 void MainWindow::on_actionOutputPoints_add_triggered()
 {
     if (myProject.addOutputPoint())
         addOutputPointsGUI();
 }
-
 
 void MainWindow::on_flagView_values_toggled(bool isChecked)
 {
@@ -3532,7 +3543,7 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
 void MainWindow::on_actionLoad_land_use_map_triggered()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open land use map"), "",
-                                                    tr("ESRI float (*.flt);; ENVI image (*.img)"));
+                                                    tr("ESRI float (*.flt);; ESRI bil (*.bil);; ENVI image (*.img)"));
     if (fileName == "") return;
 
     if (myProject.loadLandUseMap(fileName))
@@ -4233,7 +4244,8 @@ void MainWindow::on_actioncumulated_yearly_precipitation_triggered()
 
 void MainWindow::on_actionInitialize_soil_carbon_content_triggered()
 {
-    if (myProject.processes.computeWater || myProject.processes.computeCrop || myProject.processes.computeHydrall || myProject.processes.computeSnow)
+    if (myProject.processes.computeWater || myProject.processes.computeCrop
+            || myProject.processes.computeHydrall || myProject.processes.computeSnow)
     {
         myProject.logError("Activate RothC and deactivate other processes to initialize soil carbon content.");
         myProject.clearRothCMaps();
@@ -4243,17 +4255,25 @@ void MainWindow::on_actionInitialize_soil_carbon_content_triggered()
     if (myProject.processes.computeRothC)
     {
         QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
-        myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
+        myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this,
+                                                tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
 
         if (myProject.rothCModel.BICMapFolderName.empty())
             return;
 
-        myProject.rothCModel.temperatureMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average temperature files"), defaultPath).toStdString();
+        myProject.rothCModel.temperatureMapFolderName = QFileDialog::getExistingDirectory(this,
+                                                        tr("Open folder with monthly average temperature files"), defaultPath).toStdString();
 
         if (myProject.rothCModel.temperatureMapFolderName.empty())
             return;
 
-
+        // save paths in settings file
+        myProject.parametersSettings->beginGroup("RothC");
+            myProject.parametersSettings->setValue("BICMapsPath",
+                                                   QString::fromStdString(myProject.rothCModel.BICMapFolderName));
+            myProject.parametersSettings->setValue("temperatureMapsPath",
+                                                   QString::fromStdString(myProject.rothCModel.temperatureMapFolderName));
+        myProject.parametersSettings->endGroup();
 
         if (! myProject.initializeRothC())
         {
