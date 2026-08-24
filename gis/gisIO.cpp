@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 #include <cctype>
+#include <charconv>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -136,15 +137,22 @@ bool parseDouble(const string& str, double& value)
 {
     try
     {
-        const string s = trim(str);
+        string s = trim(str);
 
         if (s.empty())
             return false;
 
-        size_t pos = 0;
-        const double parsed = stod(s, &pos);
+        // use only point as decimal separator
+        std::replace(s.begin(), s.end(), ',', '.');
 
-        if (pos != s.size())
+        double parsed = 0.0;
+
+        const char* first = s.data();
+        const char* last = first + s.size();
+
+        const auto result = std::from_chars(first, last, parsed);
+
+        if (result.ec != std::errc() || result.ptr != last)
             return false;
 
         value = parsed;
@@ -669,8 +677,7 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
         {
             double valueDouble;
 
-            if (!parseDouble(value, valueDouble) ||
-                !isValidHeaderValue(valueDouble))
+            if (!parseDouble(value, valueDouble) || !isValidHeaderValue(valueDouble))
             {
                 errorStr = "Invalid XLLCORNER value.";
                 return false;
@@ -683,8 +690,7 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
         {
             double valueDouble;
 
-            if (!parseDouble(value, valueDouble) ||
-                !isValidHeaderValue(valueDouble))
+            if (!parseDouble(value, valueDouble) || !isValidHeaderValue(valueDouble))
             {
                 errorStr = "Invalid YLLCORNER value.";
                 return false;
