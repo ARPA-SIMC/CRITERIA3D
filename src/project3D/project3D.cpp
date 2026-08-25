@@ -1959,7 +1959,7 @@ bool Project3D::getTotalSurfaceWaterContent(double &wcSum, long &nrVoxels, int r
     errorString = "";
     if (! isCriteria3DInitialized)
     {
-        errorString = ERROR_STR_INITIALIZE_3D;
+        errorString = ERROR_STR_INITIALIZE_WATER3D;
         return false;
     }
 
@@ -2011,7 +2011,7 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels, bool isM
     errorString = "";
     if (! isCriteria3DInitialized)
     {
-        errorString = ERROR_STR_INITIALIZE_3D;
+        errorString = ERROR_STR_INITIALIZE_WATER3D;
         return false;
     }
 

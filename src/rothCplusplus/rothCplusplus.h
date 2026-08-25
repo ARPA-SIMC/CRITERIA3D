@@ -168,9 +168,12 @@ public:
     //~Crit3DRothCplusplus();
 
     void initialize();
-    bool computeRothCPoint();
-    bool initializeRothCSoilCarbonContent(std::vector<double> temp, std::vector<double> BIC);
-    int main();
+    void computeRothCPoint();
+
+    bool initializeRothCSoilCarbonContent(const std::vector<double> &temp,
+                                          const std::vector<double> &BIC);
+
+    int old_main();
 
     double getInputC();
     void setInputC(double myInputC);
@@ -212,8 +215,6 @@ public:
     Crit3DRothCRadioCarbon radioCarbon;
     Crit3DRothCplusplusMaps map;
 
-    bool isInitializing;
-
     std::string BICMapFolderName;
     std::string temperatureMapFolderName;
 
@@ -237,7 +238,6 @@ private:
 
     bool isUpdate;
 
-
     double SWC;
     double clay;
     double depth;
@@ -247,11 +247,12 @@ private:
     double RMF_Moist(double RAIN, double PEVAP, bool PC);
     double RMF_Moist(double monthlyBIC, bool PC);
     double RMF_Moist_Simplified(double monthlyBIC, double avgBIC);
-    double RMF_Tmp(double TEMP);
+    double RMF_Tmp(double avgT);
+
     void decomp(int timeFact,
                 double &modifyingRate);
-    void RothC(int timeFact, double &PC);
 
+    void RothC_main(double &PC);
 
 };
 

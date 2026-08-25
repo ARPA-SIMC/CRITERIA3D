@@ -156,6 +156,8 @@ bool Crit3DProject::initializeHydrallConversionVector()
 
 bool Crit3DProject::initializeRothC()
 {
+    clearRothCMaps();
+
     rothCModel.initialize();
     rothCModel.map.initialize(DEM);
 
@@ -174,7 +176,8 @@ bool Crit3DProject::initializeRothC()
     }
 
     if (! soilIndexMap.isLoaded)
-        setSoilIndexMap();
+        if (! setSoilIndexMap())
+            return false;
 
     rothCModel.conversionTableVector.resize(cropList.size(), NODATA);
 
@@ -204,23 +207,7 @@ bool Crit3DProject::initializeRothC()
 
             rothCModel.map.setDepth(soilList[soilIndex].totalDepth, row, col);
 
-            double clayContent = 0;
-            unsigned int i;
-
-            if (! processes.computeWater)
-            {
-                rothCModel.map.setClay(getRothCClayContent(soilIndex), row, col);
-            }
-            else
-            {
-                for (i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
-                {
-                    clayContent += soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay;
-                }
-
-                if (i > 0)
-                    rothCModel.map.setClay(clayContent/i, row, col);
-            }
+            rothCModel.map.setClay(getRothCClayContent(soilIndex), row, col);
 
             if (! processes.computeHydrall)
             {
@@ -240,15 +227,10 @@ bool Crit3DProject::initializeRothC()
         }
     }
 
-    if (! processes.computeWater) //TODO
-    {
-        rothCModel.isInitializing = true;
-
-        loadRothCBICMaps();
-    }
+    if (! initializeRothCSoilCarbonContent_main())
+        return false;
 
     isRothCInitialized = true;
-    //todo
 
     return true;
 }
@@ -256,11 +238,10 @@ bool Crit3DProject::initializeRothC()
 
 // initializing soil carbon content without interpolating meteo data.
 // using data of temperature and BIC averaged over the last 24 years
-bool Crit3DProject::initializeRothCSoilCarbonContent()
+bool Crit3DProject::initializeRothCSoilCarbonContent_main()
 {
-    rothCModel.isInitializing = true;
-
-    loadRothCTempMaps();
+    if (! loadRothCTempMaps() || ! loadRothCBICMaps())
+        return false;
 
     for (int row = 0; row < DEM.header->nrRows; row ++)
     {
@@ -269,16 +250,19 @@ bool Crit3DProject::initializeRothCSoilCarbonContent()
             if(isEqual(DEM.value[row][col], DEM.header->flag))
                 continue;
 
-            int soilIndex = int(soilIndexMap.value[row][col]);
-            if (soilIndex == NODATA)
+            if(isEqual(soilIndexMap.value[row][col], soilIndexMap.header->flag))
                 continue;
 
             rothCModel.setClay(rothCModel.map.getClay(row, col));
             rothCModel.setInputC(getRothCYield(row, col));
 
             rothCModel.setStateVariables(row, col);
-            rothCModel.initializeRothCSoilCarbonContent(rothCModel.map.getAvgTempVector(row, col),
-                                                        rothCModel.map.getAvgBICVector(row, col));
+
+            if (! rothCModel.initializeRothCSoilCarbonContent(
+                        rothCModel.map.getAvgTempVector(row, col),
+                        rothCModel.map.getAvgBICVector(row, col)) )
+                continue;
+
             rothCModel.getStateVariables(row, col);
         }
     }
@@ -289,7 +273,6 @@ bool Crit3DProject::initializeRothCSoilCarbonContent()
 
 double Crit3DProject::getRothCYield(int row, int col)
 {
-
     int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
     int managementIndex, forestIndex;
 
@@ -315,6 +298,8 @@ double Crit3DProject::getRothCYield(int row, int col)
 
 bool Crit3DProject::loadRothCTempMaps()
 {
+    constexpr int nrMonths = 12;
+
     const QString folderName = QString::fromStdString(rothCModel.temperatureMapFolderName);
 
     QDir myDir(folderName);
@@ -327,14 +312,15 @@ bool Crit3DProject::loadRothCTempMaps()
     myDir.setNameFilters(QStringList("*.flt"));
     QList<QString> fileList = myDir.entryList();
 
-    if (fileList.size() != 12)
+    if (fileList.size() != nrMonths)
     {
-        logError("Average temperature maps load from directory " + folderName + " failed.\n"
+        logError("Average temperature maps load from directory "
+                 + folderName + " failed.\n"
                  + "Insufficient number of files.");
         return false;
     }
 
-    for (unsigned int i = 0; i < 12; i++)
+    for (int i = 0; i < nrMonths; ++i)
     {
         const std::string fileNamePath = rothCModel.temperatureMapFolderName + "/" + fileList[i].toStdString();
 
@@ -342,7 +328,9 @@ bool Crit3DProject::loadRothCTempMaps()
         gis::Crit3DRasterGrid raster;
         if (! gis::openRaster(fileNamePath, &raster, gisSettings.utmZone, errorStr))
         {
-            logError("Average temperature map load failed: " + fileList[i] + "\n" + QString::fromStdString(errorStr));
+            logError("Average temperature map load failed: "
+                     + fileList[i] + "\n"
+                     + QString::fromStdString(errorStr));
             return false;
         }
 
@@ -357,33 +345,50 @@ bool Crit3DProject::loadRothCTempMaps()
 
 bool Crit3DProject::loadRothCBICMaps()
 {
-    std::string errorStr;
-    gis::Crit3DRasterGrid raster;
+    constexpr int nrMonths = 12;
 
-    QDir myDir = QDir(QString::fromStdString(rothCModel.BICMapFolderName));
-    myDir.setNameFilters(QStringList("*.flt"));
-    QList<QString> fileList = myDir.entryList();
-    std::string fileNamePath;
+    const QString folderName = QString::fromStdString(rothCModel.BICMapFolderName);
 
-    if (fileList.size() != 12)
+    QDir myDir(folderName);
+    if (!myDir.exists())
     {
-        errorStr = "Insufficient number of files.";
-        logError("Average BIC maps load from directory " + QString::fromStdString(rothCModel.BICMapFolderName) + " failed.\n" + QString::fromStdString(errorStr));
+        logError("BIC map directory does not exist: " + folderName);
         return false;
     }
 
-    for (unsigned int i = 0; i < 12; i++)
+    myDir.setNameFilters({"*.flt"});
+    myDir.setSorting(QDir::Name | QDir::IgnoreCase);
+
+    const QStringList fileList = myDir.entryList();
+
+    if (fileList.size() != nrMonths)
     {
-        fileNamePath = rothCModel.BICMapFolderName + "/" + fileList[i].toStdString();
-        if (! gis::openRaster(fileNamePath, &raster, gisSettings.utmZone, errorStr))
+        logError("Average BIC maps load from directory "
+                 + folderName + " failed.\n"
+                 + "Expected " + QString::number(nrMonths)
+                 + " files, found " + QString::number(fileList.size()) + ".");
+        return false;
+    }
+
+    for (int i = 0; i < nrMonths; ++i)
+    {
+        const std::string fileNamePath = rothCModel.BICMapFolderName + "/"
+                                                + fileList[i].toStdString();
+        std::string errorStr;
+        gis::Crit3DRasterGrid raster;
+
+        if (!gis::openRaster(fileNamePath, &raster, gisSettings.utmZone, errorStr))
         {
-            logError("Average BIC map load failed: " + fileList[i] + "\n" + QString::fromStdString(errorStr));
+            logError("Average BIC map load failed: "
+                     + fileList[i] + "\n"
+                     + QString::fromStdString(errorStr));
             return false;
         }
 
-        gis::resampleGrid(raster, rothCModel.map.avgBICMap[i], DEM.header, aggrPrevailing, 0);
+        gis::resampleGrid(raster, rothCModel.map.avgBICMap[i], DEM.header, aggrPrevailing,0);
     }
-    logInfo("Average BIC maps loaded from directory " + QString::fromStdString(rothCModel.BICMapFolderName));
+
+    logInfo("Average BIC maps loaded from directory: " + folderName);
 
     return true;
 }
@@ -391,26 +396,25 @@ bool Crit3DProject::loadRothCBICMaps()
 
 double Crit3DProject::getRothCClayContent(int soilIndex)
 {
-    std::vector<soil::Crit3DHorizon> horizonVector = soilList[soilIndex].horizon;
-    double weightSum = 0;
-    double clayContent = 0;
-    double upperDepth = 0;
-    double lowerDepth = 0;
-
-    if (! horizonVector.empty())
-        lowerDepth = horizonVector.front().lowerDepth;
-    else
+    if (soilList[soilIndex].totalDepth <= 0.0)
         return NODATA;
 
+    const auto& horizonVector = soilList[soilIndex].horizon;
 
-    for (unsigned int i = 0; i < horizonVector.size(); i++)
+    if (horizonVector.empty())
+        return NODATA;
+
+    double clayContent = 0;
+    for (size_t i = 0; i < horizonVector.size(); ++i)
     {
-        clayContent += horizonVector[i].texture.clay * (lowerDepth - upperDepth);
-        weightSum += lowerDepth - upperDepth;
+        const double thickness = horizonVector[i].lowerDepth - horizonVector[i].upperDepth;
+        clayContent += horizonVector[i].texture.clay * thickness * (1 - horizonVector[i].coarseFragments);
     }
 
-    return clayContent/weightSum;
+    // avg clay content [%]
+    return clayContent / soilList[soilIndex].totalDepth;
 }
+
 
 bool Crit3DProject::initializeCropMaps()
 {
@@ -700,11 +704,7 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 
 bool Crit3DProject::updateRothC(const QDate &myDate)
 {
-    rothCModel.isInitializing = false;
-
-    if (!processes.computeWater)
-        rothCModel.isInitializing = true;
-
+    // only first date of month
     if (myDate.day() != 1)
         return true;
 
@@ -725,7 +725,7 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
                 continue;
 
             //chiamata a rothC
-            computeRothCModel();
+            rothCModel.computeRothCPoint();
 
             rothCModel.getStateVariables(row, col);
 
@@ -740,6 +740,7 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
 
     return true;
 }
+
 
 void Crit3DProject::setRothCVariables(int row, int col, int month)
 {
@@ -759,7 +760,6 @@ void Crit3DProject::setRothCVariables(int row, int col, int month)
 
     double inputCTable = NODATA;
 
-
     if (! processes.computeHydrall || ! isEqual(hydrallModel.getOutputC(),NODATA)) //yield table must be used when initialising rothC or for first year of simulation of hydrall+rothC (hydrall still hasn't produced its first carbon output)
         inputCTable = getRothCYield(row, col);
 
@@ -775,7 +775,7 @@ void Crit3DProject::setRothCVariables(int row, int col, int month)
 
     //swc comes from water model. during initialization phase, it is not used
     double SWC = NODATA;
-    if (! rothCModel.isInitializing && processes.computeWater && processes.computeHydrall)
+    if (! processes.computeWater && processes.computeHydrall)
     {
         SWC = 0;
         for (int i = 0; i < (int)hydrallModel.soil.waterContent.size(); i++)
@@ -784,10 +784,8 @@ void Crit3DProject::setRothCVariables(int row, int col, int month)
         }
     }
     rothCModel.setSWC(SWC);
-
-
-    return;
 }
+
 
 /*!
  * \brief assignETreal
@@ -1042,7 +1040,7 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
     double voidsVolumeSum = 0;                          // [m3 m-3]
 
     // start from first subsurface layer
-    int layerIndex = 1;
+    unsigned int layerIndex = 1;
     while (layerIndex < nrLayers && layerDepth[layerIndex] <= maxDepth)
     {
         const long nodeIndex = indexMap.at(layerIndex).value[row][col];
@@ -1642,6 +1640,9 @@ void Crit3DProject::clear3DProject()
     dailyTminMap.clear();
     dailyTmaxMap.clear();
 
+    monthlyET0.clear();
+    monthlyPrec.clear();
+
     degreeDaysMap.clear();
     mapLast30DaysTAvg.clear();
 
@@ -1969,12 +1970,6 @@ bool Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, 
 }
 
 
-bool Crit3DProject::computeRothCModel()
-{
-    rothCModel.computeRothCPoint();
-    return true;
-}
-
 
 bool Crit3DProject::updateLast30DaysTavg()
 {
@@ -2048,23 +2043,26 @@ bool Crit3DProject::checkProcesses()
 
     if (processes.computeWater && !isCriteria3DInitialized)
     {
-        errorString = ERROR_STR_INITIALIZE_3D;
+        errorString = ERROR_STR_INITIALIZE_WATER3D;
         return false;
     }
 
     if (processes.computeSnow && !snowMaps.isInitialized && !initializeSnowModel())
     {
+        errorString = ERROR_STR_INITIALIZE_SNOW;
         return false;
     }
 
     if (processes.computeHydrall && !isHydrallInitialized)
     {
-        hydrallModel.initialize();
+        errorString = ERROR_STR_INITIALIZE_HYDRALL;
+        return false;
     }
 
     if (processes.computeRothC && !isRothCInitialized)
     {
-        initializeRothC();
+        errorString = ERROR_STR_INITIALIZE_ROTHC;
+        return false;
     }
 
     return true;

@@ -239,6 +239,7 @@
   <property name="font">
    <font>
     <pointsize>10</pointsize>
+    <weight>50</weight>
     <bold>false</bold>
    </font>
   </property>
@@ -583,6 +584,7 @@
     <property name="font">
      <font>
       <pointsize>10</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -885,6 +887,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -893,9 +896,6 @@
     </property>
     <property name="title">
      <string notr="true">Digital Elevation Model</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QSlider" name="opacitySliderRasterInput">
      <property name="enabled">
@@ -933,9 +933,6 @@
      <property name="value">
       <number>75</number>
      </property>
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
     </widget>
     <widget class="QWidget" name="colorScaleInputRaster" native="true">
      <property name="geometry">
@@ -949,6 +946,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -975,6 +973,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1278,6 +1277,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1286,9 +1286,6 @@
     </property>
     <property name="title">
      <string notr="true">Variable map</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QSlider" name="opacitySliderRasterOutput">
      <property name="enabled">
@@ -1326,9 +1323,6 @@
      <property name="value">
       <number>75</number>
      </property>
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
     </widget>
     <widget class="QWidget" name="colorScaleOutputRaster" native="true">
      <property name="geometry">
@@ -1342,6 +1336,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1368,6 +1363,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1725,6 +1721,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1733,9 +1730,6 @@
     </property>
     <property name="title">
      <string notr="true">Meteo Points</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QDateEdit" name="dateEdit">
      <property name="geometry">
@@ -1787,6 +1781,7 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1828,7 +1823,7 @@
       </date>
      </property>
      <property name="currentSection">
-      <enum>QDateTimeEdit::Section::YearSection</enum>
+      <enum>QDateTimeEdit::YearSection</enum>
      </property>
      <property name="displayFormat">
       <string>yyyy-MM-dd</string>
@@ -1856,6 +1851,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1882,6 +1878,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1901,6 +1898,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1921,6 +1919,7 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2253,6 +2252,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -2264,9 +2264,6 @@
     </property>
     <property name="title">
      <string notr="true">Model run</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QPushButton" name="buttonModelStart">
      <property name="geometry">
@@ -2293,6 +2290,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2312,6 +2310,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2332,6 +2331,7 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2364,17 +2364,15 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::LayoutDirection::RightToLeft</enum>
+      <enum>Qt::LeftToRight</enum>
      </property>
      <property name="text">
       <string>Layer</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QLineEdit" name="layerDepthEdit">
@@ -2409,17 +2407,15 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::LayoutDirection::RightToLeft</enum>
+      <enum>Qt::LeftToRight</enum>
      </property>
      <property name="text">
       <string>Time</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QLineEdit" name="modelTimeEdit">
@@ -2456,7 +2452,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>28</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="palette">
@@ -2623,13 +2619,13 @@
     <addaction name="actionCriteria3D_set_processes"/>
     <addaction name="actionCriteria3D_waterFluxes_settings"/>
     <addaction name="actionSnow_settings"/>
+    <addaction name="actionInitialize_soil_carbon_content"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_load_state"/>
     <addaction name="actionCriteria3D_load_external_state"/>
     <addaction name="actionCriteria3D_save_state"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_Initialize"/>
-    <addaction name="actionInitialize_soil_carbon_content"/>
     <addaction name="actionCriteria3D_compute_next_hour"/>
     <addaction name="actionCriteria3D_run_models"/>
     <addaction name="separator"/>
@@ -3729,7 +3725,7 @@
   </action>
   <action name="actionInitialize_soil_carbon_content">
    <property name="text">
-    <string>Initialize soil carbon content</string>
+    <string>RothC settings...</string>
    </property>
   </action>
   <action name="actionOpenShell">

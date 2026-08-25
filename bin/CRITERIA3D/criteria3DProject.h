@@ -81,7 +81,7 @@
         bool initializeHydrall();
         bool initializeHydrallConversionVector();
         bool initializeRothC();
-        bool initializeRothCSoilCarbonContent();
+        bool initializeRothCSoilCarbonContent_main();
         bool loadRothCTempMaps();
         bool loadRothCBICMaps();
         double getRothCClayContent(int soilIndex);
@@ -137,7 +137,6 @@
 
         bool dailyUpdateHydrall(const QDate &myDate);
 
-        bool computeRothCModel();
         bool updateRothC(const QDate &myDate);
         void setRothCVariables(int row, int col, int month);
 

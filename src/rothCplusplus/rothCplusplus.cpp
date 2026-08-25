@@ -277,35 +277,34 @@ void Crit3DRothCplusplus::initialize()
     };
 }
 
-bool Crit3DRothCplusplus::computeRothCPoint()
+
+void Crit3DRothCplusplus::computeRothCPoint()
 {
-    //set initial soil water content (deficit)
+    // set initial soil water content (deficit)
 
     soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
 
     /*std::cout << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
               << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
 
-    int timeFact = 12; //TODO check
+    //double modernC = 100;
 
-    double modernC = 100;
+    /*if (radioCarbon.isActive)
+        double totalDelta = (std::exp(-totalRage/8035.0) - 1) * 1000;*/
 
-    if (radioCarbon.isActive)
-        double totalDelta = (std::exp(-totalRage/8035.0) - 1) * 1000;
+    inputFYM = 0.4;     // kg C day-1 ha-1
+    inputFYM *= 0.03;   // t C month-1 ha-1
 
+    RothC_main(rothCplantCover);
 
-    inputFYM = 0.4; //kg C day-1 ha-1
-    inputFYM *= 0.03; //t C month-1 ha-1
-
-
-    RothC(timeFact, rothCplantCover);
-    if (radioCarbon.isActive)
-        double totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
+    /*if (radioCarbon.isActive)
+        double totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;*/
 
     /*std::cout << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
               << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
 
     //todo: remove
+    /*
     if (false)
     {
         std::ofstream myFile;
@@ -313,9 +312,9 @@ bool Crit3DRothCplusplus::computeRothCPoint()
         myFile << decomposablePlantMatter<< ","<< resistantPlantMatter<<","<< microbialBiomass<<","<< humifiedOrganicMatter<<","<<
             inorganicMatter<<","<< soilOrganicCarbon << "\n";
         myFile.close();
-    }
-    return true;
+    }*/
 }
+
 
 // Calculates the plant retainment modifying factor (RMF_PC)
 double Crit3DRothCplusplus::RMF_plantCover(bool plantCover) {
@@ -333,6 +332,7 @@ double Crit3DRothCplusplus::RMF_plantCover(double plantCover)
     //with 0 < plantCover < 1
     return -0.4 * plantCover + 1;
 }
+
 
 // Calculates the rate modifying factor for moisture (RMF_Moist)
 double Crit3DRothCplusplus::RMF_Moist(double RAIN, double PEVAP, bool PC) {
@@ -354,14 +354,17 @@ double Crit3DRothCplusplus::RMF_Moist(double RAIN, double PEVAP, bool PC) {
     } else {
         SWC = std::max(minSMDBareSWC, minSWCDF);
     }
+
     double RM_Moist;
     if (SWC > SMD1bar) {
         RM_Moist = 1.0;
     } else {
         RM_Moist = RMFMin + (RMFMax - RMFMin) * (SMDMaxAdj - SWC) / (SMDMaxAdj - SMD1bar);
     }
+
     return RM_Moist;
 }
+
 
 double Crit3DRothCplusplus::RMF_Moist(double monthlyBIC, bool PC) {
     const double RMFMax = 1.0;
@@ -402,16 +405,17 @@ double Crit3DRothCplusplus::RMF_Moist_Simplified(double monthlyBIC, double avgBI
 
     return RM_Moist;
 }
+
+
 // Calculates the rate modifying factor for temperature (RMF_Tmp)
-double Crit3DRothCplusplus::RMF_Tmp(double TEMP) {
-    double RM_TMP;
-    if (TEMP < -5.0) {
-        RM_TMP = 0.0;
-    } else {
-        RM_TMP = 47.91 / (std::exp(106.06 / (TEMP + 18.27)) + 1.0);
-    }
-    return RM_TMP;
+double Crit3DRothCplusplus::RMF_Tmp(double avgT)
+{
+    if (avgT < -5.0)
+        return 0.0;
+
+    return 47.91 / (std::exp(106.06 / (avgT + 18.27)) + 1.0);
 }
+
 
 void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
 {
@@ -441,6 +445,7 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
     ratioFactor[0] = x / (x + 1);
     ratioFactor[1] = 0.46 / (x + 1);
     ratioFactor[2] = 0.54 / (x + 1);
+
     //proportion C from each pool into CO2, microbialBiomass and humifiedOrganicMatter
     double decomposablePlantMatterToCo2 = decomposablePlantMatterDelta * ratioFactor[0];
     double decomposablePlantMatterToMicrobialBiomass = decomposablePlantMatterDelta * ratioFactor[1];
@@ -552,20 +557,22 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
     return;
 }
 
+
 // The Rothamsted Carbon Model: RothC
-void Crit3DRothCplusplus::RothC(int timeFact, double &PC)
+void Crit3DRothCplusplus::RothC_main(double &PC)
 {
     // Calculate RMFs
     double RM_TMP = RMF_Tmp(meteoVariable.getTemperature());
-    double RM_Moist = 0.7;
+    const double defaultMoisture = 0.7;
+    double RM_Moist = defaultMoisture;
 
-    //modified RM_Moist factor based on BIC
-    if (isInitializing)
+    // modified RM_Moist factor based on BIC
+    if (isEqual(SWC, NODATA))
     {
         RM_Moist = RMF_Moist_Simplified(meteoVariable.getBIC(), meteoVariable.getAvgBIC());
 
         if (isEqual(RM_Moist, NODATA))
-            RM_Moist = 0.7;
+            RM_Moist = defaultMoisture;
     }
     else
     {
@@ -584,10 +591,10 @@ void Crit3DRothCplusplus::RothC(int timeFact, double &PC)
     // Combine RMF's into one.
     double modifyingRate = RM_TMP * RM_Moist * RM_PC;
 
+    int timeFact = 12;      // todo check
     decomp(timeFact, modifyingRate);
-
-    return;
 }
+
 
 void Crit3DRothCplusplus::resetInputVariables()
 {
@@ -638,53 +645,41 @@ double Crit3DRothCplusplus::getInputC()
     return inputC;
 }
 
-bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent(std::vector<double> temp, std::vector<double> BIC)
+
+bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent(const std::vector<double>& temp,
+                                                           const std::vector<double>& BIC)
 {
     soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
 
-    /*std::cout << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
-              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
+    inputFYM = 0.4;     // kg C day-1 ha-1
+    inputFYM *= 0.03;   // t C month-1 ha-1
 
-    unsigned int timeFact = 12; //TODO check
+    // average BIC
+    double avgBIC = 0.0;
+    for (int month = 0; month < 12; ++month)
+        avgBIC += BIC[month];
 
-    double modernC = 100;
+    avgBIC /= 12.0;
 
-    inputFYM = 0.4; //kg C day-1 ha-1
-    inputFYM *= 0.03; //t C month-1 ha-1
+    if (isEqual(avgBIC, NODATA))
+        return false;
 
+    meteoVariable.setAvgBIC(avgBIC);
 
-    unsigned int k = -1;
-    int j = -1;
-    double test = 100.0;
-    double TOC0, TOC1;
-    //while (test > 1E-6)
-    while (j < 900) //soils are not considered to be in equilibrium. model is run for 70 years more or less
+    // soils are not considered to be in equilibrium: model run for 75 years
+    for (int count = 0; count < 900; ++count)
     {
-        k = k + 1;
-        j = j + 1 ;
+        const int monthIndex = count % 12;
 
-        if( k == timeFact)
-            k = 0;
+        meteoVariable.setTemperature(temp[monthIndex]);
+        meteoVariable.setBIC(BIC[monthIndex]);
 
-        meteoVariable.setTemperature(temp[k]);
-        meteoVariable.setBIC(BIC[k]);
-
-
-        if (radioCarbon.isActive)
-            double totalDelta = (std::exp(-totalRage/8035.0) - 1) * 1000;
-
-        RothC(timeFact, rothCplantCover);
-
-        if (isEqual((k+1)%timeFact, 0.0))
-        {
-            TOC0 = TOC1;
-            TOC1 =decomposablePlantMatter+ resistantPlantMatter+microbialBiomass+humifiedOrganicMatter;
-            test = std::abs(TOC1-TOC0);
-        }
+        RothC_main(rothCplantCover);
     }
 
     return true;
 }
+
 
 void Crit3DRothCMeteoVariable::setTemperature (double myTemperature)
 {
@@ -770,6 +765,7 @@ void Crit3DRothCMeteoVariable::cumulateWaterLoss(double myWaterLoss)
         waterLoss = myWaterLoss;
 }
 
+
 std::vector<std::vector<double>> leggi_csv(const std::string& nome_file) {
     std::vector<std::vector<double>> dati;
     std::ifstream file(nome_file);
@@ -802,6 +798,7 @@ std::vector<std::vector<double>> leggi_csv(const std::string& nome_file) {
     return dati;
 }
 
+
 void Crit3DRothCplusplus::scrivi_csv(const std::string& nome_file, const std::vector<std::vector<double>>& dati) {
     std::ofstream file(nome_file);
 
@@ -826,15 +823,10 @@ void Crit3DRothCplusplus::scrivi_csv(const std::string& nome_file, const std::ve
 }
 
 
-int Crit3DRothCplusplus::main()
+/*
+int Crit3DRothCplusplus::old_main()
 {
     //set initial pool values
-    /*double DPM = 0;
-    double RPM = 0;
-    double BIO = 0;
-    double HUM = 0;
-    double SOC = 0;*/
-
     double DPM_Rage = 0.0;
     double RPM_Rage = 0.0;
     double BIO_Rage = 0.0;
@@ -865,15 +857,6 @@ int Crit3DRothCplusplus::main()
 
     int timeFact = 12;
 
-
-    /*double TEMP;
-    double RAIN;
-    double PEVAP;
-    bool isET0 = false;
-    bool PC;
-    double DPM_RPM;
-    double modernC;*/
-
     double test = 100;
     while (test > 0.000001)
     {
@@ -893,7 +876,7 @@ int Crit3DRothCplusplus::main()
 
         totalRage = 0;
 
-        RothC(timeFact, rothCplantCover);
+        RothC_main(timeFact, rothCplantCover);
 
         if (((k+1)%timeFact) == 0)
         {
@@ -926,7 +909,7 @@ int Crit3DRothCplusplus::main()
         inputFYM = data[i][7];
         //modernC = data[i][2]/100;
 
-        RothC(timeFact, rothCplantCover);
+        RothC_main(timeFact, rothCplantCover);
 
         totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 
@@ -949,9 +932,7 @@ int Crit3DRothCplusplus::main()
     scrivi_csv("C:/Github/rothCStandAlone/CYearResults.csv", yearList);
 
     return 0;
-
-
-}
+}*/
 
 
 

@@ -1404,7 +1404,7 @@ void MainWindow::on_actionView_Boundary_triggered()
     }
     else
     {
-        myProject.logError(ERROR_STR_INITIALIZE_3D);
+        myProject.logError(ERROR_STR_INITIALIZE_WATER3D);
         return;
     }
 }
@@ -2560,13 +2560,9 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 
     if (myProject.processes.computeRothC)
     {
-        if (! myProject.processes.computeWater)
+        if (myProject.rothCModel.BICMapFolderName.empty() || myProject.rothCModel.temperatureMapFolderName.empty())
         {
-            QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
-            myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
-
-            if (myProject.rothCModel.BICMapFolderName.empty())
-                return;
+            on_actionInitialize_soil_carbon_content_triggered();
         }
 
         if (! myProject.initializeRothC())
@@ -2575,10 +2571,6 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             myProject.logError("Couldn't initialize RothC model.");
             return;
         }
-    }
-    else
-    {
-        myProject.clearRothCMaps();
     }
 
     initializeCriteria3DInterface();
@@ -2645,7 +2637,7 @@ void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
 {
     if (! myProject.isCriteria3DInitialized)
     {
-        myProject.logError(ERROR_STR_INITIALIZE_3D);
+        myProject.logError(ERROR_STR_INITIALIZE_WATER3D);
         return;
     }
 
@@ -3884,7 +3876,7 @@ void MainWindow::on_actionDecomposable_plant_matter_triggered()
     {
         if (myProject.rothCModel.map.decomposablePlantMaterial->isLoaded)
         {
-            setColorScale(noMeteoTerrain, myProject.rothCModel.map.decomposablePlantMaterial->colorScale);
+            setColorScale(noMeteoVar, myProject.rothCModel.map.decomposablePlantMaterial->colorScale);
             setCurrentRasterOutput((myProject.rothCModel.map.decomposablePlantMaterial));
             ui->labelOutputRaster->setText("Decomposable plant matter");
         }
@@ -3906,7 +3898,7 @@ void MainWindow::on_actionResistant_plant_matter_triggered()
     {
         if (myProject.rothCModel.map.resistantPlantMaterial->isLoaded)
         {
-            setColorScale(noMeteoTerrain, myProject.rothCModel.map.resistantPlantMaterial->colorScale);
+            setColorScale(noMeteoVar, myProject.rothCModel.map.resistantPlantMaterial->colorScale);
             setCurrentRasterOutput((myProject.rothCModel.map.resistantPlantMaterial));
             ui->labelOutputRaster->setText("Resistant plant matter");
         }
@@ -3928,7 +3920,7 @@ void MainWindow::on_actionMicrobial_biomass_triggered()
     {
         if (myProject.rothCModel.map.microbialBiomass->isLoaded)
         {
-            setColorScale(noMeteoTerrain, myProject.rothCModel.map.microbialBiomass->colorScale);
+            setColorScale(noMeteoVar, myProject.rothCModel.map.microbialBiomass->colorScale);
             setCurrentRasterOutput((myProject.rothCModel.map.microbialBiomass));
             ui->labelOutputRaster->setText("Microbial biomass");
         }
@@ -3950,7 +3942,7 @@ void MainWindow::on_actionHumified_organic_matter_triggered()
     {
         if (myProject.rothCModel.map.humifiedOrganicMatter->isLoaded)
         {
-            setColorScale(noMeteoTerrain, myProject.rothCModel.map.humifiedOrganicMatter->colorScale);
+            setColorScale(noMeteoVar, myProject.rothCModel.map.humifiedOrganicMatter->colorScale);
             setCurrentRasterOutput((myProject.rothCModel.map.humifiedOrganicMatter));
             ui->labelOutputRaster->setText("Humified organic matter");
         }
@@ -3972,7 +3964,7 @@ void MainWindow::on_actionSoil_organic_matter_triggered()
     {
         if (myProject.rothCModel.map.soilOrganicMatter->isLoaded)
         {
-            setColorScale(noMeteoTerrain, myProject.rothCModel.map.soilOrganicMatter->colorScale);
+            setColorScale(noMeteoVar, myProject.rothCModel.map.soilOrganicMatter->colorScale);
             setCurrentRasterOutput((myProject.rothCModel.map.soilOrganicMatter));
             ui->labelOutputRaster->setText("Soil organic matter");
         }
@@ -4244,52 +4236,26 @@ void MainWindow::on_actioncumulated_yearly_precipitation_triggered()
 
 void MainWindow::on_actionInitialize_soil_carbon_content_triggered()
 {
-    if (myProject.processes.computeWater || myProject.processes.computeCrop
-            || myProject.processes.computeHydrall || myProject.processes.computeSnow)
-    {
-        myProject.logError("Activate RothC and deactivate other processes to initialize soil carbon content.");
-        myProject.clearRothCMaps();
+    QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
+    myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this,
+                                            tr("Choose folder with monthly average BIC maps"), defaultPath).toStdString();
+
+    if (myProject.rothCModel.BICMapFolderName.empty())
         return;
-    }
 
-    if (myProject.processes.computeRothC)
-    {
-        QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
-        myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this,
-                                                tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
+    myProject.rothCModel.temperatureMapFolderName = QFileDialog::getExistingDirectory(this,
+                                                    tr("Choose folder with monthly average Temperature maps"), defaultPath).toStdString();
 
-        if (myProject.rothCModel.BICMapFolderName.empty())
-            return;
+    if (myProject.rothCModel.temperatureMapFolderName.empty())
+        return;
 
-        myProject.rothCModel.temperatureMapFolderName = QFileDialog::getExistingDirectory(this,
-                                                        tr("Open folder with monthly average temperature files"), defaultPath).toStdString();
-
-        if (myProject.rothCModel.temperatureMapFolderName.empty())
-            return;
-
-        // save paths in settings file
-        myProject.parametersSettings->beginGroup("RothC");
-            myProject.parametersSettings->setValue("BICMapsPath",
-                                                   QString::fromStdString(myProject.rothCModel.BICMapFolderName));
-            myProject.parametersSettings->setValue("temperatureMapsPath",
-                                                   QString::fromStdString(myProject.rothCModel.temperatureMapFolderName));
-        myProject.parametersSettings->endGroup();
-
-        if (! myProject.initializeRothC())
-        {
-            myProject.isRothCInitialized = false;
-            myProject.logError("Couldn't initialize RothC model.");
-            return;
-        }
-
-        myProject.initializeRothCSoilCarbonContent();
-    }
-    else
-    {
-        myProject.logError("RothC model must be activated in order to initialize soil carbon content.");
-        myProject.clearRothCMaps();
-    }
-
+    // save paths in settings file
+    myProject.parametersSettings->beginGroup("RothC");
+        myProject.parametersSettings->setValue("BICMapsPath",
+                                               QString::fromStdString(myProject.rothCModel.BICMapFolderName));
+        myProject.parametersSettings->setValue("temperatureMapsPath",
+                                               QString::fromStdString(myProject.rothCModel.temperatureMapFolderName));
+    myProject.parametersSettings->endGroup();
 }
 
 
