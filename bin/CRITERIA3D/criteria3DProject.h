@@ -1,6 +1,8 @@
 #ifndef CRITERIA3DPROJECT_H
 #define CRITERIA3DPROJECT_H
 
+    #define CRITERIA3D_VERSION "v1.4.0 (2026.08)"
+
     #ifndef SOIL_H
         #include "soil.h"
     #endif
@@ -27,9 +29,6 @@
     #endif
 
     #include <QString>
-
-
-    #define CRITERIA3D_VERSION "v1.3.3 (2026)"
 
 
     class Crit3DProject : public Project3D
