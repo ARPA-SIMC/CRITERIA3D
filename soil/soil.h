@@ -200,7 +200,7 @@
             std::string code;
             std::string name;
             unsigned int nrHorizons;
-            double totalDepth;                          /*!<   [m]  */
+            double totalDepth;          /*!<  [m]  */
 
             std::vector <Crit3DHorizon> horizon;
 
