@@ -678,7 +678,7 @@ bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent(const std::vector<dou
         meteoVariable.setBIC(BIC[monthIndex]);
         meteoVariable.setAvgBIC(BIC[monthIndex]);
 
-        RothC_main(rothCplantCover);
+        RothC_main();
     }
 
     return true;
