@@ -144,37 +144,41 @@ void Crit3DRothCplusplusMaps::clear()
 }
 
 
-void Crit3DRothCplusplusMaps::setClay(double myClay, int row, int col)
+void Crit3DRothCplusplusMaps::setClay(double clay, int row, int col)
 {
-    _clayMap->value[row][col] = (float)myClay;
+    _clayMap->value[row][col] = (float)clay;
 }
 
-double Crit3DRothCplusplusMaps::getClay(int row, int col)
+double Crit3DRothCplusplusMaps::getClay(int row, int col) const
 {
     return _clayMap->value[row][col];
 }
-void Crit3DRothCplusplusMaps::setDepth(double myDepth, int row, int col)
+void Crit3DRothCplusplusMaps::setDepth(double depth, int row, int col)
 {
-    _depthMap->value[row][col] = (float)myDepth;
+    _depthMap->value[row][col] = (float)depth;
 }
 
-double Crit3DRothCplusplusMaps::getDepth(int row, int col)
+double Crit3DRothCplusplusMaps::getDepth(int row, int col) const
 {
     return _depthMap->value[row][col];
 }
 
 double Crit3DRothCplusplusMaps::getAvgBIC(int row, int col, int month)
 {
-    if (month < int(avgBICMap.size()))
-        return avgBICMap[month]->value[row][col];
+    int monthIndex = month - 1;
+
+    if (monthIndex >= 0 && monthIndex < int(avgBICMap.size()))
+        return avgBICMap[monthIndex]->value[row][col];
     else
         return NODATA;
 }
 
 double Crit3DRothCplusplusMaps::getAvgTemp(int row, int col, int month)
 {
-    if (month < int(avgTempMap.size()))
-        return avgTempMap[month]->value[row][col];
+    int monthIndex = month - 1;
+
+    if (monthIndex >= 0 && monthIndex < int(avgTempMap.size()))
+        return avgTempMap[monthIndex]->value[row][col];
     else
         return NODATA;
 }
@@ -222,7 +226,7 @@ Crit3DRothCplusplus::Crit3DRothCplusplus()
 
 void Crit3DRothCplusplus::initialize()
 {
-    //TODO qui inizializzazione dei pool, per ora come fare? Inizializzato su python, copiato i pool all'equilibrio
+    // Inizializzato su python, copiato i pool all'equilibrio
     decomposablePlantMatter = 0.14547;
     resistantPlantMatter = 5.67812;
     microbialBiomass = 0.74059;
@@ -232,15 +236,16 @@ void Crit3DRothCplusplus::initialize()
 
     inputC = 0;
     inputFYM = 0;
+    rothCplantCover = 1.0;
 
     decomposablePMResistantPMRatio = 1.44;
 
     isUpdate = false;
 
-    //todo
     clay = NODATA;      // [%]
     depth = NODATA;     // [cm]
     SWC = NODATA;       // [mm per depth]
+
     // .. TODO ??
     if (false)
     {
@@ -278,33 +283,33 @@ void Crit3DRothCplusplus::initialize()
 }
 
 
+/*
 void Crit3DRothCplusplus::computeRothCPoint()
 {
     // set initial soil water content (deficit)
 
     soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
 
-    /*std::cout << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
-              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
+    std::cout << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
+              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";
 
-    //double modernC = 100;
+    double modernC = 100;
 
-    /*if (radioCarbon.isActive)
-        double totalDelta = (std::exp(-totalRage/8035.0) - 1) * 1000;*/
+    if (radioCarbon.isActive)
+       double totalDelta = (std::exp(-totalRage/8035.0) - 1) * 1000;
 
     inputFYM = 0.4;     // kg C day-1 ha-1
     inputFYM *= 0.03;   // t C month-1 ha-1
 
     RothC_main(rothCplantCover);
 
-    /*if (radioCarbon.isActive)
-        double totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;*/
+    if (radioCarbon.isActive)
+        double totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 
-    /*std::cout << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
-              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
+    std::cout << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
+              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";
 
     //todo: remove
-    /*
     if (false)
     {
         std::ofstream myFile;
@@ -312,8 +317,8 @@ void Crit3DRothCplusplus::computeRothCPoint()
         myFile << decomposablePlantMatter<< ","<< resistantPlantMatter<<","<< microbialBiomass<<","<< humifiedOrganicMatter<<","<<
             inorganicMatter<<","<< soilOrganicCarbon << "\n";
         myFile.close();
-    }*/
-}
+    }
+}*/
 
 
 // Calculates the plant retainment modifying factor (RMF_PC)
@@ -559,15 +564,19 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
 
 
 // The Rothamsted Carbon Model: RothC
-void Crit3DRothCplusplus::RothC_main(double &PC)
+bool Crit3DRothCplusplus::RothC_main()
 {
+    soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
+    inputFYM = 0.4;     // kg C day-1 ha-1
+    inputFYM *= 0.03;   // t C month-1 ha-1
+
     // Calculate RMFs
     double RM_TMP = RMF_Tmp(meteoVariable.getTemperature());
     const double defaultMoisture = 0.7;
     double RM_Moist = defaultMoisture;
 
     // modified RM_Moist factor based on BIC
-    if (isEqual(SWC, NODATA))
+    if (isEqual(SWC, NODATA) || isEqual(SWC, 0))
     {
         RM_Moist = RMF_Moist_Simplified(meteoVariable.getBIC(), meteoVariable.getAvgBIC());
 
@@ -578,21 +587,23 @@ void Crit3DRothCplusplus::RothC_main(double &PC)
     {
         if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
         {
-            RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), bool(PC > 0));
+            RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), bool(rothCplantCover > 0));
         }
         else
         {
-            RM_Moist = RMF_Moist(meteoVariable.getBIC(), bool(PC > 0));
+            RM_Moist = RMF_Moist(meteoVariable.getBIC(), bool(rothCplantCover > 0));
         }
     }
 
-    double RM_PC = RMF_plantCover(PC);
+    double RM_PC = RMF_plantCover(rothCplantCover);
 
     // Combine RMF's into one.
     double modifyingRate = RM_TMP * RM_Moist * RM_PC;
 
     int timeFact = 12;      // todo check
     decomp(timeFact, modifyingRate);
+
+    return true;
 }
 
 
@@ -602,8 +613,8 @@ void Crit3DRothCplusplus::resetInputVariables()
     meteoVariable.setBIC(0);
     meteoVariable.setPrecipitation(0);
     meteoVariable.setWaterLoss(0);
-
 }
+
 
 void Crit3DRothCplusplus::setStateVariables(int row, int col)
 {
@@ -615,7 +626,7 @@ void Crit3DRothCplusplus::setStateVariables(int row, int col)
     soilOrganicCarbon = map.soilOrganicMatter->value[row][col];
 }
 
-void Crit3DRothCplusplus::getStateVariables(int row, int col)
+void Crit3DRothCplusplus::storeStateVariables(int row, int col)
 {
     map.decomposablePlantMaterial->value[row][col] = (float)decomposablePlantMatter;
     map.resistantPlantMaterial->value[row][col] = (float)resistantPlantMatter;
@@ -654,17 +665,9 @@ bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent(const std::vector<dou
     inputFYM = 0.4;     // kg C day-1 ha-1
     inputFYM *= 0.03;   // t C month-1 ha-1
 
-    // average BIC
-    double avgBIC = 0.0;
-    for (int month = 0; month < 12; ++month)
-        avgBIC += BIC[month];
-
-    avgBIC /= 12.0;
-
-    if (isEqual(avgBIC, NODATA))
+    // check meteo data
+    if (isEqual(temp[0], NODATA) || isEqual(BIC[0], NODATA))
         return false;
-
-    meteoVariable.setAvgBIC(avgBIC);
 
     // soils are not considered to be in equilibrium: model run for 75 years
     for (int count = 0; count < 900; ++count)
@@ -673,6 +676,7 @@ bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent(const std::vector<dou
 
         meteoVariable.setTemperature(temp[monthIndex]);
         meteoVariable.setBIC(BIC[monthIndex]);
+        meteoVariable.setAvgBIC(BIC[monthIndex]);
 
         RothC_main(rothCplantCover);
     }

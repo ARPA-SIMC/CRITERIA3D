@@ -120,14 +120,11 @@ void Crit3DProcesses::setComputeRothC(bool value)
 {
     computeRothC = value;
 
-    //prerequisites
+    // prerequisites
     if (computeRothC)
     {
-        //computeCrop = true;
-        //computeWater = true;
         computeMeteo = true;
         computeRadiation = true;
-        //computeHydrall = true;
     }
 }
 

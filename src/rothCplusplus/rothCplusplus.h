@@ -94,9 +94,9 @@ private:
 class Crit3DRothCplusplusMaps
 {
 private:
-    //
-    gis::Crit3DRasterGrid* _depthMap; //[?]
-    gis::Crit3DRasterGrid* _clayMap; // [-]
+
+    gis::Crit3DRasterGrid* _depthMap;   // [?]
+    gis::Crit3DRasterGrid* _clayMap;    // [-]
 
 
 public:
@@ -115,6 +115,7 @@ public:
     gis::Crit3DRasterGrid* getRPM() { return resistantPlantMaterial; }
     gis::Crit3DRasterGrid* getBIO() { return microbialBiomass; }
     gis::Crit3DRasterGrid* getHUM() { return humifiedOrganicMatter; }
+    gis::Crit3DRasterGrid* getIOM() { return inertOrganicMatter; }
     gis::Crit3DRasterGrid* getSOC() { return soilOrganicMatter; }
 
     void setDPMRowCol(double myDPM, int row, int col) { decomposablePlantMaterial->value[row][col] = (float)myDPM; }
@@ -130,10 +131,10 @@ public:
     void initialize(const gis::Crit3DRasterGrid& DEM);
     void clear();
 
-    void setClay(double myClay, int row, int col);
-    double getClay(int row, int col);
-    void setDepth(double myDepth, int row, int col);
-    double getDepth(int row, int col);
+    void setClay(double clay, int row, int col);
+    double getClay(int row, int col) const;
+    void setDepth(double depth, int row, int col);
+    double getDepth(int row, int col) const;
 
     double getAvgBIC(int row, int col, int month);
     double getAvgTemp(int row, int col, int month);
@@ -168,7 +169,9 @@ public:
     //~Crit3DRothCplusplus();
 
     void initialize();
-    void computeRothCPoint();
+
+    //void computeRothCPoint();
+    bool RothC_main();
 
     bool initializeRothCSoilCarbonContent(const std::vector<double> &temp,
                                           const std::vector<double> &BIC);
@@ -179,23 +182,23 @@ public:
     void setInputC(double myInputC);
 
     void setClay(double myClay) {clay = myClay;}
-    double getClay() {return clay;}
+    double getClay() const {return clay;}
 
     void setDepth(double myDepth) {depth=myDepth;}
-    double getDepth() {return depth;}
+    double getDepth() const {return depth;}
+
+    void setPlantCover(double myPlantCover) {rothCplantCover = myPlantCover;}
+    double getPlantCover() const {return rothCplantCover;}
 
     void setSWC(double mySWC) {SWC = mySWC;}
-    double getSWC() {return SWC; }
+    double getSWC() const {return SWC; }
 
-    void setPlantCover(double myPC) {rothCplantCover = myPC; }
-    double getPlantCover() { return rothCplantCover; }
-
-    double getDPM() {return decomposablePlantMatter;}
-    double getRPM() {return resistantPlantMatter;}
-    double getBIO() {return microbialBiomass;}
-    double getHUM() {return humifiedOrganicMatter;}
-    double getIOM() {return inorganicMatter;}
-    double getSOC() {return soilOrganicCarbon;}
+    double getDPM() const {return decomposablePlantMatter;}
+    double getRPM() const {return resistantPlantMatter;}
+    double getBIO() const {return microbialBiomass;}
+    double getHUM() const {return humifiedOrganicMatter;}
+    double getIOM() const {return inorganicMatter;}
+    double getSOC() const {return soilOrganicCarbon;}
 
     void setDPM(double myDPM) {decomposablePlantMatter = myDPM;}
     void setRPM(double myRPM) {resistantPlantMatter = myRPM;}
@@ -206,7 +209,7 @@ public:
 
     void resetInputVariables();
     void setStateVariables(int row, int col);
-    void getStateVariables(int row, int col);
+    void storeStateVariables(int row, int col);
     bool checkCell();
 
     void scrivi_csv(const std::string& nome_file, const std::vector<std::vector<double>>& dati) ;
@@ -231,7 +234,7 @@ private:
     double soilOrganicCarbon; //[t C /ha]
     double inputC; //[t C /ha]
     double inputFYM; //[t C /ha]
-    double rothCplantCover; // formerly bool [-]
+    double rothCplantCover; // [0-1]
 
     double decomposablePMResistantPMRatio; //[-]
     double totalRage;
@@ -249,10 +252,7 @@ private:
     double RMF_Moist_Simplified(double monthlyBIC, double avgBIC);
     double RMF_Tmp(double avgT);
 
-    void decomp(int timeFact,
-                double &modifyingRate);
-
-    void RothC_main(double &PC);
+    void decomp(int timeFact, double &modifyingRate);
 
 };
 
