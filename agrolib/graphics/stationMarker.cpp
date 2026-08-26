@@ -78,6 +78,9 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             QAction *openSynchronicityWidget = menu.addAction("Open synchronicity test widget");
             QAction *setSynchronicityReferencePoint = menu.addAction("Set as synchronicity reference point");
             menu.addSeparator();
+            QAction *actionActivePoint = menu.addAction( "Active point" );
+            QAction *actionDeactivePoint = menu.addAction( "Deactive point" );
+            menu.addSeparator();
             QAction *actionMarkPoint = menu.addAction( "Mark point" );
             QAction *actionUnmarkPoint = menu.addAction( "Unmark point" );
             menu.addSeparator();
@@ -93,7 +96,15 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             {
                 bool isGrid = false;
                 std::string lapseRateCode = getLapseRateCodeName(_lapseRateCode);
-                if (selection == openMeteoWidget)
+                if (selection == actionActivePoint)
+                {
+                    emit activePoint(_id);
+                }
+                else if (selection == actionDeactivePoint)
+                {
+                    emit deactivePoint(_id);
+                }
+                else if (selection == openMeteoWidget)
                 {
                     emit newStationClicked(_id, _name, _dataset, _altitude, lapseRateCode, isGrid);
                 }
