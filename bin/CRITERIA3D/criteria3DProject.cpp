@@ -209,7 +209,6 @@ bool Crit3DProject::initializeRothC()
             if (soilIndex == NODATA)
                 continue;
 
-            // TODO chiedere Cate se unità misura giusta
             double soilDepth = soilList[soilIndex].totalDepth * 100.0;      // [cm]
             rothCModel.map.setDepth(soilDepth, row, col);
 
