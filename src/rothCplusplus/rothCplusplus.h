@@ -259,7 +259,7 @@ private:
     double RMF_Moist_Simplified(double monthlyBIC, double avgBIC);
     double RMF_Tmp(double avgT);
 
-    void decomp(int timeFact, double &modifyingRate);
+    void decomp(int timeFact, double modifyingRate);
 
 };
 

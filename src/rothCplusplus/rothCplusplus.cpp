@@ -57,7 +57,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
-
+#include <cassert>
 
 #include "basicMath.h"
 #include "commonConstants.h"
@@ -405,8 +405,11 @@ double Crit3DRothCplusplus::RMF_Tmp(double avgT)
 }
 
 
-void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
+void Crit3DRothCplusplus::decomp(int timeFact, double modifyingRate)
 {
+    const double oldSOC = decomposablePlantMatter + resistantPlantMatter + microbialBiomass
+                          + humifiedOrganicMatter + inorganicMatter;
+
     const double decomposablePlantMatter_k = 10.0;
     const double resistantPlantMatter_k = 0.3;
     const double microbialBiomass_k = 0.66;
@@ -429,27 +432,27 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
 
     //calculating redistribution of carbon into each pool
     double x = 1.67*(1.85+1.60*std::exp(-0.0786*clay));
-    double ratioFactor[3];
-    ratioFactor[0] = x / (x + 1);
-    ratioFactor[1] = 0.46 / (x + 1);
-    ratioFactor[2] = 0.54 / (x + 1);
+
+    const double ratioCO2 = x / (x + 1.0);
+    const double ratioBIO = 0.46 / (x + 1.0);
+    const double ratioHUM = 0.54 / (x + 1.0);
 
     //proportion C from each pool into CO2, microbialBiomass and humifiedOrganicMatter
-    double decomposablePlantMatterToCo2 = decomposablePlantMatterDelta * ratioFactor[0];
-    double decomposablePlantMatterToMicrobialBiomass = decomposablePlantMatterDelta * ratioFactor[1];
-    double decomposablePlantMatterToHumifiedOrganicMatter = decomposablePlantMatterDelta * ratioFactor[2];
+    double decomposablePlantMatterToCo2 = decomposablePlantMatterDelta * ratioCO2;
+    double decomposablePlantMatterToMicrobialBiomass = decomposablePlantMatterDelta * ratioBIO;
+    double decomposablePlantMatterToHumifiedOrganicMatter = decomposablePlantMatterDelta * ratioHUM;
 
-    double resistantPlantMatterToCo2 = resistantPlantMatterDelta * ratioFactor[0];
-    double resistantPlantMatterToMicrobialBiomass = resistantPlantMatterDelta * ratioFactor[1];
-    double resistantPlantMatterToHumifiedOrganicMatter = resistantPlantMatterDelta * ratioFactor[2];
+    double resistantPlantMatterToCo2 = resistantPlantMatterDelta * ratioCO2;
+    double resistantPlantMatterToMicrobialBiomass = resistantPlantMatterDelta * ratioBIO;
+    double resistantPlantMatterToHumifiedOrganicMatter = resistantPlantMatterDelta * ratioHUM;
 
-    double microbialBiomassToCo2 = microbialBiomassDelta * ratioFactor[0];
-    double microbialBiomassToMicrobialBiomass = microbialBiomassDelta * ratioFactor[1];
-    double microbialBiomassToHumifiedOrganicMatter = microbialBiomassDelta * ratioFactor[2];
+    double microbialBiomassToCo2 = microbialBiomassDelta * ratioCO2;
+    double microbialBiomassToMicrobialBiomass = microbialBiomassDelta * ratioBIO;
+    double microbialBiomassToHumifiedOrganicMatter = microbialBiomassDelta * ratioHUM;
 
-    double humifiedOrganicMatter_co2 = humifiedOrganicMatterDelta * ratioFactor[0];
-    double humifiedOrganicMatter_microbialBiomass = humifiedOrganicMatterDelta * ratioFactor[1];
-    double humifiedOrganicMatter_humifiedOrganicMatter = humifiedOrganicMatterDelta * ratioFactor[2];
+    double humifiedOrganicMatter_co2 = humifiedOrganicMatterDelta * ratioCO2;
+    double humifiedOrganicMatter_microbialBiomass = humifiedOrganicMatterDelta * ratioBIO;
+    double humifiedOrganicMatter_humifiedOrganicMatter = humifiedOrganicMatterDelta * ratioHUM;
 
     //update C pools
     decomposablePlantMatter = decomposablePlantMatter1;
@@ -471,9 +474,12 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
     resistantPlantMatter = resistantPlantMatter + PI_C_resistantPlantMatter + FYM_C_resistantPlantMatter;
     humifiedOrganicMatter = humifiedOrganicMatter + FYM_C_humifiedOrganicMatter;
 
+    // update soil organic carbon
+    soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
+
     if (radioCarbon.isActive)
     {
-        //calc new ract of each pool
+        // calc new ract of each pool
         double decomposablePlantMatter_Ract = decomposablePlantMatter1 * std::exp(-CONR*radioCarbon.decomposablePlantMatter_age);
         double resistantPlantMatter_Ract = resistantPlantMatter1 * std::exp(-CONR*radioCarbon.resistantPlantMatter_age);
 
@@ -489,9 +495,10 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
         double microbialBiomass_humifiedOrganicMatter_Ract = microbialBiomassToHumifiedOrganicMatter * std::exp(-CONR*radioCarbon.microbialBiomass_age);
         double humifiedOrganicMatter_humifiedOrganicMatter_Ract = humifiedOrganicMatter_humifiedOrganicMatter * std::exp(-CONR*radioCarbon.humifiedOrganicMatter_age);
 
+        // todo check
         double IOM_Ract = inorganicMatter * std::exp(-CONR*radioCarbon.IOM_age);
 
-        //assign new C from plant and FYM the correct age
+        // assign new C from plant and FYM the correct age
         double PI_decomposablePlantMatter_Ract = radioCarbon.modernC * PI_C_decomposablePlantMatter;
         double PI_resistantPlantMatter_Ract = radioCarbon.modernC * PI_C_resistantPlantMatter;
 
@@ -507,15 +514,13 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
 
         double humifiedOrganicMatter_Ract_new = FYM_humifiedOrganicMatter_Ract + (humifiedOrganicMatter_Ract + decomposablePlantMatter_humifiedOrganicMatter_Ract + resistantPlantMatter_humifiedOrganicMatter_Ract + microbialBiomass_humifiedOrganicMatter_Ract + humifiedOrganicMatter_humifiedOrganicMatter_Ract)*exc;
 
-
         double Total_Ract = decomposablePlantMatter_Ract_new + resistantPlantMatter_Ract_new + microbialBiomass_Ract_new + humifiedOrganicMatter_Ract_new + IOM_Ract;
 
-        //calculate rage of each pool
+        // calculate rage of each pool
         if (decomposablePlantMatter <= EPSILON)
             radioCarbon.decomposablePlantMatter_age = 0;
         else
             radioCarbon.decomposablePlantMatter_age = (std::log(decomposablePlantMatter/decomposablePlantMatter_Ract_new) ) / CONR;
-
 
         if(resistantPlantMatter <= EPSILON)
             radioCarbon.resistantPlantMatter_age = 0;
@@ -525,24 +530,30 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
         if(microbialBiomass <= EPSILON)
             radioCarbon.microbialBiomass_age = 0;
         else
-            radioCarbon.microbialBiomass_age = ( std::log(microbialBiomass/microbialBiomass_Ract_new) ) / CONR;
-
+            radioCarbon.microbialBiomass_age = (std::log(microbialBiomass/microbialBiomass_Ract_new) ) / CONR;
 
         if(humifiedOrganicMatter <= EPSILON)
             radioCarbon.humifiedOrganicMatter_age = 0;
         else
-            radioCarbon.humifiedOrganicMatter_age = ( std::log(humifiedOrganicMatter/humifiedOrganicMatter_Ract_new) ) / CONR;
-
+            radioCarbon.humifiedOrganicMatter_age = (std::log(humifiedOrganicMatter/humifiedOrganicMatter_Ract_new) ) / CONR;
 
         if(soilOrganicCarbon <= EPSILON)
             totalRage = 0;
         else
-            totalRage = ( std::log(soilOrganicCarbon/Total_Ract) ) / CONR;
+            totalRage = (std::log(soilOrganicCarbon/Total_Ract) ) / CONR;
     }
 
-    soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
+    // carbon balance
+    const double carbonLoss = decomposablePlantMatterToCo2 + resistantPlantMatterToCo2 + microbialBiomassToCo2 + humifiedOrganicMatter_co2;
 
-    return;
+    const double carbonInput = inputC + inputFYM;
+
+    const double expectedSOC = oldSOC + carbonInput - carbonLoss;
+
+    const double balanceError = soilOrganicCarbon - expectedSOC;
+
+    // debug stops if false
+    assert(std::abs(balanceError) < 1e-10);
 }
 
 
@@ -585,7 +596,6 @@ void Crit3DRothCplusplus::resetInputVariables()
 {
     inputC = 0;
     meteoVariable.setBIC(0);
-    meteoVariable.setPrecipitation(0);
 }
 
 
@@ -664,7 +674,7 @@ std::vector<std::vector<double>> leggi_csv(const std::string& nome_file) {
             std::getline(ss, token, ',');
             try {
                 riga.push_back(std::stod(token));
-            } catch (const std::invalid_argument& e) {
+            } catch (const std::invalid_argument&) {
                 std::cerr << "Errore nella conversione di un valore in double: " << token << std::endl;
             }
         }
