@@ -209,7 +209,7 @@ bool Crit3DProject::initializeRothC()
             if (soilIndex == NODATA)
                 continue;
 
-            // TODO chiedere Cate unità misura
+            // TODO chiedere Cate se unità misura giusta
             double soilDepth = soilList[soilIndex].totalDepth * 100.0;      // [cm]
             rothCModel.map.setDepth(soilDepth, row, col);
 
@@ -423,7 +423,8 @@ bool Crit3DProject::loadRothCBICMaps()
 }
 
 
-// avg clay content [%] TODO chiedere Cate
+// avg clay content [%]
+// TODO chiedere Cate se giusto in %
 double Crit3DProject::getRothCClayContent(int soilIndex)
 {
     if (soilList[soilIndex].totalDepth <= 0.0)
@@ -737,7 +738,7 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
     if (myDate.day() != 1)
         return true;
 
-    // TODO chiedere a Cate
+    // TODO chiedere a Cate (usava il mese corrente)
     int month = myDate.month() -1;
     if (month == 0)
         month = 12;
@@ -748,9 +749,12 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
         {
-            // check point
+            // check dtm and soil
             float height = DEM.value[row][col];
             if (isEqual(height, flag))
+                continue;
+
+            if (getSoilIndex(row, col) == NODATA)
                 continue;
 
             setRothCVariables(row, col, month);
@@ -809,14 +813,22 @@ void Crit3DProject::setRothCVariables(int row, int col, int month)
         rothCModel.setInputC(NODATA);
 
     //swc comes from water model. during initialization phase, it is not used
-    // TODO chiedere a Cate
+    // TODO chiedere a Cate perchè usava hydrall (non funzionava)
     double SWC = NODATA;
-    if (processes.computeWater && processes.computeHydrall)
+    if (processes.computeWater)
     {
         SWC = 0;
-        for (int i = 0; i < (int)hydrallModel.soil.waterContent.size(); i++)
+        float flag = indexMap.at(0).header->flag;
+        for (unsigned l = 1; l < nrLayers; ++l)
         {
-            SWC += hydrallModel.soil.waterContent[i] * hydrallModel.soil.nodeThickness[i]*1000;
+            long currentNode = indexMap.at(l).value[row][col];
+            if (! isEqual(currentNode, flag))
+            {
+                double layerVWC = soilFluxes3D::getNodeWaterContent(currentNode);
+                if (layerVWC > 0.0 && layerVWC <= 1.0)
+                    SWC += layerVWC * layerThickness[l] * 1000;
+                // TODO aggiungere coarseFragment
+            }
         }
     }
     rothCModel.setSWC(SWC);
@@ -2631,7 +2643,7 @@ bool Crit3DProject::loadModelState(const QString& statePath)
 
     // set current date/hour
     const QString stateStr = getFileName(statePath);
-    const QDateTime dateTime = QDateTime::fromString(stateStr, "yyyyMMdd_HH");
+    const QDateTime dateTime = QDateTime::fromString(stateStr, "yyyyMMdd_'H'hh");
 
     if (! dateTime.isValid())
     {
