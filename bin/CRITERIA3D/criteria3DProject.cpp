@@ -321,7 +321,7 @@ bool Crit3DProject::loadRothCTempMaps()
 
     if (folderName.isEmpty())
     {
-        logError("Set RothC model before.");
+        logError("[RothC model] Set climate directory before.");
         return false;
     }
 
@@ -374,7 +374,7 @@ bool Crit3DProject::loadRothCBICMaps()
 
     if (folderName.isEmpty())
     {
-        logError("Set RothC model before.");
+        logError("[RothC model] Set climate directory before.");
         return false;
     }
 

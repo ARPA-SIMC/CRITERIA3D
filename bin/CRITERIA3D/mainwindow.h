@@ -266,8 +266,6 @@
 
         void on_actioncumulated_yearly_precipitation_triggered();
 
-        void on_actionInitialize_soil_carbon_content_triggered();
-
         void on_action_parallel_computing_triggered(bool isChecked);
 
         void on_actionOpenShell_triggered();
@@ -276,6 +274,8 @@
         void on_flag_point_selection_triggered(bool isChecked);
 
         void on_actionView_SWE_variation_triggered();
+
+        void on_actionRothC_initializePath_triggered();
 
     protected:
         /*!

@@ -2562,7 +2562,7 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
     {
         if (myProject.rothCModel.BICMapFolderName.empty() || myProject.rothCModel.temperatureMapFolderName.empty())
         {
-            on_actionInitialize_soil_carbon_content_triggered();
+            on_actionRothC_initializePath_triggered();
         }
 
         if (! myProject.initializeRothC_full())
@@ -4234,17 +4234,17 @@ void MainWindow::on_actioncumulated_yearly_precipitation_triggered()
 }
 
 
-void MainWindow::on_actionInitialize_soil_carbon_content_triggered()
+void MainWindow::on_actionRothC_initializePath_triggered()
 {
     QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
     myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this,
-                                            tr("Choose folder with monthly average BIC maps"), defaultPath).toStdString();
+                                            tr("[RothC] Choose folder with monthly average BIC maps"), defaultPath).toStdString();
 
     if (myProject.rothCModel.BICMapFolderName.empty())
         return;
 
     myProject.rothCModel.temperatureMapFolderName = QFileDialog::getExistingDirectory(this,
-                                                    tr("Choose folder with monthly average Temperature maps"), defaultPath).toStdString();
+                                                    tr("[RothC] Choose folder with monthly average Temperature maps"), defaultPath).toStdString();
 
     if (myProject.rothCModel.temperatureMapFolderName.empty())
         return;
