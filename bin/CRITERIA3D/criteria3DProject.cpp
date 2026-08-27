@@ -809,6 +809,7 @@ void Crit3DProject::setRothCVariables(int row, int col, int month)
         rothCModel.setInputC(NODATA);
 
     //swc comes from water model. during initialization phase, it is not used
+    // TODO chiedere a Cate
     double SWC = NODATA;
     if (processes.computeWater && processes.computeHydrall)
     {

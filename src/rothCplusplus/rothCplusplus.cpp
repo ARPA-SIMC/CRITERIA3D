@@ -216,6 +216,7 @@ void Crit3DRothCplusplus::initialize()
 
     inputC = 0;             //[t C ha-1]
 
+    // TODO chiedere a Cate
     inputFYM = 0.4;         // kg C day-1 ha-1
     inputFYM *= 0.03;       // t C month-1 ha-1
 
