@@ -2313,9 +2313,9 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
 {
     DialogModelProcesses dialogProcesses;
 
+    dialogProcesses.waterFluxesProcess->setChecked(myProject.processes.computeWater);
     dialogProcesses.snowProcess->setChecked(myProject.processes.computeSnow);
     dialogProcesses.cropProcess->setChecked(myProject.processes.computeCrop);
-    dialogProcesses.waterFluxesProcess->setChecked(myProject.processes.computeWater);
     dialogProcesses.hydrallProcess->setChecked(myProject.processes.computeHydrall);
     dialogProcesses.rothCProcess->setChecked(myProject.processes.computeRothC);
 
@@ -2565,7 +2565,7 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             on_actionInitialize_soil_carbon_content_triggered();
         }
 
-        if (! myProject.initializeRothC())
+        if (! myProject.initializeRothC_full())
         {
             myProject.isRothCInitialized = false;
             myProject.logError("Couldn't initialize RothC model.");

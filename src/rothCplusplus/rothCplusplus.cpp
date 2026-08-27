@@ -144,26 +144,7 @@ void Crit3DRothCplusplusMaps::clear()
 }
 
 
-void Crit3DRothCplusplusMaps::setClay(double clay, int row, int col)
-{
-    _clayMap->value[row][col] = (float)clay;
-}
-
-double Crit3DRothCplusplusMaps::getClay(int row, int col) const
-{
-    return _clayMap->value[row][col];
-}
-void Crit3DRothCplusplusMaps::setDepth(double depth, int row, int col)
-{
-    _depthMap->value[row][col] = (float)depth;
-}
-
-double Crit3DRothCplusplusMaps::getDepth(int row, int col) const
-{
-    return _depthMap->value[row][col];
-}
-
-double Crit3DRothCplusplusMaps::getAvgBIC(int row, int col, int month)
+double Crit3DRothCplusplusMaps::getAvgBIC(int row, int col, int month) const
 {
     int monthIndex = month - 1;
 
@@ -173,7 +154,7 @@ double Crit3DRothCplusplusMaps::getAvgBIC(int row, int col, int month)
         return NODATA;
 }
 
-double Crit3DRothCplusplusMaps::getAvgTemp(int row, int col, int month)
+double Crit3DRothCplusplusMaps::getAvgTemp(int row, int col, int month) const
 {
     int monthIndex = month - 1;
 
@@ -183,24 +164,24 @@ double Crit3DRothCplusplusMaps::getAvgTemp(int row, int col, int month)
         return NODATA;
 }
 
-std::vector<double> Crit3DRothCplusplusMaps::getAvgTempVector(int row, int col)
+std::vector<double> Crit3DRothCplusplusMaps::getAvgTempVector(int row, int col) const
 {
-    std::vector<double> temp(12);
+    std::vector<double> v(12, NODATA);
 
     for (unsigned int i = 0; i < 12; i++)
-        temp[i] = avgTempMap[i]->getValueFromRowCol(row, col);
+        v[i] = avgTempMap[i]->getValueFromRowCol(row, col);
 
-    return temp;
+    return v;
 }
 
-std::vector<double> Crit3DRothCplusplusMaps::getAvgBICVector(int row, int col)
+std::vector<double> Crit3DRothCplusplusMaps::getAvgBICVector(int row, int col) const
 {
-    std::vector<double> temp(12);
+    std::vector<double> v(12, NODATA);
 
     for (unsigned int i = 0; i < 12; i++)
-        temp[i] = avgBICMap[i]->getValueFromRowCol(row, col);
+        v[i] = avgBICMap[i]->getValueFromRowCol(row, col);
 
-    return temp;
+    return v;
 }
 
 Crit3DRothCMeteoVariable::Crit3DRothCMeteoVariable()
@@ -214,10 +195,8 @@ void Crit3DRothCMeteoVariable::initialize()
     BIC = NODATA;
     avgBIC = NODATA;
     avgTemp = NODATA;
-    prec = NODATA;
-    waterLoss = NODATA;
-    std::vector<TAnnualYield> tableYield;
 }
+
 
 Crit3DRothCplusplus::Crit3DRothCplusplus()
 {
@@ -232,11 +211,15 @@ void Crit3DRothCplusplus::initialize()
     microbialBiomass = 0.74059;
     humifiedOrganicMatter = 27.64277;
     inorganicMatter = 3.0041;
+
     soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
 
-    inputC = 0;
-    inputFYM = 0;
-    rothCplantCover = 1.0;
+    inputC = 0;             //[t C ha-1]
+
+    inputFYM = 0.4;         // kg C day-1 ha-1
+    inputFYM *= 0.03;       // t C month-1 ha-1
+
+    rothCplantCover = 1.0;  // [0-1]
 
     decomposablePMResistantPMRatio = 1.44;
 
@@ -564,11 +547,9 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
 
 
 // The Rothamsted Carbon Model: RothC
-bool Crit3DRothCplusplus::RothC_main()
+bool Crit3DRothCplusplus::RothC()
 {
     soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
-    inputFYM = 0.4;     // kg C day-1 ha-1
-    inputFYM *= 0.03;   // t C month-1 ha-1
 
     // Calculate RMFs
     double RM_TMP = RMF_Tmp(meteoVariable.getTemperature());
@@ -585,14 +566,7 @@ bool Crit3DRothCplusplus::RothC_main()
     }
     else
     {
-        if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
-        {
-            RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), bool(rothCplantCover > 0));
-        }
-        else
-        {
-            RM_Moist = RMF_Moist(meteoVariable.getBIC(), bool(rothCplantCover > 0));
-        }
+        RM_Moist = RMF_Moist(meteoVariable.getBIC(), bool(rothCplantCover > 0));
     }
 
     double RM_PC = RMF_plantCover(rothCplantCover);
@@ -600,7 +574,7 @@ bool Crit3DRothCplusplus::RothC_main()
     // Combine RMF's into one.
     double modifyingRate = RM_TMP * RM_Moist * RM_PC;
 
-    int timeFact = 12;      // todo check
+    int timeFact = 12;
     decomp(timeFact, modifyingRate);
 
     return true;
@@ -612,7 +586,6 @@ void Crit3DRothCplusplus::resetInputVariables()
     inputC = 0;
     meteoVariable.setBIC(0);
     meteoVariable.setPrecipitation(0);
-    meteoVariable.setWaterLoss(0);
 }
 
 
@@ -646,25 +619,10 @@ bool Crit3DRothCplusplus::checkCell()
             isEqual(soilOrganicCarbon, NODATA));
 }
 
-void Crit3DRothCplusplus::setInputC(double myInputC)
-{
-    inputC = myInputC;
-}
-
-double Crit3DRothCplusplus::getInputC()
-{
-    return inputC;
-}
-
 
 bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent(const std::vector<double>& temp,
                                                            const std::vector<double>& BIC)
 {
-    soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
-
-    inputFYM = 0.4;     // kg C day-1 ha-1
-    inputFYM *= 0.03;   // t C month-1 ha-1
-
     // check meteo data
     if (isEqual(temp[0], NODATA) || isEqual(BIC[0], NODATA))
         return false;
@@ -678,95 +636,10 @@ bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent(const std::vector<dou
         meteoVariable.setBIC(BIC[monthIndex]);
         meteoVariable.setAvgBIC(BIC[monthIndex]);
 
-        RothC_main();
+        RothC();
     }
 
     return true;
-}
-
-
-void Crit3DRothCMeteoVariable::setTemperature (double myTemperature)
-{
-    temp = myTemperature;
-}
-
-double Crit3DRothCMeteoVariable::getTemperature()
-{
-    return temp;
-}
-
-void Crit3DRothCMeteoVariable::setPrecipitation(double myPrecipitation)
-{
-    prec = myPrecipitation;
-}
-
-double Crit3DRothCMeteoVariable::getPrecipitation()
-{
-    return prec;
-}
-
-void Crit3DRothCMeteoVariable::cumulatePrec(double myPrec)
-{
-    if (! isEqual(prec, NODATA))
-        prec += myPrec;
-    else
-        prec = myPrec;
-}
-
-void Crit3DRothCMeteoVariable::setBIC(double myBIC)
-{
-    BIC = myBIC;
-}
-
-double Crit3DRothCMeteoVariable::getBIC()
-{
-    return BIC;
-}
-
-void Crit3DRothCMeteoVariable::setAvgBIC(double myAvgBIC)
-{
-    avgBIC = myAvgBIC;
-}
-
-void Crit3DRothCMeteoVariable::setAvgTemp(double myAvgTemp)
-{
-    avgTemp = myAvgTemp;
-}
-
-double Crit3DRothCMeteoVariable::getAvgBIC()
-{
-    return avgBIC;
-}
-
-double Crit3DRothCMeteoVariable::getAvgTemp()
-{
-    return avgTemp;
-}
-
-void Crit3DRothCMeteoVariable::cumulateBIC(double myBIC)
-{
-    if (! isEqual(BIC, NODATA))
-        BIC += myBIC;
-    else
-        BIC = myBIC;
-}
-
-void Crit3DRothCMeteoVariable::setWaterLoss(double myWaterLoss)
-{
-    waterLoss = myWaterLoss;
-}
-
-double Crit3DRothCMeteoVariable::getWaterLoss()
-{
-    return waterLoss;
-}
-
-void Crit3DRothCMeteoVariable::cumulateWaterLoss(double myWaterLoss)
-{
-    if (! isEqual(waterLoss, NODATA))
-        waterLoss += myWaterLoss;
-    else
-        waterLoss = myWaterLoss;
 }
 
 
@@ -937,9 +810,3 @@ int Crit3DRothCplusplus::old_main()
 
     return 0;
 }*/
-
-
-
-
-
-

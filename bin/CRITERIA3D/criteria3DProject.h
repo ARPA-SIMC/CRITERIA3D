@@ -79,9 +79,11 @@
         bool initializeCropMaps();
         bool initializeHydrall();
         bool initializeHydrallConversionVector();
-        bool initializeRothC_soilMaps();
+
         bool initializeRothC();
-        bool initializeRothCSoilCarbonContent_main();
+        bool initializeRothC_soilCarbonContentFromClimate();
+        bool initializeRothC_full();
+
         bool loadRothCTempMaps();
         bool loadRothCBICMaps();
         double getRothCClayContent(int soilIndex);
@@ -155,7 +157,7 @@
 
         bool saveModelsState(QString &dirName);
 
-        bool loadModelState(QString statePath);
+        bool loadModelState(const QString &statePath);
         bool loadWaterPotentialState(QString waterPath);
 
         bool getAllSavedState(QList<QString> &stateList);

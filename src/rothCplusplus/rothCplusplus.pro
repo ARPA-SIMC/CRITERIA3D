@@ -5,7 +5,7 @@
 #
 #---------------------------------------------------
 
-QT       -= core gui
+QT  -= core gui
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -29,8 +29,7 @@ win32:{
 
 INCLUDEPATH += ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/soil ../../agrolib/crop ../../agrolib/gis
 
+
 SOURCES += rothCplusplus.cpp 
 
-
 HEADERS += rothCplusplus.h 
-

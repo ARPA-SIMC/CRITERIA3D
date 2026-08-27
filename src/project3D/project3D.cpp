@@ -94,6 +94,7 @@ void Crit3DProcesses::initialize()
     computeWater = false;
     computeCrop = false;
     computeHydrall = false;
+    computeRothC = false;
     computeSnow = false;
     computeSolutes = false;
     computeHeat = false;

@@ -53,12 +53,15 @@
 #define ROTHCPLUSPLUS_H
 
 #ifndef GIS_H
-#include "gis.h"
+    #include "gis.h"
 #endif
 
-#define CONR  0.0001244876401867718 // equivalent to std::log(2.0)/5568.0;
+// equivalent to std::log(2.0)/5568.0
+#define CONR  0.0001244876401867718
+
 #define EXP_DECAY(FACTOR, EXT_COEF,RAGE) ((FACTOR) * std::exp(-(EXT_COEF) * (RAGE)))
 #define LOG_RAGE(PLANT_MATERIAL, PLAT_MATERIAL_ACT) (std::log((PLANT_MATERIAL)/(PLAT_MATERIAL_ACT)) ) / CONR
+
 
 class Crit3DRothCMeteoVariable {
 
@@ -66,30 +69,25 @@ public:
     Crit3DRothCMeteoVariable();
     void initialize();
 
-    void setTemperature (double myTemperature);
-    double getTemperature();
-    void setPrecipitation(double myPrecipitation);
-    void cumulatePrec(double myPrec);
-    double getPrecipitation();
-    void setBIC(double myBIC);
-    void cumulateBIC(double myBIC);
-    double getBIC();
-    void setAvgBIC(double myAvgBIC);
-    void setAvgTemp(double myAvgTemp);
-    double getAvgBIC();
-    double getAvgTemp();
-    void setWaterLoss(double myWaterLoss);
-    void cumulateWaterLoss(double myWaterLoss);
-    double getWaterLoss();
+    void setTemperature (double myTemperature) { temp = myTemperature; }
+    double getTemperature() const { return temp; }
+
+    void setAvgTemp(double myAvgTemp) { avgTemp = myAvgTemp; }
+    double getAvgTemp() const { return avgTemp; }
+
+    void setBIC(double myBIC) { BIC = myBIC; }
+    double getBIC() const { return BIC; }
+
+    void setAvgBIC(double myAvgBIC) { avgBIC = myAvgBIC; }
+    double getAvgBIC() const { return avgBIC; }
 
 private:
     double temp;
-    double prec;
+    double avgTemp;
     double BIC;
     double avgBIC;
-    double avgTemp;
-    double waterLoss; //hourly water loss is temporarily stored here, then cumulated BIC is calculated
 };
+
 
 class Crit3DRothCplusplusMaps
 {
@@ -107,9 +105,8 @@ public:
     gis::Crit3DRasterGrid* inertOrganicMatter;          //[tC/ha]
     gis::Crit3DRasterGrid* soilOrganicMatter;           //[tC/ha]
 
-    std::vector<gis::Crit3DRasterGrid*> avgBICMap;     //[mm]
-    std::vector<gis::Crit3DRasterGrid*> avgTempMap;    //[C°]
-    bool isInitialized;
+    std::vector<gis::Crit3DRasterGrid*> avgBICMap;      //[mm]
+    std::vector<gis::Crit3DRasterGrid*> avgTempMap;     //[C°]
 
     gis::Crit3DRasterGrid* getDPM() { return decomposablePlantMaterial; }
     gis::Crit3DRasterGrid* getRPM() { return resistantPlantMaterial; }
@@ -131,17 +128,29 @@ public:
     void initialize(const gis::Crit3DRasterGrid& DEM);
     void clear();
 
-    void setClay(double clay, int row, int col);
-    double getClay(int row, int col) const;
-    void setDepth(double depth, int row, int col);
-    double getDepth(int row, int col) const;
+    void setClay(double clay, int row, int col) {
+        _clayMap->value[row][col] = (float)clay;
+    }
 
-    double getAvgBIC(int row, int col, int month);
-    double getAvgTemp(int row, int col, int month);
+    double getClay(int row, int col) const {
+        return _clayMap->value[row][col];
+    }
 
-    std::vector<double> getAvgBICVector(int row, int col);
-    std::vector<double> getAvgTempVector(int row, int col);
+    void setDepth(double depth, int row, int col) {
+        _depthMap->value[row][col] = (float)depth;
+    }
+
+    double getDepth(int row, int col) const {
+        return _depthMap->value[row][col];
+    }
+
+    double getAvgBIC(int row, int col, int month) const;
+    double getAvgTemp(int row, int col, int month) const;
+
+    std::vector<double> getAvgBICVector(int row, int col) const;
+    std::vector<double> getAvgTempVector(int row, int col) const;
 };
+
 
 struct Crit3DRothCRadioCarbon {
 public:
@@ -153,13 +162,14 @@ public:
     double modernC;
 
     bool isActive = false;
-
 };
+
 
 struct TAnnualYield{
     std::string name;
     double carbon;       // annual carbon biomass
 };
+
 
 class Crit3DRothCplusplus{
 
@@ -170,16 +180,13 @@ public:
 
     void initialize();
 
-    //void computeRothCPoint();
-    bool RothC_main();
+    bool RothC();
 
     bool initializeRothCSoilCarbonContent(const std::vector<double> &temp,
                                           const std::vector<double> &BIC);
 
-    int old_main();
-
-    double getInputC();
-    void setInputC(double myInputC);
+    void setInputC(double myInputC){ inputC = myInputC; }
+    double getInputC() const { return inputC; }
 
     void setClay(double myClay) {clay = myClay;}
     double getClay() const {return clay;}
@@ -226,15 +233,15 @@ public:
 
 
 private:
-    double decomposablePlantMatter; //[t C /ha]
-    double resistantPlantMatter; //[t C /ha]
-    double microbialBiomass; //[t C /ha]
-    double humifiedOrganicMatter; //[t C /ha]
-    double inorganicMatter; //[t C /ha]
-    double soilOrganicCarbon; //[t C /ha]
-    double inputC; //[t C /ha]
-    double inputFYM; //[t C /ha]
-    double rothCplantCover; // [0-1]
+    double decomposablePlantMatter;     //[t C /ha]
+    double resistantPlantMatter;        //[t C /ha]
+    double microbialBiomass;            //[t C /ha]
+    double humifiedOrganicMatter;       //[t C /ha]
+    double inorganicMatter;             //[t C /ha]
+    double soilOrganicCarbon;           //[t C /ha]
+    double inputC;                      //[t C /ha]
+    double inputFYM;                    //[t C /ha]
+    double rothCplantCover;             // [0-1]
 
     double decomposablePMResistantPMRatio; //[-]
     double totalRage;
@@ -255,9 +262,6 @@ private:
     void decomp(int timeFact, double &modifyingRate);
 
 };
-
-
-
 
 
 #endif // ROTHCPLUSPLUS_H
