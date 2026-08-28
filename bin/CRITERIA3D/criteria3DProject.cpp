@@ -82,10 +82,9 @@ void Crit3DProject::clearHydrallMaps()
 
 void Crit3DProject::clearRothCMaps()
 {
-    monthlyET0.clear();
-    monthlyPrec.clear();
+    monthlyFAW.clear();
 
-    rothCModel.map.clear();
+    rothCModel.maps.clear();
 
     isRothCInitialized = false;
 }
@@ -161,10 +160,9 @@ bool Crit3DProject::initializeRothC()
     clearRothCMaps();
 
     rothCModel.initialize();
-    rothCModel.map.initialize(DEM);
+    rothCModel.maps.initialize(DEM);
 
-    monthlyET0.initializeGrid(*(DEM.header));
-    monthlyPrec.initializeGrid(*(DEM.header));
+    monthlyFAW.initializeGrid(*(DEM.header));
 
     if (! mapLast30DaysTAvg.isLoaded)
     {
@@ -197,7 +195,7 @@ bool Crit3DProject::initializeRothC()
         }
     }
 
-    // DEPTH AND CLAY MAPS
+    // CLAY MAP
     for (int row = 0; row < DEM.header->nrRows; ++row)
     {
         for (int col = 0; col < DEM.header->nrCols; ++col)
@@ -209,10 +207,7 @@ bool Crit3DProject::initializeRothC()
             if (soilIndex == NODATA)
                 continue;
 
-            double soilDepth = soilList[soilIndex].totalDepth * 100.0;      // [cm]
-            rothCModel.map.setDepth(soilDepth, row, col);
-
-            rothCModel.map.setClay(getRothCClayContent(soilIndex), row, col);
+            rothCModel.maps.setClay(getRothCClayContent(soilIndex), row, col);
         }
     }
 
@@ -232,12 +227,12 @@ bool Crit3DProject::initializeRothC_full()
             if(isEqual(DEM.value[row][col], DEM.header->flag))
                 continue;
 
-            rothCModel.map.decomposablePlantMaterial->value[row][col] = rothCModel.getDPM();
-            rothCModel.map.resistantPlantMaterial->value[row][col] = rothCModel.getRPM();
-            rothCModel.map.humifiedOrganicMatter->value[row][col] = rothCModel.getHUM();
-            rothCModel.map.microbialBiomass->value[row][col] = rothCModel.getBIO();
-            rothCModel.map.inertOrganicMatter->value[row][col] = rothCModel.getIOM();
-            rothCModel.map.soilOrganicMatter->value[row][col] = rothCModel.getSOC();
+            rothCModel.maps.decomposablePlantMaterial->value[row][col] = rothCModel.getDPM();
+            rothCModel.maps.resistantPlantMaterial->value[row][col] = rothCModel.getRPM();
+            rothCModel.maps.humifiedOrganicMatter->value[row][col] = rothCModel.getHUM();
+            rothCModel.maps.microbialBiomass->value[row][col] = rothCModel.getBIO();
+            rothCModel.maps.inertOrganicMatter->value[row][col] = rothCModel.getIOM();
+            rothCModel.maps.soilOrganicMatter->value[row][col] = rothCModel.getSOC();
         }
     }
 
@@ -269,14 +264,14 @@ bool Crit3DProject::initializeRothC_soilCarbonContentFromClimate()
             if(isEqual(soilIndexMap.value[row][col], soilIndexMap.header->flag))
                 continue;
 
-            rothCModel.setClay(rothCModel.map.getClay(row, col));
+            rothCModel.setClay(rothCModel.maps.getClay(row, col));
             rothCModel.setInputC(getRothCYield(row, col));
 
             rothCModel.setStateVariables(row, col);
 
-            if (! rothCModel.initializeRothCSoilCarbonContent(
-                        rothCModel.map.getAvgTempVector(row, col),
-                        rothCModel.map.getAvgBICVector(row, col)) )
+            if (! rothCModel.initializeFromClimate(
+                        rothCModel.maps.getAvgTempVector(row, col),
+                        rothCModel.maps.getAvgBICVector(row, col)) )
                 continue;
 
             rothCModel.storeStateVariables(row, col);
@@ -356,7 +351,7 @@ bool Crit3DProject::loadRothCTempMaps()
             return false;
         }
 
-        gis::resampleGrid(raster, rothCModel.map.avgTempMap[i], DEM.header, aggrPrevailing, 0);
+        gis::resampleGrid(raster, rothCModel.maps.avgTempMap[i], DEM.header, aggrPrevailing, 0);
     }
 
     logInfo("Average temperature maps loaded from directory: " + folderName);
@@ -413,7 +408,7 @@ bool Crit3DProject::loadRothCBICMaps()
             return false;
         }
 
-        gis::resampleGrid(raster, rothCModel.map.avgBICMap[i], DEM.header, aggrPrevailing,0);
+        gis::resampleGrid(raster, rothCModel.maps.avgBICMap[i], DEM.header, aggrPrevailing,0);
     }
 
     logInfo("Average BIC maps loaded from directory: " + folderName);
@@ -423,7 +418,6 @@ bool Crit3DProject::loadRothCBICMaps()
 
 
 // avg clay content [%]
-// TODO chiedere Cate se giusto in %
 double Crit3DProject::getRothCClayContent(int soilIndex)
 {
     if (soilList[soilIndex].totalDepth <= 0.0)
@@ -737,11 +731,6 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
     if (myDate.day() != 1)
         return true;
 
-    // TODO chiedere a Cate (usava il mese corrente)
-    int month = myDate.month() -1;
-    if (month == 0)
-        month = 12;
-
     const float flag = DEM.header->flag;
 
     for (int row = 0; row < DEM.header->nrRows; row++)
@@ -753,14 +742,12 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
             if (isEqual(height, flag))
                 continue;
 
-            if (getSoilIndex(row, col) == NODATA)
+            if (! setRothCVariables(row, col, myDate))
                 continue;
-
-            setRothCVariables(row, col, month);
 
             rothCModel.setStateVariables(row, col);
 
-            if (rothCModel.checkCell())
+            if (rothCModel.checkCellPools())
                 continue;
 
             // call RothC model
@@ -768,12 +755,11 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
 
             rothCModel.storeStateVariables(row, col);
 
-            // reset meteo maps
-            monthlyPrec.value[row][col] = 0;
-            monthlyET0.value[row][col] = 0;
+            // reset avalaible water map
+            monthlyFAW.value[row][col] = 0;
 
-            // reset meteo variables and C input
-            rothCModel.resetInputVariables();
+            // reset C input
+            rothCModel.setInputC(0.0);
         }
     }
 
@@ -781,56 +767,67 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
 }
 
 
-void Crit3DProject::setRothCVariables(int row, int col, int month)
+bool Crit3DProject::setRothCVariables(int row, int col, const QDate &myDate)
 {
-    // soil variables
-    rothCModel.setDepth(rothCModel.map.getDepth(row, col));
-    rothCModel.setClay(rothCModel.map.getClay(row, col));
+    // clay content [%]
+    const double clay = rothCModel.maps.getClay(row, col);
+    if (isEqual(clay, NODATA))
+        return false;
 
-    rothCModel.setPlantCover(1); // understorey
+    // average temperature [°C]
+    const float avgT = mapLast30DaysTAvg.value[row][col];
+    if (isEqual(avgT, mapLast30DaysTAvg.header->flag))
+        return false;
 
-    //meteo variables
-    rothCModel.meteoVariable.setBIC(monthlyPrec.getValueFromRowCol(row, col) - monthlyET0.getValueFromRowCol(row, col));
-    rothCModel.meteoVariable.setTemperature(mapLast30DaysTAvg.value[row][col]);
+    // cumulated fraction of available water [-]
+    const float sumFAW = monthlyFAW.value[row][col];
+    if (isEqual(sumFAW, monthlyFAW.header->flag))
+        return false;
 
-    rothCModel.meteoVariable.setAvgBIC(rothCModel.map.getAvgBIC(row, col, month));
-    rothCModel.meteoVariable.setAvgTemp(rothCModel.map.getAvgTemp(row, col, month));
+    // compute number of days of previous month
+    int year =  myDate.year();
+    int month = myDate.month()-1;
+    if (month == 0)
+    {
+        month = 12;
+        year--;
+    }
+    const int nrDays = getDaysInMonth(month, year);
 
+    // fraction of available water [-]
+    const double fractionAW = sumFAW / nrDays;
+
+    // set variables
+    rothCModel.setClay(clay);               // [%]
+    rothCModel.setAvgTemperature(avgT);     // [°C]
+    rothCModel.setFractionAW(fractionAW);   // [-]
+    rothCModel.setPlantCover(1);            // understorey
+    rothCModel.setSixMonthBIC(NODATA);      // use only in climate initializing
+
+    // CARBON INPUT
     double inputCTable = NODATA;
+    const double hydrallOutputC = hydrallModel.getOutputC();
 
-    if (! processes.computeHydrall || ! isEqual(hydrallModel.getOutputC(), NODATA)) //yield table must be used when initialising rothC or for first year of simulation of hydrall+rothC (hydrall still hasn't produced its first carbon output)
+    // yield table must be used when initialising rothC or for first year of simulation of hydrall+rothC
+    // hydrall still hasn't produced its first carbon output
+    if (! processes.computeHydrall || isEqual(hydrallOutputC, NODATA))
         inputCTable = getRothCYield(row, col);
 
-    //carbon input is taken from hydrall, otherwise TODO
-    if (processes.computeHydrall && ! isEqual(hydrallModel.getOutputC(), NODATA))
-        rothCModel.setInputC(hydrallModel.getOutputC()/12.0); //read from hydrall (eventually from crop too?). output used is from previous year and divided by 12 months
-    else if (! isEqual(inputCTable,NODATA))
+    if (processes.computeHydrall && !isEqual(hydrallOutputC, NODATA))
     {
-        rothCModel.setInputC(inputCTable/12.0);
+        rothCModel.setInputC(hydrallOutputC / 12.0);
+    }
+    else if (!isEqual(inputCTable, NODATA))
+    {
+        // read from hydrall (eventually from crop too?). output used is from previous year and divided by 12 months
+        rothCModel.setInputC(inputCTable / 12.0);
     }
     else
-        rothCModel.setInputC(NODATA);
-
-    //swc comes from water model. during initialization phase, it is not used
-    // TODO chiedere a Cate perchè usava hydrall (non funzionava)
-    double SWC = NODATA;
-    if (processes.computeWater)
     {
-        SWC = 0;
-        float flag = indexMap.at(0).header->flag;
-        for (unsigned l = 1; l < nrLayers; ++l)
-        {
-            long currentNode = indexMap.at(l).value[row][col];
-            if (! isEqual(currentNode, flag))
-            {
-                double layerVWC = soilFluxes3D::getNodeWaterContent(currentNode);
-                if (layerVWC > 0.0 && layerVWC <= 1.0)
-                    SWC += layerVWC * layerThickness[l] * 1000;
-                // TODO aggiungere coarseFragment
-            }
-        }
+        rothCModel.setInputC(NODATA);
     }
-    rothCModel.setSWC(SWC);
+
+    return true;
 }
 
 
@@ -1391,7 +1388,7 @@ bool Crit3DProject::updateETAndPrecMaps()
     }
     if (processes.computeRothC)
     {
-        if (! monthlyET0.isLoaded || ! monthlyPrec.isLoaded)
+        if (! monthlyFAW.isLoaded)
         {
             errorString = "Missing monthly maps for RothC";
             return false;
@@ -1426,25 +1423,6 @@ bool Crit3DProject::updateETAndPrecMaps()
                         hydrallMaps.yearlyPrec->value[row][col] = hourlyPrec;
                     else
                         hydrallMaps.yearlyPrec->value[row][col] += hourlyPrec;
-                }
-            }
-
-            if (processes.computeRothC)
-            {
-                if (! isEqual(hourlyEt0, et0Flag))
-                {
-                    if (isEqual(monthlyET0.value[row][col], NODATA))
-                        monthlyET0.value[row][col] = hourlyEt0;
-                    else
-                        monthlyET0.value[row][col] += hourlyEt0;
-                }
-
-                if (! isEqual(hourlyPrec, precFlag))
-                {
-                    if (isEqual(monthlyPrec.value[row][col], NODATA))
-                        monthlyPrec.value[row][col] = hourlyPrec;
-                    else
-                        monthlyPrec.value[row][col] += hourlyPrec;
                 }
             }
         }
@@ -1698,13 +1676,12 @@ void Crit3DProject::clear3DProject()
     dailyTminMap.clear();
     dailyTmaxMap.clear();
 
-    monthlyET0.clear();
-    monthlyPrec.clear();
-
     degreeDaysMap.clear();
+
+    monthlyFAW.clear();
     mapLast30DaysTAvg.clear();
 
-    rothCModel.map.clear();
+    rothCModel.maps.clear();
     hydrallMaps.clear();
 
     clearGeometry();
@@ -2451,51 +2428,45 @@ bool Crit3DProject::saveRothCState(const QString &currentStatePath)
 
     logInfo("Saving rothC state: " + currentStatePath);
     std::string errorStr;
-    if (!gis::writeEsriGrid((rothCPath+"/DPM").toStdString(), rothCModel.map.getDPM(), errorStr))
+    if (!gis::writeEsriGrid((rothCPath+"/DPM").toStdString(), rothCModel.maps.getDPM(), errorStr))
     {
         logError("Error saving decomposable plant material map: " + QString::fromStdString(errorStr));
         return false;
     }
 
-    if (!gis::writeEsriGrid((rothCPath+"/RPM").toStdString(), rothCModel.map.getRPM(), errorStr))
+    if (!gis::writeEsriGrid((rothCPath+"/RPM").toStdString(), rothCModel.maps.getRPM(), errorStr))
     {
         logError("Error saving resistant plant material map: " + QString::fromStdString(errorStr));
         return false;
     }
 
-    if (!gis::writeEsriGrid((rothCPath+"/BIO").toStdString(), rothCModel.map.getBIO(), errorStr))
+    if (!gis::writeEsriGrid((rothCPath+"/BIO").toStdString(), rothCModel.maps.getBIO(), errorStr))
     {
         logError("Error saving microbial biomass map: " + QString::fromStdString(errorStr));
         return false;
     }
 
-    if (!gis::writeEsriGrid((rothCPath+"/HUM").toStdString(), rothCModel.map.getHUM(), errorStr))
+    if (!gis::writeEsriGrid((rothCPath+"/HUM").toStdString(), rothCModel.maps.getHUM(), errorStr))
     {
         logError("Error saving humified organic matter map: " + QString::fromStdString(errorStr));
         return false;
     }
 
-    if (!gis::writeEsriGrid((rothCPath+"/IOM").toStdString(), rothCModel.map.getIOM(), errorStr))
+    if (!gis::writeEsriGrid((rothCPath+"/IOM").toStdString(), rothCModel.maps.getIOM(), errorStr))
     {
         logError("Error saving inert organic matter map: " + QString::fromStdString(errorStr));
         return false;
     }
 
-    if (!gis::writeEsriGrid((rothCPath+"/SOC").toStdString(), rothCModel.map.getSOC(), errorStr))
+    if (!gis::writeEsriGrid((rothCPath+"/SOC").toStdString(), rothCModel.maps.getSOC(), errorStr))
     {
         logError("Error saving soil organic carbon map: " + QString::fromStdString(errorStr));
         return false;
     }
 
-    if (!gis::writeEsriGrid((rothCPath+"/monthlyET0").toStdString(), &monthlyET0, errorStr))
+    if (!gis::writeEsriGrid((rothCPath+"/monthlyFAW").toStdString(), &monthlyFAW, errorStr))
     {
-        logError("Error saving monthly ET0 map: " + QString::fromStdString(errorStr));
-        return false;
-    }
-
-    if (!gis::writeEsriGrid((rothCPath+"/monthlyPrec").toStdString(), &monthlyPrec, errorStr))
-    {
-        logError("Error saving monthly prec map: " + QString::fromStdString(errorStr));
+        logError("Error saving monthly FAW map: " + QString::fromStdString(errorStr));
         return false;
     }
 
@@ -2792,7 +2763,7 @@ bool Crit3DProject::loadModelState(const QString& statePath)
             errorString = "Wrong RothC decomposable plant matter map:\n" + QString::fromStdString(errorStr);
             return false;
         }
-        gis::resampleGrid(tmpRaster, rothCModel.map.decomposablePlantMaterial, DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(tmpRaster, rothCModel.maps.decomposablePlantMaterial, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/RPM";
         if (! gis::readEsriGridFlt(fileName, &tmpRaster, errorStr))
@@ -2800,7 +2771,7 @@ bool Crit3DProject::loadModelState(const QString& statePath)
             errorString = "Wrong RothC resistant plant matter map:\n" + QString::fromStdString(errorStr);
             return false;
         }
-        gis::resampleGrid(tmpRaster, rothCModel.map.resistantPlantMaterial, DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(tmpRaster, rothCModel.maps.resistantPlantMaterial, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/BIO";
         if (! gis::readEsriGridFlt(fileName, &tmpRaster, errorStr))
@@ -2808,7 +2779,7 @@ bool Crit3DProject::loadModelState(const QString& statePath)
             errorString = "Wrong RothC microbial biomass map:\n" + QString::fromStdString(errorStr);
             return false;
         }
-        gis::resampleGrid(tmpRaster, rothCModel.map.microbialBiomass, DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(tmpRaster, rothCModel.maps.microbialBiomass, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/HUM";
         if (! gis::readEsriGridFlt(fileName, &tmpRaster, errorStr))
@@ -2816,7 +2787,7 @@ bool Crit3DProject::loadModelState(const QString& statePath)
             errorString = "Wrong RothC humified organic matter map:\n" + QString::fromStdString(errorStr);
             return false;
         }
-        gis::resampleGrid(tmpRaster, rothCModel.map.humifiedOrganicMatter, DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(tmpRaster, rothCModel.maps.humifiedOrganicMatter, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/SOC";
         if (! gis::readEsriGridFlt(fileName, &tmpRaster, errorStr))
@@ -2824,7 +2795,7 @@ bool Crit3DProject::loadModelState(const QString& statePath)
             errorString = "Wrong RothC soil organic carbon map:\n" + QString::fromStdString(errorStr);
             return false;
         }
-        gis::resampleGrid(tmpRaster, rothCModel.map.soilOrganicMatter, DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(tmpRaster, rothCModel.maps.soilOrganicMatter, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/IOM";
         if (! gis::readEsriGridFlt(fileName, &tmpRaster, errorStr))
@@ -2832,26 +2803,17 @@ bool Crit3DProject::loadModelState(const QString& statePath)
             errorString = "Wrong RothC inert organic matter map:\n" + QString::fromStdString(errorStr);
             return false;
         }
-        gis::resampleGrid(tmpRaster, rothCModel.map.inertOrganicMatter, DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(tmpRaster, rothCModel.maps.inertOrganicMatter, DEM.header, aggrAverage, 0.1f);
 
 
-        fileName = rothCPath.toStdString() + "/monthlyET0";
+        fileName = rothCPath.toStdString() + "/monthlyFAW";
         if (! gis::readEsriGridFlt(fileName, &tmpRaster, errorStr))
         {
-            errorString = "Wrong RothC monthly ET0 map:\n" + QString::fromStdString(errorStr);
-            monthlyET0.isLoaded = false;
+            errorString = "Wrong RothC monthly FAW map:\n" + QString::fromStdString(errorStr);
+            monthlyFAW.isLoaded = false;
             return false;
         }
-        gis::resampleGrid(tmpRaster, &monthlyET0, DEM.header, aggrAverage, 0.1f);
-
-        fileName = rothCPath.toStdString() + "/monthlyPrec";
-        if (! gis::readEsriGridFlt(fileName, &tmpRaster, errorStr))
-        {
-            errorString = "Wrong RothC monthly Prec map:\n" + QString::fromStdString(errorStr);
-            monthlyPrec.isLoaded = false;
-            return false;
-        }
-        gis::resampleGrid(tmpRaster, &monthlyPrec, DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(tmpRaster, &monthlyFAW, DEM.header, aggrAverage, 0.1f);
 
         processes.setComputeRothC(true);
         isRothCInitialized = true;

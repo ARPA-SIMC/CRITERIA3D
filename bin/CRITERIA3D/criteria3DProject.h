@@ -60,15 +60,16 @@
         gis::Crit3DRasterGrid degreeDaysMap;
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
-        gis::Crit3DRasterGrid monthlyPrec;
-        gis::Crit3DRasterGrid monthlyET0;
+
+        gis::Crit3DRasterGrid monthlyFAW;
+
         gis::Crit3DRasterGrid mapLast30DaysTAvg;
 
         Crit3DHydrallMaps hydrallMaps;
 
         Crit3DSnow snowModel;
         Crit3DHydrall hydrallModel;
-        Crit3DRothCplusplus rothCModel;
+        Crit3DRothC rothCModel;
 
         QDateTime modelFirstTime, modelLastTime;
         QDateTime meteoPointsDbFirstTime;
@@ -142,7 +143,7 @@
         bool dailyUpdateHydrall(const QDate &myDate);
 
         bool updateRothC(const QDate &myDate);
-        void setRothCVariables(int row, int col, int month);
+        bool setRothCVariables(int row, int col, const QDate &myDate);
 
         bool computeSnowModel();
         void computeSnowPoint(Crit3DSnow &snowPoint, int row, int col);

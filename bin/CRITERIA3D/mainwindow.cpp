@@ -3874,10 +3874,10 @@ void MainWindow::on_actionDecomposable_plant_matter_triggered()
 {
     if (myProject.isRothCInitialized)
     {
-        if (myProject.rothCModel.map.decomposablePlantMaterial->isLoaded)
+        if (myProject.rothCModel.maps.decomposablePlantMaterial->isLoaded)
         {
-            setColorScale(noMeteoVar, myProject.rothCModel.map.decomposablePlantMaterial->colorScale);
-            setCurrentRasterOutput((myProject.rothCModel.map.decomposablePlantMaterial));
+            setColorScale(noMeteoVar, myProject.rothCModel.maps.decomposablePlantMaterial->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.maps.decomposablePlantMaterial));
             ui->labelOutputRaster->setText("Decomposable plant matter");
         }
         else
@@ -3896,10 +3896,10 @@ void MainWindow::on_actionResistant_plant_matter_triggered()
 {
     if (myProject.isRothCInitialized)
     {
-        if (myProject.rothCModel.map.resistantPlantMaterial->isLoaded)
+        if (myProject.rothCModel.maps.resistantPlantMaterial->isLoaded)
         {
-            setColorScale(noMeteoVar, myProject.rothCModel.map.resistantPlantMaterial->colorScale);
-            setCurrentRasterOutput((myProject.rothCModel.map.resistantPlantMaterial));
+            setColorScale(noMeteoVar, myProject.rothCModel.maps.resistantPlantMaterial->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.maps.resistantPlantMaterial));
             ui->labelOutputRaster->setText("Resistant plant matter");
         }
         else
@@ -3918,10 +3918,10 @@ void MainWindow::on_actionMicrobial_biomass_triggered()
 {
     if (myProject.isRothCInitialized)
     {
-        if (myProject.rothCModel.map.microbialBiomass->isLoaded)
+        if (myProject.rothCModel.maps.microbialBiomass->isLoaded)
         {
-            setColorScale(noMeteoVar, myProject.rothCModel.map.microbialBiomass->colorScale);
-            setCurrentRasterOutput((myProject.rothCModel.map.microbialBiomass));
+            setColorScale(noMeteoVar, myProject.rothCModel.maps.microbialBiomass->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.maps.microbialBiomass));
             ui->labelOutputRaster->setText("Microbial biomass");
         }
         else
@@ -3940,10 +3940,10 @@ void MainWindow::on_actionHumified_organic_matter_triggered()
 {
     if (myProject.isRothCInitialized)
     {
-        if (myProject.rothCModel.map.humifiedOrganicMatter->isLoaded)
+        if (myProject.rothCModel.maps.humifiedOrganicMatter->isLoaded)
         {
-            setColorScale(noMeteoVar, myProject.rothCModel.map.humifiedOrganicMatter->colorScale);
-            setCurrentRasterOutput((myProject.rothCModel.map.humifiedOrganicMatter));
+            setColorScale(noMeteoVar, myProject.rothCModel.maps.humifiedOrganicMatter->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.maps.humifiedOrganicMatter));
             ui->labelOutputRaster->setText("Humified organic matter");
         }
         else
@@ -3962,10 +3962,10 @@ void MainWindow::on_actionSoil_organic_matter_triggered()
 {
     if (myProject.isRothCInitialized)
     {
-        if (myProject.rothCModel.map.soilOrganicMatter->isLoaded)
+        if (myProject.rothCModel.maps.soilOrganicMatter->isLoaded)
         {
-            setColorScale(noMeteoVar, myProject.rothCModel.map.soilOrganicMatter->colorScale);
-            setCurrentRasterOutput((myProject.rothCModel.map.soilOrganicMatter));
+            setColorScale(noMeteoVar, myProject.rothCModel.maps.soilOrganicMatter->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.maps.soilOrganicMatter));
             ui->labelOutputRaster->setText("Soil organic matter");
         }
         else
