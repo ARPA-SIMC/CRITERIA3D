@@ -1016,7 +1016,7 @@ namespace soilFluxes3D::v2
 
     /*!
      * \brief gets the nodeIndex node water deficit
-     * \param fieldCapacity //TO ASK: what is this?
+     * \param fieldCapacity
      * \return water deficit    [m3 m-3] (0 at surface)
      */
     double getNodeWaterDeficit(SF3Duint_t nodeIndex, double fieldCapacity)
@@ -1031,6 +1031,25 @@ namespace soilFluxes3D::v2
             return 0.;
 
         return computeNodeTheta_fromSignedPsi(nodeIndex, -fieldCapacity) - computeNodeTheta(nodeIndex);
+    }
+
+    /*!
+     * \brief Computes node volumetric water content as function of signed water potential
+     * \param signedPsi (signed water potential)    [m]
+     * \return volumetric water content             [m3 m-3]
+     */
+    double getNodeWaterContentAtSignedPsi(SF3Duint_t nodeIndex, double signedPsi)
+    {
+        if(! nodeGrid.isInitialized)
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
+
+        if(nodeIndex >= nodeGrid.nrNodes)
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
+
+        if (nodeGrid.surfaceFlag[nodeIndex])
+            return nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
+        else
+            return computeNodeTheta_fromSignedPsi(nodeIndex, signedPsi);
     }
 
     /*!

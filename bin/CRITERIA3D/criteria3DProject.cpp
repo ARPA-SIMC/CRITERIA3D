@@ -207,7 +207,8 @@ bool Crit3DProject::initializeRothC()
             if (soilIndex == NODATA)
                 continue;
 
-            rothCModel.maps.setClay(getRothCClayContent(soilIndex), row, col);
+            const double clay = getRothCClayContent(soilIndex);  // [%]
+            rothCModel.maps.setClay(clay, row, col);
         }
     }
 
@@ -238,7 +239,7 @@ bool Crit3DProject::initializeRothC_full()
 
     logInfo("Initializing soil carbon content...");
 
-    if (! initializeRothC_soilCarbonContentFromClimate())
+    if (! initializeRothC_fromClimate())
         return false;
 
     isRothCInitialized = true;
@@ -247,9 +248,8 @@ bool Crit3DProject::initializeRothC_full()
 }
 
 
-// initializing soil carbon content without interpolating meteo data.
-// using climate of temperature and BIC
-bool Crit3DProject::initializeRothC_soilCarbonContentFromClimate()
+// initializing soil carbon content using climate of temperature and BIC
+bool Crit3DProject::initializeRothC_fromClimate()
 {
     if (! loadRothCTempMaps() || ! loadRothCBICMaps())
         return false;

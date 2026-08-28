@@ -53,6 +53,7 @@ namespace soilFluxes3D { inline namespace v2
 
     //Get water data
     double getNodeWaterContent(SF3Duint_t nodeIndex);
+    double getNodeWaterContentAtSignedPsi(SF3Duint_t nodeIndex, double signedPsi);
     double getNodeMaximumWaterContent(SF3Duint_t nodeIndex);
     double getNodeMinimumWaterContent(SF3Duint_t nodeIndex);
     double getNodeAvailableWaterContent(SF3Duint_t nodeIndex);

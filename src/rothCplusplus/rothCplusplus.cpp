@@ -317,7 +317,7 @@ double Crit3DRothC::RMF_Moist_FractionAW(double fractionAW)
  * \brief RMF_Moist_BIC
  * \param sixMonthBIC: 6-month hydroclimatic balance [mm]
  * assumption:
- * 6-month BIC >= 100 mm: no water stress
+ * 6-month BIC >= 0 mm: no water stress
  * 6-month BIC <= -DEFICIT_MAX: maximum water stress
  *
  * \return soil moisture rate modifying factor [-]
@@ -329,9 +329,9 @@ double Crit3DRothC::RMF_Moist_BIC(double sixMonthBIC)
     if (isEqual(sixMonthBIC, NODATA))
         return NODATA;
 
-    const double DEFICIT_MAX = 360.0;                           // [mm]
+    const double DEFICIT_MAX = 400.0;                           // [mm]
 
-    const double deficit = std::max(0.0, -sixMonthBIC);        // [mm]
+    const double deficit = std::max(0.0, -sixMonthBIC);         // [mm]
 
     const double deficitRatio = std::min(1.0, deficit / DEFICIT_MAX);   // [-]
 

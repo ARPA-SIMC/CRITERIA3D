@@ -1,7 +1,7 @@
 #ifndef CRITERIA3DPROJECT_H
 #define CRITERIA3DPROJECT_H
 
-    #define CRITERIA3D_VERSION "v1.4.0 (2026.08)"
+    #define CRITERIA3D_VERSION "v1.4.1 (2026.08)"
 
     #ifndef SOIL_H
         #include "soil.h"
@@ -82,7 +82,7 @@
         bool initializeHydrallConversionVector();
 
         bool initializeRothC();
-        bool initializeRothC_soilCarbonContentFromClimate();
+        bool initializeRothC_fromClimate();
         bool initializeRothC_full();
 
         bool loadRothCTempMaps();

@@ -2071,6 +2071,49 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels, bool isM
 }
 
 
+float Project3D::getFractionAvailableWater(int row, int col)
+{
+    // check surface node
+    const long surfaceNodeIndex = indexMap.at(0).value[row][col];
+
+    if (surfaceNodeIndex == indexMap.at(0).header->flag)
+        return NODATA;
+
+    double sumFC = 0;
+    double sumWP = 0;
+    double sumWC = 0;
+    for (unsigned int layer = 1; layer < nrLayers; ++layer)
+    {
+        // check node
+        const long nodeIndex = indexMap.at(layer).value[row][col];
+        if (nodeIndex == indexMap.at(layer).header->flag)
+                continue;
+
+        const double currentVWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);    // [m3 m-3]
+        if (isEqual(currentVWC, NODATA))
+            continue;
+
+        const double thickness = layerThickness[layer] * 1000.0;  // [mm]
+        sumWC += currentVWC * thickness;
+
+        const double fieldCapacity = soilFluxes3D::getNodeWaterContentAtSignedPsi(nodeIndex, -3.0);
+        const double wiltingPoint = soilFluxes3D::getNodeWaterContentAtSignedPsi(nodeIndex, -160.0);
+        sumFC += fieldCapacity * thickness;
+        sumWP += wiltingPoint * thickness;
+    }
+
+    const double availableWater = sumFC - sumWP;
+
+    if (availableWater <= EPSILON)
+        return NODATA;
+
+    const double fractionAW = (sumWC - sumWP) / availableWater;
+
+    // fractionAW > 1 is accepted (soil over field capacity)
+    return std::max(0.0, fractionAW);
+}
+
+
 bool Project3D::computeAvgDegreeOfSaturation(gis::Crit3DRasterGrid &outputRaster)
 {
     outputRaster.initializeGrid(*(indexMap.at(0).header));
