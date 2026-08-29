@@ -40,9 +40,11 @@
 
         void clear3DProject();
         bool check3DProject();
-        bool updateDailyTemperatures();
-        bool updateLast30DaysTavg();
 
+        bool updateDailyTemperatures();
+        bool updateHydrallYearlyMaps();
+        void dailyUpdateMonthlyFAW();
+        void dailyUpdate30DaysTavg();
 
         bool saveSnowModelState(const QString &currentStatePath);
         bool saveSoilWaterState(const QString &currentStatePath);
@@ -90,11 +92,6 @@
 
         double getRothCClayContent(int soilIndex);
         double getRothCYield(int row, int col);
-
-        bool hourlyUpdateHydrallMaps();
-
-        void dailyUpdateMonthlyFAW();
-        void dailyUpdate30DaysTavg();
 
         void dailyUpdateCropMaps(const QDate &myDate);
 
@@ -144,8 +141,7 @@
         bool computeHydrallModel(Crit3DHydrall &myHydrallModel, int row, int col, int forestIndex);
         bool setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, int col, int forestIndex);
 
-        bool dailyUpdateHydrall(const QDate &myDate);
-
+        bool updateHydrall(const QDate &myDate);
         bool updateRothC(const QDate &myDate);
         bool setRothCVariables(int row, int col, const QDate &myDate);
 

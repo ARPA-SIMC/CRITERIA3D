@@ -692,14 +692,10 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
                                             gisSettings.startLocation.latitude, currentDoy);
         }
     }
-
-    // cleans daily temperature maps
-    dailyTminMap.emptyGrid();
-    dailyTmaxMap.emptyGrid();
 }
 
 
-bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
+bool Crit3DProject::updateHydrall(const QDate &myDate)
 {
     //set daily variables like temp, co2
     if (myDate.dayOfYear() != 1)
@@ -1293,8 +1289,10 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             updateRothC(myDate);
         }
 
-        if (processes.computeHydrall)
-            dailyUpdateHydrall(myDate);
+        if (processes.computeHydrall && myDate.dayOfYear() == 1)
+        {
+            updateHydrall(myDate);
+        }
 
         if (isSaveOutputRaster())
         {
@@ -1324,10 +1322,20 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
                 return false;
             }
 
+            // update daily temperature maps from hourly
+            if (processes.computeCrop || processes.computeHydrall || processes.computeRothC)
+            {
+                if (! updateDailyTemperatures())
+                {
+                    logError();
+                    return false;
+                }
+            }
+
             // Hydrall maps update must be done hourly, otherwise ETReal data are not stored
             if (processes.computeHydrall)
             {
-                if (! hourlyUpdateHydrallMaps())
+                if (! updateHydrallYearlyMaps())
                 {
                     logError();
                     return false;
@@ -1352,19 +1360,20 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             }
         }
 
-        // update degree days and LAI maps
-        if (processes.computeCrop)
+        if (processes.computeCrop || processes.computeHydrall || processes.computeRothC)
         {
-            dailyUpdateCropMaps(myDate);
-        }
-
-        // update monthly maps for Hydrall and RothC
-        if (processes.computeHydrall || processes.computeRothC)
-        {
-            dailyUpdate30DaysTavg();
+            if (processes.computeCrop)
+                dailyUpdateCropMaps(myDate);
 
             if (processes.computeRothC)
                 dailyUpdateMonthlyFAW();
+
+            if (processes.computeHydrall || processes.computeRothC)
+                dailyUpdate30DaysTavg();
+
+            // cleans daily temperature maps
+            dailyTminMap.emptyGrid();
+            dailyTmaxMap.emptyGrid();
         }
 
         if (isSaveDailyState() || (isSaveYearlyState() && myDate.dayOfYear() == 1) || (isSaveMonthlyState() && myDate.day() == 1))
@@ -1391,12 +1400,13 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 }
 
 
-bool Crit3DProject::hourlyUpdateHydrallMaps()
+bool Crit3DProject::updateHydrallYearlyMaps()
 {
     if (! processes.computeHydrall)
         return true;
 
-    if (hourlyMeteoMaps == nullptr || hourlyMeteoMaps->mapHourlyET0 == nullptr
+    if (hourlyMeteoMaps == nullptr
+            || hourlyMeteoMaps->mapHourlyET0 == nullptr
             || hourlyMeteoMaps->mapHourlyPrec == nullptr)
     {
         errorString = "Missing hourly ET0 or precipitation maps";
@@ -2030,7 +2040,6 @@ void Crit3DProject::dailyUpdate30DaysTavg()
 
     const float flag = DEM.header->flag;
 
-    #pragma omp parallel for if(isParallelComputing())
     for (long row = 0; row < dailyTminMap.header->nrRows; ++row)
     {
         for (long col = 0; col < dailyTminMap.header->nrCols; ++col)
@@ -2202,7 +2211,8 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
             }
         }
 
-        if (processes.computeCrop || processes.computeWater || processes.computeRothC)
+        if (processes.computeCrop || processes.computeWater
+                || processes.computeHydrall || processes.computeRothC)
         {
             if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
             {
@@ -2213,11 +2223,6 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
             if (isSaveOutputRaster())
             {
                 saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myDateTime);
-            }
-
-            if (processes.computeCrop || processes.computeRothC)
-            {
-                updateDailyTemperatures();
             }
 
             if (processes.computeWater)
