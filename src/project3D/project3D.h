@@ -246,9 +246,9 @@
         float computeFactorOfSafety(int row, int col, unsigned int layerIndex);
 
         bool getTotalSurfaceWaterContent(double &wcSum, long &nrVoxels, int row0 = 0, int col0 = 0, int row1 = NODATA, int col1 = NODATA);
-        bool getTotalSoilWaterContent(double &wcSum, long &nrVoxels, bool isMaximum, int row0 = 0, int col0 = 0, int row1 = NODATA, int col1 = NODATA);
+        bool getTotalSoilWaterContent(double &wcSum, long &nrCells, bool isMaximum, int row0 = 0, int col0 = 0, int row1 = NODATA, int col1 = NODATA);
 
-        float getFractionAvailableWater(int row, int col);
+        double getFractionAvailableWater(int row, int col);
     };
 
     bool isCrit3dError(int result, QString &error);

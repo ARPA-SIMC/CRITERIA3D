@@ -91,7 +91,11 @@
         double getRothCClayContent(int soilIndex);
         double getRothCYield(int row, int col);
 
-        bool updateETAndPrecMaps();
+        bool hourlyUpdateHydrallMaps();
+
+        void dailyUpdateMonthlyFAW();
+        void dailyUpdate30DaysTavg();
+
         void dailyUpdateCropMaps(const QDate &myDate);
 
         void clearHydrallMaps();

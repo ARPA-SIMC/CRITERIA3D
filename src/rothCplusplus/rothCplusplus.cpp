@@ -293,34 +293,35 @@ double Crit3DRothC::RMF_plantCover(double plantCover)
 
 /*!
  * \brief RMF_Moist_FractionAW
- * \param fractionAW: fraction of available water [0-1]
+ * \param
+ * monthlyAvgFAW: monthly average fraction of available water [-]
  * 0.0: wilting point
  * 1.0: field capacity
- *
- * \return soil moisture rate modifying factor [-]
+ * \return
+ * soil moisture rate modifying factor [-]
  * 0.2: very dry soil
  * 1.0: no water stress
  */
-double Crit3DRothC::RMF_Moist_FractionAW(double fractionAW)
+double Crit3DRothC::RMF_Moist_FractionAW(double monthlyAvgFAW)
 {
-    if (isEqual(fractionAW, NODATA))
+    if (isEqual(monthlyAvgFAW, NODATA))
         return NODATA;
 
-    // TODO gestire casi FAW > 1 (suolo sopra capacità di campo)
-    const double cast_FAW = std::max(0.0, std::min(1.0, fractionAW));
+    // Values above field capacity are treated as no water stress
+    // TODO manage water excess stress
+    const double clampFAW  =
+        std::max(0.0, std::min(1.0, monthlyAvgFAW));    // [-]
 
-    return 0.2 + cast_FAW * 0.8;
+    return 0.2 + clampFAW  * 0.8;
 }
 
 
 /*!
  * \brief RMF_Moist_BIC
- * \param sixMonthBIC: 6-month hydroclimatic balance [mm]
- * assumption:
- * 6-month BIC >= 0 mm: no water stress
- * 6-month BIC <= -DEFICIT_MAX: maximum water stress
- *
- * \return soil moisture rate modifying factor [-]
+ * \param
+ * sixMonthBIC: sum of 6-month hydroclimatic balance [mm]
+ * \return
+ * soil moisture rate modifying factor [-]
  * 0.2: very dry soil
  * 1.0: no water stress
  */
@@ -329,23 +330,33 @@ double Crit3DRothC::RMF_Moist_BIC(double sixMonthBIC)
     if (isEqual(sixMonthBIC, NODATA))
         return NODATA;
 
-    const double DEFICIT_MAX = 400.0;                           // [mm]
+    const double BIC_WET = 60.0;                    // [mm]
+    const double BIC_DRY = -400.0;                  // [mm]
+    const double DEFICIT_MAX = BIC_WET - BIC_DRY;   // [mm]
 
-    const double deficit = std::max(0.0, -sixMonthBIC);         // [mm]
+    const double deficit =
+        std::max(0.0, BIC_WET - sixMonthBIC);       // [mm]
 
-    const double deficitRatio = std::min(1.0, deficit / DEFICIT_MAX);   // [-]
+    const double defRatio =
+        std::min(1.0, deficit / DEFICIT_MAX);       // [-]
 
-    return 1.0 - 0.8 * deficitRatio;
+    return 1.0 - 0.8 * defRatio;                    // [-]
 }
 
 
-// Calculates the rate modifying factor for temperature (RMF_Tmp)
-double Crit3DRothC::RMF_Tmp(double avgT)
+/*!
+ * \brief RMF_Tmp
+ * \param
+ * monthlyAvgT: monthly average temeprature [°C]
+ * \return
+ * rate modifying factor for temperature [-]
+ */
+double Crit3DRothC::RMF_Tmp(double monthlyAvgT)
 {
-    if (avgT < -5.0)
+    if (monthlyAvgT < -5.0)
         return 0.0;
 
-    return 47.91 / (std::exp(106.06 / (avgT + 18.27)) + 1.0);
+    return 47.91 / (std::exp(106.06 / (monthlyAvgT + 18.27)) + 1.0);
 }
 
 
@@ -359,8 +370,8 @@ void Crit3DRothC::decomp(int timeFact, double modifyingRate)
     const double microbialBiomass_k = 0.66;
     const double humifiedOrganicMatter_k = 0.02;
 
-    // const double conr = 0.0001244876401867718; // equivalent to std::log(2.0)/5568.0;
-    double tstep = 1.0/timeFact; //monthly 1/12 or daily 1/365
+    // monthly 1/12 or daily 1/365
+    double tstep = 1.0 / timeFact;
     double exc = std::exp(-CONR*tstep);
 
     // decomposition
@@ -374,14 +385,14 @@ void Crit3DRothC::decomp(int timeFact, double modifyingRate)
     double microbialBiomassDelta = microbialBiomass - microbialBiomass1;
     double humifiedOrganicMatterDelta = humifiedOrganicMatter - humifiedOrganicMatter1;
 
-    //calculating redistribution of carbon into each pool
+    // calculating redistribution of carbon into each pool
     double x = 1.67*(1.85+1.60*std::exp(-0.0786 * _clay));
 
     const double ratioCO2 = x / (x + 1.0);
     const double ratioBIO = 0.46 / (x + 1.0);
     const double ratioHUM = 0.54 / (x + 1.0);
 
-    //proportion C from each pool into CO2, microbialBiomass and humifiedOrganicMatter
+    // proportion C from each pool into CO2, microbialBiomass and humifiedOrganicMatter
     double decomposablePlantMatterToCo2 = decomposablePlantMatterDelta * ratioCO2;
     double decomposablePlantMatterToMicrobialBiomass = decomposablePlantMatterDelta * ratioBIO;
     double decomposablePlantMatterToHumifiedOrganicMatter = decomposablePlantMatterDelta * ratioHUM;
@@ -398,22 +409,22 @@ void Crit3DRothC::decomp(int timeFact, double modifyingRate)
     double humifiedOrganicMatter_microbialBiomass = humifiedOrganicMatterDelta * ratioBIO;
     double humifiedOrganicMatter_humifiedOrganicMatter = humifiedOrganicMatterDelta * ratioHUM;
 
-    //update C pools
+    // update C pools
     decomposablePlantMatter = decomposablePlantMatter1;
     resistantPlantMatter = resistantPlantMatter1;
     microbialBiomass = microbialBiomass1 + decomposablePlantMatterToMicrobialBiomass + resistantPlantMatterToMicrobialBiomass + microbialBiomassToMicrobialBiomass + humifiedOrganicMatter_microbialBiomass;
     humifiedOrganicMatter = humifiedOrganicMatter1 + decomposablePlantMatterToHumifiedOrganicMatter + resistantPlantMatterToHumifiedOrganicMatter + microbialBiomassToHumifiedOrganicMatter + humifiedOrganicMatter_humifiedOrganicMatter;
 
-    //split plant C to decomposablePlantMatter and resistantPlantMatter
+    // split plant C to decomposablePlantMatter and resistantPlantMatter
     double PI_C_decomposablePlantMatter = decomposablePMResistantPMRatio / (decomposablePMResistantPMRatio + 1.0) * _inputC;
     double PI_C_resistantPlantMatter = 1.0 / (decomposablePMResistantPMRatio + 1.0) * _inputC;
 
-    //split FYM C to decomposablePlantMatter, resistantPlantMatter and humifiedOrganicMatter
+    // split FYM C to decomposablePlantMatter, resistantPlantMatter and humifiedOrganicMatter
     double FYM_C_decomposablePlantMatter = 0.49 * _inputFYM;
     double FYM_C_resistantPlantMatter = 0.49 * _inputFYM;
     double FYM_C_humifiedOrganicMatter = 0.02 * _inputFYM;
 
-    //add plant C and FYM_C to decomposablePlantMatter, resistantPlantMatter and humifiedOrganicMatter
+    // add plant C and FYM_C to decomposablePlantMatter, resistantPlantMatter and humifiedOrganicMatter
     decomposablePlantMatter = decomposablePlantMatter + PI_C_decomposablePlantMatter + FYM_C_decomposablePlantMatter;
     resistantPlantMatter = resistantPlantMatter + PI_C_resistantPlantMatter + FYM_C_resistantPlantMatter;
     humifiedOrganicMatter = humifiedOrganicMatter + FYM_C_humifiedOrganicMatter;
@@ -504,34 +515,30 @@ bool Crit3DRothC::RothC()
     soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
 
     // Calculate RMFs
-    double RM_TMP = RMF_Tmp(_avgTemp);
-    const double defaultMoisture = 0.7;
-    double RM_Moist = defaultMoisture;
+    const double RM_TMP = RMF_Tmp(_avgTemp);
 
-    if (! isEqual(_fractionAW, NODATA))
+    constexpr double DEFAULT_MOISTURE = 0.7;
+    double RM_Moist = DEFAULT_MOISTURE;
+
+    if (!isEqual(_fractionAW, NODATA))
     {
-        // RM_Moist based on fraction of available water (from water balance)
-        const double RM_Moist_FAW = RMF_Moist_FractionAW(_fractionAW);
-
-        if (! isEqual(RM_Moist_FAW, NODATA))
-            RM_Moist = RM_Moist_FAW;
+        // RM_Moist based on fraction of available water
+        // obtained from the water balance
+        RM_Moist = RMF_Moist_FractionAW(_fractionAW);
     }
-    else
+    else if (!isEqual(_sixMonthBIC, NODATA))
     {
-        // RM_Moist based on BIC (climate)
-        const double RM_Moist_BIC = RMF_Moist_BIC(_sixMonthBIC);
-
-        if (! isEqual(RM_Moist_BIC, NODATA))
-            RM_Moist = RM_Moist_BIC;
+        // RM_Moist based on 6-month hydroclimatic balance
+        RM_Moist = RMF_Moist_BIC(_sixMonthBIC);
     }
 
-    double RM_PC = RMF_plantCover(_plantCover);
+    const double RM_PC = RMF_plantCover(_plantCover);
 
-    // Combine RMF's into one.
-    double modifyingRate = RM_TMP * RM_Moist * RM_PC;
+    // Combine RMFs into one
+    const double modifyingRate = RM_TMP * RM_Moist * RM_PC;
 
-    int timeFact = 12;
-    decomp(timeFact, modifyingRate);
+    constexpr int TIME_FACT = 12;   // monthly time step
+    decomp(TIME_FACT, modifyingRate);
 
     return true;
 }
@@ -550,7 +557,7 @@ bool Crit3DRothC::initializeFromClimate(const std::vector<double>& monthlyAvgT,
             return false;
     }
 
-    // compute previous 6-month hydroclimatic balance.
+    // compute 6-month hydroclimatic balance, including the current month
     std::vector<double> sixMonthBIC(12, 0);
     for (int m = 0; m < 12; ++m)
     {
@@ -564,14 +571,16 @@ bool Crit3DRothC::initializeFromClimate(const std::vector<double>& monthlyAvgT,
     // soils are not considered to be in equilibrium.
     // run model for 75 years using climatological data
     const int INITIALIZATION_YEARS = 75;
-    for (int count = 0; count < (INITIALIZATION_YEARS * 12); ++count)
+
+    for (int year = 0; year < INITIALIZATION_YEARS; ++year)
     {
-        const int monthIndex = count % 12;
+        for (int month = 0; month < 12; ++month)
+        {
+            setAvgTemperature(monthlyAvgT[month]);
+            setSixMonthBIC(sixMonthBIC[month]);
 
-        setAvgTemperature(monthlyAvgT[monthIndex]);
-        setSixMonthBIC(sixMonthBIC[monthIndex]);
-
-        RothC();
+            RothC();
+        }
     }
 
     return true;

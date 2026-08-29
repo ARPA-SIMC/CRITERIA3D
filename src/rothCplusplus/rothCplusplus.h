@@ -59,9 +59,6 @@
 // equivalent to std::log(2.0)/5568.0
 #define CONR  0.0001244876401867718
 
-//#define EXP_DECAY(FACTOR, EXT_COEF,RAGE) ((FACTOR) * std::exp(-(EXT_COEF) * (RAGE)))
-//#define LOG_RAGE(PLANT_MATERIAL, PLAT_MATERIAL_ACT) (std::log((PLANT_MATERIAL)/(PLAT_MATERIAL_ACT)) ) / CONR
-
 
 class Crit3DRothCMaps
 {
@@ -209,8 +206,8 @@ private:
 
     double RMF_plantCover(bool plantCover);
     double RMF_plantCover(double plantCover);
-    double RMF_Tmp(double avgT);
-    double RMF_Moist_FractionAW(double fractionAW);
+    double RMF_Tmp(double monthlyAvgT);
+    double RMF_Moist_FractionAW(double monthlyAvgFAW);
     double RMF_Moist_BIC(double sixMonthBIC);
 
     //double RMF_Moist(double RAIN, double PEVAP, bool PC);

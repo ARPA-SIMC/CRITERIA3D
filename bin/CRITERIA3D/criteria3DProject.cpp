@@ -601,6 +601,36 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
 }
 
 
+// Sum of daily fractions of available water
+// It is divided by the number of days at the end of the month [RothC model]
+void Crit3DProject::dailyUpdateMonthlyFAW()
+{
+    if (! monthlyFAW.isLoaded)
+        return;
+
+    const float flag = monthlyFAW.header->flag;
+
+    #pragma omp parallel for if(isParallelComputing())
+    for (int row = 0; row < monthlyFAW.header->nrRows; ++row)
+    {
+        for (int col = 0; col < monthlyFAW.header->nrCols; ++col)
+        {
+            const double fractionAW = getFractionAvailableWater(row, col);
+
+            if (isEqual(fractionAW, NODATA))
+                continue;
+
+            float& monthlyValue = monthlyFAW.value[row][col];
+
+            if (isEqual(monthlyValue, flag))
+                monthlyValue = static_cast<float>(fractionAW);
+            else
+                monthlyValue += static_cast<float>(fractionAW);
+        }
+    }
+}
+
+
 void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
 {
     int firstDoy = 1;
@@ -610,8 +640,10 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
         firstDoy = 182;
     }
 
+    const int currentDoy = myDate.dayOfYear();
+
     // reset the crop at the beginning of the new year
-    if (myDate.dayOfYear() == firstDoy)
+    if (currentDoy == firstDoy)
     {
         logInfo("Reset crop...");
 
@@ -619,17 +651,16 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
         degreeDaysMap.emptyGrid();
     }
 
-    int currentDoy = getCurrentDate().dayOfYear();
+    const float flag = DEM.header->flag;
 
     #pragma omp parallel for if(isParallelComputing())
-    for (int row = 0; row < DEM.header->nrRows; row++)
+    for (int row = 0; row < DEM.header->nrRows; ++row)
     {
-        for (int col = 0; col < DEM.header->nrCols; col++)
+        for (int col = 0; col < DEM.header->nrCols; ++col)
         {
             // is valid point
             float height = DEM.value[row][col];
-
-            if (isEqual(height, DEM.header->flag))
+            if (isEqual(height, flag))
                 continue;
 
             // landUnit list and crop list have the same index
@@ -637,10 +668,10 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
             if(!isCrop(index))
                 continue;
 
-            float tmin = dailyTminMap.value[row][col];
-            float tmax = dailyTmaxMap.value[row][col];
+            const float tmin = dailyTminMap.value[row][col];
+            const float tmax = dailyTmaxMap.value[row][col];
 
-            if(isEqual(tmin, dailyTminMap.header->flag) || isEqual(tmax, dailyTmaxMap.header->flag))
+            if(isEqual(tmin, flag) || isEqual(tmax, flag))
                 continue;
 
             double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDoy);
@@ -648,13 +679,13 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
             if (isEqual(dailyDD, NODATA))
                 continue;
 
-            if (isEqual(degreeDaysMap.value[row][col], degreeDaysMap.header->flag))
+            if (isEqual(degreeDaysMap.value[row][col], flag))
             {
-                degreeDaysMap.value[row][col] = float(dailyDD);
+                degreeDaysMap.value[row][col] = static_cast<float>(dailyDD);
             }
             else
             {
-                degreeDaysMap.value[row][col] += float(dailyDD);
+                degreeDaysMap.value[row][col] += static_cast<float>(dailyDD);
             }
 
             laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
@@ -755,7 +786,7 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
 
             rothCModel.storeStateVariables(row, col);
 
-            // reset avalaible water map
+            // reset fraction of available water
             monthlyFAW.value[row][col] = 0;
 
             // reset C input
@@ -1252,16 +1283,6 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
     {
         setCurrentDate(myDate);
 
-        // update crop at last hour of each day
-        if (processes.computeCrop && getCurrentHour() == 23)
-        {
-            // TODO FT check
-            if (! isRestart || (currentSeconds == 0 || currentSeconds == 3600))
-            {
-                dailyUpdateCropMaps(myDate);
-            }
-        }
-
         if (processes.computeWater)
         {
             dailyUpdatePond();
@@ -1303,10 +1324,10 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
                 return false;
             }
 
-            // RothC maps update must be done hourly, otherwise ETReal data are not stored
-            if (processes.computeRothC || processes.computeHydrall)
+            // Hydrall maps update must be done hourly, otherwise ETReal data are not stored
+            if (processes.computeHydrall)
             {
-                if (! updateETAndPrecMaps())
+                if (! hourlyUpdateHydrallMaps())
                 {
                     logError();
                     return false;
@@ -1331,9 +1352,19 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             }
         }
 
+        // update degree days and LAI maps
+        if (processes.computeCrop)
+        {
+            dailyUpdateCropMaps(myDate);
+        }
+
+        // update monthly maps for Hydrall and RothC
         if (processes.computeHydrall || processes.computeRothC)
         {
-            updateLast30DaysTavg();
+            dailyUpdate30DaysTavg();
+
+            if (processes.computeRothC)
+                dailyUpdateMonthlyFAW();
         }
 
         if (isSaveDailyState() || (isSaveYearlyState() && myDate.dayOfYear() == 1) || (isSaveMonthlyState() && myDate.day() == 1))
@@ -1360,9 +1391,9 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 }
 
 
-bool Crit3DProject::updateETAndPrecMaps()
+bool Crit3DProject::hourlyUpdateHydrallMaps()
 {
-    if (! processes.computeHydrall && ! processes.computeRothC)
+    if (! processes.computeHydrall)
         return true;
 
     if (hourlyMeteoMaps == nullptr || hourlyMeteoMaps->mapHourlyET0 == nullptr
@@ -1372,34 +1403,23 @@ bool Crit3DProject::updateETAndPrecMaps()
         return false;
     }
 
-    if (processes.computeHydrall)
+    if (hydrallMaps.yearlyET0 == nullptr || hydrallMaps.yearlyPrec == nullptr)
     {
-        if (hydrallMaps.yearlyET0 == nullptr || hydrallMaps.yearlyPrec == nullptr)
-        {
-            errorString = "Missing yearly maps for Hydrall";
-            return false;
-        }
-
-        if (! hydrallMaps.yearlyET0->isLoaded || ! hydrallMaps.yearlyPrec->isLoaded)
-        {
-            errorString = "Missing yearly maps for Hydrall";
-            return false;
-        }
+        errorString = "Missing yearly maps for Hydrall";
+        return false;
     }
-    if (processes.computeRothC)
+
+    if (! hydrallMaps.yearlyET0->isLoaded || ! hydrallMaps.yearlyPrec->isLoaded)
     {
-        if (! monthlyFAW.isLoaded)
-        {
-            errorString = "Missing monthly maps for RothC";
-            return false;
-        }
+        errorString = "Missing yearly maps for Hydrall";
+        return false;
     }
 
     const int nrRows = DEM.header->nrRows;
     const int nrCols = DEM.header->nrCols;
-    const float et0Flag = hourlyMeteoMaps->mapHourlyET0->header->flag;
-    const float precFlag = hourlyMeteoMaps->mapHourlyPrec->header->flag;
+    const float flag = DEM.header->flag;
 
+    #pragma omp parallel for if(isParallelComputing())
     for (int row = 0; row < nrRows; row++)
     {
         for (int col = 0; col < nrCols; col++)
@@ -1407,23 +1427,20 @@ bool Crit3DProject::updateETAndPrecMaps()
             const float hourlyEt0 = hourlyMeteoMaps->mapHourlyET0->value[row][col];
             const float hourlyPrec = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
 
-            if (processes.computeHydrall)
+            if (! isEqual(hourlyEt0, flag))
             {
-                if (! isEqual(hourlyEt0, et0Flag))
-                {
-                    if (isEqual(hydrallMaps.yearlyET0->value[row][col], NODATA))
-                        hydrallMaps.yearlyET0->value[row][col] = hourlyEt0;
-                    else
-                        hydrallMaps.yearlyET0->value[row][col] += hourlyEt0;
-                }
+                if (isEqual(hydrallMaps.yearlyET0->value[row][col], flag))
+                    hydrallMaps.yearlyET0->value[row][col] = hourlyEt0;
+                else
+                    hydrallMaps.yearlyET0->value[row][col] += hourlyEt0;
+            }
 
-                if (! isEqual(hourlyPrec, precFlag))
-                {
-                    if (isEqual(hydrallMaps.yearlyPrec->value[row][col], NODATA))
-                        hydrallMaps.yearlyPrec->value[row][col] = hourlyPrec;
-                    else
-                        hydrallMaps.yearlyPrec->value[row][col] += hourlyPrec;
-                }
+            if (! isEqual(hourlyPrec, flag))
+            {
+                if (isEqual(hydrallMaps.yearlyPrec->value[row][col], flag))
+                    hydrallMaps.yearlyPrec->value[row][col] = hourlyPrec;
+                else
+                    hydrallMaps.yearlyPrec->value[row][col] += hourlyPrec;
             }
         }
     }
@@ -2005,25 +2022,36 @@ bool Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, 
 }
 
 
-bool Crit3DProject::updateLast30DaysTavg()
+void Crit3DProject::dailyUpdate30DaysTavg()
 {
-    if (! dailyTminMap.isLoaded || ! dailyTmaxMap.isLoaded || ! hourlyMeteoMaps->mapHourlyTair->isLoaded)
-        return false;
+    if (! dailyTminMap.isLoaded || ! dailyTmaxMap.isLoaded
+        || ! mapLast30DaysTAvg.isLoaded)
+        return;
 
-    const float flag = dailyTminMap.header->flag;
-    for (long row = 0; row < dailyTminMap.header->nrRows; row++)
+    const float flag = DEM.header->flag;
+
+    #pragma omp parallel for if(isParallelComputing())
+    for (long row = 0; row < dailyTminMap.header->nrRows; ++row)
     {
-        for (long col = 0; col < dailyTminMap.header->nrCols; col++)
+        for (long col = 0; col < dailyTminMap.header->nrCols; ++col)
         {
-            if (! isEqual(dailyTminMap.value[row][col], flag))
+            const float tmin = dailyTminMap.value[row][col];
+            const float tmax = dailyTmaxMap.value[row][col];
+
+            if (! isEqual(tmin, flag) && ! isEqual(tmax, flag))
             {
-                const float lastDayTavg = (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col]) * 0.5;
-                const float currentTavg = mapLast30DaysTAvg.value[row][col];
-                mapLast30DaysTAvg.value[row][col] = (currentTavg * 29.0 + lastDayTavg) / 30.0;
+                const float tavg = (tmin + tmax) * 0.5;
+                const float previousTavg = mapLast30DaysTAvg.value[row][col];
+                if (isEqual(previousTavg, flag))
+                    mapLast30DaysTAvg.value[row][col] = tavg;
+                else
+                {
+                    // media mobile approssimata
+                    mapLast30DaysTAvg.value[row][col] = (previousTavg * 29.0 + tavg) / 30.0;
+                }
             }
         }
     }
-    return true;
 }
 
 
@@ -2032,21 +2060,23 @@ bool Crit3DProject::updateDailyTemperatures()
     if (! dailyTminMap.isLoaded || ! dailyTmaxMap.isLoaded || ! hourlyMeteoMaps->mapHourlyTair->isLoaded)
         return false;
 
+    const float flag = hourlyMeteoMaps->mapHourlyTair->header->flag;
+
     #pragma omp parallel for if (isParallelComputing())
-    for (long row = 0; row < dailyTminMap.header->nrRows; row++)
+    for (long row = 0; row < dailyTminMap.header->nrRows; ++row)
     {
-        for (long col = 0; col < dailyTminMap.header->nrCols; col++)
+        for (long col = 0; col < dailyTminMap.header->nrCols; ++col)
         {
             float airT = hourlyMeteoMaps->mapHourlyTair->value[row][col];
 
-            if (isEqual(airT, hourlyMeteoMaps->mapHourlyTair->header->flag))
+            if (isEqual(airT, flag))
                 continue;
 
             float currentTmin = dailyTminMap.value[row][col];
-            dailyTminMap.value[row][col] = isEqual(currentTmin, dailyTminMap.header->flag) ? airT : std::min(currentTmin, airT);
+            dailyTminMap.value[row][col] = isEqual(currentTmin, flag) ? airT : std::min(currentTmin, airT);
 
             float currentTmax = dailyTmaxMap.value[row][col];
-            dailyTmaxMap.value[row][col] = isEqual(currentTmax, dailyTmaxMap.header->flag) ? airT : std::max(currentTmax, airT);
+            dailyTmaxMap.value[row][col] = isEqual(currentTmax, flag) ? airT : std::max(currentTmax, airT);
         }
     }
 
