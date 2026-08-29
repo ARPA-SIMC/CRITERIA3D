@@ -2040,6 +2040,7 @@ void Crit3DProject::dailyUpdate30DaysTavg()
 
     const float flag = DEM.header->flag;
 
+    #pragma omp parallel for if (isParallelComputing())
     for (long row = 0; row < dailyTminMap.header->nrRows; ++row)
     {
         for (long col = 0; col < dailyTminMap.header->nrCols; ++col)
