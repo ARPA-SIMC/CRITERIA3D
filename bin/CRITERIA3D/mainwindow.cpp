@@ -4218,18 +4218,74 @@ void MainWindow::on_actioncumulated_yearly_precipitation_triggered()
     {
         if (myProject.hydrallMaps.yearlyPrec->isLoaded)
         {
-            setColorScale(noMeteoTerrain, myProject.hydrallMaps.yearlyPrec->colorScale);
+            setColorScale(precipitation, myProject.hydrallMaps.yearlyPrec->colorScale);
             setCurrentRasterOutput((myProject.hydrallMaps.yearlyPrec));
-            ui->labelOutputRaster->setText("Cumulated yearly prec");
+            ui->labelOutputRaster->setText("Cumulated yearly prec [mm]");
         }
         else
         {
-            myProject.logError("Error while loading understorey net primary production.");
+            myProject.logError("Error while loading yearly precipitation.");
         }
     }
     else
     {
         myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_action30_days_average_temperature_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.mapLast30DaysTAvg.isLoaded)
+        {
+            setColorScale(airTemperature, myProject.mapLast30DaysTAvg.colorScale);
+            setCurrentRasterOutput(&(myProject.mapLast30DaysTAvg));
+            ui->labelOutputRaster->setText("30-days average temperature [°C]");
+        }
+        else
+        {
+            myProject.logError("Error while loading 30-days average temperature.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actionMonthly_fraction_of_available_water_triggered()
+{
+    if (myProject.isRothCInitialized)
+    {
+        if (myProject.monthlyFAW.isLoaded)
+        {
+            myProject.criteria3DMap.copyGrid(myProject.monthlyFAW);
+            const int nrdays = myProject.getCurrentDate().day();
+
+            // monthly average
+            const float flag = myProject.criteria3DMap.header->flag;
+            for (int row = 0; row < myProject.criteria3DMap.header->nrRows; ++row)
+                for (int col = 0; col < myProject.criteria3DMap.header->nrCols; ++col)
+                    if (! isEqual(myProject.criteria3DMap.value[row][col], flag))
+                        myProject.criteria3DMap.value[row][col] /= nrdays;
+
+            gis::updateMinMaxRasterGrid(&(myProject.criteria3DMap));
+
+            setColorScale(airTemperature, myProject.criteria3DMap.colorScale);
+            setCurrentRasterOutput(&(myProject.criteria3DMap));
+            ui->labelOutputRaster->setText("fraction of available water [-]");
+        }
+        else
+        {
+            myProject.logError("Error while loading fraction of available water.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize RothC model before.");
     }
 }
 
@@ -4293,4 +4349,5 @@ void MainWindow::on_flag_point_selection_triggered(bool isChecked)
         _isAreaSelection = false;
     }
 }
+
 

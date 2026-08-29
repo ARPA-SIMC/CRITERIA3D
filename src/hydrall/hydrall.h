@@ -386,17 +386,18 @@
         gis::Crit3DRasterGrid* criticalSoilWaterPotential;
         gis::Crit3DRasterGrid* minLeafWaterPotential;
 
+        // state variables
         gis::Crit3DRasterGrid* yearlyPrec;
         gis::Crit3DRasterGrid* yearlyET0;
 
-        gis::Crit3DRasterGrid* treeNetPrimaryProduction; //SAVE
-        gis::Crit3DRasterGrid* treeBiomassFoliage; //SAVE
-        gis::Crit3DRasterGrid* treeBiomassRoot; //SAVE
-        gis::Crit3DRasterGrid* treeBiomassSapwood; //SAVE
-        gis::Crit3DRasterGrid* understoreyNetPrimaryProduction; //SAVE
-        gis::Crit3DRasterGrid* understoreyBiomassFoliage; //SAVE
-        gis::Crit3DRasterGrid* understoreyBiomassRoot; //SAVE
-
+        // state variables
+        gis::Crit3DRasterGrid* treeNetPrimaryProduction;
+        gis::Crit3DRasterGrid* treeBiomassFoliage;
+        gis::Crit3DRasterGrid* treeBiomassRoot;
+        gis::Crit3DRasterGrid* treeBiomassSapwood;
+        gis::Crit3DRasterGrid* understoreyNetPrimaryProduction;
+        gis::Crit3DRasterGrid* understoreyBiomassFoliage;
+        gis::Crit3DRasterGrid* understoreyBiomassRoot;
         gis::Crit3DRasterGrid* outputC;
         gis::Crit3DRasterGrid* carbonStock;
 

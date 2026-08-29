@@ -277,6 +277,10 @@
 
         void on_actionRothC_initializePath_triggered();
 
+        void on_action30_days_average_temperature_triggered();
+
+        void on_actionMonthly_fraction_of_available_water_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
