@@ -109,6 +109,7 @@
         QString parametersFileName;
         QString glocalMapName;
         QString glocalPointsName;
+        QString glocalCVPointsName;
         std::ofstream logFile;
         std::ofstream dataFile;
 
@@ -292,7 +293,7 @@
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings *meteoSettings);
         void passGridTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings* meteoSettings);
         bool loadGlocalAreasMap();
-        bool loadGlocalStationsAndCells(bool isGrid, QString fileNameStations);
+        bool loadGlocalStationsAndCells(bool isGrid, QString fileNameStations, QString fileNameStationsCV);
         bool loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool isGrid);
         bool loadGlocalStationsCsv(QString fileName, std::vector<std::vector<std::string> > &areaPoints);
         bool groupCellsInArea(std::vector<int> &areaPoints, int index, bool isGrid);

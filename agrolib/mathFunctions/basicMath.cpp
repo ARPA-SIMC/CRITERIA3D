@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <charconv>
 #include <string>
+#include <locale>
+#include <iostream>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -586,13 +588,33 @@
         if (normalizedStr.empty())
             return false;
 
-        // accept both ',' and '.' as decimal separator
         std::replace(normalizedStr.begin(), normalizedStr.end(), ',', '.');
 
         char* end = nullptr;
+        double parsed = 0.0;
+
+        // Use C locale (point as decimal separator).
         errno = 0;
 
-        const double parsed = std::strtod(normalizedStr.c_str(), &end);
+#ifdef _WIN32
+
+        _locale_t loc = _create_locale(LC_NUMERIC, "C");
+        if (loc == nullptr)
+            return false;
+
+        parsed = _strtod_l(normalizedStr.c_str(), &end, loc);
+        _free_locale(loc);
+
+#else
+
+        locale_t loc = newlocale(LC_NUMERIC_MASK, "C", nullptr);
+        if (loc == nullptr)
+            return false;
+
+        parsed = strtod_l(normalizedStr.c_str(), &end, loc);
+        freelocale(loc);
+
+#endif
 
         // no number found
         if (end == normalizedStr.c_str())
