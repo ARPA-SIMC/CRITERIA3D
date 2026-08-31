@@ -105,6 +105,7 @@ void Project::initializeProject()
     currentDbOutputFileName = "";
 	glocalMapName = "";
     glocalPointsName = "";
+    glocalCVPointsName = "";
 
     meteoPointsLoaded = false;
     isMeteoPointsDaily = false;
@@ -753,6 +754,9 @@ bool Project::loadParameters(QString parametersFileName)
 
             if (parametersSettings->contains("glocalPointsName"))
                 glocalPointsName = parametersSettings->value("glocalPointsName").toString();
+
+            if (parametersSettings->contains("glocalCVPointsName"))
+                glocalCVPointsName = parametersSettings->value("glocalCVPointsName").toString();
 
             if (parametersSettings->contains("meteogrid_upscalefromdem"))
                 interpolationSettings.setMeteoGridUpscaleFromDem(parametersSettings->value("meteogrid_upscalefromdem").toBool());
@@ -2552,15 +2556,19 @@ bool Project::loadGlocalAreasMap()
 }
 
 
-bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations)
+bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations, QString fileNameStationsCV)
 {
     //leggi csv aree
     std::vector<std::vector<std::string>> areaPoints;
+    std::vector<std::vector<std::string>> areaPointsCV;
 
     if (! loadGlocalStationsCsv(fileNameStations, areaPoints)) return false;
 
+    loadGlocalStationsCsv(fileNameStationsCV, areaPointsCV); //mancanza di file CV non pregiudica il proseguimento. controllo presenza fuori da funzione
+
     //salva in vettore gli indici dei meteopoints che appartengono a area n, infine salva quel vettore
     std::vector<int> temp;
+    std::vector<int> tempCV;
     std::vector<Crit3DMacroArea> myAreas;
     Crit3DMacroArea myArea;
 
@@ -2577,9 +2585,26 @@ bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations)
                     break;
                 }
         }
+
+        if (areaPointsCV.size() > j)
+        {
+            for (unsigned m = 0; m < areaPointsCV[j].size(); m++)
+            {
+                // controlla se id si trova nel vettore areaPointsCV[j] e salva l'indice del meteopoint
+                for (size_t l = 0; l < meteoPoints.size(); l++)
+                    if (areaPointsCV[j][m] == meteoPoints[l].id)
+                    {
+                        tempCV.push_back(int(l));
+                        break;
+                    }
+            }
+        }
+
         // salvataggio di temp dentro il corrispettivo crit3dmacroarea
         myArea.setMeteoPoints(temp);
+        myArea.setMeteoPointsContained(tempCV);
         myAreas.push_back(myArea);
+        tempCV.clear();
         temp.clear();
         myArea.clear();
     }
@@ -2654,7 +2679,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
         if (!gis::readEsriGridFlt(fileName + std::to_string(i), macroAreasGrid, myError))
         {
             macroAreasGrid->clear();
-            errorString = "macroareas not found";
+            errorString = "error reading macroareas files";
             return false;
         }
 
@@ -2757,7 +2782,7 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<st
             int areaNr = line[0].toInt();
             for (int i = 1; i < line.size(); i++)
             {
-                temp.push_back(line[i].toStdString());
+                if (! line[i].isEmpty()) temp.push_back(line[i].toStdString());
             }
 
             if (areaPoints.empty() || areaNr > ((int)areaPoints.size() - 1))
@@ -3520,7 +3545,8 @@ bool Project::checkGlocal(bool isGrid)
     {
         if (! loadGlocalAreasMap())
             return false;
-        if (! loadGlocalStationsAndCells(isGrid, getCompleteFileName(glocalPointsName, PATH_GEO)))
+        if (! loadGlocalStationsAndCells(isGrid, getCompleteFileName(glocalPointsName, PATH_GEO),
+                                         getCompleteFileName(glocalCVPointsName, PATH_GEO)))
             return false;
     }
 
@@ -4150,6 +4176,7 @@ void Project::saveInterpolationParameters()
         parametersSettings->setValue("minRegressionR2", QString::number(double(interpolationSettings.getMinRegressionR2())));
         parametersSettings->setValue("min_points_local_detrending", QString::number(int(interpolationSettings.getMinPointsLocalDetrending())));
         parametersSettings->setValue("glocalMapName", glocalMapName);
+        parametersSettings->setValue("glocalCVPointsName", glocalCVPointsName);
         parametersSettings->setValue("glocalPointsName", glocalPointsName);
     parametersSettings->endGroup();
 

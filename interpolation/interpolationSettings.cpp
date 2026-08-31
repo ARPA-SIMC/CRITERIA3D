@@ -904,5 +904,6 @@ void Crit3DMacroArea::clear()
     areaParameters.clear();
     areaCombination.clear();
     meteoPoints.clear();
+    meteoPointsContained.clear();
 }
 

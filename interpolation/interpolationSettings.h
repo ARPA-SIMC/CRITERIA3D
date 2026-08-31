@@ -152,6 +152,7 @@
         Crit3DProxyCombination areaCombination;
         std::vector<std::vector<double>> areaParameters;
         std::vector<int> meteoPoints;
+        std::vector<int> meteoPointsContained;
         std::vector<float> areaCellsDEM;
         std::vector<float> areaCellsGrid;
 
@@ -165,6 +166,12 @@
 
         void setMeteoPoints (std::vector<int> myMeteoPoints) { meteoPoints = myMeteoPoints; }
         std::vector<int> getMeteoPoints() const { return meteoPoints; }
+
+        int getMeteoPointsContainedNr() const
+        { return int(meteoPointsContained.size()); }
+
+        void setMeteoPointsContained (std::vector<int> myMeteoPoints) { meteoPointsContained = myMeteoPoints; }
+        std::vector<int> getMeteoPointsContained() const { return meteoPointsContained; }
 
         void setAreaCellsDEM (std::vector<float> myCells) { areaCellsDEM = myCells; }
         const std::vector<float>& getAreaCellsDEM() const { return areaCellsDEM; }
