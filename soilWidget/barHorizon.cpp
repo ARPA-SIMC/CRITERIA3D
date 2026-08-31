@@ -185,13 +185,13 @@ BarHorizonList::BarHorizonList()
 void BarHorizonList::draw(soil::Crit3DSoil *soil)
 {
     // check
-    if (soil->nrHorizons == 0)
+    if (soil->nrHorizons() == 0)
         return;
 
     int totHeight = int(groupBox->height() * 0.9);
-    double soilDepth = soil->horizon[soil->nrHorizons - 1].dbData.lowerDepth;
+    double soilDepth = soil->horizon[soil->lastHorizon()].dbData.lowerDepth;
 
-    for (unsigned int i = 0; i < soil->nrHorizons; i++)
+    for (unsigned int i = 0; i < soil->nrHorizons(); i++)
     {
         int length = 0;
         if (soilDepth > 0)
@@ -224,7 +224,7 @@ void BarHorizonList::draw(soil::Crit3DSoil *soil)
         depthLayout->addSpacing(length-13);
         labelList.push_back(depthLabel);
 
-        if (i == soil->nrHorizons -1)
+        if (i == soil->lastHorizon())
         {
             QLabel *lastLabel = new QLabel();
             // font size

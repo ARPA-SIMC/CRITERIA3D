@@ -41,161 +41,177 @@ namespace soil
 {
     Crit3DHorizonDbData::Crit3DHorizonDbData()
     {
-        this->horizonNr = NODATA;
-        this->upperDepth = NODATA;
-        this->lowerDepth = NODATA;
-        this->sand = NODATA;
-        this->silt = NODATA;
-        this->clay = NODATA;
-        this->coarseFragments = NODATA;
-        this->organicMatter = NODATA;
-        this->bulkDensity = NODATA;
-        this->thetaSat = NODATA;
-        this->kSat = NODATA;
-        this->effectiveCohesion = NODATA;
-        this->frictionAngle = NODATA;
+        horizonNr = NODATA;
+        upperDepth = NODATA;
+        lowerDepth = NODATA;
+        sand = NODATA;
+        silt = NODATA;
+        clay = NODATA;
+        coarseFragments = NODATA;
+        organicMatter = NODATA;
+        bulkDensity = NODATA;
+        thetaSat = NODATA;
+        kSat = NODATA;
+        effectiveCohesion = NODATA;
+        frictionAngle = NODATA;
     }
 
     Crit3DFittingOptions::Crit3DFittingOptions()
     {
         // default
-        this->waterRetentionCurve = MODIFIEDVANGENUCHTEN;
-        this->useWaterRetentionData = true;
-        this->airEntryFixed = true;
-        this->mRestriction = true;
+        waterRetentionCurve = MODIFIEDVANGENUCHTEN;
+        useWaterRetentionData = true;
+        airEntryFixed = true;
+        mRestriction = true;
     }
 
     Crit1DLayer::Crit1DLayer()
     {
-        this->depth = NODATA;
-        this->thickness = NODATA;
-        this->soilFraction = NODATA;
+        depth = NODATA;
+        thickness = NODATA;
+        soilFraction = NODATA;
 
-        this->waterContent = NODATA;
-        this->waterPotential = NODATA;
+        waterContent = NODATA;
+        waterPotential = NODATA;
 
-        this->SAT = NODATA;
-        this->FC = NODATA;
-        this->WP = NODATA;
-        this->HH = NODATA;
+        SAT = NODATA;
+        FC = NODATA;
+        WP = NODATA;
+        HH = NODATA;
 
-        this->critical = NODATA;
-        this->maxInfiltration = NODATA;
-        this->flux = NODATA;
-        this->factorOfSafety = NODATA;
+        critical = NODATA;
+        maxInfiltration = NODATA;
+        flux = NODATA;
+        factorOfSafety = NODATA;
 
-        this->horizonPtr = nullptr;
+        horizonPtr = nullptr;
     }
 
     Crit3DTexture::Crit3DTexture()
     {
-        this->sand = NODATA;
-        this->silt = NODATA;
-        this->clay = NODATA;
-        this->classUSDA = NODATA;
-        this->classNL = NODATA;
-        this->classNameUSDA = "UNDEFINED";
-        this->classUSCS = NODATA;
+        sand = NODATA;
+        silt = NODATA;
+        clay = NODATA;
+        classUSDA = NODATA;
+        classNL = NODATA;
+        classNameUSDA = "UNDEFINED";
+        classUSCS = NODATA;
     }
 
     Crit3DTexture::Crit3DTexture (double mySand, double mySilt, double myClay)
     {
-        this->sand = mySand;
-        this->silt = mySilt;
-        this->clay = myClay;
-        this->classUSDA = getUSDATextureClass(sand, silt, clay);
-        this->classNL = getNLTextureClass(sand, silt, clay);
+        sand = mySand;
+        silt = mySilt;
+        clay = myClay;
+        classUSDA = getUSDATextureClass(sand, silt, clay);
+        classNL = getNLTextureClass(sand, silt, clay);
     }
 
     Crit3DVanGenuchten::Crit3DVanGenuchten()
     {
-        this->alpha = NODATA;
-        this->n = NODATA;
-        this->m = NODATA;
-        this->he = NODATA;
-        this->sc = NODATA;
-        this->thetaR = NODATA;
-        this->thetaS = NODATA;
-        this->refThetaS = NODATA;
+        alpha = NODATA;
+        n = NODATA;
+        m = NODATA;
+        he = NODATA;
+        sc = NODATA;
+        thetaR = NODATA;
+        thetaS = NODATA;
+        refThetaS = NODATA;
     }
 
     Crit3DGeotechnicsClass::Crit3DGeotechnicsClass()
     {
-        this->effectiveCohesion = NODATA;
-        this->frictionAngle = NODATA;
+        effectiveCohesion = NODATA;
+        frictionAngle = NODATA;
     }
 
     Crit3DDriessen::Crit3DDriessen()
     {
-        this->k0 = NODATA;
-        this->gravConductivity = NODATA;
-        this->maxSorptivity = NODATA;
+        k0 = NODATA;
+        gravConductivity = NODATA;
+        maxSorptivity = NODATA;
     }
 
     Crit3DWaterConductivity::Crit3DWaterConductivity()
     {
-        this->kSat = NODATA;
-        this->l = NODATA;
+        kSat = NODATA;
+        l = NODATA;
     }
 
 
     Crit3DHorizon::Crit3DHorizon()
     {
-        this->upperDepth = NODATA;
-        this->lowerDepth = NODATA;
+        upperDepth = NODATA;
+        lowerDepth = NODATA;
 
-        this->coarseFragments = NODATA;
-        this->organicMatter = NODATA;
-        this->bulkDensity = NODATA;
-        this->effectiveCohesion = NODATA;
-        this->frictionAngle = NODATA;
+        coarseFragments = NODATA;
+        organicMatter = NODATA;
+        bulkDensity = NODATA;
+        effectiveCohesion = NODATA;
+        frictionAngle = NODATA;
 
-        this->fieldCapacity = NODATA;
-        this->wiltingPoint = NODATA;
-        this->hygroscopicHumidity = NODATA;
+        fieldCapacity = NODATA;
+        wiltingPoint = NODATA;
+        hygroscopicHumidity = NODATA;
 
-        this->waterContentSAT = NODATA;
-        this->waterContentFC = NODATA;
-        this->waterContentWP = NODATA;
-        this->waterContentHH = NODATA;
+        waterContentSAT = NODATA;
+        waterContentFC = NODATA;
+        waterContentWP = NODATA;
+        waterContentHH = NODATA;
+        waterContentThetaR = NODATA;
 
-        this->PH = NODATA;
-        this->CEC = NODATA;
+        PH = NODATA;
+        CEC = NODATA;
     }
 
 
     void Crit3DSoil::initialize(const std::string &soilCode, int nrHorizons)
     {
-        this->cleanSoil();
-        this->code = soilCode;
+        cleanSoil();
+
+        code = soilCode;
+
         if (nrHorizons > 0)
         {
-            this->nrHorizons = unsigned(nrHorizons);
-            this->horizon.resize(this->nrHorizons);
-            this->totalDepth = 0;
+            horizon.resize(nrHorizons);
+            totalDepth = 0;
         }
     }
 
-    void Crit3DSoil::addHorizon(int nHorizon, const Crit3DHorizon &newHorizon)
+    bool Crit3DSoil::addHorizon(int indexHorizon, const Crit3DHorizon &newHorizon)
     {
-        this->horizon.insert(this->horizon.begin() + nHorizon, newHorizon);
-        this->nrHorizons++;
+        if ( indexHorizon < 0 ||
+             indexHorizon > static_cast<int>(horizon.size()) )
+            return false;
+
+        horizon.insert(horizon.begin() + indexHorizon, newHorizon);
+        return true;
     }
 
-    void Crit3DSoil::deleteHorizon(int nHorizon)
+    bool Crit3DSoil::deleteHorizon(int indexHorizon)
     {
-        horizon.erase(horizon.begin() + nHorizon);
-        nrHorizons = nrHorizons - 1;
+        if (indexHorizon < 0 ||
+            indexHorizon >= static_cast<int>(horizon.size()))
+            return false;
+
+        horizon.erase(horizon.begin() + indexHorizon);
+        return true;
     }
 
     // depth [m]
     int Crit3DSoil::getHorizonIndex(double depth) const
     {
-       for (unsigned int index = 0; index < nrHorizons; index++)
-       {
-           if (depth >= horizon[index].upperDepth && depth <= (horizon[index].lowerDepth + EPSILON))
-               return (int)index;
-       }
+        for (int i = 0; i < nrHorizons(); ++i)
+        {
+            const bool isLast = (i == lastHorizon());
+
+            if (depth >= horizon[i].upperDepth &&
+                (depth < horizon[i].lowerDepth ||
+                 (isLast && depth <= horizon[i].lowerDepth + EPSILON)))
+            {
+                return static_cast<int>(i);
+            }
+        }
 
        return NODATA;
     }
@@ -205,12 +221,12 @@ namespace soil
     {
         for (unsigned int i = 0; i < horizon.size(); i++)
         {
-            horizon[i].dbData.waterRetention.erase(horizon[i].dbData.waterRetention.begin(), horizon[i].dbData.waterRetention.end());
             horizon[i].dbData.waterRetention.clear();
         }
+
         horizon.clear();
-        nrHorizons = 0;
         totalDepth = 0;
+
         id = NODATA;
         code = "";
         name = "";
@@ -251,7 +267,7 @@ namespace soil
     // [%]
     int getUSDATextureClass(double sand, double silt, double clay)
     {
-        if (int(sand) == int(NODATA) || int(silt) == int(NODATA) || int(clay) == int(NODATA))
+        if (isEqual(sand, NODATA) || isEqual(silt, NODATA) || isEqual(clay, NODATA))
             return NODATA;
 
         if (fabs(double(sand + clay + silt) - 100) > 2.0)
@@ -259,30 +275,55 @@ namespace soil
 
         int myClass = NODATA;
         /*! clay */
-        if (clay >= 40) myClass = 12;
+        if (clay >= 40)
+            myClass = 12;
+
         /*! silty clay */
-        if ((silt >= 40) && (clay >= 40)) myClass = 11;
+        if ((silt >= 40) && (clay >= 40))
+            myClass = 11;
+
         /*! sandy clay */
-        if ((clay >= 35) && (sand >= 45)) myClass = 10;
+        if ((clay >= 35) && (sand >= 45))
+            myClass = 10;
+
         /*! silty loam */
-        if (((clay < 27.5) && (silt >= 50) & (silt <= 80)) || ((clay >= 12.5) && (silt >= 80))) myClass = 4;
+        if (((clay < 27.5) && (silt >= 50) && (silt <= 80))
+                || ((clay >= 12.5) && (silt >= 80)))
+            myClass = 4;
+
         /*! silt */
-        if ((clay < 12.5) && (silt >= 80)) myClass = 6;
+        if ((clay < 12.5) && (silt >= 80))
+            myClass = 6;
+
         /*! silty clay loam */
-        if ((clay < 40) && (sand < 20) && (clay >= 27.5)) myClass = 8;
+        if ((clay < 40) && (sand < 20) && (clay >= 27.5))
+            myClass = 8;
+
         /*! sandy loam  */
         if (((clay < 20) && (sand >= 52.5)) ||
-           ((clay < 7.5) && (silt < 50) && (sand >= 42.5) && (sand <= 52.5))) myClass = 3;
+           ((clay < 7.5) && (silt < 50) && (sand >= 42.5) && (sand <= 52.5)))
+            myClass = 3;
+
         /*! loamy sand */
-        if ((sand >= 70) && (clay <= (sand - 70))) myClass = 2;
+        if ((sand >= 70) && (clay <= (sand - 70)))
+            myClass = 2;
+
         /*! sand */
-        if ((sand >= 85) && (clay <= (2 * sand -170))) myClass = 1;
+        if ((sand >= 85) && (clay <= (2 * sand -170)))
+            myClass = 1;
+
         /*! sandy clay loam */
-        if ((clay >= 20) && (clay < 35) && (sand >= 45) && (silt < 27.5)) myClass = 7;
+        if ((clay >= 20) && (clay < 35) && (sand >= 45) && (silt < 27.5))
+            myClass = 7;
+
         /*! loam */
-        if ((clay >= 7.5) && (clay < 27.5) && (sand < 52.5)  && (silt >= 27.5) & (silt < 50)) myClass = 5;
+        if ((clay >= 7.5) && (clay < 27.5) && (sand < 52.5)
+                && (silt >= 27.5) && (silt < 50))
+            myClass = 5;
+
         /*! clay loam */
-        if ((clay >= 27.5) && (clay < 40) && (sand >= 20) && (sand < 45)) myClass = 9;
+        if ((clay >= 27.5) && (clay < 40) && (sand >= 20) && (sand < 45))
+            myClass = 9;
 
         return myClass;
     }
@@ -397,6 +438,8 @@ namespace soil
         }
     }
 
+
+    // organicMatter [-] fraction 0..1
     double estimateSpecificDensity(double organicMatter)
     {
         if (isEqual(organicMatter, NODATA))
@@ -451,7 +494,9 @@ namespace soil
             return NODATA;
 
         const double specificDensity = estimateSpecificDensity(horizon.organicMatter);
-        return 1.0 - (bulkDensity / specificDensity);
+        const double totalporosity = 1.0 - (bulkDensity / specificDensity);
+
+        return std::clamp(totalporosity, 0.0, 1.0);
     }
 
 
@@ -468,33 +513,34 @@ namespace soil
 
     double estimateSaturatedConductivity(const Crit3DHorizon &horizon, double bulkDensity)
     {
-        if (isEqual(bulkDensity, NODATA))
+        if (isEqual(bulkDensity, NODATA) || bulkDensity <= 0.0)
+            return NODATA;
+
+        const double refKSat = horizon.waterConductivity.kSat;
+
+        if (isEqual(refKSat, NODATA) || refKSat <= 0.0)
             return NODATA;
 
         const double refTotalPorosity = horizon.vanGenuchten.refThetaS;
+
         const double specificDensity = estimateSpecificDensity(horizon.organicMatter);
+
         const double refBulkDensity = (1.0 - refTotalPorosity) * specificDensity;
 
         if (bulkDensity <= refBulkDensity)
-            return horizon.waterConductivity.kSat;
-        else
-        {
-            // soil compaction
-            const double ratio = 1 - (bulkDensity / refBulkDensity);
-            return horizon.waterConductivity.kSat * exp(10.0 * ratio);
-        }
+            return refKSat;
+
+        // soil compaction
+        const double densityRatio = std::min(bulkDensity / refBulkDensity, 1.5);
+        const double compactionFactor = std::exp(-8.0 * (densityRatio - 1.0));
+
+        return refKSat * compactionFactor;
     }
 
 
     int getHorizonIndex(const Crit3DSoil &soil, double depth)
     {
-       for (unsigned int index = 0; index < soil.nrHorizons; index++)
-       {
-           if (depth >= soil.horizon[index].upperDepth && depth <= (soil.horizon[index].lowerDepth + EPSILON))
-               return int(index);
-       }
-
-       return NODATA;
+        return soil.getHorizonIndex(depth);
     }
 
 
@@ -633,8 +679,10 @@ namespace soil
      * \return water potential                  [kPa]
      */
     double psiFromTheta(double theta, const Crit3DHorizon &horizon)
-
     {
+        if (theta >= horizon.vanGenuchten.thetaS)
+            return 0.0;
+
         double Se = SeFromTheta(theta, horizon);
         double temp = pow(1.0 / (Se * horizon.vanGenuchten.sc), 1.0 / horizon.vanGenuchten.m) - 1.0;
         double psi = (1.0 / horizon.vanGenuchten.alpha) * pow(temp, 1.0/ horizon.vanGenuchten.n);
@@ -651,7 +699,8 @@ namespace soil
      */
     double degreeOfSaturationFromSignPsi(double signPsi, const Crit3DHorizon &horizon)
     {
-        if (signPsi >= 0.0) return 1.0;
+        if (signPsi >= 0.0)
+            return 1.0;
 
         double psi = fabs(signPsi);
         if (psi <=  horizon.vanGenuchten.he) return 1.0;
@@ -659,7 +708,7 @@ namespace soil
         double degreeOfSaturation = pow(1.0 + pow(horizon.vanGenuchten.alpha * psi, horizon.vanGenuchten.n),
                         - horizon.vanGenuchten.m) / horizon.vanGenuchten.sc;
 
-        return degreeOfSaturation;
+        return std::clamp(degreeOfSaturation, 0.0, 1.0);
     }
 
 
@@ -754,10 +803,15 @@ namespace soil
 
 
     /*!
-     * \brief return current volumetric water content (soil fraction) [-]
+     * \brief getVolumetricWaterContent
+     * \return [-] current volumetric water content
+     * (accounting soil fraction)
      */
     double Crit1DLayer::getVolumetricWaterContent()
     {
+        if (thickness <= 0.0 || soilFraction <= 0.0)
+            return NODATA;
+
         // thickness [m] -> mm
         double soilThickness = thickness * soilFraction * 1000.;
 
@@ -805,6 +859,7 @@ namespace soil
      */
     double Crit1DLayer::computeSlopeStability(double slope, double rootCohesion)
     {
+        // waterPotential [kPa]: positive in unsaturated conditions
         double suctionStress = std::min(0.0, -waterPotential) * getDegreeOfSaturation();    // [kPa]
 
         double slopeAngle = std::max(asin(slope), EPSILON);                  // [rad]
@@ -1014,6 +1069,7 @@ namespace soil
         horizon.waterContentFC = soil::thetaFromSignPsi(horizon.fieldCapacity, horizon) * horizon.getSoilFraction();
         horizon.waterContentWP = soil::thetaFromSignPsi(horizon.wiltingPoint, horizon) * horizon.getSoilFraction();
         horizon.waterContentHH = soil::thetaFromSignPsi(horizon.hygroscopicHumidity, horizon) * horizon.getSoilFraction();
+        horizon.waterContentThetaR = horizon.vanGenuchten.thetaR * horizon.getSoilFraction();
 
         return true;
     }
@@ -1147,7 +1203,7 @@ namespace soil
         param[4] = horizon.vanGenuchten.n;
         if (fittingOptions.mRestriction)
         {
-            pmin[4] = 1;
+            pmin[4] = 1.0001;
             pmax[4] = 10;
         }
         else
