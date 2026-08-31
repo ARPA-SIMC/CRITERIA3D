@@ -432,7 +432,7 @@ double Crit3DProject::getRothCClayContent(int soilIndex)
     for (size_t i = 0; i < horizonVector.size(); ++i)
     {
         const double thickness = horizonVector[i].lowerDepth - horizonVector[i].upperDepth;
-        clayContent += horizonVector[i].texture.clay * thickness * (1 - horizonVector[i].coarseFragments);
+        clayContent += horizonVector[i].texture.clay * thickness * horizonVector[i].getSoilFraction();
     }
 
     // avg clay content [%]
@@ -606,6 +606,9 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
 void Crit3DProject::dailyUpdateMonthlyFAW()
 {
     if (! monthlyFAW.isLoaded)
+        return;
+
+    if (! isCriteria3DInitialized)
         return;
 
     const float flag = monthlyFAW.header->flag;
@@ -860,7 +863,7 @@ bool Crit3DProject::setRothCVariables(int row, int col, const QDate &myDate)
 
 /*!
  * \brief assignETreal
- * assigns soil evaporation and crop transpiration for the whole domain
+ * Assigns actual soil evaporation and crop transpiration over the whole domain.
  */
 void Crit3DProject::assignETreal()
 {
@@ -880,14 +883,11 @@ void Crit3DProject::assignETreal()
         {
             const int surfaceIndex = indexMap.at(0).value[row][col];
             if (surfaceIndex == flag)
-                continue;
+                continue;;
 
-            double utmX, utmY;
-            DEM.getXY(row, col, utmX, utmY);
+            const int soilIndex = getSoilIndex(row, col);
 
-            const int soilIndex = getSoilListIndex(utmX, utmY);
-
-            float currentLAI = 0;          // Leaf Area Index [m3 m-3]
+            float currentLAI = 0;          // Leaf Area Index [-]
             if (laiMap.isLoaded)
             {
                 const float laiMapValue = laiMap.getValueFromRowCol(row, col);
@@ -935,12 +935,13 @@ void Crit3DProject::assignETreal()
                 // assigns actual transpiration
                 if (currentLAI > 0)
                 {
-                    float degreeDays = degreeDaysMap.value[row][col];
+                    const float degreeDays = degreeDaysMap.value[row][col];
+
                     const double actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);   // [mm h-1]
                     // TODO verificare che la traspirazione ottenuta da hydrall sia confrontabile e nel caso mettere un if che decida come computare la traspirazione
 
-                    double traspFlow = area * (actualTransp / 1000.);       // [m3 h-1] flux
-                    tmpTotalTranspiration += traspFlow;                     // [m3 h-1] flux
+                    const double traspFlow = area * (actualTransp / 1000.);     // [m3 h-1] flux
+                    tmpTotalTranspiration += traspFlow;                         // [m3 h-1] flux
                 }
 
                 if (processes.computeHydrall && forestIndex != NODATA)
@@ -1079,8 +1080,8 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
     int lastFineHorizon = NODATA;
     double maxDepth = std::min(soilDepth, MAX_CRACKING_DEPTH);   // [m]
 
-    unsigned int h = 0;
-    while (h < soilList[soilIndex].nrHorizons
+    int h = 0;
+    while (h < soilList[soilIndex].nrHorizons()
            && soilList[soilIndex].horizon[h].upperDepth < maxDepth)
     {
         const soil::Crit3DHorizon& horizon = soilList[soilIndex].horizon[h];
@@ -1120,19 +1121,12 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
         if (nodeIndex == indexFlag)
             break;
 
-        const double currentDepth = layerDepth[layerIndex];       // [m]
-
-        const int horizonIndex = soilList[soilIndex].getHorizonIndex(currentDepth);
-        if (horizonIndex == NODATA)
-            break;
-
-        const double soilFraction = 1.0 - soilList[soilIndex].horizon[horizonIndex].coarseFragments;
-
+        // already account soilFraction
         const double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);                 // [m3 m-3]
         const double maxVWC = getCriteria3DVar(maxVolumetricWaterContent, nodeIndex);           // [m3 m-3]
 
         const double currentVoidVolume = std::max(0.0, maxVWC - VWC);                           // [m3 m-3]
-        voidVolumeList[layerIndex] = currentVoidVolume * soilFraction;                          // [m3 m-3]
+        voidVolumeList[layerIndex] = currentVoidVolume;                                         // [m3 m-3]
         voidsVolumeSum += voidVolumeList[layerIndex] * layerThickness[layerIndex];
 
         crackDepth += layerThickness[layerIndex];
@@ -1198,8 +1192,6 @@ bool Crit3DProject::startModels(const QDateTime &firstTime, const QDateTime &las
 {
     if (! checkProcesses())
         return false;
-
-
 
     std::cout << "First time: " << firstTime.date().toString("yyyy-MM-dd").toStdString() << " H" << firstTime.time().hour() << std::endl;
     std::cout << "Last time: " << lastTime.date().toString("yyyy-MM-dd").toStdString() << " H" << lastTime.time().hour() << std::endl;
@@ -1375,6 +1367,9 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             dailyTminMap.emptyGrid();
             dailyTmaxMap.emptyGrid();
         }
+
+        if (modality == MODE_GUI)
+            emit updateOutputSignal();
 
         if (isSaveDailyState() || (isSaveYearlyState() && myDate.dayOfYear() == 1) || (isSaveMonthlyState() && myDate.day() == 1))
         {
@@ -1678,7 +1673,7 @@ bool Crit3DProject::check3DProject()
 
 double Crit3DProject::getSoilVar(int soilIndex, int layerIndex, soil::soilVariable myVar)
 {
-    unsigned int hIndex = unsigned(soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[unsigned(layerIndex)]));
+    unsigned int hIndex = soilList[unsigned(soilIndex)].getHorizonIndex(layerDepth[unsigned(layerIndex)]);
 
     if (myVar == soil::soilWaterPotentialWP)
         return soilList[unsigned(soilIndex)].horizon[hIndex].wiltingPoint;
@@ -2212,8 +2207,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
             }
         }
 
-        if (processes.computeCrop || processes.computeWater
-                || processes.computeHydrall || processes.computeRothC)
+        if (processes.computeCrop || processes.computeWater || processes.computeHydrall)
         {
             if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
             {
@@ -2241,7 +2235,8 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                 return false;
         }
 
-        emit updateOutputSignal();
+        if (modality == MODE_GUI)
+            emit updateOutputSignal();
     }
 
     // soil fluxes

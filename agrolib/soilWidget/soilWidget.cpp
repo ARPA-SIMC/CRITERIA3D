@@ -455,7 +455,7 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
     restoreData->setEnabled(true);
 
     // circle inside triangle
-    for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
+    for (int i = 0; i < mySoil.nrHorizons(); i++)
     {
         if (soil::getUSDATextureClass(mySoil.horizon[i].dbData.sand, mySoil.horizon[i].dbData.silt, mySoil.horizon[i].dbData.clay) != NODATA)
         {
@@ -567,7 +567,7 @@ void Crit3DSoilWidget::on_actionUseWaterRetentionData()
     }
 
     std::string errorString;
-    for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
+    for (int i = 0; i < mySoil.nrHorizons(); i++)
     {
         soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, errorString);
     }
@@ -589,7 +589,7 @@ void Crit3DSoilWidget::on_actionAirEntry()
     }
 
     std::string errorString;
-    for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
+    for (int i = 0; i < mySoil.nrHorizons(); i++)
     {
         soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, errorString);
     }
@@ -610,7 +610,7 @@ void Crit3DSoilWidget::on_actionParameterRestriction()
         return;
     }
     std::string errorString;
-    for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
+    for (int i = 0; i < mySoil.nrHorizons(); i++)
     {
         soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, errorString);
     }
@@ -718,7 +718,7 @@ void Crit3DSoilWidget::setInfoTextural(int nHorizon)
     // re load textural triangle to clean previous circle
     pic.load(picPath);
     labelPic->setPixmap(pic);
-    for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
+    for (int i = 0; i < mySoil.nrHorizons(); i++)
     {
         if (soil::getUSDATextureClass(mySoil.horizon[i].dbData.sand, mySoil.horizon[i].dbData.silt, mySoil.horizon[i].dbData.clay) != NODATA)
         {
@@ -820,7 +820,7 @@ void Crit3DSoilWidget::tabChanged(int index)
     {
         if (!horizonsTab->getInsertSoilElement())
         {
-            if (mySoil.nrHorizons > 0)
+            if (mySoil.nrHorizons() > 0)
             {
                 horizonsTab->insertSoilHorizons(&mySoil, &textureClassList, &geotechnicsClassList, &fittingOptions);
                 addHorizon->setEnabled(true);
@@ -836,7 +836,7 @@ void Crit3DSoilWidget::tabChanged(int index)
     {
         if (!wrDataTab->getFillData())
         {
-            if (mySoil.nrHorizons > 0)
+            if (mySoil.nrHorizons() > 0)
             {
                 wrDataTab->insertData(&mySoil, &textureClassList, &geotechnicsClassList, &fittingOptions);
                 addHorizon->setEnabled(false);
@@ -852,7 +852,7 @@ void Crit3DSoilWidget::tabChanged(int index)
     {
         if (!wrCurveTab->getFillElement())
         {
-            if (mySoil.nrHorizons > 0)
+            if (mySoil.nrHorizons() > 0)
             {
                 wrCurveTab->insertElements(&mySoil);
             }
@@ -866,7 +866,7 @@ void Crit3DSoilWidget::tabChanged(int index)
     {
         if (!hydraConducCurveTab->getFillElement())
         {
-            if (mySoil.nrHorizons > 0)
+            if (mySoil.nrHorizons() > 0)
             {
                 hydraConducCurveTab->insertElements(&mySoil);
             }

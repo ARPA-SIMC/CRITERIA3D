@@ -239,6 +239,7 @@
   <property name="font">
    <font>
     <pointsize>10</pointsize>
+    <weight>50</weight>
     <bold>false</bold>
    </font>
   </property>
@@ -583,6 +584,7 @@
     <property name="font">
      <font>
       <pointsize>10</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -885,6 +887,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -943,6 +946,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -969,6 +973,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1272,6 +1277,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1330,6 +1336,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1356,6 +1363,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1713,6 +1721,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1772,6 +1781,7 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1813,7 +1823,7 @@
       </date>
      </property>
      <property name="currentSection">
-      <enum>QDateTimeEdit::Section::YearSection</enum>
+      <enum>QDateTimeEdit::YearSection</enum>
      </property>
      <property name="displayFormat">
       <string>yyyy-MM-dd</string>
@@ -1841,6 +1851,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1867,6 +1878,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1886,6 +1898,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1906,6 +1919,7 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2238,6 +2252,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -2275,6 +2290,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2294,6 +2310,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2314,6 +2331,7 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2346,11 +2364,12 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::LayoutDirection::LeftToRight</enum>
+      <enum>Qt::LeftToRight</enum>
      </property>
      <property name="text">
       <string>Layer</string>
@@ -2388,11 +2407,12 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::LayoutDirection::LeftToRight</enum>
+      <enum>Qt::LeftToRight</enum>
      </property>
      <property name="text">
       <string>Time</string>
@@ -2432,7 +2452,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>28</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="palette">
@@ -2766,12 +2786,12 @@
      <property name="title">
       <string>RothC model</string>
      </property>
+     <addaction name="actionMonthly_fraction_of_available_water"/>
      <addaction name="actionDecomposable_plant_matter"/>
      <addaction name="actionResistant_plant_matter"/>
      <addaction name="actionMicrobial_biomass"/>
      <addaction name="actionHumified_organic_matter"/>
      <addaction name="actionSoil_organic_matter"/>
-     <addaction name="actionMonthly_fraction_of_available_water"/>
     </widget>
     <widget class="QMenu" name="menuHydrall_model">
      <property name="title">

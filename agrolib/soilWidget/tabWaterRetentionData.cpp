@@ -59,7 +59,7 @@ void TabWaterRetentionData::insertData(soil::Crit3DSoil *soil, std::vector<soil:
 {
     resetAll();
 
-    if (soil == nullptr || soil->nrHorizons == 0)
+    if (soil == nullptr || soil->nrHorizons() == 0)
         return;
 
     fillData = true;

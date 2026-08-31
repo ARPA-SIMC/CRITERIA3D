@@ -385,8 +385,8 @@ bool loadSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Cri
     query.first();
     do
     {
-        unsigned int horizonNr = unsigned(query.value("horizon_nr").toInt());
-        if (horizonNr > 0 && horizonNr <= mySoil.nrHorizons)
+        int horizonNr = query.value("horizon_nr").toInt();
+        if (horizonNr > 0 && horizonNr <= mySoil.nrHorizons())
         {
             // TODO: check data
             waterRetention.water_potential = query.value("water_potential").toDouble();  // [kPa]
@@ -421,7 +421,7 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
     errorStr = "";
     bool isFirstError = true;
     int firstWrongIndex = NODATA;
-    for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
+    for (int i = 0; i < mySoil.nrHorizons(); i++)
     {
         std::string horizonError;
         if (! soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, horizonError))
@@ -448,22 +448,24 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
 
     // check total depth
     // errors on the last horizon is tolerated (bedrock)
-    if (mySoil.nrHorizons > 0)
+    if (mySoil.nrHorizons() > 0)
     {
         if (firstWrongIndex != NODATA)
         {
-            if (mySoil.nrHorizons == 1 || firstWrongIndex == 0)
+            if (mySoil.nrHorizons() == 1 || firstWrongIndex == 0)
             {
                 return false;
             }
             else
             {
-                mySoil.nrHorizons = firstWrongIndex;
-                mySoil.horizon.resize(mySoil.nrHorizons);
+                mySoil.horizon.resize(firstWrongIndex);
             }
         }
 
-        mySoil.totalDepth = mySoil.horizon[mySoil.nrHorizons-1].lowerDepth;
+        if (mySoil.lastHorizon() >= 0)
+        {
+            mySoil.totalDepth = mySoil.horizon[mySoil.lastHorizon()].lowerDepth;
+        }
     }
     else
     {
@@ -534,7 +536,7 @@ bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::C
     QVariantList effective_cohesion;
     QVariantList friction_angle;
 
-    for (unsigned int i=0; i < mySoil.nrHorizons; i++)
+    for (int i=0; i < mySoil.nrHorizons(); i++)
     {
         soil_code << soilCode;
         horizon_nr << i+1;

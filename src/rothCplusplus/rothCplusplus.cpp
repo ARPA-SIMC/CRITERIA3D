@@ -330,8 +330,8 @@ double Crit3DRothC::RMF_Moist_BIC(double sixMonthBIC)
     if (isEqual(sixMonthBIC, NODATA))
         return NODATA;
 
-    const double BIC_WET = 60.0;                    // [mm]
-    const double BIC_DRY = -400.0;                  // [mm]
+    const double BIC_WET = 0.0;                     // [mm]
+    const double BIC_DRY = -360.0;                  // [mm]
     const double DEFICIT_MAX = BIC_WET - BIC_DRY;   // [mm]
 
     const double deficit =

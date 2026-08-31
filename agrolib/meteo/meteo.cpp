@@ -599,7 +599,8 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
     gamma = psychro(pressure, airTemp);
     lambda = latentHeatVaporization(airTemp);
 
-    windSpeed2 = windSpeed10 * 0.748;
+    constexpr double WIND_SPEED_10M_TO_2M = 0.748;
+    windSpeed2 = windSpeed10 * WIND_SPEED_10M_TO_2M;
 
     denominator = delta + gamma * (1 + Cd * windSpeed2);
     firstTerm = delta * (netRadiation - g) / (lambda * denominator);
@@ -607,6 +608,7 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
 
     return MAXVALUE(firstTerm + secondTerm, 0);
 }
+
 
 /*!
  * \brief ET0_Penman_hourly_net_rad http://www.cimis.water.ca.gov/cimis/infoEtoPmEquation.jsp

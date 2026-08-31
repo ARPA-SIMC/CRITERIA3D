@@ -125,7 +125,6 @@ void Crit3DProcesses::setComputeRothC(bool value)
     if (computeRothC)
     {
         computeMeteo = true;
-        computeRadiation = true;
     }
 }
 
@@ -904,7 +903,7 @@ bool Project3D::setCrit3DSoils()
 
     for (unsigned int soilIndex = 0; soilIndex < nrSoils; soilIndex++)
     {
-        for (unsigned int horizIndex = 0; horizIndex < soilList[soilIndex].nrHorizons; horizIndex++)
+        for (int horizIndex = 0; horizIndex < soilList[soilIndex].nrHorizons(); horizIndex++)
         {
             soil::Crit3DHorizon& myHorizon = soilList[soilIndex].horizon[horizIndex];
             if ((myHorizon.texture.classUSDA <= 0) || (myHorizon.texture.classUSDA > 12))
@@ -1547,7 +1546,8 @@ bool Project3D::loadSoilDatabase(const QString &fileName)
 
     soilDbFileName = getCompleteFileName(fileName, PATH_SOIL);
 
-    if (!loadAllSoils(soilDbFileName, soilList, texturalClassList, geotechnicsClassList, fittingOptions, errorString))
+    if (! loadAllSoils(soilDbFileName, soilList, texturalClassList,
+                      geotechnicsClassList, fittingOptions, errorString))
     {
         return false;
     }
@@ -1738,7 +1738,10 @@ bool Project3D::isWithinSoil(int soilIndex, double depth)
         return false;
 
     // check if depth is lower than lowerDepth of last horizon
-    unsigned int lastHorizon = soilList[unsigned(soilIndex)].nrHorizons -1;
+    int lastHorizon = soilList[unsigned(soilIndex)].lastHorizon();
+    if (lastHorizon < 0)
+        return false;
+
     double lowerDepth = soilList[unsigned(soilIndex)].horizon[lastHorizon].lowerDepth;
 
     return (depth <= lowerDepth);
@@ -2004,7 +2007,8 @@ bool Project3D::getTotalSurfaceWaterContent(double &wcSum, long &nrVoxels, int r
  * wcSum: [m3] sum of soil water content
  * nrCells: [-] number of valid surface cells
  */
-bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrCells, bool isMaximum, int row0, int col0, int row1, int col1)
+bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrCells, bool isMaximum,
+                                         int row0, int col0, int row1, int col1)
 {
     errorString = "";
     if (! isCriteria3DInitialized)
@@ -2014,7 +2018,7 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrCells, bool isMa
     }
 
     gis::Crit3DRasterHeader* header = indexMap.at(0).header;
-    const long flag = static_cast<long>(header->flag);
+    const long indexFlag = static_cast<long>(header->flag);
     const double voxelArea = header->cellSize * header->cellSize;           // [m2]
 
     // default: all map
@@ -2029,40 +2033,38 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrCells, bool isMa
 
     nrCells = 0;
     wcSum = 0.0;
+    #pragma omp parallel for if (isParallelComputing())
     for (int row = row0; row <= row1; ++row)
     {
         for (int col = col0; col <= col1; ++col)
         {
-            const long nodeIndex = indexMap.at(0).value[row][col];
-            if (nodeIndex == flag)
+            // check surface node
+            if (indexMap.at(0).value[row][col] == indexFlag)
                 continue;
 
+            // check soil
             const int soilIndex = getSoilIndex(row, col);
             if (soilIndex == NODATA)
                 continue;
 
-            // update number of valid cells
+            // the cell is valid
             nrCells++;
 
             for (unsigned layer = 1; layer < nrLayers; layer++)
             {
                 const long nodeIndex = indexMap.at(layer).value[row][col];
-                if (nodeIndex == flag)
-                    break;
-
-                const int horizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[layer]);
-                if (horizonIndex == NODATA)
+                if (nodeIndex == indexFlag)
                     break;
 
                 // [m3 m-3]
+                // already account soilFraction
                 const double volWaterContent = getCriteria3DVar(required3DVar, nodeIndex);
                 if (isEqual(volWaterContent, NODATA))
-                    continue;
+                    break;
 
-                const double volume = voxelArea * layerThickness[layer];            // [m3]
-                const double soilFraction = 1.0 - soilList[soilIndex].horizon[horizonIndex].coarseFragments;
+                const double volume = voxelArea * layerThickness[layer];    // [m3]
 
-                wcSum += volWaterContent * volume * soilFraction;                           // [m3]
+                wcSum += volWaterContent * volume;                          // [m3]
             }
         }
     }
@@ -2073,8 +2075,7 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrCells, bool isMa
 
 /*!
  * \brief getFractionAvailableWater
- * \return
- * fraction of available water content [-]
+ * \return fraction of available water content [-]
  * from wilting point to field capacity
  * FAW =(WC−WP)/(FC−WP)
  */
@@ -2085,14 +2086,13 @@ double Project3D::getFractionAvailableWater(int row, int col)
         || col >= indexMap.at(0).header->nrCols)
         return NODATA;
 
-    // check surface node
-    const long surfaceNodeIndex = indexMap.at(0).value[row][col];
-
     const long indexflag = indexMap.at(0).header->flag;
 
-    if (surfaceNodeIndex == indexflag)
+    // check surface node
+    if (indexMap.at(0).value[row][col] == indexflag)
         return NODATA;
 
+    // check soil
     const int soilIndex = getSoilIndex(row, col);
     if (soilIndex == NODATA)
         return NODATA;
@@ -2114,20 +2114,16 @@ double Project3D::getFractionAvailableWater(int row, int col)
         // [m3 m-3]
         const double currentVWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);
         if (isEqual(currentVWC, NODATA))
-            continue;
+            break;
 
-        const double soilFraction = 1.0 - soilList[soilIndex].horizon[horizonIndex].coarseFragments;
-        const double thickness = layerThickness[layer] * 1000.0;        // [mm]
+        const auto &horizon = soilList[soilIndex].horizon[horizonIndex];
 
-        sumWC += currentVWC * thickness * soilFraction;                 // [mm]
+        const double thickness = layerThickness[layer] * 1000.0;    // [mm]
 
-        // [m3 m-3]
-        const double wiltingPoint = soilList[soilIndex].horizon[horizonIndex].waterContentWP;
-        sumWP += wiltingPoint * thickness * soilFraction;               // [mm]
-
-        // [m3 m-3]
-        const double fieldCapacity = soilList[soilIndex].horizon[horizonIndex].waterContentFC;
-        sumFC += fieldCapacity * thickness * soilFraction;              // [mm]
+        // already account for soilFraction
+        sumWC += currentVWC * thickness;                            // [mm]
+        sumFC += horizon.waterContentFC * thickness;                // [mm]
+        sumWP += horizon.waterContentWP * thickness;                // [mm]
     }
 
     const double maxAvailableWater = sumFC - sumWP;
@@ -2136,53 +2132,69 @@ double Project3D::getFractionAvailableWater(int row, int col)
 
     const double fractionAW = (sumWC - sumWP) / maxAvailableWater;
 
-    // FAW > 1 is accepted (soil over field capacity)
+    // FAW is bounded below by 0 but can exceed 1
+    // when soil water content is above field capacity
     return std::max(0.0, fractionAW);
 }
 
 
 bool Project3D::computeAvgDegreeOfSaturation(gis::Crit3DRasterGrid &outputRaster)
 {
-    outputRaster.initializeGrid(*(indexMap.at(0).header));
+    const auto &header = indexMap.at(0).header;
 
-    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    outputRaster.initializeGrid(*header);
+
+    const long indexflag = header->flag;
+
+    #pragma omp parallel for if (isParallelComputing())
+    for (int row = 0; row < header->nrRows; ++row)
     {
-        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        for (int col = 0; col < header->nrCols; ++col)
         {
-            // initialize
-            outputRaster.value[row][col] = outputRaster.header->flag;
             // check surface node
-            long nodeIndex = indexMap.at(0).value[row][col];
-            if (nodeIndex == indexMap.at(0).header->flag)
+            if (indexMap.at(0).value[row][col] == indexflag)
                 continue;
 
-            double thetaS = 0;
-            double thetaR = 0;
-            double sumWC = 0;
-            for (unsigned int layer = 1; layer < nrLayers; layer++)
+            // check soil
+            const int soilIndex = getSoilIndex(row, col);
+            if (soilIndex == NODATA)
+                continue;
+
+            double thetaS = 0.0;
+            double thetaR = 0.0;
+            double sumWC = 0.0;
+            for (unsigned int layer = 1; layer < nrLayers; ++layer)
             {
-                // check node
-                long nodeIndex = indexMap.at(layer).value[row][col];
-                if (nodeIndex == indexMap.at(layer).header->flag)
-                    continue;
+                // node
+                const long nodeIndex = indexMap.at(layer).value[row][col];
+                if (nodeIndex == indexflag)
+                    break;
 
-                double currentVWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);    // [m3 m-3]
+                // soil horizon
+                const int horizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[layer]);
+                if (horizonIndex == NODATA)
+                    break;
+
+                // volumetric water content [m3 m-3]
+                const double currentVWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);
                 if (isEqual(currentVWC, NODATA))
-                    continue;
+                    break;
 
-                double thickness = layerThickness[layer];  // [m]
+                const auto &horizon = soilList[soilIndex].horizon[horizonIndex];
+
+                const double thickness = layerThickness[layer] * 1000.0; // mm
+
+                // already account for soilFraction
                 sumWC += currentVWC * thickness;
-
-                double currentThetaR = getCriteria3DVar(minVolumetricWaterContent, nodeIndex);    // [m3 m-3]
-                thetaR += currentThetaR * thickness;
-
-                double currentThetaS = getCriteria3DVar(maxVolumetricWaterContent, nodeIndex);    // [m3 m-3]
-                thetaS += currentThetaS * thickness;
+                thetaS += horizon.waterContentSAT * thickness;
+                thetaR += horizon.waterContentThetaR * thickness;
             }
 
-            if (sumWC > 0)
+            const double waterCapacity = thetaS - thetaR;
+
+            if (waterCapacity > 0.0)
             {
-                outputRaster.value[row][col] = (sumWC - thetaR) / (thetaS - thetaR);
+                outputRaster.value[row][col] = (sumWC - thetaR) / waterCapacity;
             }
         }
     }
@@ -2494,7 +2506,8 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
             // [m3 m-3]
             double evapThreshold = horizon.waterContentHH + (1 - evapCoeff[layer]) * (horizon.waterContentFC - horizon.waterContentHH) * 0.5;
             // [m3 m-3]
-            double layerWaterContent = getCriteria3DVar(volumetricWaterContent, nodeIndex) * horizon.getSoilFraction();
+            // already account for soilFraction
+            double layerWaterContent = getCriteria3DVar(volumetricWaterContent, nodeIndex);
             // [m3 m-3]
             double wcAboveThreshold = std::max(layerWaterContent - evapThreshold, 0.0);
             // [mm]

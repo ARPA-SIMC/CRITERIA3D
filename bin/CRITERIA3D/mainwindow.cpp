@@ -4236,22 +4236,15 @@ void MainWindow::on_actioncumulated_yearly_precipitation_triggered()
 
 void MainWindow::on_action30_days_average_temperature_triggered()
 {
-    if (myProject.isHydrallInitialized)
+    if (myProject.mapLast30DaysTAvg.isLoaded)
     {
-        if (myProject.mapLast30DaysTAvg.isLoaded)
-        {
-            setColorScale(airTemperature, myProject.mapLast30DaysTAvg.colorScale);
-            setCurrentRasterOutput(&(myProject.mapLast30DaysTAvg));
-            ui->labelOutputRaster->setText("30-days average temperature [°C]");
-        }
-        else
-        {
-            myProject.logError("Error while loading 30-days average temperature.");
-        }
+        setColorScale(airTemperature, myProject.mapLast30DaysTAvg.colorScale);
+        setCurrentRasterOutput(&(myProject.mapLast30DaysTAvg));
+        ui->labelOutputRaster->setText("30-days average temperature [°C]");
     }
     else
     {
-        myProject.logWarning("Initialize Hydrall model before.");
+        myProject.logError("Initialize models before.");
     }
 }
 
@@ -4275,6 +4268,7 @@ void MainWindow::on_actionMonthly_fraction_of_available_water_triggered()
             gis::updateMinMaxRasterGrid(&(myProject.criteria3DMap));
 
             setColorScale(airTemperature, myProject.criteria3DMap.colorScale);
+            reverseColorScale(myProject.criteria3DMap.colorScale);
             setCurrentRasterOutput(&(myProject.criteria3DMap));
             ui->labelOutputRaster->setText("fraction of available water [-]");
         }
