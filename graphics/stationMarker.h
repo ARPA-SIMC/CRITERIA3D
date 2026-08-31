@@ -80,6 +80,8 @@
             void setSynchronicityReferenceClicked(std::string);
             void markPoint(std::string);
             void unmarkPoint(std::string);
+            void activePoint(std::string);
+            void deactivePoint(std::string);
 
     };
 
