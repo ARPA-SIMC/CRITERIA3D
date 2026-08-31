@@ -170,8 +170,10 @@
             double depth;               /*!<   [m] */
             double thickness;           /*!<   [m] */
             double soilFraction;        /*!<   [-] fraction of soil (1 - coarse fragment fraction) */
+
             double waterContent;        /*!<   [mm] */
             double waterPotential;      /*!<   [kPa] water potential (psi) saved after soilFluxes computation (positive: unsaturated) */
+
             double SAT;                 /*!<   [mm] water content at saturation  */
             double FC;                  /*!<   [mm] water content at field capacity */
             double WP;                  /*!<   [mm] water content at wilting point  */
@@ -212,8 +214,8 @@
             bool addHorizon(int nHorizon, const Crit3DHorizon &newHorizon);
             bool deleteHorizon(int nHorizon);
 
-            int nrHorizons() const { return horizon.size(); }
-            int lastHorizon() const { return horizon.size() - 1; }
+            int nrHorizons() const { return int(horizon.size()); }
+            int lastHorizon() const { return int(horizon.size()) - 1; }
             int getHorizonIndex(double depth) const;
 
             bool setSoilLayers(double layerThicknessMin, double geometricFactor,
