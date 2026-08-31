@@ -237,37 +237,36 @@ gis::Crit3DRasterGrid* Crit3DHourlyMeteoMaps::getMapFromVar(meteoVariable myVar)
 
 bool Crit3DHourlyMeteoMaps::computeET0PMMap(const gis::Crit3DRasterGrid& DEM, Crit3DRadiationMaps *radMaps)
 {
-    float globalRadiation, transmissivity, clearSkyTransmissivity;
-    float temperature, relHumidity, windSpeed, height;
+    const double flag = DEM.header->flag;
+    const double clearSkyTransmissivity = CLEAR_SKY_TRANSMISSIVITY_DEFAULT;
 
-    for (long row = 0; row < this->mapHourlyET0->header->nrRows; row++)
-        for (long col = 0; col < this->mapHourlyET0->header->nrCols; col++)
+    for (long row = 0; row < mapHourlyET0->header->nrRows; ++row)
+        for (long col = 0; col < mapHourlyET0->header->nrCols; ++col)
         {
-            this->mapHourlyET0->value[row][col] = this->mapHourlyET0->header->flag;
+            mapHourlyET0->value[row][col] = flag;
 
-            height = DEM.value[row][col];
-            if (int(height) != int(DEM.header->flag))
+            const double height = DEM.value[row][col];
+            if (isEqual(height, flag))
+                continue;
+
+            const double globalRadiation = radMaps->globalRadiationMap->value[row][col];
+            const double transmissivity = radMaps->transmissivityMap->value[row][col];
+            const double temperature = mapHourlyTair->value[row][col];
+            const double relHumidity = mapHourlyRelHum->value[row][col];
+            const double windSpeed = mapHourlyWindScalarInt->value[row][col];
+
+            if (! isEqual(globalRadiation, flag)
+                    && ! isEqual(transmissivity, flag)
+                    && ! isEqual(temperature, flag)
+                    && ! isEqual(relHumidity, flag)
+                    && ! isEqual(windSpeed, flag))
             {
-                clearSkyTransmissivity = CLEAR_SKY_TRANSMISSIVITY_DEFAULT;
-                globalRadiation = radMaps->globalRadiationMap->value[row][col];
-                transmissivity = radMaps->transmissivityMap->value[row][col];
-                temperature = this->mapHourlyTair->value[row][col];
-                relHumidity = this->mapHourlyRelHum->value[row][col];
-                windSpeed = this->mapHourlyWindScalarInt->value[row][col];
-
-                if (! isEqual(globalRadiation, radMaps->globalRadiationMap->header->flag)
-                        && ! isEqual(transmissivity, radMaps->transmissivityMap->header->flag)
-                        && ! isEqual(temperature, mapHourlyTair->header->flag)
-                        && ! isEqual(relHumidity, mapHourlyRelHum->header->flag)
-                        && ! isEqual(windSpeed, mapHourlyWindScalarInt->header->flag))
-                {
-                    this->mapHourlyET0->value[row][col] = float(ET0_Penman_hourly(double(height), double(transmissivity / clearSkyTransmissivity),
-                                      double(globalRadiation), double(temperature), double(relHumidity), double(windSpeed)));
-                }
+                mapHourlyET0->value[row][col] = float(ET0_Penman_hourly(height, transmissivity / clearSkyTransmissivity,
+                                                        globalRadiation, temperature, relHumidity, windSpeed));
             }
         }
 
-    return gis::updateMinMaxRasterGrid(this->mapHourlyET0);
+    return gis::updateMinMaxRasterGrid(mapHourlyET0);
 }
 
 

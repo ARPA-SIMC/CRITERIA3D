@@ -84,7 +84,7 @@ void TabHorizons::insertSoilHorizons(soil::Crit3DSoil *soil, std::vector<soil::C
     myGeotechnicsClassList = geotechnicsClassList;
     myFittingOptions = fittingOptions;
 
-    int row = signed(mySoil->nrHorizons);
+    int row = signed(mySoil->nrHorizons());
     tableDb->setRowCount(row);
     tableModel->setRowCount(row);
 
@@ -202,7 +202,7 @@ void TabHorizons::updateTableModel(soil::Crit3DSoil *soil)
 
     mySoil = soil;
 
-    int row = signed(mySoil->nrHorizons);
+    int row = mySoil->nrHorizons();
     tableModel->setRowCount(row);
 
     // fill Tables
@@ -585,7 +585,7 @@ void TabHorizons::tableDbVerticalHeaderClick(int index)
 
 void TabHorizons::cellChanged(int row, int column)
 {
-    if (tableDb->itemAt(row,column) == nullptr || mySoil->nrHorizons < unsigned(row))
+    if (tableDb->itemAt(row,column) == nullptr || mySoil->nrHorizons() < unsigned(row))
     {
         qDebug() << "mySoil->horizon->dbData.horizonNr < row ";
         return;

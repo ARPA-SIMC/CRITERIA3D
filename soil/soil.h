@@ -146,6 +146,7 @@
             double waterContentFC;              /*!<  [m3 m-3]*/
             double waterContentWP;              /*!<  [m3 m-3]*/
             double waterContentHH;              /*!<  [m3 m-3]*/
+            double waterContentThetaR;          /*!<  [m3 m-3]*/
 
             double PH;                          /*!<  [-]       */
             double CEC;                         /*!<  [meq/100g]*/
@@ -199,17 +200,20 @@
             int id;
             std::string code;
             std::string name;
-            unsigned int nrHorizons;
-            double totalDepth;                          /*!<   [m]  */
+
+            double totalDepth;          /*!<  [m]  */
 
             std::vector <Crit3DHorizon> horizon;
 
             Crit3DSoil() { this->cleanSoil(); }
 
-            void initialize(const std::string &soilCode, int nrHorizons);
+            void initialize(const std::string &soilCode, int _nrHorizons);
             void cleanSoil();
-            void addHorizon(int nHorizon, const Crit3DHorizon &newHorizon);
-            void deleteHorizon(int nHorizon);
+            bool addHorizon(int nHorizon, const Crit3DHorizon &newHorizon);
+            bool deleteHorizon(int nHorizon);
+
+            int nrHorizons() const { return horizon.size(); }
+            int lastHorizon() const { return horizon.size() - 1; }
             int getHorizonIndex(double depth) const;
 
             bool setSoilLayers(double layerThicknessMin, double geometricFactor,
