@@ -696,7 +696,7 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
         return false;
 
     // compute the sub-hour index
-    int subH = int(ceil(float(myMinutes) / float(60 / hourlyFraction)));
+    const int subH = int(ceil(float(myMinutes) / float(60 / hourlyFraction)));
 
     // if +1 date exceed accept only hour 00:00
     if (iDay == nrObsDataDaysH && (myHour != 0 || subH != 0))
@@ -707,13 +707,13 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
     {
         myHour = 24;
         iDay--;
-        if (iDay < 0) return false;
+        if (iDay < 0)
+            return false;
     }
 
     // sub-hour index
-    int j = hourlyFraction * myHour + subH - 1;
-    int maxIndex = hourlyFraction * 24;
-    if (j < 0 || j >= maxIndex)
+    const int j = hourlyFraction * myHour + subH - 1;
+    if (j < 0 || j >= (hourlyFraction * 24))
         return false;
 
     switch (myVar)

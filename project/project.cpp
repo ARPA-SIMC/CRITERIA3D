@@ -4568,7 +4568,9 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
 
     if (isAppend)
     {
+        logInfoGUI("Loading daily data...");
         meteoPointsDbHandler->loadDailyData(db, getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), mp);
+        logInfoGUI("Loading hourly data...");
         meteoPointsDbHandler->loadHourlyData(db, getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), mp);
         meteoWidgetPointList[meteoWidgetPointList.size()-1]->drawMeteoPoint(mp, isAppend);
     }
@@ -4585,11 +4587,15 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         {
             meteoWidgetId = 0;
         }
+
         meteoWidgetPoint->setMeteoWidgetID(meteoWidgetId);
         meteoWidgetPoint->setAllMeteoPoints(meteoPoints);
         meteoWidgetPointList.append(meteoWidgetPoint);
         QObject::connect(meteoWidgetPoint, SIGNAL(closeWidgetPoint(int)), this, SLOT(deleteMeteoWidgetPoint(int)));
+
+        logInfoGUI("Loading daily data...");
         meteoPointsDbHandler->loadDailyData(db, getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), mp);
+        logInfoGUI("Loading hourly data...");
         meteoPointsDbHandler->loadHourlyData(db, getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), mp);
 
         if (hasDailyData)
