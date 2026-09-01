@@ -245,64 +245,105 @@ bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea
     std::vector<int> meteoPointsContainedList = myArea.getMeteoPointsContained();
     std::vector<float> areaCells;
     std::vector<double> myProxyValues;
+    Crit3DMeteoPoint myMeteoPoint;
     bool isValid;
 
     //un solo detrending per ogni area
     macroAreaDetrending(myArea, myVar, interpolationSettings, meteoSettings, meteoPoints, interpolationPoints, areaInterpolationPoints, elevationPos);
 
-    //ciclo sui meteopoint dell'area
-    for (int i = 0; i < (int)meteoPointsContainedList.size(); i++)
+    if (! meteoPointsContainedList.empty()) //glocal CV sulle macroaree: sì è specificata la lista di punti contenuti nelle macroaree senza doppioni
     {
-        myProxyValues = meteoPoints[meteoPointsContainedList[i]].getProxyValues();
-        Crit3DMeteoPoint myMeteoPoint = meteoPoints[meteoPointsContainedList[i]];
-
-        if (myMeteoPoint.active)
+        //ciclo sui meteopoint dell'area
+        for (int i = 0; i < (int)meteoPointsContainedList.size(); i++)
         {
-            //peso della stazione nell'area attuale in base alla sua posizione
-            int row, col;
-            float weight = NODATA;
+            myProxyValues = meteoPoints[meteoPointsContainedList[i]].getProxyValues();
+            myMeteoPoint = meteoPoints[meteoPointsContainedList[i]];
 
-            //valido solo per DEM
-            areaCells = myArea.getAreaCellsDEM();
-            std::string name = meteoPoints[meteoPointsList[i]].name;
-            std::string id = meteoPoints[meteoPointsList[i]].id;
-
-            gis::getRowColFromXY(*(interpolationSettings.getCurrentDEM()->header), myMeteoPoint.point.utm, &row, &col);
-            long temp = interpolationSettings.getCurrentDEM()->header->nrCols*row + col;
-
-            for (int k = 0; k < (int)areaCells.size(); k = k + 2)
+            if (myMeteoPoint.active)
             {
-                if (areaCells[k] == temp)
-                    weight = areaCells[k+1];
-            }
-            weight = 1;
+                //peso della stazione 1
+                float weight = 1;
 
-            isValid = (! excludeSupplemental || checkLapseRateCode(myMeteoPoint.lapseRateCode, interpolationSettings.getUseLapseRateCode(), false));
-            isValid = (isValid && (! excludeOutsideDem || myMeteoPoint.isInsideDem));
+                isValid = (! excludeSupplemental || checkLapseRateCode(myMeteoPoint.lapseRateCode, interpolationSettings.getUseLapseRateCode(), false));
+                isValid = (isValid && (! excludeOutsideDem || myMeteoPoint.isInsideDem));
 
-            if (isValid && myMeteoPoint.quality == quality::accepted)
-            {
-                float myValue = myMeteoPoint.currentValue;
-
-                float interpolatedValue = interpolate(areaInterpolationPoints, interpolationSettings, meteoSettings, myVar,
-                                                      float(myMeteoPoint.point.utm.x),
-                                                      float(myMeteoPoint.point.utm.y),
-                                                      float(myMeteoPoint.point.z),
-                                                      myProxyValues, false);
-
-
-                if (!isEqual(interpolatedValue, NODATA) && !isEqual(myValue, NODATA) && !isEqual(weight, NODATA))
+                if (isValid && myMeteoPoint.quality == quality::accepted)
                 {
-                    if (isEqual(meteoPoints[meteoPointsContainedList[i]].residual, NODATA)) //non uso myMeteoPoint perché bisogna salvare il valore per utilizzo successivo
-                        meteoPoints[meteoPointsContainedList[i]].residual = (myValue - interpolatedValue)*weight;
-                    else
-                    {
-                        meteoPoints[meteoPointsContainedList[i]].residual += (myValue - interpolatedValue)*weight;
-                    }
+                    float myValue = myMeteoPoint.currentValue;
 
+                    float interpolatedValue = interpolate(areaInterpolationPoints, interpolationSettings, meteoSettings, myVar,
+                                                          float(myMeteoPoint.point.utm.x),
+                                                          float(myMeteoPoint.point.utm.y),
+                                                          float(myMeteoPoint.point.z),
+                                                          myProxyValues, false);
+
+                    if (!isEqual(interpolatedValue, NODATA) && !isEqual(myValue, NODATA) && !isEqual(weight, NODATA))
+                    {
+                        if (isEqual(meteoPoints[meteoPointsContainedList[i]].residual, NODATA)) //non uso myMeteoPoint perché bisogna salvare il valore per utilizzo successivo
+                            meteoPoints[meteoPointsContainedList[i]].residual = (myValue - interpolatedValue)*weight;
+                        else
+                        {
+                            meteoPoints[meteoPointsContainedList[i]].residual += (myValue - interpolatedValue)*weight;
+                        }
+
+                    }
                 }
             }
         }
+    }
+    else //glocal CV sui punti stazione: non si è specificata altra lista
+    {
+        //ciclo sui meteopoint dell'area
+        for (int i = 0; i < (int)meteoPointsList.size(); i++)
+        {
+            myProxyValues = meteoPoints[meteoPointsList[i]].getProxyValues();
+            myMeteoPoint = meteoPoints[meteoPointsList[i]];
+
+            if (myMeteoPoint.active)
+            {
+                //peso della stazione nell'area attuale in base alla sua posizione
+                int row, col;
+                float weight = NODATA;
+
+                //valido solo per DEM
+                areaCells = myArea.getAreaCellsDEM();
+
+                gis::getRowColFromXY(*(interpolationSettings.getCurrentDEM()->header), myMeteoPoint.point.utm, &row, &col);
+                long temp = interpolationSettings.getCurrentDEM()->header->nrCols*row + col;
+
+                for (int k = 0; k < (int)areaCells.size(); k = k + 2)
+                {
+                    if (areaCells[k] == temp)
+                        weight = areaCells[k+1];
+                }
+
+                isValid = (! excludeSupplemental || checkLapseRateCode(myMeteoPoint.lapseRateCode, interpolationSettings.getUseLapseRateCode(), false));
+                isValid = (isValid && (! excludeOutsideDem || myMeteoPoint.isInsideDem));
+
+                if (isValid && myMeteoPoint.quality == quality::accepted)
+                {
+                    float myValue = myMeteoPoint.currentValue;
+
+                    float interpolatedValue = interpolate(areaInterpolationPoints, interpolationSettings, meteoSettings, myVar,
+                                                          float(myMeteoPoint.point.utm.x),
+                                                          float(myMeteoPoint.point.utm.y),
+                                                          float(myMeteoPoint.point.z),
+                                                          myProxyValues, false);
+
+                    if (!isEqual(interpolatedValue, NODATA) && !isEqual(myValue, NODATA) && !isEqual(weight, NODATA))
+                    {
+                        if (isEqual(meteoPoints[meteoPointsList[i]].residual, NODATA)) //non uso myMeteoPoint perché bisogna salvare il valore per utilizzo successivo
+                            meteoPoints[meteoPointsList[i]].residual = (myValue - interpolatedValue)*weight;
+                        else
+                        {
+                            meteoPoints[meteoPointsList[i]].residual += (myValue - interpolatedValue)*weight;
+                        }
+
+                    }
+                }
+            }
+        }
+
     }
 
     return true;
