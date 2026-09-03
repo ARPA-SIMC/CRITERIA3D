@@ -40,6 +40,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
 
+# parallel computing settings
+include($$absolute_path(../parallel.pri))
+
 INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../gis ../utilities \
                 ../shapeHandler ../netcdfHandler ../shapeUtilities
 

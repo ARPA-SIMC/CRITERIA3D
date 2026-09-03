@@ -13,7 +13,7 @@
     #include "shapeHandler.h"
     #include "crit3dDate.h"
 
-    #define CRITERIA_OUTPUT_VERSION "v2.0.5 (2026)"
+    #define CRITERIA_OUTPUT_VERSION "v2.0.6 (2026.09)"
 
     #define ERROR_MISSINGPARAMETERS -900
     #define ERROR_WRONGPARAMETER -901

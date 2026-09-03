@@ -5,8 +5,7 @@
 #
 #--------------------------------------------------------
 
-QT    += sql
-QT    -= gui
+QT    += sql widgets
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -25,7 +24,10 @@ CONFIG += c++11 c++14 c++17
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
-INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler  ../utilities
+# parallel computing settings
+include($$absolute_path(../parallel.pri))
+
+INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler ../utilities ../commonDialogs
 
 SOURCES += \
     shapeFromCsv.cpp \

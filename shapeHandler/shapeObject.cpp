@@ -356,7 +356,7 @@ bool ShapeObject::isClockWise(const Part &part) const
 // ray casting / even-odd rule
 bool ShapeObject::pointInPart(double x, double y, unsigned int partIndex) const
 {
-    const Part &part = getPart(partIndex);
+    const auto &part = parts[partIndex];
 
     if (x < part.boundsPart.xmin || x > part.boundsPart.xmax ||
         y < part.boundsPart.ymin || y > part.boundsPart.ymax)
@@ -371,60 +371,54 @@ bool ShapeObject::pointInPart(double x, double y, unsigned int partIndex) const
     const unsigned long offset = part.offset;
     const unsigned long last = offset + part.length - 1;
 
-    bool oddNodes = false;
+    bool inside = false;
     unsigned long j = last;
 
     for (unsigned long i = offset; i <= last; ++i)
     {
-        const auto &vertexI = vertices[i];
-        const auto &vertexJ = vertices[j];
+        const auto &a = vertices[i];
+        const auto &b = vertices[j];
 
-        if ( ((vertexI.y < y && vertexJ.y >= y) || (vertexJ.y < y && vertexI.y >= y))
-            && (vertexI.x <= x || vertexJ.x <= x) )
+        if ((a.y < y && b.y >= y) ||
+            (b.y < y && a.y >= y))
         {
-            oddNodes ^= (vertexI.x + (y - vertexI.y) /
-                        (vertexJ.y - vertexI.y) * (vertexJ.x - vertexI.x) < x);
+            const double xIntersect =
+                a.x + (y - a.y) * (b.x - a.x) / (b.y - a.y);
+
+            if (xIntersect < x)
+                inside = !inside;
         }
 
         j = i;
     }
 
-    return oddNodes;
+    return inside;
 }
 
 
 bool ShapeObject::pointInPolygon(double x, double y) const
 {
-    // WARNING: if the test point is on the border of the polygon,
-    // this algorithm may deliver unpredictable results
-
     if (x < bounds.xmin || x > bounds.xmax
         || y < bounds.ymin || y > bounds.ymax)
     {
         return false;
     }
 
+    bool inside = false;
     const unsigned int nParts = getPartCount();
 
-    // Check first the holes
-    // A point inside a hole is not inside the polygon
-    for (unsigned int partIndex  = 0; partIndex < nParts; ++partIndex)
+    for (unsigned int partIndex = 0; partIndex < nParts; ++partIndex)
     {
-        const Part& part = getPart(partIndex);
+        if (! pointInPart(x, y, partIndex))
+            continue;
 
-        if (part.hole && pointInPart(x, y, partIndex))
+        if (parts[partIndex].hole)
             return false;
+
+        inside = true;
     }
 
-    for (unsigned int partIndex  = 0; partIndex < nParts; ++partIndex)
-    {
-        const Part& part = getPart(partIndex);
-
-        if (!part.hole && pointInPart(x, y, partIndex))
-            return true;
-    }
-
-    return false;
+    return inside;
 }
 
 
@@ -440,9 +434,7 @@ int ShapeObject::getOuterPartIndex(double x, double y) const
 
     for (unsigned int partIndex = 0; partIndex < nrParts; ++partIndex)
     {
-        const Part &part = getPart(partIndex);
-
-        if (!part.hole && pointInPart(x, y, partIndex))
+        if (!parts[partIndex].hole && pointInPart(x, y, partIndex))
             return static_cast<int>(partIndex);
     }
 

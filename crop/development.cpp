@@ -29,11 +29,12 @@
 */
 
 
-#include <math.h>
 #include "commonConstants.h"
 #include "development.h"
 #include "crop.h"
+
 #include <algorithm>
+#include <math.h>
 
 
 namespace leafDevelopment
@@ -129,29 +130,30 @@ namespace leafDevelopment
     }
 
 
-    double getLAICriteria(Crit3DCrop* myCrop, double myDegreeDays)
+    // degreeDays [°C] after emergence
+    double getLAICriteria(const Crit3DCrop* crop, double degreeDays)
     {
-        // decreasing parameter
-        double c4;
-        if (myCrop->type == TREE)
-            c4 = 15.0;
-        else
-            c4 = 9.0;
-
-        if (myDegreeDays <= myCrop->degreeDaysIncrease)
+        if (degreeDays <= crop->degreeDaysIncrease)
         {
             // LAI increasing curve
-            return myCrop->LAImin + (myCrop->LAImax - myCrop->LAImin) / (1 + exp(myCrop->LAIcurve_a + myCrop->LAIcurve_b * myDegreeDays));
+            const double exponent = crop->LAIcurve_a + crop->LAIcurve_b * degreeDays;
+
+            return crop->LAImin + (crop->LAImax - crop->LAImin) / (1.0 + exp(exponent));
         }
         else
         {
             // LAI decreasing curve
-            double n4 = 4.0;
-            return myCrop->LAImin + (myCrop->LAImax - myCrop->LAImin) /
-                                     (1 + pow(10 * ((myDegreeDays - myCrop->degreeDaysIncrease)
-                                      / std::max(myCrop->degreeDaysDecrease, 1.)) / c4, n4));
+            constexpr double n4 = 4.0;
+            const double c4 = (crop->type == TREE) ? 15.0 : 9.0;
+
+            // real maximum LAI
+            const double maxExponent = crop->LAIcurve_a + crop->LAIcurve_b * crop->degreeDaysIncrease;
+            const double maxLai = crop->LAImin + (crop->LAImax - crop->LAImin) / (1.0 + exp(maxExponent));
+
+            const double ddSenescence = (degreeDays - crop->degreeDaysIncrease) / std::max(crop->degreeDaysDecrease, 1.0);
+
+            return crop->LAImin + (maxLai - crop->LAImin) / (1.0 + pow(10.0 * ddSenescence / c4, n4));
         }
     }
-
 }
 

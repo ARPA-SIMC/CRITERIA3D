@@ -8,6 +8,7 @@
 #include "gis.h"
 #include "shapeToRaster.h"
 #include "shapeHandler.h"
+#include "formInfo.h"
 
 
 bool initializeRasterFromShape(const Crit3DShapeHandler &shapeHandler, gis::Crit3DRasterGrid &newRaster, double cellSize)
@@ -117,7 +118,8 @@ bool fillRasterWithShapeIndex(gis::Crit3DRasterGrid &raster, const Crit3DShapeHa
 
 bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGrid &newRaster,
                     const Crit3DShapeHandler &shapeHandler, const std::string &fieldName, double cellSizeRef = NODATA,
-                    int sampleGrid = 1, double coverageThreshold = 0.5, bool useReferenceRaster = true)
+                    int sampleGrid = 1, double coverageThreshold = 0.5,
+                    bool useReferenceRaster = true, bool showInfo = false)
 {
     if (useReferenceRaster)
     {
@@ -131,6 +133,7 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
     }
 
     const auto& header = *newRaster.header;
+    const float flag = header.flag;
 
     const int nrShape = shapeHandler.getShapeCount();
     if (nrShape <= 0)
@@ -151,6 +154,11 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
     coverageThreshold = std::max(0.0, std::min(1.0, coverageThreshold));
 
     const int nrSamples = sampleGrid * sampleGrid;
+
+    int halfSamples = nrSamples / 2;
+    if (nrSamples % 2 == 1)
+        halfSamples++;
+
     const int minPoints = std::max(1, static_cast<int>(std::ceil(coverageThreshold * nrSamples)));
 
     const int nrRows = header.nrRows;
@@ -177,8 +185,17 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
     // tmp coverage raster
     std::vector<uint8_t> coverageCount(nrRows * nrCols, 0);
 
+    FormInfo formInfo;
+    if (showInfo)
+    {
+        formInfo.start("Fill raster...", nrShape);
+    }
+
     for (int shapeIndex = 0; shapeIndex < nrShape; ++shapeIndex)
     {
+        if (showInfo)
+            formInfo.setValue(shapeIndex);
+
         ShapeObject object;
         shapeHandler.getShape(shapeIndex, object);
 
@@ -206,6 +223,7 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
         c0 = MAXVALUE(c0 - 1, 0);
         c1 = MINVALUE(c1 + 1, nrCols - 1);
 
+        #pragma omp parallel for
         for (int row = r0; row <= r1; ++row)
         {
             for (int col = c0; col <= c1; ++col)
@@ -213,9 +231,16 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
                 if (useReferenceRaster)
                 {
                     // skip empty cells of reference raster
-                    if (isEqual(refRaster->value[row][col], header.flag))
+                    if (isEqual(refRaster->value[row][col], flag))
                         continue;
                 }
+
+                const int index = row * nrCols + col;
+
+                // just covered
+                const int currentCoverage = coverageCount[index];
+                if (currentCoverage >= halfSamples)
+                    continue;
 
                 double xc, yc;
                 newRaster.getXY(row, col, xc, yc);
@@ -234,6 +259,9 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
                     // skip unnecessary steps
                     if (inside + remaining < minPoints)
                         break;
+
+                    if (inside + remaining <= currentCoverage)
+                        break;
                 }
 
                 // check threshold
@@ -241,9 +269,7 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
                     continue;
 
                 // check and store cell coverage
-                const int index = row * nrCols + col;
-
-                if (inside > coverageCount[index])
+                if (inside > currentCoverage)
                 {
                     coverageCount[index] = inside;
                     newRaster.value[row][col] = static_cast<float>(fieldValue);
@@ -251,6 +277,9 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
             }
         }
     }
+
+    if (showInfo)
+        formInfo.close();
 
     return true;
 }
