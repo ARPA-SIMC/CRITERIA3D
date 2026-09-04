@@ -71,9 +71,10 @@ bool fillRasterWithShapeIndex(gis::Crit3DRasterGrid &raster, const Crit3DShapeHa
 
     raster.emptyGrid();
 
-    ShapeObject object;
+    #pragma omp parallel for
     for (int shapeIndex = 0; shapeIndex < nrShapes; ++shapeIndex)
     {
+        ShapeObject object;
         shapeHandler.getShape(shapeIndex, object);
 
         const auto& bounds = object.getBounds();

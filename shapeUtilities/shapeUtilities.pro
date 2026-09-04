@@ -36,7 +36,8 @@ SOURCES += \
     shapeToRaster.cpp    \
     shapeUtilities.cpp   \
     unitCropMap.cpp      \
-    zonalStatistic.cpp
+    zonalStatistic.cpp   \
+    ../commonDialogs/formInfo.cpp
 
 
 HEADERS += \
@@ -44,6 +45,7 @@ HEADERS += \
     shapeToRaster.h    \
     shapeUtilities.h   \
     unitCropMap.h      \
-    zonalStatistic.h
+    zonalStatistic.h    \
+    ../commonDialogs/formInfo.h
 
 
