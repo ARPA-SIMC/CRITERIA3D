@@ -191,7 +191,7 @@ void BarHorizonList::draw(soil::Crit3DSoil *soil)
     int totHeight = int(groupBox->height() * 0.9);
     double soilDepth = soil->horizon[soil->lastHorizon()].dbData.lowerDepth;
 
-    for (unsigned int i = 0; i < soil->nrHorizons(); i++)
+    for (int i = 0; i < soil->nrHorizons(); i++)
     {
         int length = 0;
         if (soilDepth > 0)

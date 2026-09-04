@@ -264,11 +264,10 @@
         double waterConductivity(double Se, const Crit3DHorizon &horizon);
 
         double estimateOrganicMatter(double upperDepth);
-        double estimateSpecificDensity(double organicMatter);
-        double estimateBulkDensity(const Crit3DHorizon &horizon, double totalPorosity, bool increaseWithDepth);
-        double estimateSaturatedConductivity(const Crit3DHorizon &horizon, double bulkDensity);
+        double estimateParticleDensity(double organicMatter);
+        double estimateBulkDensity(const Crit3DHorizon &horizon, double totalPorosity);
+        double estimateSaturatedConductivity(const Crit3DHorizon &horizon, double totalPorosity);
         double estimateTotalPorosity(const Crit3DHorizon &horizon, double bulkDensity);
-        double estimateThetaSat(const Crit3DHorizon &horizon, double bulkDensity);
 
         double getWaterContentFromPsi(double signPsi, const Crit1DLayer &layer);
         double getWaterContentFromAW(double availableWater, const Crit1DLayer &layer);

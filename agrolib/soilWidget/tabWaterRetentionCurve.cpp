@@ -98,7 +98,7 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
     double x;
     double maxThetaSat = 0;
 
-    for (unsigned int i = 0; i < mySoil->nrHorizons(); i++)
+    for (int i = 0; i < mySoil->nrHorizons(); i++)
     {
         QColor color = barHorizons.getColor(i);
         // insert Curves

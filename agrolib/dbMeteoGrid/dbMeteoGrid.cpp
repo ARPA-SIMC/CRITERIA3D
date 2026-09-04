@@ -2152,7 +2152,7 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QSqlDatabase &myDb, const QStr
             meteoVariable variable = getHourlyVarEnum(varCode);
 
             if (! meteoPoint->setMeteoPointValueH(getCrit3DDate(dateTime.date()), dateTime.time().hour(),
-                                                                              dateTime.time().minute(), variable, value))
+                                                  dateTime.time().minute(), variable, value))
             {
                 errorStr = "Wrong VariableCode: " + QString::number(varCode);
                 return false;

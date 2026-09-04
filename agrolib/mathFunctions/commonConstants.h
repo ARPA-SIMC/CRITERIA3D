@@ -213,7 +213,7 @@
     #define CP 1013.
 
     // [g cm3-1]
-    #define QUARTZ_DENSITY 2.648
+    #define QUARTZ_DENSITY 2.65
 
     // [J m-3 K-1] volumetric specific heat
     #define HEAT_CAPACITY_WATER 4182000.

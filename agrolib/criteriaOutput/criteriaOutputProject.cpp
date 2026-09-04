@@ -1056,7 +1056,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
     constexpr double threshold = 0.5;
 
     if (! rasterizeShape(nullptr, tmpRaster, shapeHandler, fieldName, cellSize,
-                        sampleGrid, threshold, useReferenceRaster))
+                        sampleGrid, threshold, useReferenceRaster, false))
     {
         projectError = "Error in rasterize shape.";
         return false;

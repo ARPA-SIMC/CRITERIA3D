@@ -11,7 +11,7 @@
         double getDDfromLAIGrowth(double lai, double a, double b,double laiMIN,double laiMAX);
         double getTheoreticalLAIGrowth(double DD, double a, double b,double laiMIN,double laiMAX);
         double getLAISenescence(double LaiMin, double LAIStartSenescence, int daysFromStartSenescence);
-        double getLAICriteria(Crit3DCrop* myCrop, double myDegreeDays);
+        double getLAICriteria(const Crit3DCrop *crop, double degreeDays);
     }
 
 

@@ -313,20 +313,26 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int currentDo
 
 int Crit3DCrop::getDaysFromTypicalSowing(int doy) const
 {
-    return (doy - sowingDoy) % 365;
+    int daysFromSowing = doy - sowingDoy;
+
+    if (daysFromSowing < 0)
+        daysFromSowing += 365;
+
+    return daysFromSowing;
 }
 
 
 int Crit3DCrop::getDaysFromCurrentSowing(int doy) const
 {
-    if (currentSowingDoy != NODATA)
-    {
-        return (doy - currentSowingDoy) % 365;
-    }
-    else
-    {
+    if (currentSowingDoy == NODATA)
         return getDaysFromTypicalSowing(doy);
-    }
+
+    int daysFromSowing = doy - currentSowingDoy;
+
+    if (daysFromSowing < 0)
+        daysFromSowing += 365;
+
+    return daysFromSowing;
 }
 
 

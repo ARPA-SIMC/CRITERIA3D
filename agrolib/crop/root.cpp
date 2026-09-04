@@ -392,11 +392,10 @@ namespace root
             double minimumThickness;
             std::vector<int> atoms;
             atoms.resize(nrLayers);
-            int nrAtoms = root::getNrAtoms(soilLayers, minimumThickness, atoms);
+            const int nrAtoms = root::getNrAtoms(soilLayers, minimumThickness, atoms);
 
-            int numberOfRootedLayers, numberOfTopUnrootedLayers;
-            numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
-            numberOfRootedLayers = int(round(std::min(myCrop->roots.currentRootLength, soilDepth) / minimumThickness));
+            const int numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
+            int numberOfRootedLayers = int(round(std::min(myCrop->roots.currentRootLength, soilDepth) / minimumThickness));
 
             // roots are still too short
             if (numberOfRootedLayers == 0)
@@ -409,12 +408,7 @@ namespace root
             }
 
             // initialize thin layers density
-            std::vector<double> densityThinLayers;
-            densityThinLayers.resize(nrAtoms);
-            for (int i=0; i < nrAtoms; i++)
-            {
-                densityThinLayers[i] = 0.;
-            }
+            std::vector<double> densityThinLayers(nrAtoms, 0.0);
 
             if (myCrop->roots.rootShape == CARDIOID_DISTRIBUTION)
             {
@@ -428,9 +422,9 @@ namespace root
             }
 
             int counter = 0;
-            for (unsigned int layer=0; layer < nrLayers; layer++)
+            for (unsigned int layer = 0; layer < nrLayers; ++layer)
             {
-                for (int j = 0; j < atoms[layer]; j++)
+                for (int j = 0; j < atoms[layer]; ++j)
                 {
                     if (counter < nrAtoms)
                         myCrop->roots.rootDensity[layer] += densityThinLayers[counter];
@@ -440,27 +434,37 @@ namespace root
         }
         else if (myCrop->roots.rootShape == GAMMA_DISTRIBUTION)
         {
-            double kappa, theta,a,b;
-            double mean, mode;
-            mean = myCrop->roots.currentRootLength * 0.5;
+            double integralComplementary, kappa, theta, mode;
+
+            double mean = myCrop->roots.currentRootLength * 0.5;
             int iterations=0;
-            double integralComplementary;
             do{
-                mode = 0.6*mean;
+                // TODO check (viene sempre kappa = mean / 0.4*mean = 2.5)
+                mode = 0.6 * mean;
                 theta = mean - mode;
                 kappa = mean / theta;
-                iterations++;
-                integralComplementary=incompleteGamma(kappa,3*myCrop->roots.currentRootLength/theta) - incompleteGamma(kappa,myCrop->roots.currentRootLength/theta);
+                integralComplementary = incompleteGamma(kappa, 3 * myCrop->roots.currentRootLength/theta)
+                                        - incompleteGamma(kappa, myCrop->roots.currentRootLength/theta);
                 mean *= 0.99;
-            } while(integralComplementary>0.01 && iterations<1000);
+                iterations++;
+            }
+            while(integralComplementary > 0.01 && iterations < 1000);
 
-            for (unsigned int i=1 ; i < nrLayers; i++)
+            for (unsigned int i = 1 ; i < nrLayers; ++i)
             {
-                b = MAXVALUE(soilLayers[i].depth + soilLayers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // right extreme
-                if (b>0 && b< myCrop->roots.currentRootLength)
+                const double b = std::max(0.0, soilLayers[i].depth
+                                                   + soilLayers[i].thickness * 0.5
+                                                   - myCrop->roots.rootDepthMin);       // right extreme
+
+                if (b > 0 && b < myCrop->roots.currentRootLength)
                 {
-                    a = MAXVALUE(soilLayers[i].depth - soilLayers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // left extreme
-                    myCrop->roots.rootDensity[i] = incompleteGamma(kappa,b/theta) - incompleteGamma(kappa,a/theta); // incompleteGamma is already normalized by gamma(kappa)
+                    const double a = std::max(0.0, soilLayers[i].depth
+                                                  - soilLayers[i].thickness * 0.5
+                                                  - myCrop->roots.rootDepthMin);        // left extreme
+
+                    // incompleteGamma is already normalized by gamma(kappa)
+                    myCrop->roots.rootDensity[i] = incompleteGamma(kappa, b/theta)
+                                                   - incompleteGamma(kappa, a/theta);
                 }
                 else
                 {
@@ -470,7 +474,7 @@ namespace root
         }
 
         double rootDensitySum = 0. ;
-        for (unsigned int i=0 ; i < nrLayers; i++)
+        for (unsigned int i = 0 ; i < nrLayers; ++i)
         {
             myCrop->roots.rootDensity[i] *= soilLayers[i].soilFraction;
             rootDensitySum += myCrop->roots.rootDensity[i];
@@ -478,7 +482,7 @@ namespace root
 
         if (rootDensitySum > 0.0)
         {
-            for (unsigned int i=0 ; i < nrLayers ; i++)
+            for (unsigned int i = 0 ; i < nrLayers ; ++i)
                 myCrop->roots.rootDensity[i] /= rootDensitySum;
 
             myCrop->roots.firstRootLayer = 0;

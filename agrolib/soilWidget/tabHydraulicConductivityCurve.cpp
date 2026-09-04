@@ -88,7 +88,7 @@ void TabHydraulicConductivityCurve::insertElements(soil::Crit3DSoil *soil)
     double x;
     double maxValue = 0;
 
-    for (unsigned int i = 0; i < mySoil->nrHorizons(); i++)
+    for (int i = 0; i < mySoil->nrHorizons(); i++)
     {
         // insert Curves
         QColor color = barHorizons.getColor(i);

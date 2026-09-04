@@ -14,6 +14,9 @@ QT   += sql
 TEMPLATE = lib
 CONFIG += staticlib
 
+CONFIG += debug_and_release
+CONFIG += c++11 c++14 c++17
+
 unix:{
     CONFIG(debug, debug|release) {
         TARGET = debug/criteriaOutput
@@ -39,6 +42,9 @@ win32:{
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
+
+# parallel computing settings
+include($$absolute_path(../parallel.pri))
 
 INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../gis ../utilities \
                 ../shapeHandler ../netcdfHandler ../shapeUtilities
