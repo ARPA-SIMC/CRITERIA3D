@@ -31,7 +31,6 @@
          * crop cycle
          */
         int sowingDoy;
-        int currentSowingDoy;
         int doyStartSenescence;
         int plantCycle;
         double LAImin, LAImax, LAIgrass;
@@ -73,17 +72,17 @@
 
         void clear();
 
-        int getDaysFromTypicalSowing(int doy) const;
-        int getDaysFromCurrentSowing(int doy) const;
+        int getDaysFromSowing(int doy) const;
         bool isInsideTypicalCycle(int doy) const;
 
         bool isWaterSurplusResistant() const;
         bool isSowingCrop() const;
         bool isRootStatic() const;
+        bool isPerennialCrop() const;
 
         bool isBareSoil() const { return (type == BARESOIL); }
 
-        double getDailyDegreeIncrease(double tmin, double tmax, int doy);
+        double getDailyDegreeIncrease(double tmin, double tmax);
 
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
         bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);

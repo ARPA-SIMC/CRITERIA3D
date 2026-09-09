@@ -54,9 +54,8 @@ void Crit3DCrop::clear()
 
     roots.clear();
 
-    // crop cycle
+    // crop cycle parameters
     sowingDoy = NODATA;
-    currentSowingDoy = NODATA;
     doyStartSenescence = NODATA;
     plantCycle = NODATA;
     LAImin = NODATA;
@@ -70,13 +69,13 @@ void Crit3DCrop::clear()
     degreeDaysDecrease = NODATA;
     degreeDaysEmergence = NODATA;
 
-    // water need
+    // water need parameters
     kcMax  = NODATA;
     psiLeaf = NODATA;
     stressTolerance = NODATA;
     fRAW = NODATA;
 
-    // irrigation
+    // irrigation parameters
     irrigationShift = NODATA;
     irrigationVolume = NODATA;
     degreeDaysStartIrrigation = NODATA;
@@ -85,14 +84,18 @@ void Crit3DCrop::clear()
     doyEndIrrigation = NODATA;
     maxSurfacePuddle = NODATA;
 
-    // variables
-    isLiving = false;
-    isEmerged = false;
+    // state variables
+    degreeDays = NODATA;
     LAIstartSenescence = NODATA;
     daysSinceIrrigation = NODATA;
-    degreeDays = NODATA;
+
+    // other variables
+    isLiving = false;
+    isEmerged = false;
+
     LAI = NODATA;
     LAIpreviousDay = NODATA;
+
     layerTranspiration.clear();
 }
 
@@ -107,6 +110,7 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
 
     // initialize root depth
     roots.rootDepth = 0;
+    roots.currentRootLength = 0;
 
     if (isBareSoil())
     {
@@ -136,18 +140,10 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
         doyStartSenescence = 120;
     }
 
-    roots.currentRootLength = NODATA;
-    LAIstartSenescence = NODATA;
-    currentSowingDoy = NODATA;
-    daysSinceIrrigation = NODATA;
-
     // check if the crop is living
     if (isSowingCrop())
     {
         isLiving = isInsideTypicalCycle(currentDoy);
-
-        if (isLiving == true)
-            currentSowingDoy = sowingDoy;
     }
     else
     {
@@ -158,16 +154,10 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
 }
 
 
-double Crit3DCrop::getDailyDegreeIncrease(double tmin, double tmax, int doy)
+double Crit3DCrop::getDailyDegreeIncrease(double tmin, double tmax)
 {
     if (isEqual(tmin, NODATA) || isEqual(tmax, NODATA))
         return NODATA;
-
-    // check crop cycle
-    if (isSowingCrop() && ! isInsideTypicalCycle(doy))
-    {
-        return 0;
-    }
 
     double tmed = (tmin + std::min(tmax, upperThermalThreshold)) * 0.5;
     return std::max(tmed - thermalThreshold, 0.);
@@ -243,7 +233,7 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int currentDo
                 return true;
             }
 
-            if (currentDoy - sowingDoy < MIN_EMERGENCE_DAYS)
+            if (getDaysFromSowing(currentDoy) < MIN_EMERGENCE_DAYS)
             {
                 LAIpreviousDay = LAI;
                 LAI = 0.0;
@@ -311,26 +301,18 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int currentDo
 }
 
 
-int Crit3DCrop::getDaysFromTypicalSowing(int doy) const
+int Crit3DCrop::getDaysFromSowing(int doy) const
 {
+    if (sowingDoy == NODATA)
+        return NODATA;
+
     int daysFromSowing = doy - sowingDoy;
 
     if (daysFromSowing < 0)
         daysFromSowing += 365;
 
-    return daysFromSowing;
-}
-
-
-int Crit3DCrop::getDaysFromCurrentSowing(int doy) const
-{
-    if (currentSowingDoy == NODATA)
-        return getDaysFromTypicalSowing(doy);
-
-    int daysFromSowing = doy - currentSowingDoy;
-
-    if (daysFromSowing < 0)
-        daysFromSowing += 365;
+    if (daysFromSowing > 365)
+        daysFromSowing -= 365;
 
     return daysFromSowing;
 }
@@ -338,21 +320,27 @@ int Crit3DCrop::getDaysFromCurrentSowing(int doy) const
 
 bool Crit3DCrop::isInsideTypicalCycle(int doy) const
 {
-    int daysFromSowing = getDaysFromTypicalSowing(doy);
-    if (daysFromSowing >= 0)
-    {
-        return (daysFromSowing < plantCycle);
-    }
-    else
-    {
-        return ((doy + 365 - sowingDoy) < plantCycle);
-    }
+    int daysFromSowing = getDaysFromSowing(doy);
+
+    if (daysFromSowing == NODATA)
+        return false;
+
+    return (daysFromSowing < plantCycle);
 }
 
 
 bool Crit3DCrop::isSowingCrop() const
 {
     return (type == HERBACEOUS_ANNUAL || type == HORTICULTURAL);
+}
+
+bool Crit3DCrop::isPerennialCrop() const
+{
+    return (type == HERBACEOUS_PERENNIAL
+             || type == GRASS
+             || type == TREE
+             || type == FALLOW
+             || type ==  FALLOW_ANNUAL);
 }
 
 
@@ -403,7 +391,7 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
             // living crop: check end of crop cycle
             double cycleDD = degreeDaysEmergence + degreeDaysIncrease + degreeDaysDecrease;
 
-            if ((degreeDays > cycleDD) || (getDaysFromCurrentSowing(currentDoy) > plantCycle))
+            if ((degreeDays > cycleDD) || (getDaysFromSowing(currentDoy) > plantCycle))
             {
                 isLiving = false;
                 return true;
@@ -413,7 +401,7 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
         {
             // bare soil: check sowing
             int sowingDoyPeriod = 30;
-            int daysFromSowing = getDaysFromTypicalSowing(currentDoy);
+            int daysFromSowing = getDaysFromSowing(currentDoy);
 
             // is sowing possible? (check period and watertable depth)
             if (daysFromSowing >= 0 && daysFromSowing <= sowingDoyPeriod)
@@ -425,16 +413,15 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
                         || waterTableDepth >= waterTableThreshold)
                 {
                     isLiving = true;
-                    // update sowing doy
-                    currentSowingDoy = sowingDoy + daysFromSowing;
                     return true;
                 }
             }
         }
     }
-    else
+
+    if (isPerennialCrop())
     {
-        // pluriannual crop: reset at the end of year
+        // perennial crop: reset at the end of crop season
         // January at north hemisphere, July at south
         if ((latitude >= 0 && myDate.month == 1 && myDate.day == 1)
             || (latitude < 0 && myDate.month == 7 && myDate.day == 1))
@@ -476,7 +463,6 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
         degreeDays = NODATA;
         LAI = NODATA;
         LAIpreviousDay = NODATA;
-        currentSowingDoy = NODATA;
 
         // roots
         roots.currentRootLength = NODATA;
@@ -492,9 +478,11 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
                              double tmin, double tmax, double waterTableDepth, std::string &errorStr)
 {
     errorStr = "";
-    if (idCrop == "") return false;
 
-    unsigned int nrLayers = unsigned(soilLayers.size());
+    if (idCrop.empty())
+        return false;
+
+    const unsigned int nrLayers = unsigned(soilLayers.size());
 
     // check start/end crop cycle
     if (needReset(myDate, latitude, waterTableDepth))
@@ -504,18 +492,18 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
 
     if (isLiving)
     {
-        int currentDoy = getDoyFromDate(myDate);
-
         // update degree days
-        double dailyDD = getDailyDegreeIncrease(tmin, tmax, currentDoy);
+        const double dailyDD = getDailyDegreeIncrease(tmin, tmax);
         if (isEqual(dailyDD, NODATA))
         {
             errorStr = "Error in computing degree days for " + myDate.toISOString();
             return false;
         }
+
         degreeDays += dailyDD;
 
         // update LAI
+        const int currentDoy = getDoyFromDate(myDate);
         if (! updateLAI(latitude, nrLayers, currentDoy))
         {
             errorStr = "Error in updating LAI for crop " + idCrop;
@@ -807,10 +795,14 @@ double Crit3DCrop::computeTranspiration(const double maxTranspiration, const std
 
     for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; ++i)
     {
+        if (soilLayers[i].horizonPtr == nullptr)
+            continue;
+        const auto horizon = *(soilLayers[i].horizonPtr);
+
         // [mm]
         waterSurplusThreshold = soilLayers[i].SAT - (WSS * (soilLayers[i].SAT - soilLayers[i].FC));
         // [-]
-        thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), *(soilLayers[i].horizonPtr));
+        thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), horizon);
         // [mm]
         cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.;
 
@@ -927,7 +919,7 @@ speciesType getCropType(std::string cropType)
     else if (cropType == "bare" || cropType == "bare_soil")
         return BARESOIL;
     else
-        return HERBACEOUS_ANNUAL;
+        return BARESOIL;
 }
 
 
