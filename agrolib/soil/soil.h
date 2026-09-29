@@ -1,12 +1,8 @@
 #ifndef SOIL_H
 #define SOIL_H
 
-    #ifndef _STRING_
-        #include <string>
-    #endif
-    #ifndef _VECTOR_
-        #include <vector>
-    #endif
+    #include <string>
+    #include <vector>
 
     #define MINIMUM_ORGANIC_MATTER 0.005
 
@@ -54,9 +50,10 @@
             double clay;                        /*!<   [%]         */
             int classUSDA;
             int classNL;
-            std::string classNameUSDA;
             // Unified Soil Classification System (USCS)
             int classUSCS;
+
+            std::string classNameUSDA;
 
             Crit3DTexture();
             /*!
@@ -278,7 +275,7 @@
 
         bool fittingWaterRetentionCurve(Crit3DHorizon &horizon, const Crit3DFittingOptions &fittingOptions);
 
-        bool sortWaterPotential(soil::Crit3DWaterRetention first, soil::Crit3DWaterRetention second);
+        bool sortWaterPotential(const soil::Crit3DWaterRetention& first, const soil::Crit3DWaterRetention& second);
     }
 
 

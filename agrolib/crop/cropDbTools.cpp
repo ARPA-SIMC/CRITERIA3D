@@ -68,7 +68,8 @@ bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &
 
     if (fieldExists(query, "roots_additional_cohesion"))
     {
-        getValue(query.value("roots_additional_cohesion"), &(myCrop.roots.rootsAdditionalCohesion));
+        if (! getValue(query.value("roots_additional_cohesion"), &(myCrop.roots.rootsAdditionalCohesion)))
+            myCrop.roots.rootsAdditionalCohesion = 0;
     }
     else
     {

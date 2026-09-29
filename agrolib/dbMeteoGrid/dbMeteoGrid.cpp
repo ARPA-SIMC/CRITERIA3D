@@ -505,7 +505,6 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString &errorS
         {
             meteoVariable gridMeteoKey = MapDailyMeteoVar.at(_tableDaily.varcode[i].varPragaName.toStdString());
             _gridDailyVar.insert(gridMeteoKey, _tableDaily.varcode[i].varCode);
-            _gridDailyVarField.insert(gridMeteoKey, _tableDaily.varcode[i].varField);
         }
         catch (const std::out_of_range& oor)
         {
@@ -520,7 +519,6 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString &errorS
         {
             meteoVariable gridMeteoKey = MapHourlyMeteoVar.at(_tableHourly.varcode[i].varPragaName.toStdString());
             _gridHourlyVar.insert(gridMeteoKey, _tableHourly.varcode[i].varCode);
-            _gridHourlyVarField.insert(gridMeteoKey, _tableHourly.varcode[i].varField);
         }
         catch (const std::out_of_range& oor)
         {
@@ -535,7 +533,6 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString &errorS
         {
             meteoVariable gridMeteoKey = MapMonthlyMeteoVar.at(_tableMonthly.varcode[i].varPragaName.toStdString());
             _gridMonthlyVar.insert(gridMeteoKey, _tableMonthly.varcode[i].varCode);
-            _gridMonthlyVarField.insert(gridMeteoKey, _tableMonthly.varcode[i].varField);
         }
         catch (const std::out_of_range& oor)
         {
@@ -765,27 +762,6 @@ int Crit3DMeteoGridDbHandler::getDailyVarCode(meteoVariable meteoGridDailyVar)
 }
 
 
-QString Crit3DMeteoGridDbHandler::getDailyVarField(meteoVariable meteoGridDailyVar)
-{
-    QString varField = "";
-    //check
-    if (meteoGridDailyVar == noMeteoVar)
-    {
-        return varField;
-    }
-    if (_gridDailyVarField.empty())
-    {
-        return varField;
-    }
-    if(_gridDailyVarField.contains(meteoGridDailyVar))
-    {
-        varField = _gridDailyVarField[meteoGridDailyVar];
-    }
-
-    return varField;
-}
-
-
 meteoVariable Crit3DMeteoGridDbHandler::getDailyVarEnum(int varCode)
 {
     if (varCode == NODATA)
@@ -797,26 +773,6 @@ meteoVariable Crit3DMeteoGridDbHandler::getDailyVarEnum(int varCode)
     while (i.hasNext()) {
         i.next();
         if (i.value() == varCode)
-        {
-            return i.key();
-        }
-    }
-
-    return noMeteoVar;
-}
-
-
-meteoVariable Crit3DMeteoGridDbHandler::getDailyVarFieldEnum(QString varField)
-{
-    if (varField == "")
-    {
-        return noMeteoVar;
-    }
-
-    QMapIterator<meteoVariable, QString> i(_gridDailyVarField);
-    while (i.hasNext()) {
-        i.next();
-        if (i.value() == varField)
         {
             return i.key();
         }
@@ -849,30 +805,6 @@ int Crit3DMeteoGridDbHandler::getHourlyVarCode(meteoVariable meteoGridHourlyVar)
 }
 
 
-QString Crit3DMeteoGridDbHandler::getHourlyVarField(meteoVariable meteoGridHourlyVar)
-{
-    QString varField = "";
-
-    //check
-    if (meteoGridHourlyVar == noMeteoVar)
-    {
-        return varField;
-    }
-
-    if (_gridHourlyVarField.empty())
-    {
-        return varField;
-    }
-
-    if(_gridHourlyVarField.contains(meteoGridHourlyVar))
-    {
-        varField = _gridHourlyVarField[meteoGridHourlyVar];
-    }
-
-    return varField;
-}
-
-
 meteoVariable Crit3DMeteoGridDbHandler::getHourlyVarEnum(int varCode)
 {
     if (varCode == NODATA)
@@ -884,26 +816,6 @@ meteoVariable Crit3DMeteoGridDbHandler::getHourlyVarEnum(int varCode)
     while (i.hasNext()) {
         i.next();
         if (i.value() == varCode)
-        {
-            return i.key();
-        }
-    }
-
-    return noMeteoVar;
-}
-
-
-meteoVariable Crit3DMeteoGridDbHandler::getHourlyVarFieldEnum(const QString &varField)
-{
-    if (varField == "")
-    {
-        return noMeteoVar;
-    }
-
-    QMapIterator<meteoVariable, QString> i(_gridHourlyVarField);
-    while (i.hasNext()) {
-        i.next();
-        if (i.value() == varField)
         {
             return i.key();
         }
@@ -972,25 +884,6 @@ meteoVariable Crit3DMeteoGridDbHandler::getMonthlyVarEnum(int varCode)
 
     return noMeteoVar;
 
-}
-
-meteoVariable Crit3DMeteoGridDbHandler::getMonthlyVarFieldEnum(const QString &varField)
-{
-    if (varField == "")
-    {
-        return noMeteoVar;
-    }
-
-    QMapIterator<meteoVariable, QString> i(_gridMonthlyVarField);
-    while (i.hasNext()) {
-        i.next();
-        if (i.value() == varField)
-        {
-            return i.key();
-        }
-    }
-
-    return noMeteoVar;
 }
 
 
@@ -2603,47 +2496,74 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(const QString &met
 }
 
 
-std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString &errorStr, frequencyType freq,
+std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString &errorStr, frequencyType frequency,
                                                               meteoVariable variable, const QString &id,
-                                                              const QDateTime &myFirstTime, const QDateTime &myLastTime,
+                                                              const QDateTime &firstTime, const QDateTime &lastTime,
                                                               std::vector<QString> &dateStrList)
 {
-    QString myDateStr;
-    float value;
     std::vector<float> allDataVarList;
-
-    QSqlQuery myQuery(_db);
-    QString tableName;
     QString statement;
-    QString startDate;
-    QString endDate;
-    int idVar;
+    bool isTavg = false;
 
-    if (freq == daily)
+    if (frequency == daily)
     {
-        idVar = getDailyVarCode(variable);
+        const int idVar = getDailyVarCode(variable);
         if (idVar == NODATA)
         {
-            errorStr = "The variable does not exist in this meteo grid";
-            return allDataVarList;
+            if (variable == dailyAirTemperatureAvg)
+                isTavg = true;
+            else
+            {
+                errorStr = "The variable does not exist in this meteo grid";
+                return allDataVarList;
+            }
         }
-        tableName = _tableDaily.prefix + id + _tableDaily.postFix;
-        startDate = myFirstTime.date().toString("yyyy-MM-dd");
-        endDate = myLastTime.date().toString("yyyy-MM-dd");
-        statement = QString( "SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3` ASC")
-                        .arg(tableName).arg(idVar).arg(_tableDaily.fieldTime).arg(startDate).arg(endDate);
+
+        const QString tableName = _tableDaily.prefix + id + _tableDaily.postFix;
+        const QString startDate = firstTime.date().toString("yyyy-MM-dd");
+        const QString endDate = lastTime.date().toString("yyyy-MM-dd");
+
+        if (isTavg)
+        {
+            const int idTmin = getDailyVarCode(dailyAirTemperatureMin);
+            const int idTmax = getDailyVarCode(dailyAirTemperatureMax);
+            if (idTmin == NODATA || idTmax == NODATA)
+            {
+                errorStr = "Temperature does not exist in this meteo grid";
+                return allDataVarList;
+            }
+
+            statement = QString("SELECT `%4`, AVG(Value) AS Value FROM `%1` "
+                                "WHERE VariableCode IN (%2,%3) "
+                                "AND `%4` BETWEEN '%5' AND '%6' "
+                                "GROUP BY `%4` "
+                                "ORDER BY `%4` ASC")
+                            .arg(tableName).arg(idTmin).arg(idTmax)
+                            .arg(_tableDaily.fieldTime, startDate, endDate);
+        }
+        else
+        {
+            statement = QString( "SELECT `%3`, Value FROM `%1` "
+                                "WHERE VariableCode = %2 "
+                                "AND `%3` BETWEEN '%4' AND '%5' "
+                                "ORDER BY `%3` ASC")
+                            .arg(tableName).arg(idVar)
+                            .arg(_tableDaily.fieldTime, startDate, endDate);
+        }
     }
-    else if (freq == hourly)
+    else if (frequency == hourly)
     {
-        idVar = getHourlyVarCode(variable);
+        const int idVar = getHourlyVarCode(variable);
         if (idVar == NODATA)
         {
             errorStr = "The variable does not exist in this meteo grid";
             return allDataVarList;
         }
-        tableName = _tableHourly.prefix + id + _tableHourly.postFix;
-        startDate = myFirstTime.date().toString("yyyy-MM-dd") + " " + myFirstTime.time().toString("hh:mm");
-        endDate = myLastTime.date().toString("yyyy-MM-dd") + " " + myLastTime.time().toString("hh:mm");
+
+        const QString tableName = _tableHourly.prefix + id + _tableHourly.postFix;
+        const QString startDate = firstTime.date().toString("yyyy-MM-dd") + " " + firstTime.time().toString("hh:mm");
+        const QString endDate = lastTime.date().toString("yyyy-MM-dd") + " " + lastTime.time().toString("hh:mm");
+
         statement = QString( "SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3` ASC")
                         .arg(tableName).arg(idVar).arg(_tableHourly.fieldTime, startDate, endDate);
     }
@@ -2652,40 +2572,45 @@ std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString &errorStr,
         errorStr = "Frequency should be daily or hourly";
         return allDataVarList;
     }
-    QDate date;
-    if( !myQuery.exec(statement) )
+
+    QSqlQuery myQuery(_db);
+    if(! myQuery.exec(statement))
     {
         errorStr = myQuery.lastError().text();
         return allDataVarList;
     }
-    else
+
+    while (myQuery.next())
     {
-        while (myQuery.next())
+        QString currentDateStr;
+
+        if (frequency == daily)
         {
-            if (freq == daily)
+            QDate date;
+            if (! getValue(myQuery.value(_tableDaily.fieldTime), &date))
             {
-                if (! getValue(myQuery.value(_tableDaily.fieldTime), &date))
-                {
-                    errorStr = "Missing fieldTime";
-                    return allDataVarList;
-                }
-                myDateStr = date.toString("yyyy-MM-dd");
-            }
-            else if (freq == hourly)
-            {
-                Crit3DTime dateTime;
-                if (! getValueCrit3DTime(myQuery.value(_tableHourly.fieldTime), &dateTime))
-                {
-                    errorStr = "Missing fieldTime";
-                    return allDataVarList;
-                }
-                myDateStr = QString::fromStdString(dateTime.toISOString());
+                errorStr = "Missing fieldTime";
+                return allDataVarList;
             }
 
-            dateStrList.push_back(myDateStr);
-            value = myQuery.value(2).toFloat();
-            allDataVarList.push_back(value);
+            currentDateStr = date.toString("yyyy-MM-dd");
         }
+        else if (frequency == hourly)
+        {
+            Crit3DTime dateTime;
+            if (! getValueCrit3DTime(myQuery.value(_tableHourly.fieldTime), &dateTime))
+            {
+                errorStr = "Missing fieldTime";
+                return allDataVarList;
+            }
+
+            currentDateStr = QString::fromStdString(dateTime.toISOString());
+        }
+
+        dateStrList.push_back(currentDateStr);
+
+        const float value = myQuery.value("Value").toFloat();
+        allDataVarList.push_back(value);
     }
 
     return allDataVarList;
@@ -3483,7 +3408,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridDailyDataFF(QString &errorStr, const 
             statement += QString(" ('%1',").arg(date.toString("yyyy-MM-dd"));
             for (unsigned int j = 0; j < _tableDaily.varcode.size(); j++)
             {
-                float value = meteoGrid()->meteoPoint(row,col).getMeteoPointValueD(getCrit3DDate(date), getDailyVarFieldEnum(_tableDaily.varcode[j].varField), meteoSettings);
+                float value = meteoGrid()->meteoPoint(row,col).getMeteoPointValueD(getCrit3DDate(date), getDailyVarEnum(_tableDaily.varcode[j].varCode), meteoSettings);
 
                 QString valueS = QString("'%1'").arg(value);
                 if (value == NODATA)
@@ -3932,7 +3857,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyDataFF(QString &errorStr, QStri
             {
                 float value = meteoGrid()->meteoPoint(row,col).getMeteoPointValueH(getCrit3DDate(myTime.date()),
                                             myTime.time().hour(), myTime.time().minute(),
-                                            getHourlyVarFieldEnum(_tableHourly.varcode[j].varField));
+                                            getHourlyVarEnum(_tableHourly.varcode[j].varCode));
                 QString valueS = QString("'%1'").arg(double(value));
                 if (value == NODATA)
                     valueS = "NULL";

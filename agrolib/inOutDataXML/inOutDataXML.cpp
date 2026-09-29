@@ -6,13 +6,15 @@
 #include <QTimeZone>
 
 
-InOutDataXML::InOutDataXML(bool isGrid, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler, Crit3DMeteoGridDbHandler *meteoGridDbHandler, QString xmlFileName)
+InOutDataXML::InOutDataXML(bool _isGrid, Crit3DMeteoPointsDbHandler *_meteoPointsDbHandler, Crit3DMeteoGridDbHandler *_meteoGridDbHandler, QString _xmlFileName)
 {
-    this->isGrid = isGrid;
-    this->xmlFileName = xmlFileName;
-    this->meteoPointsDbHandler = meteoPointsDbHandler;
-    this->meteoGridDbHandler = meteoGridDbHandler;
-    this->nrHeaderRows = 0;
+    isGrid = _isGrid;
+    xmlFileName = _xmlFileName;
+    meteoPointsDbHandler = _meteoPointsDbHandler;
+    meteoGridDbHandler = _meteoGridDbHandler;
+
+    nrHeaderRows = 0;
+    missingValue = NODATA;
 }
 
 bool InOutDataXML::parseXMLFile(QDomDocument* xmlDoc, QString *errorStr)
@@ -137,7 +139,10 @@ bool InOutDataXML::parserXML(QString *myError)
                 }
                 else if (myTag == "MISSINGVALUE" || myTag == "MISSING_VALUE" || myTag == "NODATA")
                 {
-                    missingValue = child.toElement().text().toFloat();
+                    if (child.toElement().text().isEmpty())
+                        missingValue = NODATA;
+                    else
+                        missingValue = child.toElement().text().toFloat();
                 }
                 else if (myTag == "DELIMITER")
                 {

@@ -390,7 +390,7 @@ bool DbArkimet::readVmDataDaily(const QString &vmFileName, bool isPrec0024, QStr
     {
         errorString = "File is empty: " + vmFileName;
         myFile.close();
-        return false;
+        return true;
     }
 
     // list variables

@@ -6580,7 +6580,10 @@ bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType 
         if (frequency == daily)
         {
             if (! dbMeteoArkimet->readVmDataDaily(vmFileList[i], isPrec0024, errorString))
+            {
+                closeProgressBar();
                 return false;
+            }
         }
         else
         {

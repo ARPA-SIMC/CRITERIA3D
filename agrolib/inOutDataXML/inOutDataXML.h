@@ -19,8 +19,8 @@ enum formatType{ XMLFORMATFIXED, XMLFORMATDELIMITED};
 class InOutDataXML
 {
 public:
-    InOutDataXML(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler,
-                 Crit3DMeteoGridDbHandler* meteoGridDbHandler, QString xmlFileName);
+    InOutDataXML(bool _isGrid, Crit3DMeteoPointsDbHandler* _meteoPointsDbHandler,
+                 Crit3DMeteoGridDbHandler* _meteoGridDbHandler, QString _xmlFileName);
 
     bool parseXMLFile(QDomDocument* xmlDoc, QString *error);
     bool parserXML(QString *error);
