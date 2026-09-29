@@ -1546,7 +1546,7 @@ bool Vine3DProject::initializeGrapevine()
     for (int i = 0; i < modelCases.size(); i++)
     {
         int soilIndex = modelCases[i].soilIndex;
-        int nrHorizons = soilList[soilIndex].nrHorizons;
+        int nrHorizons = soilList[soilIndex].nrHorizons();
         soil::Crit3DHorizon myHorizon = soilList[soilIndex].horizon[nrHorizons - 1];
 
         unsigned int layer=0;
