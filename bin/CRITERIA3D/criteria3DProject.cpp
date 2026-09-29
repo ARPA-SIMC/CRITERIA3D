@@ -529,7 +529,7 @@ bool Crit3DProject::initializeCropWithClimateData()
                 float tmax = climateParameters.getClimateVar(dailyAirTemperatureMax, myDate.month,
                                                              height, quality->getReferenceHeight());
 
-                double currentDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDoy);
+                double currentDD = cropList[index].getDailyDegreeIncrease(tmin, tmax);
                 if (!isEqual(currentDD, NODATA))
                 {
                     degreeDays += currentDD;
@@ -677,7 +677,7 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
             if(isEqual(tmin, flag) || isEqual(tmax, flag))
                 continue;
 
-            double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDoy);
+            double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax);
 
             if (isEqual(dailyDD, NODATA))
                 continue;
