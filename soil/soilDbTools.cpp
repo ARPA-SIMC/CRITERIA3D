@@ -388,7 +388,7 @@ bool loadSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Cri
         int horizonNr = query.value("horizon_nr").toInt();
         if (horizonNr > 0 && horizonNr <= mySoil.nrHorizons())
         {
-            // TODO: check data
+            // water_potential must be positive
             waterRetention.water_potential = query.value("water_potential").toDouble();  // [kPa]
             waterRetention.water_content = query.value("water_content").toDouble();      // [m3 m-3]
 

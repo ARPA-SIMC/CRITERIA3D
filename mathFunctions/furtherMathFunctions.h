@@ -90,7 +90,7 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
                           double* parametersDelta, double* parametersChange);
 
         bool fittingMarquardt(double *myParMin, double *myParMax,
-                    double *myPar, int nrMyPar, double *parametersDelta, int myMaxIterations,
+                    double *myPar, double *parametersDelta, int nrMyPar, int myMaxIterations,
                     double myEpsilon, int idFunction, double *x, double *y, int nrData);
 
         double estimateFunction(int idFunction, double *parameters, int nrParameters, double x);

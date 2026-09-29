@@ -606,15 +606,17 @@ double Crit3DCrop::computeRootLength(double currentDD, double waterTableDepth)
     // WATERTABLE
     // Nel saturo le radici vanno in asfissia
     // per cui si mantengono a distanza dalla falda nella fase di crescita
-    // le radici possono crescere (max 2 cm al giorno) se:
-    // la falda è più bassa o si sta abbassando
+    // le radici possono crescere (max 2 cm al giorno) se la falda è più bassa o si sta abbassando
     // restano invariate se:
-    // 1) non sono più in fase di crescita
-    // 2) sono già dentro la falda (currentRootDepth > waterTableDepth)
+    // 1) sono water resistant (riso)
+    // 2) sono statiche (alberi ed erbacee perenni)
+    // 3) non sono più in fase di crescita
+    // 4) sono già dentro la falda (currentRootDepth > waterTableDepth)
     const double MAX_DAILY_GROWTH = 0.02;             // [m]
     const double MIN_WATERTABLE_DISTANCE = 0.1;       // [m]
 
     if (! isWaterSurplusResistant()
+        && ! isRootStatic()
         && ! isEqual(roots.currentRootLength, NODATA)
         && newRootLength > roots.currentRootLength)
     {

@@ -649,8 +649,8 @@ namespace interpolation
      parametersMax              parameters maximum values
      parameters                 parameters first guess values
     ----------------------------------------------------------- */
-    bool fittingMarquardt(double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
-                          double* parametersDelta, int maxIterationsNr, double myEpsilon, int idFunction,
+    bool fittingMarquardt(double* parametersMin, double* parametersMax, double* parameters, double* parametersDelta,
+                          int nrParameters, int maxIterationsNr, double myEpsilon, int idFunction,
                           double* x, double* y, int nrData)
     {
         // Sum of Squared Erros
