@@ -778,8 +778,8 @@ bool Project::loadParameters(QString parametersFileName)
 
             if (parametersSettings->contains("topographicDistanceMaxMultiplier"))
             {
-                interpolationSettings.setTopoDist_maxKh(parametersSettings->value("topographicDistanceMaxMultiplier").toInt());
-                qualityInterpolationSettings.setTopoDist_maxKh(parametersSettings->value("topographicDistanceMaxMultiplier").toInt());
+                interpolationSettings.setTopoDist_maxKh(parametersSettings->value("topographicDistanceMaxMultiplier").toDouble());
+                qualityInterpolationSettings.setTopoDist_maxKh(parametersSettings->value("topographicDistanceMaxMultiplier").toDouble());
             }
 
             if (parametersSettings->contains("useDewPoint"))

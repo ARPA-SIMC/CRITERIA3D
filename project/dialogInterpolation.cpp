@@ -365,14 +365,14 @@ void DialogInterpolation::accept()
     _interpolationSettings->setUseDewPoint(useDewPointEdit->isChecked());
     _interpolationSettings->setUseInterpolatedTForRH((useInterpolTForRH->isChecked()));
     _interpolationSettings->setMinRegressionR2(QLocale().toFloat(minRegressionR2Edit.text()));
-    _interpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toInt());
+    _interpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toDouble());
     _interpolationSettings->setMinPointsLocalDetrending(minPointsLocalDetrendingEdit.text().toInt());
 
     QString elFunctionString = elevationFunctionEdit.itemData(elevationFunctionEdit.currentIndex()).toString();
     _interpolationSettings->setChosenElevationFunction(fittingFunctionNames.at(elFunctionString.toStdString()));
 
     _qualityInterpolationSettings->setMinRegressionR2(QLocale().toFloat(minRegressionR2Edit.text()));
-    _qualityInterpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toInt());
+    _qualityInterpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toDouble());
     _qualityInterpolationSettings->setUseLapseRateCode(lapseRateCodeEdit->isChecked());
     _qualityInterpolationSettings->setUseThermalInversion(thermalInversionEdit->isChecked());
 

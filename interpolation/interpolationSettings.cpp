@@ -55,24 +55,9 @@ void Crit3DInterpolationSettings::setMeteoGridAggrMethod(const aggregationMethod
     meteoGridAggrMethod = value;
 }
 
-void Crit3DInterpolationSettings::setIndexPointCV(int value)
-{
-    indexPointCV = value;
-}
-
 void Crit3DInterpolationSettings::setCurrentDEM(gis::Crit3DRasterGrid *value)
 {
     currentDEM = value;
-}
-
-void Crit3DInterpolationSettings::setTopoDist_maxKh(int value)
-{
-    topoDist_maxKh = value;
-}
-
-void Crit3DInterpolationSettings::setTopoDist_Kh(int value)
-{
-    topoDist_Kh = value;
 }
 
 void Crit3DInterpolationSettings::setSelectedCombination(const Crit3DProxyCombination &value)
@@ -126,12 +111,12 @@ void Crit3DInterpolationSettings::setProxyLoaded(bool value)
     proxyLoaded = value;
 }
 
-void Crit3DInterpolationSettings::setKh_series(const std::vector<float> &newKh_series)
+void Crit3DInterpolationSettings::setKh_series(const std::vector<double> &newKh_series)
 {
     Kh_series = newKh_series;
 }
 
-void Crit3DInterpolationSettings::addToKhSeries(float kh, float error)
+void Crit3DInterpolationSettings::addToKhSeries(double kh, double error)
 {
     Kh_series.push_back(kh);
     Kh_error_series.push_back(error);
@@ -143,7 +128,7 @@ void Crit3DInterpolationSettings::initializeKhSeries()
     Kh_error_series.clear();
 }
 
-void Crit3DInterpolationSettings::setKh_error_series(const std::vector<float> &newKh_error_series)
+void Crit3DInterpolationSettings::setKh_error_series(const std::vector<double> &newKh_error_series)
 {
     Kh_error_series = newKh_error_series;
 }
@@ -371,7 +356,6 @@ void Crit3DInterpolationSettings::initialize()
     isKrigingReady = false;
     precipitationAllZero = false;
     maxHeightInversion = 1000.;
-    indexPointCV = NODATA;
     minPointsLocalDetrending = 20;
 
     Kh_series.clear();
