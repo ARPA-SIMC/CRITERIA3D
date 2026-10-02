@@ -220,10 +220,10 @@
         float maxHeightInversion;
         float pointsBoundingBoxArea;
         float localRadius;
-        int indexPointCV;
-        int topoDist_maxKh, topoDist_Kh;
-        std::vector <float> Kh_series;
-        std::vector <float> Kh_error_series;
+
+        double topoDist_maxKh, topoDist_Kh;
+        std::vector <double> Kh_series;
+        std::vector <double> Kh_error_series;
 
         bool proxyLoaded;
         std::vector <Crit3DProxy> currentProxy;
@@ -302,17 +302,15 @@
 
         int getMinPointsLocalDetrending() const { return minPointsLocalDetrending; }
 
-        int getIndexPointCV() const { return indexPointCV; }
-
         bool getProxyLoaded() const { return proxyLoaded; }
 
-        const std::vector<float>& getKh_series() const { return Kh_series; }
+        const std::vector<double>& getKh_series() const { return Kh_series; }
 
-        const std::vector<float>& getKh_error_series() const { return Kh_error_series; }
+        const std::vector<double>& getKh_error_series() const { return Kh_error_series; }
 
-        int getTopoDist_maxKh() const { return topoDist_maxKh; }
+        double getTopoDist_maxKh() const { return topoDist_maxKh; }
 
-        int getTopoDist_Kh() const { return topoDist_Kh; }
+        double getTopoDist_Kh() const { return topoDist_Kh; }
 
         Crit3DProxyCombination getSelectedCombination() const { return selectedCombination; }
 
@@ -361,8 +359,13 @@
         void setShepardInitialRadius(float value);
         void setIndexPointCV(int value);
         void setCurrentDEM(gis::Crit3DRasterGrid *value);
-        void setTopoDist_maxKh(int value);
-        void setTopoDist_Kh(int value);
+
+        void setTopoDist_maxKh(double value)
+        { topoDist_maxKh = value; }
+
+        void setTopoDist_Kh(double value)
+        { topoDist_Kh = value; }
+
         Crit3DProxyCombination getOptimalCombination() const;
         void setOptimalCombination(const Crit3DProxyCombination &value);
         void setSelectedCombination(const Crit3DProxyCombination &value);
@@ -375,9 +378,9 @@
         void setCurrentProxy(const std::vector<Crit3DProxy> &value);
         void setUseInterpolatedTForRH(bool value);
         void setProxyLoaded(bool value);
-        void setKh_series(const std::vector<float> &newKh_series);
-        void setKh_error_series(const std::vector<float> &newKh_error_series);
-        void addToKhSeries(float kh, float error);
+        void setKh_series(const std::vector<double> &newKh_series);
+        void setKh_error_series(const std::vector<double> &newKh_error_series);
+        void addToKhSeries(double kh, double error);
         void initializeKhSeries();
         void setMeteoGridUpscaleFromDem(bool newMeteoGridUpscaleFromDem);
         void setUseMultipleDetrending(bool newUseMultipleDetrending);

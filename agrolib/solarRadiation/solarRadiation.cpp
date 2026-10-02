@@ -1,6 +1,6 @@
 /*!
     \name Solar Radiation
-    \copyright 2011 Gabriele Antolini, Fausto Tomei
+    \copyright 2026 Gabriele Antolini, Fausto Tomei
     \note  This library uses G_calc_solar_position() by Markus Neteler
 
     This library is part of CRITERIA3D.
@@ -263,7 +263,7 @@ namespace radiation
                 break;
 
             default:
-                radSettings->getLinke(point);
+                output = radSettings->getLinke(point);
         }
         return output;
     }
@@ -379,7 +379,7 @@ namespace radiation
         double A0 = 0.26463 + linke * (-0.061581 + 0.0031408 * linke);
         // empirical patch to force stability
         if ((A0 * Trd) < 0.0022)
-            A0 = 0.002 / Trd;
+            A0 = 0.0022 / Trd;
 
         double A1 = 2.0402 + linke * (0.018945 - 0.011161 * linke);
         double A2 = -1.3025 + linke * (0.039231 + 0.0085079 * linke);
@@ -404,120 +404,67 @@ namespace radiation
 
 
     /*!
-     * \brief Diffuse irradiance on an inclined surface (Muneer, 1990)               [W m-2]
-     * \param beamIrradianceHor
-     * \param diffuseIrradianceHor
-     * \param sunPosition a pointer to a TsunPosition
-     * \param radPoint
-     */
-    float clearSkyDiffuseInclined_OLD(float beamIrradianceHor, float diffuseIrradianceHor,
-                                  const TsunPosition& sunPosition, const TradPoint& radPoint)
-    {
-        //Bh                     beam irradiance on a horizontal surface                                     [W m-2]
-        //Dh                     diffuse irradiance on a horizontal surface
-
-        double cosSlope, sinSlope;
-        double slopeRad, aspectRad, elevRad, azimRad;
-        double sinElev;    
-        double Fg, r_sky, Fx, Aln;
-        double n;
-        sinElev = MAXVALUE(getSinDecimalDegree(sunPosition.elevation), 1e-6);
-        cosSlope = getCosDecimalDegree(radPoint.slope);
-        sinSlope = getSinDecimalDegree(radPoint.slope);
-        slopeRad = radPoint.slope * DEG_TO_RAD;
-        aspectRad = radPoint.aspect * DEG_TO_RAD;
-        elevRad = sunPosition.elevation * DEG_TO_RAD;
-        azimRad = sunPosition.azimuth * DEG_TO_RAD;
-
-        /*!< amount of beam irradiance available [-] */
-        double denom = sunPosition.extraIrradianceNormal * sinElev;
-        double Kb = (denom > 1e-6) ? beamIrradianceHor / denom : 0.0;
-        Kb = std::max(0.0, Kb);
-
-        Fg = sinSlope - slopeRad * cosSlope - PI * getSinDecimalDegree(radPoint.slope * 0.5)
-                                                 * getSinDecimalDegree(radPoint.slope * 0.5);
-        r_sky = (1.0 + cosSlope) / 2.0;
-        if ((sunPosition.shadow || (sunPosition.incidence * DEG_TO_RAD) <= 0.1) && elevRad >= 0.0)
-        {
-            n = 0.252271;
-            Fx = r_sky + Fg * n;
-        }
-        else
-        {
-            n = 0.00263 - Kb * (0.712 + 0.6883 * Kb);
-            // attenzione: crea discontinuita'
-            if (elevRad >= 0.05)
-                Fx = (n * Fg + r_sky) * (1 - Kb) + Kb * getSinDecimalDegree(sunPosition.incidence) / sinElev;
-            else
-            {
-                Aln = azimRad - aspectRad;
-                if (Aln > (2.0 * PI))
-                    Aln -= (float)(2.0 * PI);
-                else if (Aln < 0.0)
-                    Aln += (float)(2.0 * PI);
-                Fx = (n * Fg + r_sky) * (1.0 - Kb) + Kb * sinSlope * getCosDecimalDegree(float(Aln * RAD_TO_DEG)) / (0.1 - 0.008 * elevRad);
-            }
-        }
-
-        return float(diffuseIrradianceHor * Fx);
-    }
-
-
-    /*!
      * \brief Diffuse irradiance on an inclined surface (Muneer, 1990)  [W m-2]
-     * Fx = (1 - Kb) × F_iso + Kb × F_aniso
+     * Fx = (n * Fg + r_sky) * (1 - Kb) + Kb * F_beam
      * \param Bh   beam irradiance on a horizontal surface              [W m-2]
      * \param Dh   diffuse irradiance on a horizontal surface           [W m-2]
      */
     double getDiffuseInclined_Muneer(double Bh, double Dh,
-                                    const TsunPosition& sun,
-                                    const TradPoint& p)
+                                     const TsunPosition& sun,
+                                     const TradPoint& p)
     {
         if (sun.elevationRefr < 1e-6)
-            return 0.0f;
+            return 0.0;
 
-        double slopeRad = p.slope * DEG_TO_RAD;
-        double aspectRad = p.aspect * DEG_TO_RAD;
-        double elevationRad = sun.elevationRefr * DEG_TO_RAD;
+        const double slopeRad = p.slope * DEG_TO_RAD;
+        const double aspectRad = p.aspect * DEG_TO_RAD;
+        const double elevationRad = sun.elevationRefr * DEG_TO_RAD;
 
-        double sinElev = std::max(sin(elevationRad), 1e-6);
-        double sinSlope = std::sin(slopeRad);
-        double cosSlope = std::cos(slopeRad);
+        const double sinElev = std::max(std::sin(elevationRad), 1e-6);
+        const double sinSlope = std::sin(slopeRad);
+        const double cosSlope = std::cos(slopeRad);
 
-        // Amount of beam irradiance available [-]
-        // allow slight physical overshoot (1.2)
+        // amount of beam irradiance available [-] (slight physical overshoot allowed)
         double Kb = Bh / (sun.extraIrradianceNormal * sinElev);
         Kb = std::clamp(Kb, 0.0, 1.2);
 
-        double r_sky = (1.0 + cosSlope) / 2.0;
+        const double r_sky = (1.0 + cosSlope) / 2.0;
 
-        // Slope-dependent geometric term [-]
-        double Fg = sinSlope - slopeRad * cosSlope
-                    - PI * std::pow(std::sin(p.slope * 0.5 * DEG_TO_RAD), 2);
+        // slope-dependent geometric term [-]
+        const double sinHalfSlope = std::sin(slopeRad * 0.5);
+        const double Fg = sinSlope - slopeRad * cosSlope - PI * sinHalfSlope * sinHalfSlope;
 
-        bool lowSun = (sun.elevationRefr < 3.0);    // degree, smooth proxy
+        // sun.incidence is the sun altitude over the tilted surface [degree]
+        const double incidenceRad = sun.incidence * DEG_TO_RAD;
 
-        double Fx;                                  // diffuse irradiance tilt factor [-]
-        if (sun.shadow || sun.incidence <= 0.1)
+        // r.sun: threshold for very low solar elevation above the inclined surface [rad]
+        constexpr double MUNEER_LOW_SUN_RAD = 0.1;       // ~5.73 degrees
+
+        double Fx;      // diffuse irradiance tilt factor [-]
+        if (sun.shadow || incidenceRad <= 0.0)
         {
+            // Shadowed surface: Muneer shadow formulation
             Fx = r_sky + Fg * 0.252271;
         }
         else
         {
-            double n = 0.00263 - Kb * (0.712 + 0.6883 * Kb);
-            double termBeam = std::sin(sun.incidence * DEG_TO_RAD) / sinElev;
+            const double n = 0.00263 - Kb * (0.712 + 0.6883 * Kb);
 
-            if (! lowSun)
+            double beamTerm;
+            if (elevationRad >= MUNEER_LOW_SUN_RAD)
             {
-                Fx = (n * Fg + r_sky) * (1.0 - Kb) + Kb * termBeam;
+                // normal Muneer formulation
+                beamTerm = std::sin(incidenceRad) / sinElev;
             }
             else
             {
-                double azimuthLocalDiff = std::fmod(sun.azimuth * DEG_TO_RAD - aspectRad + 2*PI, 2*PI);
-
-                double denom2 = std::max(0.05, 0.1 - 0.008 * elevationRad);
-                Fx = (n * Fg + r_sky) * (1.0 - Kb) + Kb * sinSlope * std::cos(azimuthLocalDiff) / denom2;
+                // low-sun approximation used by r.sun/Muneer formulation
+                const double azimuthDiff = sun.azimuth * DEG_TO_RAD - aspectRad;
+                beamTerm = sinSlope * std::cos(azimuthDiff)
+                           / (MUNEER_LOW_SUN_RAD - 0.008 * elevationRad);
             }
+
+            Fx = (n * Fg + r_sky) * (1.0 - Kb) + Kb * beamTerm;
         }
 
         return Dh * Fx;
@@ -551,26 +498,26 @@ namespace radiation
         inizializzazione a sole visibile
         */
 
-        double x0 = radPoint.x;
-        double y0 = radPoint.y;
-        double z0 = radPoint.height;
+        const double x0 = radPoint.x;
+        const double y0 = radPoint.y;
+        const double z0 = radPoint.height;
 
         const double cellSize = myDem.header->cellSize;
 
-        double sinAz = std::sin(sunPosition.azimuth * DEG_TO_RAD);
-        double cosAz = std::cos(sunPosition.azimuth * DEG_TO_RAD);
+        const double sinAz = std::sin(sunPosition.azimuth * DEG_TO_RAD);
+        const double cosAz = std::cos(sunPosition.azimuth * DEG_TO_RAD);
 
-        double sinElev = std::sin(sunPosition.elevationRefr * DEG_TO_RAD);
-        double cosElev = std::cos(sunPosition.elevationRefr * DEG_TO_RAD);
+        const double sinElev = std::sin(sunPosition.elevationRefr * DEG_TO_RAD);
+        const double cosElev = std::cos(sunPosition.elevationRefr * DEG_TO_RAD);
 
-        // evita divisione per zero
-        double tgElev = sinElev / std::max(cosElev, 1e-6);
+        // avoid zero division
+        const double tgElev = sinElev / std::max(cosElev, 1e-6);
 
-        double stepX = SHADOW_FACTOR * sinAz * cellSize;        // [m]
-        double stepY = SHADOW_FACTOR * cosAz * cellSize;        // [m]
-        double stepZ = SHADOW_FACTOR * cellSize * tgElev;       // [m]
+        const double stepX = SHADOW_FACTOR * sinAz * cellSize;        // [m]
+        const double stepY = SHADOW_FACTOR * cosAz * cellSize;        // [m]
+        const double stepZ = SHADOW_FACTOR * cellSize * tgElev;       // [m]
 
-        double maxDeltaH = cellSize * SHADOW_FACTOR * 2.0;
+        const double maxDeltaH = cellSize * SHADOW_FACTOR * 2.0;
 
         double maxDistCount;
         if (std::abs(stepZ) < 1e-6)
@@ -585,9 +532,9 @@ namespace radiation
         {
             stepCount += step;
 
-            double x = x0 + stepX * stepCount;
-            double y = y0 + stepY * stepCount;
-            double z = z0 + stepZ * stepCount;
+            const double x = x0 + stepX * stepCount;
+            const double y = y0 + stepY * stepCount;
+            const double z = z0 + stepZ * stepCount;
 
             int row, col;
             myDem.getRowCol(x, y, row, col);
@@ -634,66 +581,52 @@ namespace radiation
     }
 
 
-    // S.A.Erbs (1982) Peter Reindl (1990)
-    void separateTransmissivity_Erbs_Reindl(double clearSkyTransmissivity, double transmissivity,
-                                            double sunElevationDeg, double &td, double &Tt)
+    // Reindl et al.(1990) Diffuse fraction correlations
+    void separateTransmissivity_Reindl(double clearSkyTransmissivity, double transmissivity,
+                                       double sunElevationDeg, double &td, double &Tt)
     {
         // ----------------------------
         // 1. Safety bounds
         // ----------------------------
-        Tt = std::clamp(transmissivity, 1e-6, clearSkyTransmissivity);
-
         if (clearSkyTransmissivity <= 1e-6)
         {
+            Tt = 0.0;
             td = 0.0;
             return;
         }
 
+        Tt = std::clamp(transmissivity, 1e-6, clearSkyTransmissivity);
+
         // ----------------------------
         // 2. Clearness index
         // ----------------------------
-        double Kt = Tt / clearSkyTransmissivity;
-        Kt = std::clamp(Kt, 0.0, 1.2);
+        const double Kt = Tt / clearSkyTransmissivity;
 
-        double elevRad = sunElevationDeg * DEG_TO_RAD;
-        double sinElev = std::max(std::sin(elevRad), 1e-4);
+        const double elevRad = sunElevationDeg * DEG_TO_RAD;
+        const double sinElev = std::clamp(std::sin(elevRad), 0.0, 1.0);
 
         // ----------------------------
-        // 3. Erbs correlation (daily/hourly adapted)
+        // 3. Reindl correction (sun elevation dependency)
         // ----------------------------
         double Kd;
 
-        if (Kt <= 0.22)
+        if (Kt <= 0.30)
         {
-            Kd = 1.0 - 0.09 * Kt;
+            Kd = 1.02 - 0.254 * Kt + 0.0123 * sinElev;
         }
-        else if (Kt <= 0.80)
+        else if (Kt < 0.78)
         {
-            Kd = 0.9511 - 0.1604 * Kt + 4.388 * Kt * Kt
-                 - 16.638 * Kt * Kt * Kt
-                 + 12.336 * Kt * Kt * Kt * Kt;
+            Kd = 1.40 - 1.749 * Kt + 0.177 * sinElev;
         }
         else
         {
-            Kd = 0.165;
+            Kd = 0.486 * Kt - 0.182 * sinElev;
         }
 
         // ----------------------------
-        // 4. Reindl correction (sun elevation dependency)
+        // 4. Final split
         // ----------------------------
-        double Kd_reindl = Kd;
-
-        if (sunElevationDeg > 0.0)
-        {
-            Kd_reindl = Kd + (0.10 + 0.12 * sunElevationDeg / 90.0) * (1.0 - std::exp(-1.0 / sinElev));
-        }
-
-        Kd_reindl = std::clamp(Kd_reindl, 0.0, 1.0);
-
-        // ----------------------------
-        // 5. Final split
-        // ----------------------------
-        td = Tt * Kd_reindl;
+        td = Tt * Kd;
     }
 
 
@@ -741,10 +674,10 @@ namespace radiation
 
         /*! Shadowing */
         isPointIlluminated = isIlluminated(float(localTime.time), sunPosition.rise, sunPosition.set, sunPosition.elevationRefr);
+        sunPosition.shadow = !isPointIlluminated;
+
         if (radSettings->getShadowing())
         {
-            sunPosition.shadow = ! isPointIlluminated;
-
             if (isPointIlluminated && dem.isLoaded && ! gis::isOutOfGridXY(radPoint.x, radPoint.y, dem.header))
                 sunPosition.shadow = computeShadow(radPoint, sunPosition, dem);
         }
@@ -769,8 +702,8 @@ namespace radiation
             if (! radSettings->getRealSky())
                 transmissivity = clearSkyTransmissivity;
 
-            separateTransmissivity_Erbs_Reindl (clearSkyTransmissivity, transmissivity, sunPosition.elevationRefr,
-                                               diffuseTransmittance, globalTransmittance);
+            separateTransmissivity_Reindl(clearSkyTransmissivity, transmissivity, sunPosition.elevationRefr,
+                                          diffuseTransmittance, globalTransmittance);
 
             Gh = sunPosition.extraIrradianceHorizontal * transmissivity;
             dH = sunPosition.extraIrradianceHorizontal * diffuseTransmittance;
@@ -786,7 +719,9 @@ namespace radiation
                 Gh = Ghc * transmissivity / clearSkyTransmissivity;
 
                 // todo: trovare un metodo migliore (che non usi la clearSkyTransmissivity, non coerente con l'utilizzo di Linke)
-                separateTransmissivity_Erbs_Reindl (clearSkyTransmissivity, transmissivity, sunPosition.elevationRefr, diffuseTransmittance, globalTransmittance);
+                separateTransmissivity_Reindl(clearSkyTransmissivity, transmissivity, sunPosition.elevationRefr,
+                                              diffuseTransmittance, globalTransmittance);
+
                 dhsOverGhs = diffuseTransmittance / globalTransmittance;
                 dH = dhsOverGhs * Gh;
             }
@@ -835,7 +770,7 @@ namespace radiation
     int estimateTransmissivityWindow(Crit3DRadiationSettings* radSettings, const gis::Crit3DPoint& myPoint,
                                      const Crit3DTime &myTime, const gis::Crit3DRasterGrid& myDem, int timeStepSecond)
     {
-        const int MAX_STEPS = 23;           // 1 day
+        const int MAX_STEPS = 23;           // [hours] 1 day
         const double MIN_ELEV = 3.0;        // [degree] low-sun filter
 
         TradPoint radPoint;
@@ -931,13 +866,18 @@ namespace radiation
         if (dem.value[row][col] == dem.header->flag)
             return false;
 
-        if ((radiationMaps->latMap->value[row][col] == radiationMaps->latMap->header->flag)
-            || (radiationMaps->lonMap->value[row][col] == radiationMaps->lonMap->header->flag))
+        const float latLonFlag = radiationMaps->latMap->header->flag;
+        if ( isEqual(radiationMaps->latMap->value[row][col], latLonFlag)
+             || isEqual(radiationMaps->lonMap->value[row][col], latLonFlag) )
             return false;
 
+        const float slopeAspectFlag = radiationMaps->slopeMap->header->flag;
         float slope = readSlope(radSettings, radiationMaps->slopeMap, row, col);
         float aspect = readAspect(radSettings, radiationMaps->aspectMap, row, col);
-        if ((slope == NODATA) || (aspect == NODATA)) return false;
+
+        if ( isEqual(slope, slopeAspectFlag) || isEqual(slope, NODATA)
+             || isEqual(aspect, slopeAspectFlag) || isEqual(aspect, NODATA) )
+            return false;
 
         return true;
     }
@@ -947,6 +887,14 @@ namespace radiation
                                   const gis::Crit3DRasterGrid& dem, const Crit3DTime& myTime,
                                   int row, int col, double height)
     {
+        // initialize
+        const float flag = radiationMaps->globalRadiationMap->header->flag;
+        radiationMaps->sunElevationMap->value[row][col] = flag;
+        radiationMaps->globalRadiationMap->value[row][col] = flag;
+        radiationMaps->beamRadiationMap->value[row][col] = flag;
+        radiationMaps->diffuseRadiationMap->value[row][col] = flag;
+        radiationMaps->reflectedRadiationMap->value[row][col] = flag;
+
         TradPoint radPoint;
         radPoint.height = height;
         dem.getXY(row, col, radPoint.x, radPoint.y);
@@ -971,6 +919,7 @@ namespace radiation
                                   sunPosition, radPoint, dem))
             return false;
 
+        // set values
         radiationMaps->sunElevationMap->value[row][col] = sunPosition.elevationRefr;
         radiationMaps->globalRadiationMap->value[row][col] = float(radPoint.global);
         radiationMaps->beamRadiationMap->value[row][col] = float(radPoint.beam);
@@ -1013,12 +962,18 @@ namespace radiation
 
 
     bool computeRadiationRSunMeteoPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
-                              Crit3DMeteoPoint* myMeteoPoint, TradPoint radPoint, const Crit3DTime& myTime)
+                              Crit3DMeteoPoint* myMeteoPoint, TradPoint& radPoint, const Crit3DTime& myTime)
     {
         radPoint.lat = myMeteoPoint->latitude;
         radPoint.lon = myMeteoPoint->longitude;
+        radPoint.x = myMeteoPoint->point.utm.x;
+        radPoint.y = myMeteoPoint->point.utm.y;
+        radPoint.height = myMeteoPoint->point.z;
         radPoint.slope = readSlope(radSettings);
         radPoint.aspect = readAspect(radSettings);
+
+        if (isEqual(radPoint.slope, NODATA) || isEqual(radPoint.aspect, NODATA))
+            return false;
 
         gis::Crit3DPoint myPoint = myMeteoPoint->point;
 
@@ -1048,16 +1003,14 @@ namespace radiation
         if (radSettings->getAlgorithm() != RADIATION_ALGORITHM_RSUN)
             return false;
 
-        const float flag = dem.header->flag;
-
         #pragma omp parallel for if (isParallelComputing)
         for (int row = 0; row < dem.header->nrRows; ++row)
         {
             for (int col = 0; col < dem.header->nrCols; ++col)
             {
-                const float height = dem.value[row][col];
-                if (! isEqual(height, flag))
+                if (isGridPointComputable(radSettings, row, col, dem, radiationMaps))
                 {
+                    double height = double(dem.value[row][col]);
                     computeRadiationDemPoint(radSettings, radiationMaps, dem, myTime, row, col, height);
                 }
             }
@@ -1123,7 +1076,10 @@ namespace radiation
         sunRiseMinutes                  = solarPosition.sretr;
         sunSetMinutes                   = solarPosition.ssetr;
 
-        sunPosition.incidence = float(std::max(0., RAD_TO_DEG * ((PI / 2.0) - acos(sunCosIncidenceCompl))));
+        // Solar elevation angle on Panel [deg]
+        const float cosInc = std::clamp(sunCosIncidenceCompl, -1.f, 1.f);
+        sunPosition.incidence = float(std::max(0., RAD_TO_DEG * std::asin(double(cosInc))));
+
         sunPosition.rise = sunRiseMinutes * 60.f;
         sunPosition.set = sunSetMinutes * 60.f;
 
@@ -1162,6 +1118,7 @@ namespace radiation
 
         timeAdjustment = (279.575 + 0.986 * myDoy) * DEG_TO_RAD;
 
+        // [hours]
         timeEq = (-104.7 * sin(timeAdjustment) + 596.2 * sin(2 * timeAdjustment)
                   + 4.3 * sin(3 * timeAdjustment) - 12.7 * sin(4 * timeAdjustment)
                   - 429.3 * cos(timeAdjustment) - 2 * cos(2 * timeAdjustment)

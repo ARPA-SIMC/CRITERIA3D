@@ -76,7 +76,7 @@
         float azimuth;                  /*!<  Solar azimuth angle [degrees, N=0, E=90, S=180, W = 270] */
         float elevation;                /*!<  Solar elevation, no atmospheric correction */
         float elevationRefr;            /*!<  Solar elevation angle refracted [deg.From horizon] */
-        float incidence;                /*!<  Solar incidence angle on Panel [deg] */
+        float incidence;                /*!<  Solar elevation angle on Panel [deg] */
         float relOptAirMass;            /*!<  Relative optical airmass [] */
         float relOptAirMassCorr;        /*!<  Pressure-corrected airmass [] */
         float extraIrradianceNormal;    /*!<  Extraterrestrial (top-of-atmosphere) direct normal solar irradiance [W m-2] */

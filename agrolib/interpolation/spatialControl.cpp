@@ -104,8 +104,8 @@ bool computeResiduals(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoP
                       Crit3DInterpolationSettings &interpolationSettings,
                       Crit3DMeteoSettings* meteoSettings, bool excludeOutsideDem, bool excludeSupplemental)
 {
-
-    if (myVar == noMeteoVar) return false;
+    if (myVar == noMeteoVar)
+        return false;
 
     std::vector <double> myProxyValues;
     bool isValid;
