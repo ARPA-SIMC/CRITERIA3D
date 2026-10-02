@@ -564,23 +564,6 @@ namespace radiation
     }
 
 
-    void separateTransmissivity_old(double clearSkyTransmissivity, double transmissivity, double &td, double &Tt)
-    {
-        double maximumDiffuseTransmissivity;
-
-        // in attesa di studi mirati (Bristow and Campbell, 1985)
-        maximumDiffuseTransmissivity = 0.6 / (clearSkyTransmissivity - 0.4);
-
-        Tt = std::max(std::min(transmissivity, clearSkyTransmissivity), 1e-5);
-
-        td = Tt * (1.0 - exp(maximumDiffuseTransmissivity - (maximumDiffuseTransmissivity * clearSkyTransmissivity) / Tt));
-
-        // FT 0.12 stimato da Settefonti agosto 2007
-        if (Tt > 0.6)
-            td = std::max(td, 0.12);
-    }
-
-
     // Reindl et al.(1990) Diffuse fraction correlations
     void separateTransmissivity_Reindl(double clearSkyTransmissivity, double transmissivity,
                                        double sunElevationDeg, double &td, double &Tt)
@@ -602,7 +585,7 @@ namespace radiation
         // ----------------------------
         const double Kt = Tt / clearSkyTransmissivity;
 
-        const double elevRad = sunElevationDeg * DEG_TO_RAD;
+        const double elevRad = sunElevationDeg * DEG_TO_RAD;            // [rad]
         const double sinElev = std::clamp(std::sin(elevRad), 0.0, 1.0);
 
         // ----------------------------
@@ -1161,7 +1144,8 @@ namespace radiation
         {
             if (transmissivity != NODATA)
             {
-                separateTransmissivity_old(clearSkyTransmissivity, transmissivity, td, Tt);
+                double sunElevationDeg = elevationAngle * RAD_TO_DEG;
+                separateTransmissivity_Reindl(clearSkyTransmissivity, transmissivity, sunElevationDeg, td, Tt);
             }
         }
 
