@@ -1082,7 +1082,7 @@ namespace interpolation
             secondDerivative[i] = NODATA;
         }
 
-        if (! punctualSecondDerivative(dim, firstColumn, secondColumn, secondDerivative))
+        if (! splineSecondDerivatives(dim, firstColumn, secondColumn, secondDerivative))
         {
             free(secondDerivative);
             return NODATA;
@@ -1104,7 +1104,7 @@ namespace interpolation
     }
 
 
-    bool punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative)
+    bool splineSecondDerivatives(int dim, double *firstColumn , double *secondColumn, double* secondDerivative)
     {
         if (dim <= 2) return false;
 

@@ -101,8 +101,9 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
         void cubicSplineYearInterpolate(float *monthlyAvg, float *outputDailyValues);
         void quadrSplineYearInterpolate(float *meanY, float *dayVal);
 
-        bool punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative); // not working to be checked
-        void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output); // not working to be checked
+        bool splineSecondDerivatives(int dim, double *firstColumn , double *secondColumn, double* secondDerivative);
+        void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal,
+                                        double *superDiagonal, double *constantTerm, double* output);
 
         double computeR2(const std::vector<double>& obs, const std::vector<double>& sim);
         double computeR2adjusted(const std::vector<double>& obs, const std::vector<double>& sim);
