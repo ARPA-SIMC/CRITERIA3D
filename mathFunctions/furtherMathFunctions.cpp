@@ -970,16 +970,18 @@ namespace interpolation
     * \param monthlyAvg: vector of monthly averages (12 values)
     * outputDailyValues: vector of interpolated daily values (366 values)
     */
-    void cubicSplineYearInterpolate(float *monthlyAvg, float *outputDailyValues)
+    bool cubicSplineYearInterpolate(const float *monthlyAvg, float *outputDailyValues)
     {
-        double monthMid [16] = {-61, - 31, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365, 396};
+        const int nrMonths = 16;
 
-        for (int iMonth=0; iMonth<16; iMonth++)
+        double monthMid [nrMonths] = {-61, - 31, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365, 396};
+
+        for (int iMonth=0; iMonth < nrMonths; iMonth++)
         {
             monthMid[iMonth] += 15;
         }
 
-        double* avgMonthlyAmountLarger = new double[16];
+        double avgMonthlyAmountLarger[nrMonths];
         for (int iMonth = 0; iMonth < 12; iMonth++)
         {
             avgMonthlyAmountLarger[iMonth+2] = double(monthlyAvg[iMonth]);
@@ -990,14 +992,21 @@ namespace interpolation
         avgMonthlyAmountLarger[14] = double(monthlyAvg[0]);
         avgMonthlyAmountLarger[15] = double(monthlyAvg[1]);
 
-        for (int iDay=0; iDay<365; iDay++)
+        double secondDerivative[nrMonths];
+        for (int i=0; i < nrMonths; i++)
         {
-            outputDailyValues[iDay] = float(interpolation::cubicSpline(iDay, monthMid, avgMonthlyAmountLarger, 16));
+            secondDerivative[i] = NODATA;
         }
-        // leap years
-        outputDailyValues[365] = outputDailyValues[0];
 
-        delete [] avgMonthlyAmountLarger;
+        if (! splineSecondDerivatives(nrMonths, monthMid, avgMonthlyAmountLarger, secondDerivative))
+            return false;
+
+        for (int iDay=0; iDay <= 365; iDay++)
+        {
+            outputDailyValues[iDay] = float(interpolation::cubicSpline(iDay, nrMonths, monthMid, avgMonthlyAmountLarger, secondDerivative));
+        }
+
+        return true;
     }
 
 
@@ -1071,21 +1080,8 @@ namespace interpolation
     }
 
 
-    double cubicSpline(double x, double *firstColumn, double *secondColumn, int dim)
+    double cubicSpline(double x, int dim, const double *firstColumn, const double *secondColumn, const double *secondDerivative)
     {
-        double *secondDerivative = (double *) calloc(dim, sizeof(double));
-
-        for (int i=0; i < dim; i++)
-        {
-            secondDerivative[i] = NODATA;
-        }
-
-        if (! splineSecondDerivatives(dim, firstColumn, secondColumn, secondDerivative))
-        {
-            free(secondDerivative);
-            return NODATA;
-        }
-
         int i = 1;
         while (i < dim && x > firstColumn[i])
             ++i;
@@ -1102,13 +1098,11 @@ namespace interpolation
         d *= (b*b*b - b);
         const double y = a*secondColumn[i-1] + b*secondColumn[i] + c*secondDerivative[i-1] + d*secondDerivative[i];
 
-        free(secondDerivative);
-
         return y;
     }
 
 
-    bool splineSecondDerivatives(int dim, double *firstColumn , double *secondColumn, double* secondDerivative)
+    bool splineSecondDerivatives(int dim, const double *firstColumn, const double *secondColumn, double* secondDerivative)
     {
         if (dim <= 2)
             return false;
