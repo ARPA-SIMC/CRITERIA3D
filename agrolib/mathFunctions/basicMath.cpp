@@ -31,6 +31,8 @@
 #include <string>
 #include <locale>
 #include <iostream>
+#include <limits>
+#include <cerrno>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -46,6 +48,8 @@
         return a*b >= 0.0f;
     }
 
+    // NOTE: despite the name, this is NOT an ordering comparison:
+    // returns true if a and b differ by more than 1% of |b|, in any direction
     bool greaterThan(float a, float b)
     {
         return (fabs(a - b) > fabs(b / 100.f));
@@ -59,69 +63,81 @@
     bool compareValue(float a, float b, bool isPositive)
     {
         if (isPositive)
-        {
             return (a > b);
-        }
         else
-        {
             return (a < b);
-        }
     }
 
     int integralPart(double number)
     {
         double intPart;
-        modf(number,&intPart);
+        modf(number, &intPart);
+
         return int(intPart);
     }
 
     double fractionalPart(double number)
     {
         double intPart,fracPart;
-        fracPart = modf(number,&intPart);
+        fracPart = modf(number, &intPart);
+
         return fracPart;
     }
 
     double inputSwitch (double x, double y1, double y2)
     {
-        if (x < 0) return y1;
-        else return y2;
+        if (x < 0)
+            return y1;
+        else
+            return y2;
     }
 
     double stepFunction (double x, double change, double y1, double y2)
     {
-        if (x < change) return y1;
-        else return y2;
+        if (x < change)
+            return y1;
+        else
+            return y2;
     }
 
     double boundedValue (double x, double lowerBound, double upperBound)
     {
-        if (x < lowerBound) return lowerBound;
-        else if (x > upperBound) return upperBound;
-        else return x;
+        if (x < lowerBound)
+            return lowerBound;
+        else if (x > upperBound)
+            return upperBound;
+        else
+            return x;
     }
 
+    // rotates point[0..1] counterclockwise by angle [rad]
     void directRotation(float *point, float angle)
     {
-        point[0] = cosf(angle)*point[0] - sinf(angle)*point[1];
-        point[0] = sinf(angle)*point[0] + cosf(angle)*point[1];
+        const float c = cosf(angle);
+        const float s = sinf(angle);
+        const float x = point[0];
+        const float y = point[1];
+
+        point[0] = c*x - s*y;
+        point[1] = s*x + c*y;
     }
 
     void inverseRotation(float *point, float angle)
     {
-        angle *=-1;
-        point[0] = cosf(angle)*point[0] - sinf(angle)*point[1];
-        point[0] = sinf(angle)*point[0] + cosf(angle)*point[1];
+        directRotation(point, -angle);
     }
 
+    // euclidean distance between two vectors
     float distance(float* x,float* y, int vectorLength)
     {
-        float dist = 0 ;
-        for (int i=0; i<vectorLength;i++)
-            dist = powf(x[i]-y[i],2);
+        double sum = 0.0;
+        for (int i=0; i < vectorLength; i++)
+        {
+            const double d = double(x[i]) - double(y[i]);
+            sum += d*d;
+        }
 
-        dist = sqrtf(dist);
-        return dist;
+        return float(sqrt(sum));
     }
 
     float distance2D(float x1, float y1, float x2, float y2)
@@ -129,14 +145,14 @@
         return sqrtf((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
     }
 
+    // euclidean norm
     float norm(float* x, int vectorLength)
     {
-        float myNorm = 0 ;
-        for (int i=0; i<vectorLength;i++)
-            myNorm = powf(x[i],2);
+        double sum = 0.0;
+        for (int i=0; i < vectorLength; i++)
+            sum += double(x[i]) * double(x[i]);
 
-        myNorm = sqrtf(myNorm);
-        return myNorm;
+        return float(sqrt(sum));
     }
 
     bool findLinesIntersection(float q1, float m1, float q2, float m2, float* x, float* y)
@@ -202,6 +218,7 @@
 
        return  pointer;
     }
+
 
     float getSinDecimalDegree(float angle)
     {
@@ -639,6 +656,10 @@
         double parsed;
 
         if (! parseDouble(str, parsed))
+            return false;
+
+        // reject values that do not fit in a float
+        if (std::fabs(parsed) > double(std::numeric_limits<float>::max()))
             return false;
 
         value = static_cast<float>(parsed);

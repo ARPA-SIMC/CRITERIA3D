@@ -1706,7 +1706,7 @@ void Crit3DProject::clear3DProject()
     rothCModel.maps.clear();
     hydrallMaps.clear();
 
-    clearGeometry();
+    clearGlGeometry();
 
     clearProject3D();
 }
@@ -3430,7 +3430,7 @@ bool Crit3DProject::writeMeteoPointsProperties(const QList<QString> &joinedPrope
 
 //------------------------------------- 3D geometry and color --------------------------------------
 
-void Crit3DProject::clearGeometry()
+void Crit3DProject::clearGlGeometry()
 {
     if (openGlGeometry != nullptr)
     {
@@ -3441,7 +3441,7 @@ void Crit3DProject::clearGeometry()
 }
 
 
-bool Crit3DProject::initializeGeometry()
+bool Crit3DProject::initializeGlGeometry()
 {
     if (! DEM.isLoaded)
     {
@@ -3449,68 +3449,79 @@ bool Crit3DProject::initializeGeometry()
         return false;
     }
 
-    this->clearGeometry();
+    if (radiationMaps == nullptr || radiationMaps->slopeMap == nullptr
+        || radiationMaps->aspectMap == nullptr)
+    {
+        errorString = "Missing slope/aspect maps.";
+        return false;
+    }
+
+    clearGlGeometry();
     openGlGeometry = new Crit3DGeometry();
 
     // set center
     gis::Crit3DPoint center = DEM.getCenter();
     gis::updateMinMaxRasterGrid(&DEM);
-    float zCenter = (DEM.maximum + DEM.minimum) * 0.5f;
+
+    const float zCenter = (DEM.maximum + DEM.minimum) * 0.5f;
     openGlGeometry->setCenter(float(center.utm.x), float(center.utm.y), zCenter);
 
     // set dimension
-    float dx = float(DEM.header->nrCols * DEM.header->cellSize);
-    float dy = float(DEM.header->nrRows * DEM.header->cellSize);
-    float dz = DEM.maximum + DEM.minimum;
+    const float dx = float(DEM.header->nrCols * DEM.header->cellSize);
+    const float dy = float(DEM.header->nrRows * DEM.header->cellSize);
+    const float dz = DEM.maximum + DEM.minimum;
     openGlGeometry->setDimension(dx, dy);
-    float magnify = ((dx + dy) * 0.5f) / (dz * 10.f);
+
+    const float magnify = ((dx + dy) * 0.5f) / (dz * 10.f);
     openGlGeometry->setMagnify(std::min(5.f, std::max(1.f, magnify)));
 
+    const float slopeAmplification = 120.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
+
     // set triangles
-    double x, y;
-    float z1, z2, z3;
     gis::Crit3DPoint p1, p2, p3;
     Crit3DColor *c1, *c2, *c3;
     Crit3DColor sc1, sc2, sc3;
+
     for (long row = 0; row < DEM.header->nrRows; row++)
     {
         for (long col = 0; col < DEM.header->nrCols; col++)
         {
-            z1 = DEM.getValueFromRowCol(row, col);
+            const float z1 = DEM.getValueFromRowCol(row, col);
             if (isEqual(z1, DEM.header->flag))
                 continue;
 
+            double x, y;
             DEM.getXY(row, col, x, y);
             p1 = gis::Crit3DPoint(x, y, z1);
             c1 = DEM.colorScale->getColor(z1);
-            shadowDtmColor(*c1, sc1, row, col);
+            shadowDtmColor(*c1, sc1, slopeAmplification, row, col);
 
-            z3 = DEM.getValueFromRowCol(row+1, col+1);
+            const float z3 = DEM.getValueFromRowCol(row+1, col+1);
             if (isEqual(z3, DEM.header->flag))
                 continue;
 
             DEM.getXY(row+1, col+1, x, y);
             p3 = gis::Crit3DPoint(x, y, z3);
             c3 = DEM.colorScale->getColor(z3);
-            shadowDtmColor(*c3, sc3, row+1, col+1);
+            shadowDtmColor(*c3, sc3, slopeAmplification, row+1, col+1);
 
-            z2 = DEM.getValueFromRowCol(row+1, col);
+            const float z2 = DEM.getValueFromRowCol(row+1, col);
             if (! isEqual(z2, DEM.header->flag))
             {
                 DEM.getXY(row+1, col, x, y);
                 p2 = gis::Crit3DPoint(x, y, z2);
                 c2 = DEM.colorScale->getColor(z2);
-                shadowDtmColor(*c2, sc2, row+1, col);
+                shadowDtmColor(*c2, sc2, slopeAmplification, row+1, col);
                 openGlGeometry->addTriangle(p1, p2, p3, sc1, sc2, sc3);
             }
 
-            z2 = DEM.getValueFromRowCol(row, col+1);
-            if (! isEqual(z2, DEM.header->flag))
+            const float z4 = DEM.getValueFromRowCol(row, col+1);
+            if (! isEqual(z4, DEM.header->flag))
             {
                 DEM.getXY(row, col+1, x, y);
-                p2 = gis::Crit3DPoint(x, y, z2);
-                c2 = DEM.colorScale->getColor(z2);
-                shadowDtmColor(*c2, sc2, row, col+1);
+                p2 = gis::Crit3DPoint(x, y, z4);
+                c2 = DEM.colorScale->getColor(z4);
+                shadowDtmColor(*c2, sc2, slopeAmplification, row, col+1);
                 openGlGeometry->addTriangle(p3, p2, p1, sc3, sc2, sc1);
             }
         }
@@ -3520,26 +3531,26 @@ bool Crit3DProject::initializeGeometry()
 }
 
 
-void Crit3DProject::shadowDtmColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col)
+void Crit3DProject::shadowDtmColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, float slopeAmplification, int row, int col)
 {
     colorOut.red = colorIn.red;
     colorOut.green = colorIn.green;
     colorOut.blue = colorIn.blue;
 
-    float aspect = radiationMaps->aspectMap->getValueFromRowCol(row, col);
+    const float aspect = radiationMaps->aspectMap->getValueFromRowCol(row, col);
     if (isEqual(aspect, radiationMaps->aspectMap->header->flag))
         return;
 
-    float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
+    const float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
     if (isEqual(slopeDegree, radiationMaps->slopeMap->header->flag))
         return;
 
-    float slopeAmplification = 120.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
-    float shadow = -cos(aspect * DEG_TO_RAD) * std::max(6.f, slopeDegree * slopeAmplification);
+    const float shadow = -cos(aspect * DEG_TO_RAD) * std::max(6.f, slopeDegree * slopeAmplification);
 
     colorOut.red = std::min(255, std::max(0, int(colorOut.red + shadow)));
     colorOut.green = std::min(255, std::max(0, int(colorOut.green + shadow)));
     colorOut.blue = std::min(255, std::max(0, int(colorOut.blue + shadow)));
+
     if (slopeDegree > openGlGeometry->artifactSlope())
     {
         colorOut.red = std::min(255, std::max(0, int((colorOut.red + 256) * 0.5)));
@@ -3555,7 +3566,7 @@ void Crit3DProject::getMixedColor(gis::Crit3DRasterGrid *rasterPointer, int row,
     const double DEFAULT_ALPHA = 0.8;
     const double ALPHA_POW = 0.2;
 
-    float value = rasterPointer->getValueFromRowCol(row, col);
+    const float value = rasterPointer->getValueFromRowCol(row, col);
     if (isEqual(value, rasterPointer->header->flag))
     {
         otutColor = dtmColor;
@@ -3567,7 +3578,7 @@ void Crit3DProject::getMixedColor(gis::Crit3DRasterGrid *rasterPointer, int row,
 
     if (rasterPointer->colorScale->isTransparent())
     {
-        double step = std::max(0., value - rasterPointer->colorScale->minimum());
+        const double step = std::max(0., value - rasterPointer->colorScale->minimum());
         alpha = std::min(1., step/variableRange);
         alpha = DEFAULT_ALPHA * pow(alpha, ALPHA_POW);
     }
@@ -3589,77 +3600,91 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
         return false;
     }
 
-    bool isShowVariable = (rasterPointer != nullptr && rasterPointer->header->isEqualTo(*(DEM.header)));
+    if (radiationMaps == nullptr || radiationMaps->slopeMap == nullptr
+        || radiationMaps->aspectMap == nullptr)
+    {
+        errorString = "Missing slope/aspect maps.";
+        return false;
+    }
 
-    float z1, z2, z3;
-    Crit3DColor* dtmColor;
-    Crit3DColor tmpColor;
-    Crit3DColor color1, color2, color3;                 // final colors
+    const long nrRows = DEM.header->nrRows;
+    const long nrCols = DEM.header->nrCols;
+    const float flag = DEM.header->flag;
+
+    const bool isShowVariable = (rasterPointer != nullptr
+                                 && rasterPointer->header->isEqualTo(*(DEM.header)));
 
     double variableRange = 0;
     if (isShowVariable)
     {
-        variableRange = std::max(EPSILON, rasterPointer->colorScale->maximum() - rasterPointer->colorScale->minimum());
+        variableRange = std::max(EPSILON, rasterPointer->colorScale->maximum()
+                                 - rasterPointer->colorScale->minimum());
     }
 
-    long vertexIndex = 0;
-    for (long row = 0; row < DEM.header->nrRows; row++)
+    const float slopeAmplification = 120.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
+
+    // map of final color of each cell, computed only once
+    std::vector<Crit3DColor> cellColors(size_t(nrRows) * size_t(nrCols));
+
+    Crit3DColor tmpColor;
+    for (long row = 0; row < nrRows; row++)
     {
-        for (long col = 0; col < DEM.header->nrCols; col++)
+        for (long col = 0; col < nrCols; col++)
         {
-            z1 = DEM.getValueFromRowCol(row, col);
-            if (isEqual(z1, DEM.header->flag))
+            const float z = DEM.getValueFromRowCol(row, col);
+            if (isEqual(z, flag))
                 continue;
 
-            z3 = DEM.getValueFromRowCol(row+1, col+1);
-            if (isEqual(z3, DEM.header->flag))
-                continue;
-
-            dtmColor = DEM.colorScale->getColor(z1);
+            const Crit3DColor *dtmColor = DEM.colorScale->getColor(z);
             if (isShowVariable)
                 getMixedColor(rasterPointer, row, col, variableRange, *dtmColor, tmpColor);
             else
                 tmpColor = *dtmColor;
-            shadowDtmColor(tmpColor, color1, row, col);
 
-            dtmColor = DEM.colorScale->getColor(z3);
-            if (isShowVariable)
-                getMixedColor(rasterPointer, row+1, col+1, variableRange, *dtmColor, tmpColor);
-            else
-                tmpColor = *dtmColor;
+            shadowDtmColor(tmpColor, cellColors[size_t(row) * nrCols + col],
+                           slopeAmplification, row, col);
+        }
+    }
 
-            shadowDtmColor(tmpColor, color3, row+1, col+1);
+    // fill the triangles (same vertex order as initializeGlGeometry)
+    long vertexIndex = 0;
+    for (long row = 0; row < nrRows; row++)
+    {
+        for (long col = 0; col < nrCols; col++)
+        {
+            if (isEqual(DEM.getValueFromRowCol(row, col), flag))
+                continue;
 
-            z2 = DEM.getValueFromRowCol(row+1, col);
-            if (!isEqual(z2, DEM.header->flag))
+            if (isEqual(DEM.getValueFromRowCol(row+1, col+1), flag))
+                continue;
+
+            const Crit3DColor &color1 = cellColors[size_t(row) * nrCols + col];
+            const Crit3DColor &color3 = cellColors[size_t(row+1) * nrCols + (col+1)];
+
+            if (! isEqual(DEM.getValueFromRowCol(row+1, col), flag))
             {
-                dtmColor = DEM.colorScale->getColor(z2);
-                if (isShowVariable)
-                    getMixedColor(rasterPointer, row+1, col, variableRange, *dtmColor, tmpColor);
-                else
-                    tmpColor = *dtmColor;
-                shadowDtmColor(tmpColor, color2, row+1, col);
+                const Crit3DColor &color2 = cellColors[size_t(row+1) * nrCols + col];
 
                 openGlGeometry->setVertexColor(vertexIndex++, color1);
                 openGlGeometry->setVertexColor(vertexIndex++, color2);
                 openGlGeometry->setVertexColor(vertexIndex++, color3);
             }
 
-            z2 = DEM.getValueFromRowCol(row, col+1);
-            if (!isEqual(z2, DEM.header->flag))
+            if (! isEqual(DEM.getValueFromRowCol(row, col+1), flag))
             {
-                dtmColor = DEM.colorScale->getColor(z2);
-                if (isShowVariable)
-                    getMixedColor(rasterPointer, row, col+1, variableRange, *dtmColor, tmpColor);
-                else
-                    tmpColor = *dtmColor;
-                shadowDtmColor(tmpColor, color2, row, col+1);
+                const Crit3DColor &color2 = cellColors[size_t(row) * nrCols + (col+1)];
 
                 openGlGeometry->setVertexColor(vertexIndex++, color3);
                 openGlGeometry->setVertexColor(vertexIndex++, color2);
                 openGlGeometry->setVertexColor(vertexIndex++, color1);
             }
         }
+    }
+
+    if (vertexIndex != openGlGeometry->vertexCount())
+    {
+        errorString = "3D geometry out of sync with DEM.";
+        return false;
     }
 
     return true;

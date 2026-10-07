@@ -1,10 +1,9 @@
 #ifndef ROOT_H
 #define ROOT_H
 
-    #ifndef SOIL_H
-        #include "soil.h"
-    #endif
+    #include "soil.h"
     #include <vector>
+    #include <string>
 
     class Crit3DCrop;
 
@@ -62,7 +61,6 @@
 
         int getNrAtoms(const std::vector<soil::Crit1DLayer> &soilLayers, double &minThickness, std::vector<int> &atoms);
     }
-    
-    // test
+
 
 #endif // ROOT_H

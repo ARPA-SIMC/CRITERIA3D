@@ -2657,7 +2657,7 @@ double Project3D::assignTranspiration(int row, int col, Crit3DCrop &currentCrop,
     // otherwise it refers to the subset of soil profile considered
     double waterStress = 1 - (actualTranspiration / transpirationSubsetMax);
 
-    // Hydraulic redistribution: movement of water from moist to dry soil through plant roots
+    // root water uptake compensation: movement of water from moist to dry soil through plant roots
     if (waterStress > EPSILON && rootDensityWithoutStress > EPSILON)
     {
         // redistribution acts only on not stressed roots

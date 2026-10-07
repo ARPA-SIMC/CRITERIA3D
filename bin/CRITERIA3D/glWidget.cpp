@@ -227,6 +227,28 @@ static const char *fragmentShaderSource =
     "}\n";
 
 
+void Crit3DOpenGLWidget::updateColorBuffer()
+{
+    if (m_geometry == nullptr || ! m_colorBuffer.isCreated())
+        return;
+
+    makeCurrent();
+
+    m_vao.bind();
+    m_colorBuffer.bind();
+
+    m_colorBuffer.write(0,
+                        m_geometry->getColors(),
+                        m_geometry->colorCount() * sizeof(GLubyte));
+
+    m_colorBuffer.release();
+    m_vao.release();
+
+    doneCurrent();
+    update();                                        // repaint
+}
+
+
 void Crit3DOpenGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();

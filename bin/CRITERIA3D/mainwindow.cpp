@@ -1296,7 +1296,7 @@ void MainWindow::refreshViewer3D()
             myProject.update3DColors();
         }
 
-        viewer3D->glWidget->update();
+        viewer3D->glWidget->updateColorBuffer();
     }
 }
 
@@ -3495,7 +3495,7 @@ void MainWindow::on_actionTopographicDistanceMapLoad_triggered()
 
 void MainWindow::on_viewer3DClosed()
 {
-    myProject.clearGeometry();
+    myProject.clearGlGeometry();
     viewer3D = nullptr;
 }
 
@@ -3517,7 +3517,7 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
         return;
     }
 
-    if (! myProject.initializeGeometry())
+    if (! myProject.initializeGlGeometry())
     {
         myProject.logError();
         return;

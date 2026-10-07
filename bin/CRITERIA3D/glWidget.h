@@ -28,6 +28,7 @@ public:
 
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
+    void updateColorBuffer();
 
 public slots:
     void setXRotation(int angle);

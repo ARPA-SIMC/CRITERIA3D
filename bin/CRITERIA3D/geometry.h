@@ -3,6 +3,7 @@
 
     #include <qopengl.h>
     #include <vector>
+    #include <algorithm>
 
     #ifndef CRIT3DCOLOR_H
         #include "color.h"
@@ -23,7 +24,7 @@
 
         long dataCount() const          { return long(m_vertices.size()); }
         long vertexCount() const        { return long(m_vertices.size()) / 3; }
-        int colorCount() const          { return int(m_colors.size()); }
+        long colorCount() const         { return long(m_colors.size()); }
         float defaultDistance() const   { return std::max(m_dx, m_dy); }
         float magnify() const           { return m_magnify; }
         int artifactSlope() const       { return m_artifactSlope; }
@@ -37,7 +38,7 @@
         void addTriangle(const gis::Crit3DPoint &p1, const gis::Crit3DPoint &p2, const gis::Crit3DPoint &p3,
                          const Crit3DColor &c1, const Crit3DColor &c2, const Crit3DColor &c3);
 
-        void setVertexColor(int i, const Crit3DColor &color);
+        void setVertexColor(long i, const Crit3DColor &color);
 
     private:
 
@@ -47,9 +48,9 @@
         std::vector<GLfloat> m_vertices;
         std::vector<GLubyte> m_colors;
 
-        float m_dx, m_dy;
-        float m_xCenter, m_yCenter, m_zCenter;
-        float m_magnify;
+        float m_dx = 0, m_dy = 0;
+        float m_xCenter = 0, m_yCenter = 0, m_zCenter = 0;
+        float m_magnify = 1;
         int m_artifactSlope = 60;
     };
 
