@@ -279,7 +279,7 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int currentDo
 
             if (isLeafFall)
             {
-                if (currentDoy == doyStartSenescence || int(LAIstartSenescence) == int(NODATA))
+                if (currentDoy == doyStartSenescence || isEqual(LAIstartSenescence, NODATA))
                 {
                     LAIstartSenescence = myLai;
                 }
@@ -870,9 +870,7 @@ double Crit3DCrop::computeTranspiration(const double maxTranspiration, const std
     // WATER STRESS [-]
     double firstWaterStress = 1 - (transpStressOnly / maxTranspiration);
 
-    // Hydraulic redistribution
-    // the movement of water from moist to dry soil through plant roots
-    // TODO add numerical process
+    // root water uptake compensation
     if (firstWaterStress > EPSILON && totRootDensityWithoutStress > EPSILON)
     {
         // redistribution acts on not stressed roots

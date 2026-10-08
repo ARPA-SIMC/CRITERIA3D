@@ -97,12 +97,14 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
         double normGeneric(int idFunction, double *parameters, int nrParameters, double *x, double *y,  int nrData);
 
         double modifiedVanGenuchten(double psi, double *parameters, bool isRestricted);
-        double cubicSpline(double x , double *firstColumn , double *secondColumn, int dim);
-        void cubicSplineYearInterpolate(float *monthlyAvg, float *outputDailyValues);
+
+        bool cubicSplineYearInterpolate(const float *monthlyAvg, float *outputDailyValues);
         void quadrSplineYearInterpolate(float *meanY, float *dayVal);
 
-        bool punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative); // not working to be checked
-        void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output); // not working to be checked
+        double cubicSpline(double x, int dim, const double *firstColumn, const double *secondColumn, const double *secondDerivative);
+        bool splineSecondDerivatives(int dim, const double *firstColumn , const double *secondColumn, double* secondDerivative);
+        void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal,
+                                        double *superDiagonal, double *constantTerm, double* output);
 
         double computeR2(const std::vector<double>& obs, const std::vector<double>& sim);
         double computeR2adjusted(const std::vector<double>& obs, const std::vector<double>& sim);

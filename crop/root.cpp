@@ -7,7 +7,7 @@
     \authors
     Antonio Volta       avolta@arpae.it
     Fausto Tomei        ftomei@arpae.it
-    Gabriele Antolini   gantolini@arpe.it
+    Gabriele Antolini   gantolini@arpae.it
 
     \copyright
     This file is part of CRITERIA3D.
@@ -32,6 +32,7 @@
 #include <algorithm>
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "gammaFunction.h"
 #include "root.h"
 #include "crop.h"
@@ -128,9 +129,9 @@ namespace root
             return "cardioid";
         case GAMMA_DISTRIBUTION:
             return "gamma function";
+        default:
+            return "UNDEFINED";
         }
-
-        return "Undefined root type";
     }
 
 
@@ -190,29 +191,12 @@ namespace root
     }
 
 
-    int checkTheOrderOfMagnitude(double number, int &order)
-    {
-        if (number<1)
-        {
-            number *= 10;
-            order--;
-            checkTheOrderOfMagnitude(number, order);
-        }
-        else if (number >= 10)
-        {
-            number /=10;
-            order++;
-            checkTheOrderOfMagnitude(number, order);
-        }
-        return 0;
-    }
-
-
     int orderOfMagnitude(double number)
     {
-        int order = 0;
-        number = fabs(number);
-        checkTheOrderOfMagnitude(number, order);
+        if (isEqual(number, 0.0))
+            return 0;
+
+        int order = floor(log10(fabs(number)));
         return order;
     }
 
@@ -318,49 +302,53 @@ namespace root
     }
 
 
-    void cylindricalDistribution(double deformation, unsigned int nrLayersWithRoot,
+    bool cylindricalDistribution(double deformation, unsigned int nrLayersWithRoot,
                                  unsigned int nrUpperLayersWithoutRoot, unsigned int totalLayers,
                                  std::vector<double> &densityThinLayers)
     {
-       unsigned int i;
-       std::vector<double> cylinderDensity;
-       cylinderDensity.resize(nrLayersWithRoot*2);
+        // initialize
+        densityThinLayers.assign(totalLayers, 0.0);
 
-       // initialize not deformed cylinder
-       for (i = 0 ; i < (2*nrLayersWithRoot); i++)
-       {
-           cylinderDensity[i]= 1./(2*nrLayersWithRoot);
-       }
+        // check
+        if (nrLayersWithRoot == 0)
+            return true;
 
-       // linear and ovoidal deformation
-       double deltaDeformation,rootDensitySum;
-       rootDensitySum = 0;
-       deltaDeformation = deformation - 1;
+        if (nrUpperLayersWithoutRoot + nrLayersWithRoot > totalLayers)
+            return false;
 
-       for (i = 0 ; i < nrLayersWithRoot; i++)
-       {
-           cylinderDensity[i] *= deformation;
-           deformation -= deltaDeformation/nrLayersWithRoot;
-           rootDensitySum += cylinderDensity[i];
-       }
-       for (i = nrLayersWithRoot; i < (2*nrLayersWithRoot); i++)
-       {
-           deformation -= deltaDeformation / nrLayersWithRoot;
-           cylinderDensity[i] *= deformation;
-           rootDensitySum += cylinderDensity[i];
-       }
-       for (i = nrLayersWithRoot; i < (2*nrLayersWithRoot); i++)
-       {
+        deformation = std::clamp(deformation, 0.0, 2.0);
+
+        int nrLunette = 2*nrLayersWithRoot;
+        double equalDensity = 1.0 / nrLunette;
+        // initialize not deformed cylinder
+        std::vector<double> cylinderDensity(nrLunette, equalDensity);
+
+        // linear deformation
+        double rootDensitySum = 0.0;
+        double deltaDeformation = deformation - 1.0;
+
+        for (int i = 0 ; i < nrLunette; i++)
+        {
+            deformation -= deltaDeformation / nrLayersWithRoot;
+            cylinderDensity[i] *= deformation;
+            rootDensitySum += cylinderDensity[i];
+        }
+
+        if (rootDensitySum <= EPSILON)
+            return false;
+
+        // normalize
+        for (int i = 0; i < nrLunette; i++)
+        {
            cylinderDensity[i] /= rootDensitySum;
-       }
-       for (i = 0; i < totalLayers ; i++)
-       {
-           densityThinLayers[i] = 0;
-       }
-       for (i = 0; i < nrLayersWithRoot ; i++)
-       {
+        }
+
+        for (unsigned int i = 0; i < nrLayersWithRoot ; i++)
+        {
            densityThinLayers[nrUpperLayersWithoutRoot+i] = cylinderDensity[2*i] + cylinderDensity[2*i+1];
-       }
+        }
+
+        return true;
     }
 
 
@@ -368,20 +356,18 @@ namespace root
     {
         // check soil
         unsigned int nrLayers = unsigned(soilLayers.size());
+
         if (nrLayers == 0)
         {
-            myCrop->roots.firstRootLayer = NODATA;
-            myCrop->roots.lastRootLayer = NODATA;
+            myCrop->roots.firstRootLayer = int(NODATA);
+            myCrop->roots.lastRootLayer = int(NODATA);
             return false;
         }
 
         double soilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
         // Initialize
-        for (unsigned int i = 0; i < nrLayers; i++)
-        {
-            myCrop->roots.rootDensity[i] = 0.0;
-        }
+        myCrop->roots.rootDensity.assign(nrLayers, 0.0);
 
         if ((! myCrop->isLiving) || (myCrop->roots.currentRootLength <= 0 ))
             return true;
@@ -412,13 +398,15 @@ namespace root
 
             if (myCrop->roots.rootShape == CARDIOID_DISTRIBUTION)
             {
-                cardioidDistribution(myCrop->roots.shapeDeformation, numberOfRootedLayers,
-                                     numberOfTopUnrootedLayers, signed(nrAtoms), densityThinLayers);
+                if (! cardioidDistribution(myCrop->roots.shapeDeformation, numberOfRootedLayers,
+                                          numberOfTopUnrootedLayers, nrAtoms, densityThinLayers))
+                    return false;
             }
             else if (myCrop->roots.rootShape == CYLINDRICAL_DISTRIBUTION)
             {
-                cylindricalDistribution(myCrop->roots.shapeDeformation, numberOfRootedLayers,
-                                        numberOfTopUnrootedLayers, signed(nrAtoms), densityThinLayers);
+                if (! cylindricalDistribution(myCrop->roots.shapeDeformation, numberOfRootedLayers,
+                                             numberOfTopUnrootedLayers, nrAtoms, densityThinLayers))
+                    return false;
             }
 
             int counter = 0;
@@ -439,7 +427,7 @@ namespace root
             double mean = myCrop->roots.currentRootLength * 0.5;
             int iterations=0;
             do{
-                // TODO check (viene sempre kappa = mean / 0.4*mean = 2.5)
+                // TODO check (always kappa = mean / 0.4*mean = 2.5)
                 mode = 0.6 * mean;
                 theta = mean - mode;
                 kappa = mean / theta;
@@ -473,32 +461,29 @@ namespace root
             }
         }
 
-        double rootDensitySum = 0. ;
+        double rootDensitySum = 0.0;
         for (unsigned int i = 0 ; i < nrLayers; ++i)
         {
             myCrop->roots.rootDensity[i] *= soilLayers[i].soilFraction;
             rootDensitySum += myCrop->roots.rootDensity[i];
         }
 
-        if (rootDensitySum > 0.0)
+        if (rootDensitySum <= EPSILON)
+            return true;
+
+        for (unsigned int i = 0 ; i < nrLayers ; ++i)
+            myCrop->roots.rootDensity[i] /= rootDensitySum;
+
+        myCrop->roots.firstRootLayer = int(NODATA);
+        myCrop->roots.lastRootLayer = int(NODATA);
+        for (unsigned int l = 0; l < nrLayers; ++l)
         {
-            for (unsigned int i = 0 ; i < nrLayers ; ++i)
-                myCrop->roots.rootDensity[i] /= rootDensitySum;
-
-            myCrop->roots.firstRootLayer = 0;
-            unsigned int layer = 0;
-
-            while (layer < nrLayers && myCrop->roots.rootDensity[layer] == 0.0)
+            if (myCrop->roots.rootDensity[l] > EPSILON)
             {
-                layer++;
-                (myCrop->roots.firstRootLayer)++;
-            }
+                if (myCrop->roots.firstRootLayer == int(NODATA))
+                    myCrop->roots.firstRootLayer = l;
 
-            myCrop->roots.lastRootLayer = myCrop->roots.firstRootLayer;
-            while (layer < nrLayers && myCrop->roots.rootDensity[layer] != 0.0)
-            {
-                myCrop->roots.lastRootLayer = signed(layer);
-                layer++;
+                myCrop->roots.lastRootLayer = l;
             }
         }
 
@@ -512,8 +497,8 @@ namespace root
         // check soil
         if (nrLayers <= 1)
         {
-            myCrop.roots.firstRootLayer = NODATA;
-            myCrop.roots.lastRootLayer = NODATA;
+            myCrop.roots.firstRootLayer = int(NODATA);
+            myCrop.roots.lastRootLayer = int(NODATA);
             return false;
         }
 
@@ -530,14 +515,15 @@ namespace root
         if (myCrop.roots.currentRootLength <= 0 )
             return true;
 
-        // TODO Gamma distribuion
+        // TODO Gamma distribution
         if (myCrop.roots.rootShape == GAMMA_DISTRIBUTION)
         {
             myCrop.roots.rootShape = CARDIOID_DISTRIBUTION;
         }
 
-        int nrAtoms = int(currentSoil.totalDepth * 100) + 1;
-        double minimumThickness = 0.01;                                    // [m]
+        const int nrAtoms = int(currentSoil.totalDepth * 100) + 1;
+        const double oneCm = 0.01;                  // [m]
+        const double minimumThickness = oneCm;      // [m]
 
         int numberOfRootedLayers, numberOfTopUnrootedLayers;
         numberOfTopUnrootedLayers = int(round(myCrop.roots.rootDepthMin / minimumThickness));
@@ -558,19 +544,21 @@ namespace root
 
         if (myCrop.roots.rootShape == CARDIOID_DISTRIBUTION)
         {
-            cardioidDistribution(myCrop.roots.shapeDeformation, numberOfRootedLayers,
-                                 numberOfTopUnrootedLayers, nrAtoms, densityThinLayers);
+            if (! cardioidDistribution(myCrop.roots.shapeDeformation, numberOfRootedLayers,
+                                      numberOfTopUnrootedLayers, nrAtoms, densityThinLayers))
+                return false;
         }
         else if (myCrop.roots.rootShape == CYLINDRICAL_DISTRIBUTION)
         {
-            cylindricalDistribution(myCrop.roots.shapeDeformation, numberOfRootedLayers,
-                                    numberOfTopUnrootedLayers, nrAtoms, densityThinLayers);
+            if (! cylindricalDistribution(myCrop.roots.shapeDeformation, numberOfRootedLayers,
+                                         numberOfTopUnrootedLayers, nrAtoms, densityThinLayers))
+                return false;
         }
 
         double maxLayerDepth = layerDepth[nrLayers-1] + layerThickness[nrLayers-1] * 0.5;
         int atom = 0;
-        double currentDepth = double(atom) * 0.01;                              // [m]
-        double rootDensitySum = 0.;
+        double currentDepth = 0.0;                              // [m]
+        double rootDensitySum = 0.0;                            // [-]
         while (currentDepth <= maxLayerDepth && atom < nrAtoms)
         {
             for (unsigned int l = 0; l < nrLayers; l++)
@@ -586,12 +574,11 @@ namespace root
             }
 
             atom++;
-            currentDepth = double(atom) * 0.01;                                 // [m]
+            currentDepth = double(atom) * oneCm;                // [m]
         }
 
         if (rootDensitySum <= EPSILON)
             return true;
-
 
         double rootDensitySumSubset = 0.;
         for (unsigned int l=0 ; l < nrLayers; l++)
@@ -616,15 +603,15 @@ namespace root
             }
         }
 
-        // find and last root layers
-        myCrop.roots.firstRootLayer = NODATA;
-        myCrop.roots.lastRootLayer = NODATA;
+        // first and last root layers
+        myCrop.roots.firstRootLayer = int(NODATA);
+        myCrop.roots.lastRootLayer = int(NODATA);
 
         for (unsigned int l = 0; l < nrLayers; ++l)
         {
             if (myCrop.roots.rootDensity[l] > EPSILON)
             {
-                if (myCrop.roots.firstRootLayer == NODATA)
+                if (myCrop.roots.firstRootLayer == int(NODATA))
                 {
                     myCrop.roots.firstRootLayer = static_cast<int>(l);
                 }

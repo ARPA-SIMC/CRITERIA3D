@@ -970,16 +970,18 @@ namespace interpolation
     * \param monthlyAvg: vector of monthly averages (12 values)
     * outputDailyValues: vector of interpolated daily values (366 values)
     */
-    void cubicSplineYearInterpolate(float *monthlyAvg, float *outputDailyValues)
+    bool cubicSplineYearInterpolate(const float *monthlyAvg, float *outputDailyValues)
     {
-        double monthMid [16] = {-61, - 31, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365, 396};
+        const int nrMonths = 16;
 
-        for (int iMonth=0; iMonth<16; iMonth++)
+        double monthMid [nrMonths] = {-61, - 31, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365, 396};
+
+        for (int iMonth=0; iMonth < nrMonths; iMonth++)
         {
             monthMid[iMonth] += 15;
         }
 
-        double* avgMonthlyAmountLarger = new double[16];
+        double avgMonthlyAmountLarger[nrMonths];
         for (int iMonth = 0; iMonth < 12; iMonth++)
         {
             avgMonthlyAmountLarger[iMonth+2] = double(monthlyAvg[iMonth]);
@@ -990,14 +992,21 @@ namespace interpolation
         avgMonthlyAmountLarger[14] = double(monthlyAvg[0]);
         avgMonthlyAmountLarger[15] = double(monthlyAvg[1]);
 
-        for (int iDay=0; iDay<365; iDay++)
+        double secondDerivative[nrMonths];
+        for (int i=0; i < nrMonths; i++)
         {
-            outputDailyValues[iDay] = float(interpolation::cubicSpline(iDay, monthMid, avgMonthlyAmountLarger, 16));
+            secondDerivative[i] = NODATA;
         }
-        // leap years
-        outputDailyValues[365] = outputDailyValues[0];
 
-        delete [] avgMonthlyAmountLarger;
+        if (! splineSecondDerivatives(nrMonths, monthMid, avgMonthlyAmountLarger, secondDerivative))
+            return false;
+
+        for (int iDay=0; iDay <= 365; iDay++)
+        {
+            outputDailyValues[iDay] = float(interpolation::cubicSpline(iDay, nrMonths, monthMid, avgMonthlyAmountLarger, secondDerivative));
+        }
+
+        return true;
     }
 
 
@@ -1071,51 +1080,41 @@ namespace interpolation
     }
 
 
-    double cubicSpline(double x, double *firstColumn, double *secondColumn, int dim)
+    double cubicSpline(double x, int dim, const double *firstColumn, const double *secondColumn, const double *secondDerivative)
     {
-        double a,b,c,d,y;
-        int i = 0;
-        double *secondDerivative = (double *) calloc(dim, sizeof(double));
+        int i = 1;
+        while (i < dim && x > firstColumn[i])
+            ++i;
 
-        for (int i=0 ; i < dim; i++)
-        {
-            secondDerivative[i] = NODATA;
-        }
-
-        if (! punctualSecondDerivative(dim, firstColumn, secondColumn, secondDerivative))
-        {
-            free(secondDerivative);
+        if (i >= dim)
             return NODATA;
-        }
 
-        while (x > firstColumn[i])
-            i++;
-
-        double step = (firstColumn[i]- firstColumn[i-1]);
-        a = (firstColumn[i] - x)/ step;
-        b = 1 - a;
-        d = c = step*step/6;
+        const double step = (firstColumn[i]- firstColumn[i-1]);
+        const double a = (firstColumn[i] - x) / step;
+        const double b = 1.0 - a;
+        double c = step*step/6.0;
+        double d = c;
         c *= (a*a*a - a);
         d *= (b*b*b - b);
-        y = a*secondColumn[i-1]+b*secondColumn[i]+c*secondDerivative[i-1]+d*secondDerivative[i];
+        const double y = a*secondColumn[i-1] + b*secondColumn[i] + c*secondDerivative[i-1] + d*secondDerivative[i];
 
-        free(secondDerivative);
-        return y ;
+        return y;
     }
 
 
-    bool punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative)
+    bool splineSecondDerivatives(int dim, const double *firstColumn, const double *secondColumn, double* secondDerivative)
     {
-        if (dim <= 2) return false;
+        if (dim <= 2)
+            return false;
 
-        int matrixDimension = dim-2;
+        const int matrixDimension = dim-2;
         double *y2 = (double *) calloc(matrixDimension, sizeof(double));
         double *constantTerm = (double *) calloc(matrixDimension, sizeof(double));
         double *diagonal =  (double *) calloc(matrixDimension, sizeof(double));
         double *subDiagonal =  (double *) calloc(matrixDimension, sizeof(double));
         double *superDiagonal =  (double *) calloc(matrixDimension, sizeof(double));
 
-        for (int i=0 ; i < matrixDimension; i++)
+        for (int i=0; i < matrixDimension; i++)
         {
             y2[i] = 0;
             diagonal[i] = (firstColumn[i+2]-firstColumn[i])/3 ;
@@ -1127,8 +1126,11 @@ namespace interpolation
 
         tridiagonalThomasAlgorithm(matrixDimension,subDiagonal,diagonal,superDiagonal,constantTerm,y2);
 
-        for (int i = 0 ; i < dim ; i++) secondDerivative[i]= 0;
-        for (int i = 1 ; i < dim-1 ; i++) secondDerivative[i] = y2[i-1];
+        for (int i = 0 ; i < dim ; i++)
+            secondDerivative[i]= 0;
+
+        for (int i = 1 ; i < dim-1 ; i++)
+            secondDerivative[i] = y2[i-1];
 
         free(y2);
         free(constantTerm);
@@ -1140,7 +1142,8 @@ namespace interpolation
     }
 
 
-    void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output)
+    void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal,
+                                    double *superDiagonal, double *constantTerm, double* output)
     {
         // * n - number of equations
         // * subDiagonal - sub-diagonal (means it is the diagonal below the main diagonal) -- indexed from 1..n-1
@@ -1149,27 +1152,25 @@ namespace interpolation
         // * v - right part
         // * output - the answer
 
-        double *newDiagonal, *newConstantTerm;
-        newDiagonal = (double *) calloc(n, sizeof(double));
-        newConstantTerm =   (double *) calloc(n, sizeof(double));
+        double *newDiagonal = (double *) calloc(n, sizeof(double));
+        double *newConstantTerm = (double *) calloc(n, sizeof(double));
 
         newDiagonal[0] = mainDiagonal[0];
-        newConstantTerm[0]= constantTerm[0];
+        newConstantTerm[0] = constantTerm[0];
         for (int i = 1; i < n; i++)
         {
-                double m = subDiagonal[i]/mainDiagonal[i-1];
-                newDiagonal[i] = mainDiagonal[i] - m*superDiagonal[i-1];
-                newConstantTerm[i] = constantTerm[i] - m*constantTerm[i-1];
+            double m = subDiagonal[i]/mainDiagonal[i-1];
+            newDiagonal[i] = mainDiagonal[i] - m*superDiagonal[i-1];
+            newConstantTerm[i] = constantTerm[i] - m*constantTerm[i-1];
         }
 
-        output[n-1] = newConstantTerm[n-1]/newDiagonal[n-1];
+        output[n-1] = newConstantTerm[n-1] / newDiagonal[n-1];
         for (int i = n - 2; i >= 0; i--)
-                output[i]=(newConstantTerm[i]-superDiagonal[i]*output[i+1])/newDiagonal[i];
+            output[i]=(newConstantTerm[i] - superDiagonal[i] * output[i+1]) / newDiagonal[i];
 
         free(newDiagonal);
         free(newConstantTerm);
     }
-
 
 
     double computeR2adjusted(const std::vector<double>& obs,const std::vector<double>& sim)
