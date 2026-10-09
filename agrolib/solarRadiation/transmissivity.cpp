@@ -1,6 +1,6 @@
 /*!
     \name Solar Radiation
-    \copyright 2011 Gabriele Antolini, Fausto Tomei
+    \copyright 2026 Gabriele Antolini, Fausto Tomei
     \note  This library uses G_calc_solar_position() by Markus Neteler
 
     This library is part of CRITERIA3D.
@@ -39,66 +39,9 @@ float computePointTransmissivitySamani(float tmin, float tmax, float samaniCoeff
         if (tmin <= tmax)
             return samaniCoeff * sqrtf(tmax - tmin);
         else
-            return false;
+            return NODATA;
     else
         return NODATA;
-}
-
-
-bool computeTransmissivity_old(Crit3DRadiationSettings *mySettings, std::vector<Crit3DMeteoPoint> &meteoPoints,
-                           int intervalWidth, Crit3DTime myTime, const gis::Crit3DRasterGrid& myDEM)
-{
-    if (meteoPoints.empty())
-        return false;
-
-    int hourlyFraction = meteoPoints[0].hourlyFraction;
-    int deltaSeconds = 3600 / hourlyFraction;
-
-    int semiInterval = (intervalWidth - 1)/2;
-    int semiIntervalSeconds = semiInterval * deltaSeconds;
-    int myIndex;
-    Crit3DTime myTimeIni =  myTime.addSeconds(-semiIntervalSeconds);
-    Crit3DTime myTimeFin =  myTime.addSeconds(semiIntervalSeconds);
-    Crit3DTime myCurrentTime;
-    int myCounter = 0;
-    float transmissivity;
-
-    gis::Crit3DPoint myPoint;
-
-    for (size_t i = 0; i < meteoPoints.size(); i++)
-    {
-        float myRad = meteoPoints[i].getMeteoPointValueH(myTime.date, myTime.getHour(),
-                                                         myTime.getMinutes(), globalIrradiance);
-
-        if (!isEqual(myRad, NODATA))
-        {
-            myIndex = 0;
-            float* obsRadVector = new float[unsigned(intervalWidth)];
-            myCurrentTime = myTimeIni;
-            while (myCurrentTime <= myTimeFin)
-            {
-                obsRadVector[myIndex] = meteoPoints[i].getMeteoPointValueH(myCurrentTime.date, myCurrentTime.getHour(),
-                                                                       myCurrentTime.getMinutes(), globalIrradiance);
-                myCurrentTime = myCurrentTime.addSeconds(deltaSeconds);
-                myIndex++;
-            }
-
-            myPoint.utm.x = meteoPoints[i].point.utm.x;
-            myPoint.utm.y = meteoPoints[i].point.utm.y;
-            myPoint.z = meteoPoints[i].point.z;
-
-            transmissivity = radiation::computePointTransmissivity(mySettings, myPoint, myTime, obsRadVector,
-                                                                   intervalWidth, deltaSeconds, myDEM);
-
-            meteoPoints[i].setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(),
-                                               atmTransmissivity, transmissivity);
-
-            if (!isEqual(transmissivity, NODATA)) myCounter++;
-            delete [] obsRadVector;
-        }
-    }
-
-    return (myCounter > 0);
 }
 
 
