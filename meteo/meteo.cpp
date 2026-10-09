@@ -795,8 +795,8 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case precipitation:
         case snowWaterEquivalent: case snowMelt: case snowFall: case snowLiquidWaterContent:
             setPrecipitationScale(colorScale);
+            reverseColorScale(colorScale);
             colorScale->setHideZero(true);
-            colorScale->setHideMinimum(true);
             colorScale->setTransparent(true);
             break;
         case dailyPrecipitation: case monthlyPrecipitation:
