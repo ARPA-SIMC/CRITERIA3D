@@ -753,8 +753,8 @@ using namespace std;
         {
             logLogisticCDF = std::exp(s) / (1. + std::exp(s));
         }
-        double sigmoidFactor= 0.00000001 * std::pow(1 + exp(-5*(logLogisticCDF)),-1); // to avoid numerical problems in both tails of the ditribution
-        return logLogisticCDF - sigmoidFactor;
+        //double sigmoidFactor= 0.00000001 * std::pow(1 + exp(-5*(logLogisticCDF)),-1); // to avoid numerical problems in both tails of the distribution
+        return BOUNDFUNCTION(1e-15, 1-1e-15, logLogisticCDF);
     }
 
     double weibullCDF(double x, double lambda, double kappa)
