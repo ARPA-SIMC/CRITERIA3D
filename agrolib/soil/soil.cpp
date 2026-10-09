@@ -365,6 +365,8 @@ namespace soil
     // Unified Soil Classification System (USCS)
     int getUSCSClass(const Crit3DHorizon &horizon)
     {
+        // TODO check
+
         double coarseFraction = horizon.coarseFragments + (horizon.texture.sand / 100) * (1 - horizon.coarseFragments);
         double fineFraction = (horizon.texture.clay + horizon.texture.silt) / 100 * (1 - horizon.coarseFragments);
         if (coarseFraction > 0.5)

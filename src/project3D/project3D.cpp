@@ -185,6 +185,7 @@ void Project3D::initializeProject3D()
 
     showEachTimeStep = false;
     increaseSlope = false;
+    slopeIncreaseRatio = 1.0;
 
     isModelRunning = false;
     isModelPaused = false;
@@ -2208,13 +2209,18 @@ bool Project3D::computeAvgDegreeOfSaturation(gis::Crit3DRasterGrid &outputRaster
 bool Project3D::computeMinimumFoS(gis::Crit3DRasterGrid &outputRaster)
 {
     outputRaster.initializeGrid(*(indexMap.at(0).header));
+    const double MINIMUM_DEPTH = 0.15;                          // [m]
+
+    int firstLayer = 1;
+    while(firstLayer < layerDepth.size() && layerDepth[firstLayer] < MINIMUM_DEPTH )
+        firstLayer++;
 
     for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
     {
         for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
         {
             double minimumValue = NODATA;
-            for (unsigned int layer = 1; layer < nrLayers; layer++)
+            for (unsigned int layer = firstLayer; layer < nrLayers; layer++)
             {
                 double currentValue = computeFactorOfSafety(row, col, layer);
                 if (isEqual(currentValue, NODATA))
@@ -2723,7 +2729,7 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
     if (increaseSlope)
     {
         // increase slope (max: 89 degrees)
-        slopeDegree = std::min(slopeDegree * 1.5, 89.);
+        slopeDegree = std::min(slopeDegree * slopeIncreaseRatio, 89.);
     }
     double slopeAngle = std::max(slopeDegree * DEG_TO_RAD, EPSILON);        // [rad]
 

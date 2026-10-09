@@ -3673,6 +3673,26 @@ void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
 void MainWindow::on_flag_increase_slope_triggered(bool isChecked)
 {
     myProject.increaseSlope = isChecked;
+    if (isChecked)
+    {
+        float increaseValue = 1.0;
+        QString valueStr = editValue("Choose slope increase ratio [-]", QString::number(increaseValue));
+        if (valueStr == "")
+            return;
+
+        bool isOk;
+        double value = valueStr.toDouble(&isOk);
+        if (! isOk)
+            return;
+
+        if ((value < 1.0) || (value > 2.0))
+        {
+            myProject.logWarning("Wrong value: insert a number in [1.0, 2.0]");
+            return;
+        }
+
+        myProject.slopeIncreaseRatio = value;
+    }
 }
 
 
