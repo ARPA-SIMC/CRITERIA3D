@@ -54,6 +54,9 @@ namespace soilFluxes3D::v2
         if(cleanResult != SF3Derror_t::SF3Dok)
             return cleanResult;
 
+        if(nrLateralLinks > maxLateralLink)
+            return SF3Derror_t::ParameterError;
+
         // Set flags data
         simulationFlags.computeWater = isComputeWater;
         simulationFlags.computeHeat = isComputeHeat;
@@ -69,9 +72,6 @@ namespace soilFluxes3D::v2
         nodeGrid.nrNodes = nrNodes;
         nodeGrid.nrSurfaceNodes = nrSurfaceNodes;
 
-        if(nrLateralLinks > maxLateralLink)
-            return SF3Derror_t::ParameterError;
-
         // Topology data
         hostAlloc(nodeGrid.size, nrNodes);
         hostAlloc(nodeGrid.x, nrNodes);
@@ -81,6 +81,7 @@ namespace soilFluxes3D::v2
 
         // Soil/Surface data
         hostAlloc(nodeGrid.soilSurfacePointers, nrNodes);
+        surfaceList.resize(nrSurfaceNodes);
 
         // Boundary data
         hostAlloc(nodeGrid.boundaryData.boundaryType, nrNodes); //NoBoundary is equal 0, automatic set with calloc
@@ -153,6 +154,7 @@ namespace soilFluxes3D::v2
             hostAlloc(nodeGrid.heatData.heatFlux, nrNodes);
             hostAlloc(nodeGrid.heatData.heatSinkSource, nrNodes);
         }
+
         nodeGrid.isInitialized = true;
 
         //initialize the solver pointer
@@ -190,8 +192,6 @@ namespace soilFluxes3D::v2
 
         if(simulationFlags.computeHeat)
             status = initializeHeatBalance();
-        else
-            balanceDataWholePeriod.heatMBR = 1.;    //Why?
 
         return status;
     }
@@ -293,12 +293,17 @@ namespace soilFluxes3D::v2
 
         //Clear the soil/surface data
         soilList.clear();
+        soil1DIndices.clear();
         surfaceList.clear();
+        culvertList.clear();
 
         //Clean the solver
-        SF3Derror_t solverResult = solver->clean();
-        if(solverResult != SF3Derror_t::SF3Dok)
-            return solverResult;
+        if (solver != nullptr)
+        {
+            SF3Derror_t solverResult = solver->clean();
+            if(solverResult != SF3Derror_t::SF3Dok)
+                return solverResult;
+        }
 
         return SF3Derror_t::SF3Dok;
     }
@@ -550,7 +555,7 @@ namespace soilFluxes3D::v2
 
     SF3Derror_t setCulvert(SF3Duint_t nodeIndex, double roughness, double slope, double width, double height)
     {
-        if(!nodeGrid.isInitialized)
+        if(!nodeGrid.isInitialized || nodeGrid.culvertPtr == nullptr)
             return SF3Derror_t::MemoryError;
 
         if(nodeIndex >= nodeGrid.nrNodes || !nodeGrid.surfaceFlag[nodeIndex])
@@ -1413,7 +1418,7 @@ namespace soilFluxes3D::v2
     }
 
     /*!
-     * \brief sets the nodeIndex node boundary temperature
+     * \brief sets the nodeIndex node boundary temperature  [K]
      * \return Ok/Error
      */
     SF3Derror_t setNodeBoundaryTemperature(SF3Duint_t nodeIndex, double temperature)
@@ -1561,28 +1566,30 @@ namespace soilFluxes3D::v2
      * \param pressureHead  [m]
      * \return heat storage [J]
      */
-    __cudaSpec double getNodeHeatStorage(SF3Duint_t nodeIndex, double h)
+    __cudaSpec SF3Derror_t getNodeHeatStorage(SF3Duint_t nodeIndex, double h, double &heatStorage)
     {
+        heatStorage = 0.0;
+
         if(!nodeGrid.isInitialized)
-            return getDoubleErrorValue(SF3Derror_t::MemoryError);
+            return SF3Derror_t::MemoryError;
 
         if(nodeIndex >= nodeGrid.nrNodes)
-            return getDoubleErrorValue(SF3Derror_t::IndexError);
+            return SF3Derror_t::IndexError;
 
         if(!simulationFlags.computeHeat)
-            return getDoubleErrorValue(SF3Derror_t::MissingDataError);
+            return SF3Derror_t::MissingDataError;
 
         double nodeT = nodeGrid.heatData.temperature[nodeIndex];
         double nodeSize = nodeGrid.size[nodeIndex];
-        double nodeHeat = computeNodeHeatCapacity(nodeIndex, h, nodeT) * nodeSize * nodeT;
+        heatStorage = computeNodeHeatCapacity(nodeIndex, h, nodeT) * nodeSize * nodeT;
 
         if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
         {
             double nodeThetaV = computeNodeVaporThetaV(nodeIndex, h, nodeT);
-            nodeHeat += nodeThetaV * computeLatentVaporizationHeat(nodeT - ZEROCELSIUS) * WATER_DENSITY * nodeSize;
+            heatStorage += nodeThetaV * computeLatentVaporizationHeat(nodeT - ZEROCELSIUS) * WATER_DENSITY * nodeSize;
         }
 
-        return nodeHeat;
+        return SF3Derror_t::SF3Dok;
     }
 
     /*!
@@ -1617,7 +1624,7 @@ namespace soilFluxes3D::v2
                 for(u8_t linkIdx = 0; linkIdx < maxLateralLink; ++linkIdx)
                 {
                     double currFlux = getLinkHeatFlux(nodeGrid.linkData[2 + linkIdx], nodeIndex, fluxType);
-                    if(currFlux > std::fabs(nodeMaxFlux))
+                    if(currFlux != noDataD && std::fabs(currFlux) > std::fabs(nodeMaxFlux))
                         nodeMaxFlux = currFlux;
                 }
                 return nodeMaxFlux;
@@ -1812,14 +1819,19 @@ namespace soilFluxes3D::v2
         double dtWater, dtHeat;
 
         if(simulationFlags.computeWater)
+        {
             solver->run(maxTimeStep, dtWater, processType::Water);
+        }
         else
+        {
             dtWater = SF3Dmin(maxTimeStep, solver->getMaxTimeStep());
+        }
 
         if(simulationFlags.computeHeat)
         {
             dtHeat = dtWater;
-            saveWaterFluxValues(dtHeat, dtWater);
+            if(simulationFlags.computeWater)
+                saveWaterFluxValues(dtHeat, dtWater);
 
             double dtHeatSum = 0.;
             while(dtHeatSum < dtWater)

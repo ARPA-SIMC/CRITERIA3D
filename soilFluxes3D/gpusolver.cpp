@@ -186,10 +186,6 @@ namespace soilFluxes3D::v2
 
             launchKernel(initializeCapacityAndSaturationDegree_k, d_Cvalues);
 
-            //Update aereodynamic and soil conductance
-            if(simulationFlags.computeHeat)
-                updateConductance();
-
             //Effective computation step
             stepStatus = waterApproximationLoop(acceptedTimeStep);
 
@@ -1035,12 +1031,12 @@ namespace soilFluxes3D::v2
 
         double heatCapacity = dTheta * HEAT_CAPACITY_WATER * nodeT;
 
-        if(simulationFlags.computeHeatVapor)
+        if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
         {
             double dThetaV = computeNodeVaporThetaV(rowIdx, nodeH - nodeGrid.z[rowIdx], nodeT) -
                              computeNodeVaporThetaV(rowIdx, nodeGrid.waterData.oldPressureHead[rowIdx] - nodeGrid.z[rowIdx], nodeGrid.heatData.oldTemperature[rowIdx]);
 
-            heatCapacity += dThetaV * HEAT_CAPACITY_AIR * nodeT;
+            heatCapacity += dThetaV * WATER_DENSITY * HEAT_CAPACITY_WATER_VAPOR * nodeT;
             heatCapacity += dThetaV * computeLatentVaporizationHeat(nodeT - ZEROCELSIUS) * WATER_DENSITY;
         }
 
@@ -1183,7 +1179,7 @@ namespace soilFluxes3D::v2
         return;
     }
 
-    __global__ void computeCurrentHeatStorage_k(double* d_heatSinkSourceVector, double dtWater,double dtHeat)
+    __global__ void computeCurrentHeatStorage_k(double* d_heatSinkSourceVector, double dtWater, double dtHeat)
     {
         SF3Duint_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.nrNodes)
@@ -1192,8 +1188,13 @@ namespace soilFluxes3D::v2
         if(nodeGrid.surfaceFlag[nodeIdx])
             return;
 
-        double nodeH = (dtHeat != noDataD && dtWater != noDataD) ? getNodeH_fromTimeSteps(nodeIdx, dtHeat, dtWater) : nodeGrid.waterData.pressureHead[nodeIdx];
-        d_heatSinkSourceVector[nodeIdx] = getNodeHeatStorage(nodeIdx, nodeH - nodeGrid.z[nodeIdx]);
+        const double nodeH = (dtHeat != noDataD && dtWater != noDataD) ? getNodeH_fromTimeSteps(nodeIdx, dtHeat, dtWater)
+                                                                 : nodeGrid.waterData.pressureHead[nodeIdx];
+
+        double nodeStorage;
+        SF3Derror_t result = getNodeHeatStorage(nodeIdx, nodeH - nodeGrid.z[nodeIdx], nodeStorage);
+        if (result == SF3Derror_t::SF3Dok)
+            d_heatSinkSourceVector[nodeIdx] = nodeStorage;
     }
 
     __global__ void saveHeatFluxValues_k(double dtHeat, double dtWater)

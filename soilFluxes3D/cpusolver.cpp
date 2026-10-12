@@ -168,10 +168,6 @@ namespace soilFluxes3D::v2
                 nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
             }
 
-            // update aereodynamic and soil conductance
-            if(simulationFlags.computeHeat)
-                updateConductance();
-
             // main computation
             stepStatus = waterApproximationLoop(acceptedTimeStep);
 
@@ -506,12 +502,12 @@ namespace soilFluxes3D::v2
 
             double heatCapacity = dTheta * HEAT_CAPACITY_WATER * nodeT;
 
-            if(simulationFlags.computeHeatVapor)
+            if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
             {
                 double dThetaV = computeNodeVaporThetaV(rowIdx, nodeH - nodeGrid.z[rowIdx], nodeT) -
                                  computeNodeVaporThetaV(rowIdx, nodeGrid.waterData.oldPressureHead[rowIdx] - nodeGrid.z[rowIdx], nodeGrid.heatData.oldTemperature[rowIdx]);
 
-                heatCapacity += dThetaV * HEAT_CAPACITY_AIR * nodeT;
+                heatCapacity += dThetaV * WATER_DENSITY * HEAT_CAPACITY_WATER_VAPOR * nodeT;
                 heatCapacity += dThetaV * computeLatentVaporizationHeat(nodeT - ZEROCELSIUS) * WATER_DENSITY;
             }
 
@@ -578,7 +574,7 @@ namespace soilFluxes3D::v2
 
         // Compute balance
         evaluateHeatBalance(timeStepHeat, timeStepWater);
-        if (fabs(balanceDataCurrentTimeStep.heatMBR) > 1.0 && timeStepHeat > (_parameters.deltaTmin * 10.0))
+        if (fabs(balanceDataCurrentTimeStep.heatMBR) > 1.0 && timeStepHeat > (_parameters.deltaTmin * 2.0))
         {
             // restore old temperatures
             __parfor(_parameters.enableOMP)

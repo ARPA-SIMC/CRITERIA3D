@@ -202,7 +202,7 @@ namespace soilFluxes3D::v2::Heat
                 break;
 
             case heatFluxSaveMode_t::All:
-                if(simulationFlags.computeHeatVapor)
+                if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
                 {
                     const double thermalLatentFlux = computeThermalVaporFlux(nIdx, lIdx, processType::Heat, dtHeat, dtWater) * computeLatentVaporizationHeat(nodeGrid.heatData.temperature[nIdx] - ZEROCELSIUS);
                     saveNodeHeatSpecificFlux(nIdx, lIdx, fluxTypes_t::HeatLatentThermal, thermalLatentFlux);
@@ -389,6 +389,7 @@ namespace soilFluxes3D::v2::Heat
         return true;
     }
 
+    // total current heat storage [J]
     double computeCurrentHeatStorage(double dtHeat, double dtWater)
     {
         double heatStorage = 0.;
@@ -398,8 +399,13 @@ namespace soilFluxes3D::v2::Heat
             if(nodeGrid.surfaceFlag[nodeIdx])
                 continue;
 
-            double nodeH = (dtHeat != noDataD && dtWater != noDataD) ? getNodeH_fromTimeSteps(nodeIdx, dtHeat, dtWater) : nodeGrid.waterData.pressureHead[nodeIdx];
-            heatStorage += getNodeHeatStorage(nodeIdx, nodeH - nodeGrid.z[nodeIdx]);
+            const double nodeH = (dtHeat != noDataD && dtWater != noDataD) ? getNodeH_fromTimeSteps(nodeIdx, dtHeat, dtWater)
+                                                                     : nodeGrid.waterData.pressureHead[nodeIdx];
+
+            double nodeStorage;
+            SF3Derror_t result = getNodeHeatStorage(nodeIdx, nodeH - nodeGrid.z[nodeIdx], nodeStorage);
+            if (result == SF3Derror_t::SF3Dok)
+                heatStorage += nodeStorage;
         }
         return heatStorage;
     }
@@ -422,21 +428,23 @@ namespace soilFluxes3D::v2::Heat
 
     void evaluateHeatBalance(double dtHeat, double dtWater)
     {
-        // Heat sink/source
-        double heatSinkSource = computeCurrentHeatSinkSource(dtHeat);
-        balanceDataCurrentTimeStep.heatSinkSource = heatSinkSource;
-
         // Heat storage
-        double heatStorage = computeCurrentHeatStorage(dtHeat, dtWater);
+        const double heatStorage = computeCurrentHeatStorage(dtHeat, dtWater);
         balanceDataCurrentTimeStep.heatStorage = heatStorage;
 
-        // Heat MBE
-        double deltaHeatStorage = balanceDataCurrentTimeStep.heatStorage - balanceDataPreviousTimeStep.heatStorage;
-        balanceDataCurrentTimeStep.heatMBE = deltaHeatStorage - balanceDataCurrentTimeStep.heatSinkSource;
+        // Heat sink/source
+        const double heatSinkSource = computeCurrentHeatSinkSource(dtHeat);
+        balanceDataCurrentTimeStep.heatSinkSource = heatSinkSource;
 
-        // Heat MBR (minimum 1 Joule)
-        double referenceHeat = SF3Dmax(heatStorage * 1e-6, std::fabs(balanceDataCurrentTimeStep.heatSinkSource));
-        balanceDataCurrentTimeStep.heatMBR = balanceDataCurrentTimeStep.heatMBE / referenceHeat;
+        // Heat MBE
+        const double deltaHeatStorage = balanceDataCurrentTimeStep.heatStorage - balanceDataPreviousTimeStep.heatStorage;
+        const double massBalanceError = deltaHeatStorage - heatSinkSource;
+        balanceDataCurrentTimeStep.heatMBE = massBalanceError;
+
+        // Heat MBR
+        const double referenceHeat = SF3Dmax(heatStorage * 1e-6, std::fabs(balanceDataCurrentTimeStep.heatSinkSource));
+        const double massBalanceErrorRatio = massBalanceError / referenceHeat;
+        balanceDataCurrentTimeStep.heatMBR = massBalanceErrorRatio;
     }
 
 
@@ -481,13 +489,13 @@ namespace soilFluxes3D::v2::Heat
 
         double advectiveFlux = 0., latentFlux = 0.;
 
-        if(simulationFlags.computeHeatVapor)
+        if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
         {
             latentFlux = computeIsothermalLatentHeatFlux(nodeIndex, linkIndex, dtHeat, dtWater);
             saveNodeHeatSpecificFlux(nodeIndex, linkIndex, fluxTypes_t::HeatLatentIsothermal, latentFlux);
         }
 
-        if(simulationFlags.computeHeatAdvection)
+        if(simulationFlags.computeWater && simulationFlags.computeHeatAdvection)
         {
             advectiveFlux = computeAdvectiveFlux(nodeIndex, linkIndex);
             saveNodeHeatSpecificFlux(nodeIndex, linkIndex, fluxTypes_t::HeatAdvective, advectiveFlux);
@@ -889,7 +897,7 @@ namespace soilFluxes3D::v2::Heat
         double bulkDensity = estimateNodeBulkDensity(nodeIndex);
         double heatCapacity = (bulkDensity / QUARTZ_DENSITY) * HEAT_CAPACITY_MINERAL + theta * HEAT_CAPACITY_WATER;
 
-        if(simulationFlags.computeHeatVapor)
+        if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
         {
             // vapor mass per soil volume [kg m-3] * specific heat of vapor [J kg-1 K-1]
             double vaporMassPerVolume = computeNodeVaporThetaV(nodeIndex, h, T) * WATER_DENSITY;

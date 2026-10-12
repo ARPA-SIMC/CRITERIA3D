@@ -332,7 +332,7 @@ namespace soilFluxes3D::v2::Water
             nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalLiquidFlux;
 
             // vapor
-            if(simulationFlags.computeHeatVapor)
+            if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
             {
                 double thermalVaporFlux = computeThermalVaporFlux(nodeIndex, linkIndex, processType::Water) / WATER_DENSITY;
                 nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalVaporFlux;
