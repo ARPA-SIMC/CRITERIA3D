@@ -56,6 +56,7 @@ namespace soilFluxes3D::v2
         deviceSolverAlloc(iterationMatrix.d_values, tnv);
 
         deviceSolverAlloc(iterationMatrix.d_diagonalValues, iterationMatrix.numRows);
+        deviceSolverAlloc(iterationMatrix.d_originalDiagonalValues, iterationMatrix.numRows);
 
         //initialize vectors data
         constantTerm.numElements = nodeGrid.nrNodes;
@@ -103,7 +104,7 @@ namespace soilFluxes3D::v2
         return SF3Derror_t::SF3Dok;
     }
 
-    SF3Derror_t GPUSolver::run(double maxTimeStep, double &acceptedTimeStep, processType process)
+    SF3Derror_t GPUSolver::run(double maxTimeStep, double &acceptedTimeStep, processType process, double heatStartTime)
     {
         if(_status != solverStatus::initialized)
             return SF3Derror_t::SolverError;
@@ -117,10 +118,22 @@ namespace soilFluxes3D::v2
                 waterMainLoop(maxTimeStep, acceptedTimeStep);
                 break;
             case processType::Heat:
-                throw std::runtime_error("Heat not available with GPUSolver");
+            {
+                const double dtWater = acceptedTimeStep;
+                double dtHeat = maxTimeStep;
+                double sumHeatTime = 0;
+                while (sumHeatTime < maxTimeStep)
+                {
+                    dtHeat = SF3Dmin(dtHeat, maxTimeStep - sumHeatTime);
+                    if (! heatLoop(dtHeat, dtWater, heatStartTime))
+                        dtHeat *= 0.5;
+                    else
+                        sumHeatTime += dtHeat;
+                }
                 break;
+            }
             case processType::Solutes:
-                throw std::runtime_error("Solutes not available with GPUSolver");
+                throw std::runtime_error("Solutes not available");
                 break;
             default:
                 break;
@@ -147,6 +160,7 @@ namespace soilFluxes3D::v2
         deviceSolverFree(iterationMatrix.d_columnIndeces);
         deviceSolverFree(iterationMatrix.d_values);
         deviceSolverFree(iterationMatrix.d_diagonalValues);
+        deviceSolverFree(iterationMatrix.d_originalDiagonalValues);
 
         cuspCheck(cusparseDestroySpMat(iterationMatrix.cusparseDescriptor));
 
@@ -255,7 +269,7 @@ namespace soilFluxes3D::v2
         return balanceResult;
     }
 
-    void GPUSolver::heatLoop(double timeStepHeat, double timeStepWater)
+    bool GPUSolver::heatLoop(double timeStepHeat, double timeStepWater, double heatStartTime)
     {
         resetFluxValues_m(true, false);
 
@@ -274,11 +288,27 @@ namespace soilFluxes3D::v2
 
         solveLinearSystem(_parameters.maxApproximationsNumber - 1, processType::Heat);
 
-        //Retrive new temperatures
+        // retrive new temperatures
         deviceConditionalCopy(nodeGrid.heatData.temperature, unknownTerm.d_values, nodeGrid.nrNodes,
                               ConditionWrapper<condition::notSurface>(nodeGrid.surfaceFlag));
 
         evaluateHeatBalance_m(timeStepHeat, timeStepWater);
+        if (std::fabs(balanceDataCurrentTimeStep.heatMBR) > 1.0)
+        {
+            if (timeStepHeat > (_parameters.deltaTmin * 2.0))
+            {
+                // restore old temperatures
+                deviceConditionalCopy(nodeGrid.heatData.temperature, nodeGrid.heatData.oldTemperature, nodeGrid.nrNodes,
+                                      ConditionWrapper<condition::notSurface>(nodeGrid.surfaceFlag));
+
+                return false;
+            }
+            else
+            {
+                // TODO: log?
+            }
+        }
+
         updateHeatBalanceData();
         saveHeatFluxValues_m(timeStepHeat, timeStepWater);
 
@@ -286,7 +316,7 @@ namespace soilFluxes3D::v2
         deviceConditionalCopy(nodeGrid.heatData.oldTemperature, nodeGrid.heatData.temperature, nodeGrid.nrNodes,
                               ConditionWrapper<condition::notSurface>(nodeGrid.surfaceFlag));
 
-        return;
+        return true;
     }
 
     bool GPUSolver::solveLinearSystem(u8_t approximationNumber, processType computationType) //Implemented only Jacobi
@@ -987,7 +1017,7 @@ namespace soilFluxes3D::v2
             matrixA.d_columnIndeces[currentElementIndex] = -1;
         }
 
-        //Compute diagonal element
+        // Compute diagonal element
         double sum = 0.;
         for(u32_t colIdx = 0; colIdx < numLinks; ++colIdx)
         {
@@ -997,11 +1027,13 @@ namespace soilFluxes3D::v2
         }
 
         matrixA.d_diagonalValues[rowIdx] = (Cvalues[rowIdx] / deltaT) + sum;
+        // store the diagonal value
+        matrixA.d_originalDiagonalValues[rowIdx] = matrixA.d_diagonalValues[rowIdx];
 
-        //Compute b element
+        // Compute b element
         vectorB.d_values[rowIdx] = ((Cvalues[rowIdx] / deltaT) * nodeGrid.waterData.oldPressureHead[rowIdx]) + nodeGrid.waterData.waterFlow[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx];
 
-        //Preconditioning
+        // Preconditioning
         for(u32_t colIdx = 0; colIdx < matrixA.d_numColsInRow[rowIdx]; ++colIdx)
         {
             currentElementIndex = baseRowIndex + (colIdx * blockDim.x);
@@ -1009,6 +1041,7 @@ namespace soilFluxes3D::v2
         }
 
         vectorB.d_values[rowIdx] /= matrixA.d_diagonalValues[rowIdx];
+        matrixA.d_diagonalValues[rowIdx] = 1.0;
     }
 
     __global__ void computeHeatLinearSystemElement_k(MatrixGPU matrixA, VectorGPU vectorB, const double* Cvalues, double timeStepHeat, double timeStepWater)
@@ -1017,11 +1050,28 @@ namespace soilFluxes3D::v2
         if(rowIdx >= nodeGrid.nrNodes)
             return;
 
-        if(nodeGrid.surfaceFlag[rowIdx])
-            return;
-
         SF3Duint_t sliceIdx = blockIdx.x;
         SF3Duint_t baseRowIndex = (sliceIdx * maxTotalLink * blockDim.x) + threadIdx.x;
+
+        if(nodeGrid.surfaceFlag[rowIdx])
+        {
+            // Identity: 1.0 * T_new = T_old
+            matrixA.d_numColsInRow[rowIdx] = 0;
+            matrixA.d_diagonalValues[rowIdx] = 1.0;
+            matrixA.d_originalDiagonalValues[rowIdx] = 1.0;
+
+            vectorB.d_values[rowIdx] = nodeGrid.heatData.oldTemperature[rowIdx];
+
+            // Azzera la memoria delle colonne non usate per questa riga nel formato Sliced ELL
+            for(u32_t colIdx = 0; colIdx < maxTotalLink; ++colIdx)
+            {
+                SF3Duint_t currentElementIndex = baseRowIndex + (colIdx * blockDim.x);
+                matrixA.d_values[currentElementIndex] = 0.0;
+                matrixA.d_columnIndeces[currentElementIndex] = -1;
+            }
+
+            return;
+        }
 
         double nodeT = nodeGrid.heatData.temperature[rowIdx];
         double nodeH = getNodeH_fromTimeSteps(rowIdx, timeStepHeat, timeStepWater);
@@ -1036,7 +1086,7 @@ namespace soilFluxes3D::v2
             double dThetaV = computeNodeVaporThetaV(rowIdx, nodeH - nodeGrid.z[rowIdx], nodeT) -
                              computeNodeVaporThetaV(rowIdx, nodeGrid.waterData.oldPressureHead[rowIdx] - nodeGrid.z[rowIdx], nodeGrid.heatData.oldTemperature[rowIdx]);
 
-            heatCapacity += dThetaV * WATER_DENSITY * HEAT_CAPACITY_WATER_VAPOR * nodeT;
+            heatCapacity += dThetaV * HEAT_CAPACITY_WATER * nodeT;
             heatCapacity += dThetaV * computeLatentVaporizationHeat(nodeT - ZEROCELSIUS) * WATER_DENSITY;
         }
 
@@ -1099,8 +1149,10 @@ namespace soilFluxes3D::v2
         }
 
         matrixA.d_diagonalValues[rowIdx] = sumDP + (Cvalues[rowIdx] / timeStepHeat);
+        // store the diagonal value
+        matrixA.d_originalDiagonalValues[rowIdx] = matrixA.d_diagonalValues[rowIdx];
 
-        //Computeb element
+        //Compute b element
         vectorB.d_values[rowIdx] = Cvalues[rowIdx] * nodeGrid.heatData.oldTemperature[rowIdx] / timeStepHeat - heatCapacity / timeStepHeat +
                                  nodeGrid.heatData.heatFlux[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx] + sumF0;
 
@@ -1114,10 +1166,13 @@ namespace soilFluxes3D::v2
                 currentElementIndex = baseRowIndex + (colIdx * blockDim.x);
                 matrixA.d_values[currentElementIndex] /= matrixA.d_diagonalValues[rowIdx];
             }
+
+            matrixA.d_diagonalValues[rowIdx] = 1.0;
         }
 
         return;
     }
+
 
     __global__ void updateSaturationDegree_k()
     {

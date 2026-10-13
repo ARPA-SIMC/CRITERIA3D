@@ -1816,7 +1816,7 @@ namespace soilFluxes3D::v2
             updateConductance();
         }
 
-        double dtWater, dtHeat;
+        double dtWater;
 
         if(simulationFlags.computeWater)
         {
@@ -1829,20 +1829,21 @@ namespace soilFluxes3D::v2
 
         if(simulationFlags.computeHeat)
         {
-            dtHeat = dtWater;
             if(simulationFlags.computeWater)
-                saveWaterFluxValues(dtHeat, dtWater);
+                saveWaterFluxValues(dtWater, dtWater);
 
+            double dtHeat = dtWater;
             double dtHeatSum = 0.;
             while(dtHeatSum < dtWater)
             {
                 dtHeat = std::min(dtHeat, dtWater - dtHeatSum);
 
-                double reducedTimeStep;
+                double reducedTimeStep = dtHeat;
                 while(! updateBoundaryHeatData(dtHeat, reducedTimeStep))
                     dtHeat = reducedTimeStep;
 
-                solver->run(dtHeat, dtWater, processType::Heat);
+                // dtHeatSum = absolute start time of this window inside the water step
+                solver->run(dtHeat, dtWater, processType::Heat, dtHeatSum);
 
                 dtHeatSum += dtHeat;
             }

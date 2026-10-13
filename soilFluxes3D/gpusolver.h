@@ -26,7 +26,7 @@ namespace soilFluxes3D::v2
             void waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
 
-            void heatLoop(double timeStepHeat, double timeStepWater);
+            bool heatLoop(double timeStepHeat, double timeStepWater, double heatStartTime = 0.);
 
             bool solveLinearSystem(u8_t approximationNumber, processType computationType) override;
 
@@ -53,7 +53,7 @@ namespace soilFluxes3D::v2
             __cudaSpec double getMatrixElementValue(SF3Duint_t rowIndex, SF3Duint_t colIndex) const noexcept;
 
             SF3Derror_t initialize() override;
-            SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) override;
+            SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process, double heatStartTime = 0.) override;
             SF3Derror_t clean() override;
     };
 
@@ -61,7 +61,7 @@ namespace soilFluxes3D::v2
     {
         //Valori diagonali
         if(rowIndex == colIndex)
-            return iterationMatrix.d_diagonalValues[rowIndex];
+            return iterationMatrix.d_originalDiagonalValues[rowIndex];
 
         SF3Duint_t sliceIndex = static_cast<SF3Duint_t>(floor((double) rowIndex / iterationMatrix.sliceSize));
         SF3Duint_t baseIndex = static_cast<SF3Duint_t>(iterationMatrix.d_offsets[sliceIndex]);
@@ -71,7 +71,7 @@ namespace soilFluxes3D::v2
         {
             SF3Duint_t finalIndex = baseIndex + pOffIndex + (colSELLIdx * iterationMatrix.sliceSize);
             if(iterationMatrix.d_columnIndeces[finalIndex] == colIndex)
-                return iterationMatrix.d_values[finalIndex] * iterationMatrix.d_diagonalValues[rowIndex];
+                return iterationMatrix.d_values[finalIndex] * iterationMatrix.d_originalDiagonalValues[rowIndex];
         }
 
         return 0.;
