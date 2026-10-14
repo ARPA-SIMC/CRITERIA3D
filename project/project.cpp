@@ -2564,7 +2564,12 @@ bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations, 
 
     if (! loadGlocalStationsCsv(fileNameStations, areaPoints)) return false;
 
-    loadGlocalStationsCsv(fileNameStationsCV, areaPointsCV); //mancanza di file CV non pregiudica il proseguimento. controllo presenza fuori da funzione
+    if (! fileNameStationsCV.isEmpty())
+    {
+        loadGlocalStationsCsv(fileNameStationsCV, areaPointsCV); //mancanza di file CV non pregiudica il proseguimento. controllo presenza fuori da funzione
+    }
+    else
+        logInfo("Glocal CV will be run on single points.");
 
     //salva in vettore gli indici dei meteopoints che appartengono a area n, infine salva quel vettore
     std::vector<int> temp;
