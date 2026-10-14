@@ -80,9 +80,20 @@ namespace soilFluxes3D::v2::Water
         {
             double theta;
             if (nodeGrid.surfaceFlag[idx])
+            {
                 theta = SF3Dmax(nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx], 0.0);
+            }
             else
+            {
                 theta = computeNodeTheta(idx);
+
+                if(simulationFlags.computeHeat && simulationFlags.computeHeatVapor)
+                {
+                    const double T = nodeGrid.heatData.temperature[idx];
+                    const double h = nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx];
+                    theta += computeNodeVaporThetaV(idx, h, T);
+                }
+            }
             sum += theta * nodeGrid.size[idx];
         }
 
@@ -631,9 +642,11 @@ namespace soilFluxes3D::v2::Water
 
     void updateBoundaryWaterData(double deltaT)
     {
+        std::memset(nodeGrid.boundaryData.waterFlowRate, 0.0, nodeGrid.nrNodes * sizeof(double));
+
         if(simulationFlags.computeHeat)
         {
-            std::memset(nodeGrid.waterData.invariantFluxes, 0, nodeGrid.nrNodes * sizeof(double));
+            std::memset(nodeGrid.waterData.invariantFluxes, 0.0, nodeGrid.nrNodes * sizeof(double));
         }
 
         __parfor(__ompStatus)
@@ -653,8 +666,6 @@ namespace soilFluxes3D::v2::Water
 
             if(nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType_t::NoBoundary)
                 continue;
-
-            nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0;   //TO DO: evaluate move to a memset
 
             switch(nodeGrid.boundaryData.boundaryType[nodeIdx])
             {
@@ -727,10 +738,17 @@ namespace soilFluxes3D::v2::Water
                         const double waterVolume = (nodeGrid.waterData.pressureHead[upIndex] - nodeGrid.z[upIndex]) * nodeGrid.size[upIndex];
                         surfEvaporation = SF3Dmax(surfEvaporation, -waterVolume / deltaT);
 
+                        // FIX RACE CONDITION
                         if(nodeGrid.boundaryData.boundaryType[upIndex] != boundaryType_t::NoBoundary)
-                            nodeGrid.boundaryData.waterFlowRate[upIndex] = surfEvaporation;
+                        {
+                            #pragma omp atomic
+                            nodeGrid.boundaryData.waterFlowRate[upIndex] += surfEvaporation;
+                        }
                         else
+                        {
+                            #pragma omp atomic
                             nodeGrid.waterData.waterFlow[upIndex] += surfEvaporation;
+                        }
                     }
 
                     const double thetaR = nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->Theta_r;

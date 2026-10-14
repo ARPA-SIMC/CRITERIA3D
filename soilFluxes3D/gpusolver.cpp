@@ -1215,9 +1215,26 @@ namespace soilFluxes3D::v2
         if(nodeIdx >= nodeGrid.nrNodes)
             return;
 
-        double theta = nodeGrid.surfaceFlag[nodeIdx] ? (nodeGrid.waterData.pressureHead[nodeIdx] - nodeGrid.z[nodeIdx]) : computeNodeTheta(nodeIdx);
+        double theta = 0.0;
+        if(nodeGrid.surfaceFlag[nodeIdx])
+        {
+            theta = SF3Dmax(0.0, nodeGrid.waterData.pressureHead[nodeIdx] - nodeGrid.z[nodeIdx]);
+        }
+        else
+        {
+            theta = computeNodeTheta(nodeIdx);
+
+            if(simulationFlags.computeHeat && simulationFlags.computeHeatVapor)
+            {
+                double T = nodeGrid.heatData.temperature[nodeIdx];
+                double h = nodeGrid.waterData.pressureHead[nodeIdx] - nodeGrid.z[nodeIdx];
+                theta += computeNodeVaporThetaV(nodeIdx, h, T);
+            }
+        }
+
         outVector[nodeIdx] = theta * nodeGrid.size[nodeIdx];
     }
+
 
     __global__ void computeCurrentHeatSinkSource_k(double* d_heatSinkSourceVector, double dtHeat)
     {
