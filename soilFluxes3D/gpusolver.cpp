@@ -125,7 +125,7 @@ namespace soilFluxes3D::v2
                 while (sumHeatTime < maxTimeStep)
                 {
                     dtHeat = SF3Dmin(dtHeat, maxTimeStep - sumHeatTime);
-                    if (! heatLoop(dtHeat, dtWater, heatStartTime))
+                    if (! heatLoop(dtHeat, dtWater, heatStartTime + sumHeatTime))
                         dtHeat *= 0.5;
                     else
                         sumHeatTime += dtHeat;
@@ -295,7 +295,7 @@ namespace soilFluxes3D::v2
         evaluateHeatBalance_m(timeStepHeat, timeStepWater);
         if (std::fabs(balanceDataCurrentTimeStep.heatMBR) > 1.0)
         {
-            if (timeStepHeat > (_parameters.deltaTmin * 2.0))
+            if (timeStepHeat > _parameters.deltaTmin)
             {
                 // restore old temperatures
                 deviceConditionalCopy(nodeGrid.heatData.temperature, nodeGrid.heatData.oldTemperature, nodeGrid.nrNodes,
@@ -1086,8 +1086,8 @@ namespace soilFluxes3D::v2
             double dThetaV = computeNodeVaporThetaV(rowIdx, nodeH - nodeGrid.z[rowIdx], nodeT) -
                              computeNodeVaporThetaV(rowIdx, nodeGrid.waterData.oldPressureHead[rowIdx] - nodeGrid.z[rowIdx], nodeGrid.heatData.oldTemperature[rowIdx]);
 
-            heatCapacity += dThetaV * HEAT_CAPACITY_WATER * nodeT;
-            heatCapacity += dThetaV * computeLatentVaporizationHeat(nodeT - ZEROCELSIUS) * WATER_DENSITY;
+            heatCapacity += dThetaV * WATER_DENSITY * HEAT_CAPACITY_WATER_VAPOR * nodeT;
+            heatCapacity += dThetaV * WATER_DENSITY * computeLatentVaporizationHeat(nodeT - ZEROCELSIUS);
         }
 
         heatCapacity *= nodeGrid.size[rowIdx];
