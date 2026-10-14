@@ -86,13 +86,6 @@ namespace soilFluxes3D::v2::Water
             else
             {
                 theta = computeNodeTheta(idx);
-
-                if(simulationFlags.computeHeat && simulationFlags.computeHeatVapor)
-                {
-                    const double T = nodeGrid.heatData.temperature[idx];
-                    const double h = nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx];
-                    theta += computeNodeVaporThetaV(idx, h, T);
-                }
             }
             sum += theta * nodeGrid.size[idx];
         }
@@ -642,11 +635,11 @@ namespace soilFluxes3D::v2::Water
 
     void updateBoundaryWaterData(double deltaT)
     {
-        std::memset(nodeGrid.boundaryData.waterFlowRate, 0.0, nodeGrid.nrNodes * sizeof(double));
+        std::memset(nodeGrid.boundaryData.waterFlowRate, 0, nodeGrid.nrNodes * sizeof(double));
 
         if(simulationFlags.computeHeat)
         {
-            std::memset(nodeGrid.waterData.invariantFluxes, 0.0, nodeGrid.nrNodes * sizeof(double));
+            std::memset(nodeGrid.waterData.invariantFluxes, 0, nodeGrid.nrNodes * sizeof(double));
         }
 
         __parfor(__ompStatus)
@@ -738,7 +731,6 @@ namespace soilFluxes3D::v2::Water
                         const double waterVolume = (nodeGrid.waterData.pressureHead[upIndex] - nodeGrid.z[upIndex]) * nodeGrid.size[upIndex];
                         surfEvaporation = SF3Dmax(surfEvaporation, -waterVolume / deltaT);
 
-                        // FIX RACE CONDITION
                         if(nodeGrid.boundaryData.boundaryType[upIndex] != boundaryType_t::NoBoundary)
                         {
                             #pragma omp atomic

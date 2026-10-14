@@ -560,7 +560,7 @@ namespace soilFluxes3D::v2
                     linkIdx++;
             }
 
-            matrixA.numColsInRow[rowIdx] = linkIdx; //TO DO: need to fill the not used columns of the row?
+            matrixA.numColsInRow[rowIdx] = linkIdx;
 
             // Compute diagonal elements
             double sumDP = 0., sumF0 = 0.;

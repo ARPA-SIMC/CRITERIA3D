@@ -152,15 +152,15 @@ namespace soilFluxes3D::v2::Heat
         const double thermalVaporflux = deepLink ? computeThermalVaporFlux(nIdx, lIdx, processType::Heat,
                                                                             dtHeat, dtWater, heatStartTime) : 0.;
 
-        nodeGrid.linkData[lIdx].waterFlux[nIdx] = static_cast<float>(isothermalLiquidFlux - isothermalVaporFlux / WATER_DENSITY + thermalLiquidFlux);
-        nodeGrid.linkData[lIdx].vaporFlux[nIdx] = static_cast<float>(isothermalVaporFlux + thermalVaporflux);
+        nodeGrid.linkData[lIdx].waterFlux[nIdx] = isothermalLiquidFlux - isothermalVaporFlux / WATER_DENSITY + thermalLiquidFlux;
+        nodeGrid.linkData[lIdx].vaporFlux[nIdx] = isothermalVaporFlux + thermalVaporflux;
 
         if(simulationFlags.HFsaveMode == heatFluxSaveMode_t::All)
         {
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidIsothermal)][nIdx] = static_cast<float>(isothermalLiquidFlux);
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidThermal)][nIdx] = static_cast<float>(thermalLiquidFlux);
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporIsothermal)][nIdx] = static_cast<float>(isothermalVaporFlux);
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporThermal)][nIdx] = static_cast<float>(thermalVaporflux);
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidIsothermal)][nIdx] = isothermalLiquidFlux;
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidThermal)][nIdx] = thermalLiquidFlux;
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporIsothermal)][nIdx] = isothermalVaporFlux;
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporThermal)][nIdx] = thermalVaporflux;
         }
 
         return SF3Derror_t::SF3Dok;
@@ -838,7 +838,7 @@ namespace soilFluxes3D::v2::Heat
         //Thermal conductivity of (dry) air     [W m-1 K-1]
         double aThermalK = 0.024 + 0.0000773 * celsiusT - 0.000000026 * celsiusT * celsiusT;
 
-        if(simulationFlags.computeWater)
+        if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
         {
             //Latent heat of vaporization       [J kg-1]
             const double lambda = computeLatentVaporizationHeat(celsiusT);

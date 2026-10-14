@@ -1223,13 +1223,6 @@ namespace soilFluxes3D::v2
         else
         {
             theta = computeNodeTheta(nodeIdx);
-
-            if(simulationFlags.computeHeat && simulationFlags.computeHeatVapor)
-            {
-                double T = nodeGrid.heatData.temperature[nodeIdx];
-                double h = nodeGrid.waterData.pressureHead[nodeIdx] - nodeGrid.z[nodeIdx];
-                theta += computeNodeVaporThetaV(nodeIdx, h, T);
-            }
         }
 
         outVector[nodeIdx] = theta * nodeGrid.size[nodeIdx];
