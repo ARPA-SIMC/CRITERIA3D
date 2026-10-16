@@ -48,7 +48,7 @@ namespace soilFluxes3D::v2
             __cudaSpec double getMatrixElementValue(SF3Duint_t rowIndex, SF3Duint_t colIndex) const noexcept;
 
             virtual SF3Derror_t initialize() = 0;
-            virtual SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) = 0;
+            virtual SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process, double heatStartTime = 0.) = 0;
             virtual SF3Derror_t clean() = 0;
     };
 

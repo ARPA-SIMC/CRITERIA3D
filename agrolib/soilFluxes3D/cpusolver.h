@@ -11,7 +11,7 @@ namespace soilFluxes3D::v2
         private:
             MatrixCPU matrixA;
             VectorCPU vectorB, vectorX, vectorNewX;
-            VectorCPU vectorC;
+            VectorCPU vectorDiagOriginal, vectorC;
 
             bool waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
@@ -23,7 +23,7 @@ namespace soilFluxes3D::v2
             bool checkSurfaceElements(double deltaT);
             bool checkCourant(double deltaT);
 
-            bool heatLoop(double timeStepHeat, double timeStepWater);
+            bool heatLoop(double timeStepHeat, double timeStepWater, double heatStartTime = 0.);
 
             bool solveLinearSystem(u8_t approximationNr, processType computationType) override;
             bool linealSolver(u8_t approximationNr);
@@ -34,22 +34,23 @@ namespace soilFluxes3D::v2
             __cudaSpec double getMatrixElementValue(SF3Duint_t rowIndex, SF3Duint_t colIndex) const noexcept;
 
             SF3Derror_t initialize() override;
-            SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) override;
+            SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process, double heatStartTime = 0.) override;
             SF3Derror_t clean() override;
             void setThreads();
     };
 
+
     inline __cudaSpec double CPUSolver::getMatrixElementValue(SF3Duint_t rowIndex, SF3Duint_t colIndex) const noexcept
     {
         assert(rowIndex != colIndex);
-        //assert(matrixA.values != nullptr);
         u8_t cpuColIdx;
         for(cpuColIdx = 1; cpuColIdx < matrixA.numColsInRow[rowIndex]; ++cpuColIdx)
             if(matrixA.columnIndeces[rowIndex][cpuColIdx] == colIndex)
-                break;
+                return matrixA.values[rowIndex][cpuColIdx] * vectorDiagOriginal.values[rowIndex];
 
-        return matrixA.values[rowIndex][cpuColIdx] * matrixA.values[rowIndex][0];
+        return 0.;
     }
+
 
     inline SF3Derror_t solverHostCheckError(SF3Derror_t retError, solverStatus& status)
     {

@@ -313,8 +313,11 @@ bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea
 
                 for (int k = 0; k < (int)areaCells.size(); k = k + 2)
                 {
-                    if (areaCells[k] == temp)
+                    if (isEqual(float(areaCells[k]), float(temp)))
+                    {
                         weight = areaCells[k+1];
+                        break;
+                    }
                 }
 
                 isValid = (! excludeSupplemental || checkLapseRateCode(myMeteoPoint.lapseRateCode, interpolationSettings.getUseLapseRateCode(), false));
