@@ -792,14 +792,12 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case thom: case dailyThomMax: case dailyThomAvg: case dailyThomHoursAbove: case dailyThomDaytime: case dailyThomNighttime:
             setRelativeHumidityScale(colorScale);
             break;
-        case precipitation:
-        case snowWaterEquivalent: case snowMelt: case snowFall: case snowLiquidWaterContent:
+        case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt: case snowFall:
             setPrecipitationScale(colorScale);
             reverseColorScale(colorScale);
             colorScale->setHideZero(true);
-            colorScale->setTransparent(true);
             break;
-        case dailyPrecipitation: case monthlyPrecipitation:
+        case precipitation: case dailyPrecipitation: case monthlyPrecipitation:
             setPrecipitationScale(colorScale);
             colorScale->setHideZero(true);
             break;

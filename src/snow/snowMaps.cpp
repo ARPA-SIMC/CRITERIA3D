@@ -25,6 +25,7 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "snowMaps.h"
+#include <algorithm>
 
 
 Crit3DSnowMaps::Crit3DSnowMaps()
@@ -52,7 +53,21 @@ Crit3DSnowMaps::Crit3DSnowMaps()
 
 Crit3DSnowMaps::~Crit3DSnowMaps()
 {
-    this->clear();
+    clear();
+
+    delete _snowWaterEquivalentMap;
+    delete _iceContentMap;
+    delete _liquidWaterContentMap;
+    delete _internalEnergyMap;
+    delete _surfaceEnergyMap;
+    delete _snowSurfaceTempMap;
+    delete _ageOfSnowMap;
+
+    delete _snowFallMap;
+    delete _snowMeltMap;
+    delete _deltaSWEMap;
+    delete _sensibleHeatMap;
+    delete _latentHeatMap;
 }
 
 
@@ -193,18 +208,22 @@ void Crit3DSnowMaps::resetSnowModel(double skinThickness)
                 _liquidWaterContentMap->value[row][col] = 0;
                 _ageOfSnowMap->value[row][col] = NODATA;
 
-                _snowSurfaceTempMap->value[row][col] = float(_initSnowSurfaceTemp);
-
                 if (initSWE > 0)
                 {
-                    _surfaceEnergyMap->value[row][col] = float(computeSurfaceEnergySnow(_initSnowSurfaceTemp, skinThickness));
+                    // snow surface and pack cannot be above 0 °C
+                    double snowSurfaceTemp = std::min(_initSnowSurfaceTemp, 0.);        // [°C]
+                    double packTemp = std::min(_initSoilPackTemp, 0.);                  // [°C]
+
+                    _snowSurfaceTempMap->value[row][col] = float(snowSurfaceTemp);
+                    _surfaceEnergyMap->value[row][col] = float(computeSurfaceEnergySnow(snowSurfaceTemp, skinThickness));
+                    _internalEnergyMap->value[row][col] = float(computeInternalEnergy(packTemp, surfaceBulkDensity, initSWE));
                 }
                 else
                 {
+                    _snowSurfaceTempMap->value[row][col] = float(_initSnowSurfaceTemp);
                     _surfaceEnergyMap->value[row][col] = float(computeSurfaceEnergySoil(_initSnowSurfaceTemp, skinThickness));
+                    _internalEnergyMap->value[row][col] = float(computeInternalEnergySoil(_initSoilPackTemp, surfaceBulkDensity));
                 }
-
-                _internalEnergyMap->value[row][col] = float(computeInternalEnergy(_initSoilPackTemp, surfaceBulkDensity, initSWE/1000.));
 
                 // output map
                 _snowFallMap->value[row][col] = 0;
@@ -216,4 +235,3 @@ void Crit3DSnowMaps::resetSnowModel(double skinThickness)
         }
     }
 }
-

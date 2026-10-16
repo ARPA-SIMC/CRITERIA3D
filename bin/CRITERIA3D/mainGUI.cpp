@@ -69,7 +69,7 @@ int mainGUI(int argc, char *argv[], QString criteria3dHome, Crit3DProject& myPro
     QApplication::setOverrideCursor(Qt::ArrowCursor);
 
     // Windows without right to set environment
-    if (QSysInfo::productType() == "windows" && criteria3dHome == "")
+    if (QSysInfo::productType() == "windows" && criteria3dHome.isEmpty())
     {
         QString appPath = myApp.applicationDirPath();
         criteria3dHome = searchDefaultPath(appPath);
@@ -84,10 +84,16 @@ int mainGUI(int argc, char *argv[], QString criteria3dHome, Crit3DProject& myPro
     }
 
     if (! myProject.start(criteria3dHome))
+    {
+        myProject.logError();
         return -1;
+    }
 
     if (! myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini"))
+    {
+        myProject.logError();
         return -1;
+    }
 
     MainWindow w;
     w.show();

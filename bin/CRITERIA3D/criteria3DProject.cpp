@@ -3564,7 +3564,7 @@ void Crit3DProject::getMixedColor(gis::Crit3DRasterGrid *rasterPointer, int row,
                                          const Crit3DColor& dtmColor, Crit3DColor& otutColor)
 {
     const double DEFAULT_ALPHA = 0.8;
-    const double ALPHA_POW = 0.2;
+    const double ALPHA_POW = 0.1;
 
     const float value = rasterPointer->getValueFromRowCol(row, col);
     if (isEqual(value, rasterPointer->header->flag))
@@ -3578,8 +3578,8 @@ void Crit3DProject::getMixedColor(gis::Crit3DRasterGrid *rasterPointer, int row,
 
     if (rasterPointer->colorScale->isTransparent())
     {
-        const double step = std::max(0., value - rasterPointer->colorScale->minimum());
-        alpha = std::min(1., step/variableRange);
+        const double delta = std::max(0., value - rasterPointer->colorScale->minimum());
+        alpha = std::min(1., delta/variableRange);
         alpha = DEFAULT_ALPHA * pow(alpha, ALPHA_POW);
     }
 
