@@ -80,9 +80,13 @@ namespace soilFluxes3D::v2::Water
         {
             double theta;
             if (nodeGrid.surfaceFlag[idx])
+            {
                 theta = SF3Dmax(nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx], 0.0);
+            }
             else
+            {
                 theta = computeNodeTheta(idx);
+            }
             sum += theta * nodeGrid.size[idx];
         }
 
@@ -332,7 +336,7 @@ namespace soilFluxes3D::v2::Water
             nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalLiquidFlux;
 
             // vapor
-            if(simulationFlags.computeHeatVapor)
+            if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
             {
                 double thermalVaporFlux = computeThermalVaporFlux(nodeIndex, linkIndex, processType::Water) / WATER_DENSITY;
                 nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalVaporFlux;
@@ -579,7 +583,7 @@ namespace soilFluxes3D::v2::Water
                 x_new -= A * vectorX.values[index];
             }
 
-            // check surface water level (it must be <= 0)
+            // check surface hydraulic head (it must be >= z_i)
             const double z_i = nodeGrid.z[row];
             if (row < nodeGrid.nrSurfaceNodes)
                 x_new = std::max(x_new, z_i);
@@ -631,6 +635,8 @@ namespace soilFluxes3D::v2::Water
 
     void updateBoundaryWaterData(double deltaT)
     {
+        std::memset(nodeGrid.boundaryData.waterFlowRate, 0, nodeGrid.nrNodes * sizeof(double));
+
         if(simulationFlags.computeHeat)
         {
             std::memset(nodeGrid.waterData.invariantFluxes, 0, nodeGrid.nrNodes * sizeof(double));
@@ -645,38 +651,36 @@ namespace soilFluxes3D::v2::Water
             // check on surface negative flux (i.e. evaporation)
             if (nodeGrid.surfaceFlag[nodeIdx] && nodeGrid.waterData.waterFlow[nodeIdx] < 0)
             {
-                double avgH = 0.5 * (nodeGrid.waterData.pressureHead[nodeIdx] + nodeGrid.waterData.oldPressureHead[nodeIdx]);
-                double h_s = SF3Dmax(0., avgH - nodeGrid.z[nodeIdx]);                       // [m]
-                double maxSurfaceFlux = -h_s * nodeGrid.size[nodeIdx] / deltaT;             // [m3 s-1]
+                const double avgH = 0.5 * (nodeGrid.waterData.pressureHead[nodeIdx] + nodeGrid.waterData.oldPressureHead[nodeIdx]);
+                const double h_s = SF3Dmax(0., avgH - nodeGrid.z[nodeIdx]);                       // [m]
+                const double maxSurfaceFlux = -h_s * nodeGrid.size[nodeIdx] / deltaT;             // [m3 s-1]
                 nodeGrid.waterData.waterFlow[nodeIdx] = SF3Dmax(nodeGrid.waterData.waterFlow[nodeIdx], maxSurfaceFlux);
             }
 
             if(nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType_t::NoBoundary)
                 continue;
 
-            nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0;   //TO DO: evaluate move to a memset
-
             switch(nodeGrid.boundaryData.boundaryType[nodeIdx])
             {
                 case boundaryType_t::Runoff:
-                    double avgH, hs, maxFlow, v, valFlow;
-                    avgH = 0.5 * (nodeGrid.waterData.pressureHead[nodeIdx] + nodeGrid.waterData.oldPressureHead[nodeIdx]);
+                {
+                    const double avgH = 0.5 * (nodeGrid.waterData.pressureHead[nodeIdx] + nodeGrid.waterData.oldPressureHead[nodeIdx]);
 
-                    hs = SF3Dmax(0., avgH - (nodeGrid.z[nodeIdx] + nodeGrid.waterData.pond[nodeIdx]));
+                    const double hs = SF3Dmax(0., avgH - (nodeGrid.z[nodeIdx] + nodeGrid.waterData.pond[nodeIdx]));
                     if(hs < EPSILON_RUNOFF)
                         break;
 
                     // Maximum flow available during the time step [m3 s-1]
-                    maxFlow = (hs * nodeGrid.size[nodeIdx]) / deltaT;
+                    const double maxFlow = (hs * nodeGrid.size[nodeIdx]) / deltaT;
 
                     //Manning equation
                     assert(nodeGrid.surfaceFlag[nodeIdx]);
-                    v = std::pow(hs, 2./3.) * std::sqrt(nodeGrid.boundaryData.boundarySlope[nodeIdx]) / nodeGrid.soilSurfacePointers[nodeIdx].surfacePtr->roughness;
+                    const double v = std::pow(hs, 2./3.) * std::sqrt(nodeGrid.boundaryData.boundarySlope[nodeIdx]) / nodeGrid.soilSurfacePointers[nodeIdx].surfacePtr->roughness;
 
-                    valFlow = hs * v * nodeGrid.boundaryData.boundarySize[nodeIdx];
+                    const double valFlow = hs * v * nodeGrid.boundaryData.boundarySize[nodeIdx];
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = -SF3Dmin(valFlow, maxFlow);
                     break;
-
+                }
                 case boundaryType_t::FreeDrainage:
                     //Darcy unit gradient (use link node up)
                     assert(nodeGrid.linkData[0].linkType[nodeIdx] != linkType_t::NoLink);
@@ -690,31 +694,29 @@ namespace soilFluxes3D::v2::Water
                     break;
 
                 case boundaryType_t::PrescribedTotalWaterPotential:
-                    double L, boundaryPsi, boundaryZ, boundaryK, meanK, dH;
-                    L = 1.;     // [m]
-                    boundaryZ = nodeGrid.z[nodeIdx] - L;
+                {
+                    const double L = 1.0;                               // [m]
+                    const double boundaryZ = nodeGrid.z[nodeIdx] - L;
 
-                    boundaryPsi = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - boundaryZ;
+                    const double boundaryPsi = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - boundaryZ;
 
-                    boundaryK = (boundaryPsi >= 0)  ? nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->K_sat
+                    const double boundaryK = (boundaryPsi >= 0)  ? nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->K_sat
                                                     : computeMualemSoilConductivity(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, std::fabs(boundaryPsi)));
 
-                    meanK = computeMean(boundaryK, nodeGrid.waterData.waterConductivity[nodeIdx], solver->getMeanType());
-                    dH = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - nodeGrid.waterData.pressureHead[nodeIdx];
+                    const double meanK = computeMean(boundaryK, nodeGrid.waterData.waterConductivity[nodeIdx], solver->getMeanType());
+                    const double dH = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - nodeGrid.waterData.pressureHead[nodeIdx];
 
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = meanK * nodeGrid.boundaryData.boundarySize[nodeIdx] * (dH / L);
                     break;
-
+                }
                 case boundaryType_t::HeatSurface:
+                {
                     if(!simulationFlags.computeHeat || !simulationFlags.computeHeatVapor)
                         break;
 
-                    bool isUpLinked;
-                    SF3Duint_t upIndex;
-                    double surfaceWaterFraction;
-                    isUpLinked = (nodeGrid.linkData[0].linkType[nodeIdx] != linkType_t::NoLink);
-                    upIndex = isUpLinked ? nodeGrid.linkData[0].linkIndex[nodeIdx] : noDataU;
-                    surfaceWaterFraction = isUpLinked ? getNodeSurfaceWaterFraction(upIndex) : 0.;
+                    const bool isUpLinked = (nodeGrid.linkData[0].linkType[nodeIdx] != linkType_t::NoLink);
+                    const SF3Duint_t upIndex = isUpLinked ? nodeGrid.linkData[0].linkIndex[nodeIdx] : noDataU;
+                    const double surfaceWaterFraction = isUpLinked ? getNodeSurfaceWaterFraction(upIndex) : 0.;
 
                     double soilEvaporation;
                     soilEvaporation = computeNodeAtmosphericLatentVaporFlux(nodeIdx) / WATER_DENSITY * nodeGrid.linkData[0].interfaceArea[nodeIdx];
@@ -726,73 +728,78 @@ namespace soilFluxes3D::v2::Water
                         soilEvaporation *= (1. - surfaceWaterFraction);
                         surfEvaporation *= surfaceWaterFraction;
 
-                        double waterVolume = (nodeGrid.waterData.pressureHead[upIndex] - nodeGrid.z[upIndex]) * nodeGrid.size[upIndex];
+                        const double waterVolume = (nodeGrid.waterData.pressureHead[upIndex] - nodeGrid.z[upIndex]) * nodeGrid.size[upIndex];
                         surfEvaporation = SF3Dmax(surfEvaporation, -waterVolume / deltaT);
 
                         if(nodeGrid.boundaryData.boundaryType[upIndex] != boundaryType_t::NoBoundary)
-                            nodeGrid.boundaryData.waterFlowRate[upIndex] = surfEvaporation;
+                        {
+                            #pragma omp atomic
+                            nodeGrid.boundaryData.waterFlowRate[upIndex] += surfEvaporation;
+                        }
                         else
+                        {
+                            #pragma omp atomic
                             nodeGrid.waterData.waterFlow[upIndex] += surfEvaporation;
+                        }
                     }
 
-                    double thetaR, thetaS, thetaV;
-                    thetaR = nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->Theta_r;
-                    thetaS = nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->Theta_s;
-                    thetaV = computeNodeTheta(nodeIdx);
+                    const double thetaR = nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->Theta_r;
+                    const double thetaS = nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->Theta_s;
+                    const double thetaV = computeNodeTheta(nodeIdx);
 
                     soilEvaporation = (soilEvaporation < 0.) ? SF3Dmax(soilEvaporation, -(thetaV - thetaR) * nodeGrid.size[nodeIdx] / deltaT)
-                                                             : SF3Dmin(soilEvaporation, (thetaS - thetaR) * nodeGrid.size[nodeIdx] / deltaT);
+                                                             : SF3Dmin(soilEvaporation, (thetaS - thetaV) * nodeGrid.size[nodeIdx] / deltaT);
 
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = soilEvaporation;
                     break;
-
+                }
                 case boundaryType_t::Culvert:
+                {
                     if(nodeGrid.culvertPtr[nodeIdx] == nullptr)
                         assert(false); //? -> throwing error?
 
-                    double culvertHeight, culvertWidth, culvertRoughness, culvertSlope;
-                    culvertHeight = nodeGrid.culvertPtr[nodeIdx]->height;
-                    culvertWidth = nodeGrid.culvertPtr[nodeIdx]->width;
-                    culvertRoughness = nodeGrid.culvertPtr[nodeIdx]->roughness;
-                    culvertSlope = nodeGrid.boundaryData.boundarySlope[nodeIdx];
-
-                    double waterLevel, flow;
-                    waterLevel = 0.5 * (nodeGrid.waterData.pressureHead[nodeIdx] - nodeGrid.waterData.oldPressureHead[nodeIdx]) - nodeGrid.z[nodeIdx];
-                    flow = 0.;
+                    const double culvertHeight = nodeGrid.culvertPtr[nodeIdx]->height;
+                    const double culvertWidth = nodeGrid.culvertPtr[nodeIdx]->width;
+                    const double culvertRoughness = nodeGrid.culvertPtr[nodeIdx]->roughness;
+                    const double culvertSlope = nodeGrid.boundaryData.boundarySlope[nodeIdx];
+                    const double avgH = (nodeGrid.waterData.pressureHead[nodeIdx] + nodeGrid.waterData.oldPressureHead[nodeIdx]) * 0.5;
+                    const double waterLevel = avgH - nodeGrid.z[nodeIdx];
+                    double flow = 0.;
 
                     if(waterLevel >= 1.5 * culvertHeight)
                     {
                         //Pressure flow (Hazen-Williams equation) (roughness = 70. - rough concrete)
-                        double equivalentDiameter = std::sqrt(4. * culvertWidth * culvertHeight / PI);
+                        const double equivalentDiameter = std::sqrt(4. * culvertWidth * culvertHeight / PI);
                         flow = (70. * std::pow(culvertSlope, 0.54)) * std::pow(equivalentDiameter, 2.63) / 3.591;
                     }
                     else if(waterLevel >= culvertHeight)
                     {
                         //Mixed flow: open channel and pressure
-                        double wettedPerimeter = culvertWidth + 2. * culvertHeight;
-                        double hydraulicRadius = nodeGrid.boundaryData.boundarySize[nodeIdx] / wettedPerimeter;
+                        const double wettedPerimeter = culvertWidth + 2. * culvertHeight;
+                        const double hydraulicRadius = nodeGrid.boundaryData.boundarySize[nodeIdx] / wettedPerimeter;
 
                         //Maximum Mannig flow [m3 s-1]
-                        double ManningFlow = (nodeGrid.boundaryData.boundarySize[nodeIdx] / culvertRoughness) * std::sqrt(culvertSlope) * std::pow(hydraulicRadius, 2./3.);
+                        const double ManningFlow = (nodeGrid.boundaryData.boundarySize[nodeIdx] / culvertRoughness) * std::sqrt(culvertSlope) * std::pow(hydraulicRadius, 2./3.);
                         //Pressure flow (Hazen-Williams equation) (roughness = 70. - rough concrete)
-                        double equivalentDiameter = std::sqrt(4. * culvertWidth * culvertHeight / PI);
-                        double pressureFlow = (70. * std::pow(culvertSlope, 0.54)) * std::pow(equivalentDiameter, 2.63) / 3.591;
+                        const double equivalentDiameter = std::sqrt(4. * culvertWidth * culvertHeight / PI);
+                        const double pressureFlow = (70. * std::pow(culvertSlope, 0.54)) * std::pow(equivalentDiameter, 2.63) / 3.591;
 
-                        double weight = (waterLevel - culvertHeight) / (0.5 * culvertHeight);
+                        const double weight = (waterLevel - culvertHeight) / (0.5 * culvertHeight);
                         flow = weight * pressureFlow + (1. - weight) * ManningFlow;
                     }
                     else if(waterLevel > nodeGrid.waterData.pond[nodeIdx])
                     {
-                        //Open channel flow
-                        double boundaryArea = culvertWidth * waterLevel;
-                        double wettedPerimeter = culvertWidth + 2. * waterLevel;
-                        double hydraulicRadius = boundaryArea / wettedPerimeter;
+                        // Open channel flow
+                        const double boundaryArea = culvertWidth * waterLevel;
+                        const double wettedPerimeter = culvertWidth + 2. * waterLevel;
+                        const double hydraulicRadius = boundaryArea / wettedPerimeter;
 
                         flow = (boundaryArea / culvertRoughness) * std::sqrt(culvertSlope) * std::pow(hydraulicRadius, 2./3.);
                     }
 
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = -flow;
                     break;
+                }
                 default:
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0.;
                     assert(false);
@@ -805,6 +812,7 @@ namespace soilFluxes3D::v2::Water
                 nodeGrid.waterData.waterFlow[nodeIdx] += nodeGrid.boundaryData.waterFlowRate[nodeIdx];
         }
     }
+
 
     __cudaSpec double getMatrixElement(SF3Duint_t rowIndex, SF3Duint_t columnIndex)
     {
@@ -826,4 +834,4 @@ namespace soilFluxes3D::v2::Water
 
     }
 
-}//namespace
+} // end namespace

@@ -28,6 +28,7 @@ namespace soilFluxes3D::v2
         i64_t* d_columnIndeces = nullptr;
         double* d_values = nullptr;
         double* d_diagonalValues = nullptr;
+        double* d_originalDiagonalValues = nullptr;
         const cusparseIndexType_t offsetType = CUSPARSE_INDEX_64I;
         const cusparseIndexType_t colIdxType = CUSPARSE_INDEX_64I;
         const cusparseIndexBase_t idxBase = CUSPARSE_INDEX_BASE_ZERO;
