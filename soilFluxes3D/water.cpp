@@ -1,14 +1,14 @@
 #ifdef CUDA_ENABLED
     #include "gpusolver.h"
 #endif
+
 #include "cpusolver.h"
-
-#include <cassert>
-
 #include "water.h"
 #include "soilPhysics.h"
 #include "heat.h"
 #include "otherFunctions.h"
+
+#include <cassert>
 
 // [m] 10 micrometres
 #define EPSILON_METER 0.00001
@@ -86,6 +86,11 @@ namespace soilFluxes3D::v2::Water
             else
             {
                 theta = computeNodeTheta(idx);
+                if(simulationFlags.computeHeat && simulationFlags.computeHeatVapor)
+                {
+                    const double h = nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx];
+                    theta += computeNodeVaporThetaV(idx, h, getNodeMeanTemperature(idx));
+                }
             }
             sum += theta * nodeGrid.size[idx];
         }
@@ -105,21 +110,21 @@ namespace soilFluxes3D::v2::Water
         // [m3]
         currentBalance.waterStorage = computeTotalWaterContent();
         // [m3]
-        double deltaStorage = currentBalance.waterStorage - balanceDataPreviousTimeStep.waterStorage;
+        const double deltaStorage = currentBalance.waterStorage - balanceDataPreviousTimeStep.waterStorage;
         // [m3]
         currentBalance.waterSinkSource = computeWaterSinkSourceFlowsSum(deltaT);
         //[ m3]
         currentBalance.waterMBE = deltaStorage - currentBalance.waterSinkSource;
 
         // minimum reference water storage [m3] as % of current storage
-        double timePercentage = 0.001 * SF3Dmax(deltaT, 30.0) / HOUR_SECONDS;
+        const double timePercentage = 0.001 * SF3Dmax(deltaT, 30.0) / HOUR_SECONDS;
         double minRefWaterStorage = currentBalance.waterStorage * timePercentage;
         // [m3] minimum 1 liter
         minRefWaterStorage = SF3Dmax(minRefWaterStorage, 0.001);
 
         // Reference water [m3] for computation of mass balance error ratio
         // when the water sink/source is too low, use the reference water storage
-        double referenceWater = SF3Dmax(std::fabs(currentBalance.waterSinkSource), minRefWaterStorage);
+        const double referenceWater = SF3Dmax(std::fabs(currentBalance.waterSinkSource), minRefWaterStorage);
 
         currentBalance.waterMBR = currentBalance.waterMBE / referenceWater;
 
@@ -642,6 +647,14 @@ namespace soilFluxes3D::v2::Water
             std::memset(nodeGrid.waterData.invariantFluxes, 0, nodeGrid.nrNodes * sizeof(double));
         }
 
+        // Surface water evaporation is accumulated in a separate buffer and applied after the parallel loop:
+        // writing it directly on the upper (surface) node races with the
+        // initialization/boundary update of that same node, executed by another thread.
+        const bool computeSurfEvap = simulationFlags.computeHeat && simulationFlags.computeHeatVapor;
+        static std::vector<double> surfaceEvaporation;
+        if(computeSurfEvap)
+            surfaceEvaporation.assign(nodeGrid.nrSurfaceNodes, 0.);
+
         __parfor(__ompStatus)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
         {
@@ -731,16 +744,9 @@ namespace soilFluxes3D::v2::Water
                         const double waterVolume = (nodeGrid.waterData.pressureHead[upIndex] - nodeGrid.z[upIndex]) * nodeGrid.size[upIndex];
                         surfEvaporation = SF3Dmax(surfEvaporation, -waterVolume / deltaT);
 
-                        if(nodeGrid.boundaryData.boundaryType[upIndex] != boundaryType_t::NoBoundary)
-                        {
-                            #pragma omp atomic
-                            nodeGrid.boundaryData.waterFlowRate[upIndex] += surfEvaporation;
-                        }
-                        else
-                        {
-                            #pragma omp atomic
-                            nodeGrid.waterData.waterFlow[upIndex] += surfEvaporation;
-                        }
+                        // deferred: applied after the parallel loop (see below)
+                        #pragma omp atomic
+                        surfaceEvaporation[upIndex] += surfEvaporation;
                     }
 
                     const double thetaR = nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->Theta_r;
@@ -756,7 +762,7 @@ namespace soilFluxes3D::v2::Water
                 case boundaryType_t::Culvert:
                 {
                     if(nodeGrid.culvertPtr[nodeIdx] == nullptr)
-                        assert(false); //? -> throwing error?
+                        continue;
 
                     const double culvertHeight = nodeGrid.culvertPtr[nodeIdx]->height;
                     const double culvertWidth = nodeGrid.culvertPtr[nodeIdx]->width;
@@ -810,6 +816,24 @@ namespace soilFluxes3D::v2::Water
                 nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0.;
             else
                 nodeGrid.waterData.waterFlow[nodeIdx] += nodeGrid.boundaryData.waterFlowRate[nodeIdx];
+        }
+
+        // Apply the surface water evaporation (all other writes on surface nodes are completed)
+        if(computeSurfEvap)
+        {
+            __parfor(__ompStatus)
+            for (SF3Duint_t surfIdx = 0; surfIdx < nodeGrid.nrSurfaceNodes; ++surfIdx)
+            {
+                const double surfEvap = surfaceEvaporation[surfIdx];
+                if(surfEvap == 0.)
+                    continue;
+
+                // keep boundary flow rate (and its cumulated sum) consistent with the total flow
+                if(nodeGrid.boundaryData.boundaryType[surfIdx] != boundaryType_t::NoBoundary)
+                    nodeGrid.boundaryData.waterFlowRate[surfIdx] += surfEvap;
+
+                nodeGrid.waterData.waterFlow[surfIdx] += surfEvap;
+            }
         }
     }
 

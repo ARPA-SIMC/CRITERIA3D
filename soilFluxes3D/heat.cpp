@@ -955,8 +955,8 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeNodeVaporThetaV(SF3Duint_t nodeIndex, double h, double T)
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
-        double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
-        double vaporConcentration = computeVapor_fromPsiTemp(h, T);
+        const double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
+        const double vaporConcentration = computeVapor_fromPsiTemp(h, T);
 
         return vaporConcentration / WATER_DENSITY * (nodeSoil.Theta_s - theta);
     }

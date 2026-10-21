@@ -309,7 +309,7 @@ namespace soilFluxes3D::v2::Soil
      */
     __cudaSpec double getNodeMeanTemperature(SF3Duint_t nodeIndex)
     {
-        if(!simulationFlags.computeHeat)   //Add control over heat data
+        if(!simulationFlags.computeHeat)
             return noDataD;
 
         return computeMean(nodeGrid.heatData.temperature[nodeIndex], nodeGrid.heatData.oldTemperature[nodeIndex], meanType_t::Arithmetic);
