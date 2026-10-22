@@ -1,12 +1,9 @@
 #include "soilPhysics.h"
 #include "solver.h"
-#include "otherFunctions.h"
 #include "heat.h"
+
 #include <cassert>
 
-using namespace soilFluxes3D::v2;
-using namespace soilFluxes3D::v2::Math;
-using namespace soilFluxes3D::v2::Heat;
 
 namespace soilFluxes3D::v2
 {
@@ -14,6 +11,61 @@ namespace soilFluxes3D::v2
     extern __cudaMngd Solver* solver;
     extern __cudaMngd simulationFlags_t simulationFlags;
 }
+
+using namespace soilFluxes3D::v2;
+using namespace soilFluxes3D::v2::Math;
+using namespace soilFluxes3D::v2::Heat;
+
+
+namespace soilFluxes3D::v2::Math
+{
+    __cudaSpec double computeMean(double v1, double v2, meanType_t type)
+    {
+        switch(type)
+        {
+        case meanType_t::Arithmetic:
+            return (v1 + v2) * 0.5;
+        case meanType_t::Geometric:
+            return geometricMean(v1, v2);
+        case meanType_t::Logarithmic:
+            return logarithmicMean(v1, v2);
+        default:
+            return logarithmicMean(v1, v2);
+        }
+    }
+
+    __cudaSpec double geometricMean(double v1, double v2)
+    {
+        int8_t sign = (v1 > 0) - (v1 < 0);
+        return sign * std::sqrt(v1 * v2);
+    }
+
+    __cudaSpec double logarithmicMean(double v1, double v2)
+    {
+        if (v1 <= 0.0 || v2 <= 0.0)
+            return 0.0;
+
+        // protezione numerica: se i valori sono molto vicini,
+        // la media logaritmica è numericamente instabile ma converge a quella aritmetica.
+        const double diff = std::fabs(v1 - v2);
+        if (diff < 1e-6 * std::max(v1, v2))
+            return (v1 + v2) * 0.5;
+
+        return (v1 - v2) / std::log(v1 / v2);
+    }
+
+    __cudaSpec double vectorNorm(const double *vector, std::size_t size)
+    {
+        double norm = 0;
+        for (std::size_t idx = 0; idx < size; ++idx)
+            norm += (vector[idx] * vector[idx]);
+
+        return std::sqrt(norm);
+    }
+
+} // end namespace math
+
+
 
 namespace soilFluxes3D::v2::Soil
 {
@@ -218,6 +270,33 @@ namespace soilFluxes3D::v2::Soil
 
 
     /*!
+     * \brief estimate the nodeIndex node bulk density
+     * \return bulk density [Mg m-3]
+     */
+    __cudaSpec double computeNodeBulkDensity(SF3Duint_t nodeIndex)
+    {
+        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
+        const double particleDensity = computeSoilParticleDensity(nodeSoil.organicMatter);
+        const double totalPorosity = nodeSoil.Theta_s;
+
+        return (1. - totalPorosity) * particleDensity;
+    }
+
+    /*!
+     * \brief estimate soil particle density (Driessen, 1986)
+     * \param organicMatter: fraction of organic matter
+     * \return soil particle density [Mg m-3]
+     */
+    __cudaSpec double computeSoilParticleDensity(double organicMatter)
+    {
+        if(organicMatter == noDataD)
+            organicMatter = 0.02;
+
+        return 1. / ((1. - organicMatter) / QUARTZ_DENSITY + organicMatter / 1.43);
+    }
+
+
+    /*!
      * \brief Compute the derivative of water volumetric content respect to the water potential
      * \details dTheta/dH = dSe/dH * (Theta_S - Theta_R) where
      *                      dSe/dH = -sgn(H-z) * alpha * n * m * [1 + (alpha * |H - z|)^n]^(-m-1) * (alpha * |H-z|)^(n-1)               if VanGenuchten
@@ -342,4 +421,4 @@ namespace soilFluxes3D::v2::Soil
         return vectorNorm(vec, 3);
     }
 
-} //end namespace
+} //end namespace soil

@@ -1,5 +1,6 @@
 #include <cstring>
 #include <cassert>
+#include <cmath>
 #include <omp.h>
 #include <iostream>
 
@@ -8,7 +9,6 @@
 #include "soilPhysics.h"
 #include "water.h"
 #include "heat.h"
-#include "otherFunctions.h"
 #include "linealia.hpp"
 
 using namespace soilFluxes3D::v2::Soil;
@@ -84,12 +84,18 @@ namespace soilFluxes3D::v2
                 const double dtWater = acceptedTimeStep;
                 double dtHeat = maxTimeStep;
                 double sumHeatTime = 0.;
-                while (sumHeatTime < maxTimeStep)
+                while ((maxTimeStep - sumHeatTime) > 1e-9)
                 {
                     dtHeat = SF3Dmin(dtHeat, maxTimeStep - sumHeatTime);
 
                     if (! heatLoop(dtHeat, dtWater, heatStartTime + sumHeatTime))
-                        dtHeat *= 0.5;
+                    {
+                        // step already at the minimum: halving again would never end
+                        if (dtHeat <= _parameters.deltaTmin)
+                            return SF3Derror_t::SolverError;
+
+                        dtHeat = SF3Dmax(dtHeat * 0.5, _parameters.deltaTmin);
+                    }
                     else
                         sumHeatTime += dtHeat;
                 }
@@ -266,6 +272,10 @@ namespace soilFluxes3D::v2
         {
             _parameters.deltaTcurr /= nodeGrid.CourantWater;
 
+            // guard against non finite/zero values (the rescaling loop below would never end)
+            if (!std::isfinite(_parameters.deltaTcurr) || _parameters.deltaTcurr <= 0.)
+                _parameters.deltaTcurr = _parameters.deltaTmin;
+
             int multiply = 0;
             while (_parameters.deltaTcurr < 1.)
             {
@@ -309,33 +319,6 @@ namespace soilFluxes3D::v2
             rowValues[0] = 1.0;
         }
     }
-
-
-    /*
-    bool CPUSolver::isLinked(bool& isPrevious, double& matrixElement, SF3Duint_t& matrixIndex,
-                             SF3Duint_t nodeIndex, u8_t linkIndex)
-    {
-        if(nodeGrid.linkData[linkIndex].linkType[nodeIndex] == linkType_t::NoLink)
-            return false;
-
-        SF3Duint_t index = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
-        isPrevious = (index < nodeIndex);
-
-        if (! isPrevious)
-            return true;
-
-        for (u8_t j = 1; j < matrixA.numColsInRow[index]; ++j)
-        {
-            if (matrixA.columnIndeces[index][j] == nodeIndex)
-            {
-                matrixElement = matrixA.values[index][j];
-                matrixIndex = index;
-                return true;
-            }
-        }
-
-        return false;
-    }*/
 
 
     void CPUSolver::computeDiagonalElement(SF3Duint_t row, double deltaT)

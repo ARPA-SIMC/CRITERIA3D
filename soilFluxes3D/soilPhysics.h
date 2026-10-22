@@ -5,6 +5,15 @@
 
 using namespace soilFluxes3D::v2;
 
+namespace soilFluxes3D::v2::Math
+{
+    __cudaSpec double computeMean(double v1, double v2, meanType_t type = meanType_t::Logarithmic);
+    __cudaSpec double geometricMean(double v1, double v2);
+    __cudaSpec double logarithmicMean(double v1, double v2);
+
+    __cudaSpec double vectorNorm(const double* vector, std::size_t size);
+}
+
 namespace soilFluxes3D::v2::Soil
 {
     __cudaSpec double computeNodeTheta(SF3Duint_t nodeIndex);
@@ -24,6 +33,9 @@ namespace soilFluxes3D::v2::Soil
 
     __cudaSpec double computeNode_dTheta_dH(SF3Duint_t nodeIndex);
     __cudaSpec double computeNodedThetaVdH(SF3Duint_t nodeIndex, double temperature, double dThetadH);
+
+    __cudaSpec double computeNodeBulkDensity(SF3Duint_t nodeIndex);
+    __cudaSpec double computeSoilParticleDensity(double organicMatter);
 
     __cudaSpec double getNodeMeanTemperature(SF3Duint_t nodeIndex);
 

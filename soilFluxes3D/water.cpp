@@ -6,17 +6,12 @@
 #include "water.h"
 #include "soilPhysics.h"
 #include "heat.h"
-#include "otherFunctions.h"
 
 #include <cassert>
 
 // [m] 10 micrometres
 #define EPSILON_METER 0.00001
 
-using namespace soilFluxes3D::v2;
-using namespace soilFluxes3D::v2::Soil;
-using namespace soilFluxes3D::v2::Math;
-using namespace soilFluxes3D::v2::Heat;
 
 namespace soilFluxes3D::v2
 {
@@ -25,6 +20,12 @@ namespace soilFluxes3D::v2
     extern __cudaMngd balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
     extern __cudaMngd simulationFlags_t simulationFlags;
 }
+
+using namespace soilFluxes3D::v2;
+using namespace soilFluxes3D::v2::Soil;
+using namespace soilFluxes3D::v2::Math;
+using namespace soilFluxes3D::v2::Heat;
+
 
 namespace soilFluxes3D::v2::Water
 {

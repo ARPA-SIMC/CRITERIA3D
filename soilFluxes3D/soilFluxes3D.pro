@@ -37,7 +37,6 @@ SOURCES += \
     lineal/linealiaLib.cpp \
     cpusolver.cpp \
     heat.cpp \
-    otherFunctions.cpp \
     soilFluxes3D.cpp \
     soilPhysics.cpp \
     water.cpp
@@ -49,7 +48,6 @@ HEADERS += \
     cpusolver.h \
     heat.h \
     macro.h \
-    otherFunctions.h \
     soilFluxes3D.h \
     soilPhysics.h \
     solver.h \

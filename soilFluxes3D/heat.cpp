@@ -4,16 +4,11 @@
 #include "types_cpu.h"
 #include "water.h"
 #include "soilPhysics.h"
-#include "otherFunctions.h"
 #include "commonConstants.h"
 #include "basicMath.h"
 
 #include <algorithm>
 
-using namespace soilFluxes3D::v2;
-using namespace soilFluxes3D::v2::Soil;
-using namespace soilFluxes3D::v2::Water;
-using namespace soilFluxes3D::v2::Math;
 
 namespace soilFluxes3D::v2
 {
@@ -22,6 +17,12 @@ namespace soilFluxes3D::v2
     extern __cudaMngd balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
     extern __cudaMngd simulationFlags_t simulationFlags;
 }
+
+using namespace soilFluxes3D::v2;
+using namespace soilFluxes3D::v2::Soil;
+using namespace soilFluxes3D::v2::Water;
+using namespace soilFluxes3D::v2::Math;
+
 
 namespace soilFluxes3D::v2::Heat
 {
@@ -689,7 +690,7 @@ namespace soilFluxes3D::v2::Heat
      * \brief compute the advective liquid water heat flux at lIdx link of the nIdx node
      * \return Advective liquid water heat flux [W]
      */
-    __cudaSpec double computeAdvectiveFlux(SF3Duint_t nIdx, u8_t lIdx) //TO DO: change param lIdx with a linkData_t const ref
+    __cudaSpec double computeAdvectiveFlux(SF3Duint_t nIdx, u8_t lIdx)
     {
         SF3Duint_t linkedNodeIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
@@ -941,7 +942,7 @@ namespace soilFluxes3D::v2::Heat
     {
         const double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
 
-        const double bulkDensity = estimateNodeBulkDensity(nodeIndex);
+        const double bulkDensity = computeNodeBulkDensity(nodeIndex);
         double heatCapacity = (bulkDensity / QUARTZ_DENSITY) * HEAT_CAPACITY_MINERAL + theta * HEAT_CAPACITY_WATER;
 
         if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
@@ -1130,32 +1131,6 @@ namespace soilFluxes3D::v2::Heat
         return deltaVapor * nodeGrid.boundaryData.aerodynamicConductance[downIndex];
     }
 
-
-    /*!
-     * \brief estimate the nodeIndex node bulk density
-     * \return bulk density [Mg m-3]
-     */
-    __cudaSpec double estimateNodeBulkDensity(SF3Duint_t nodeIndex)
-    {
-        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
-        double particleDensity = estimateSoilParticleDensity(nodeSoil.organicMatter);
-        double totalPorosity = nodeSoil.Theta_s;
-
-        return (1. - totalPorosity) * particleDensity;
-    }
-
-    /*!
-     * \brief estimate soil particle density (Driessen, 1986)
-     * \param organicMatter: fraction of organic matter
-     * \return soil particle density [Mg m-3]
-     */
-    __cudaSpec double estimateSoilParticleDensity(double organicMatter)
-    {
-        if(organicMatter == noDataD)
-            organicMatter = 0.02;
-
-        return 1. / ((1. - organicMatter) / QUARTZ_DENSITY + organicMatter / 1.43);
-    }
 
     /*!
      * \brief compute vapor concentration from matric potential and temperature

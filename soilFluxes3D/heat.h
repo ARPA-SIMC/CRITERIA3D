@@ -43,7 +43,7 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeIsothermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime);
     __cudaSpec double computeIsothermalLatentHeatFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime);
 
-    __cudaSpec double computeAdvectiveFlux(SF3Duint_t nIdx, u8_t lIdx);     //originally double&: check if needed somewhere
+    __cudaSpec double computeAdvectiveFlux(SF3Duint_t nIdx, u8_t lIdx);
     __cudaSpec double getLinkHeatFlux(const linkData_t &linkData, SF3Duint_t srcIndex, fluxTypes_t fluxType);
 
     __cudaSpec double conduction(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime);
@@ -61,10 +61,6 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeNodeAtmosphericLatentHeatFlux(SF3Duint_t nodeIndex);
     __cudaSpec double computeNodeAtmosphericLatentVaporFlux(SF3Duint_t nodeIndex);
     __cudaSpec double computeNodeAtmosphericLatentSurfaceWaterFlux(SF3Duint_t nodeIndex);
-
-    //Move to soilPhysics (update comment in mathFunctions/physics.h)
-    __cudaSpec double estimateNodeBulkDensity(SF3Duint_t nodeIndex);
-    __cudaSpec double estimateSoilParticleDensity(double organicMatter);
 
     __cudaSpec double computeVapor_fromPsiTemp(double h, double T);
     __cudaSpec double computeLatentVaporizationHeat(double T);
