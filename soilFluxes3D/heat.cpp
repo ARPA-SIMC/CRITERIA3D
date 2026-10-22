@@ -122,11 +122,12 @@ namespace soilFluxes3D::v2::Heat
         return nodeGrid.waterData.oldPressureHead[nodeIndex] + deltaH * dt;
     }
 
+
     // mean matric potential during heat time step [m]
     __cudaSpec double getNodeAvgH_fromTimeSteps(SF3Duint_t nodeIndex, double dtHeat, double dtWater, double heatStartTime)
     {
-        double H0 = getNodeH_fromTimeSteps(nodeIndex, 0, dtWater, heatStartTime);
-        double H1 = getNodeH_fromTimeSteps(nodeIndex, dtHeat, dtWater, heatStartTime);
+        const double H0 = getNodeH_fromTimeSteps(nodeIndex, 0, dtWater, heatStartTime);
+        const double H1 = getNodeH_fromTimeSteps(nodeIndex, dtHeat, dtWater, heatStartTime);
         return computeMean(H0, H1, meanType_t::Arithmetic) - nodeGrid.z[nodeIndex];
     }
 
@@ -151,7 +152,6 @@ namespace soilFluxes3D::v2::Heat
                                                                             dtHeat, dtWater, heatStartTime) : 0.;
         const double thermalVaporflux = deepLink ? computeThermalVaporFlux(nIdx, lIdx, processType::Heat,
                                                                             dtHeat, dtWater, heatStartTime) : 0.;
-
         nodeGrid.linkData[lIdx].waterFlux[nIdx] = isothermalLiquidFlux - isothermalVaporFlux / WATER_DENSITY + thermalLiquidFlux;
         nodeGrid.linkData[lIdx].vaporFlux[nIdx] = isothermalVaporFlux + thermalVaporflux;
 
@@ -693,30 +693,33 @@ namespace soilFluxes3D::v2::Heat
     {
         SF3Duint_t linkedNodeIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
-        double liquidWaterFlux = nodeGrid.linkData[lIdx].waterFlux[nIdx];
-        double liquidAdvT = nodeGrid.heatData.temperature[(liquidWaterFlux < 0.) ? nIdx : linkedNodeIdx];
+        const double liquidWaterFlux = nodeGrid.linkData[lIdx].waterFlux[nIdx];
+        const double liquidAdvT = nodeGrid.heatData.temperature[(liquidWaterFlux < 0.) ? nIdx : linkedNodeIdx];
 
-        double AdvFluxCourant = HEAT_CAPACITY_WATER * liquidWaterFlux;
+        const double AdvFluxCourant = HEAT_CAPACITY_WATER * liquidWaterFlux;
 
-        double vaporWaterFlux = nodeGrid.linkData[lIdx].vaporFlux[nIdx];
-        double vaporAdvT = nodeGrid.heatData.temperature[(vaporWaterFlux < 0.) ? nIdx : linkedNodeIdx];
+        const double vaporWaterFlux = nodeGrid.linkData[lIdx].vaporFlux[nIdx];
+        const double vaporAdvT = nodeGrid.heatData.temperature[(vaporWaterFlux < 0.) ? nIdx : linkedNodeIdx];
 
-        double vapFluxCourant = HEAT_CAPACITY_WATER_VAPOR * vaporWaterFlux;
+        const double vapFluxCourant = HEAT_CAPACITY_WATER_VAPOR * vaporWaterFlux;
 
         return AdvFluxCourant * liquidAdvT + vapFluxCourant * vaporAdvT;
     }
 
+
     __cudaSpec double getLinkHeatFlux(const linkData_t& linkData, SF3Duint_t srcIndex, fluxTypes_t fluxType)
     {
-        if(!simulationFlags.computeHeat)
+        if(! simulationFlags.computeHeat)
             return noDataD;
 
         switch(simulationFlags.HFsaveMode)
         {
             case heatFluxSaveMode_t::Total:
                 if(fluxType == fluxTypes_t::HeatTotal)
+                {
                     return linkData.fluxes[toUnderlyingT(fluxType)][srcIndex];
-                return noDataD;
+                }
+                else return noDataD;
                 break;
             case heatFluxSaveMode_t::All:
                 return linkData.fluxes[toUnderlyingT(fluxType)][srcIndex];
@@ -784,46 +787,48 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeNodeHeatSoilConductivity(SF3Duint_t nodeIndex, double T, double h)
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
-        double celsiusT = T - ZEROCELSIUS;
+        const double celsiusT = T - ZEROCELSIUS;
 
-        //Volume fraction of water          [m3 m-3]
-        double wVolFrac = computeNodeTheta_fromSignedPsi(nodeIndex, h);
+        // Volume fraction of water          [m3 m-3]
+        const double wVolFrac = computeNodeTheta_fromSignedPsi(nodeIndex, h);
 
-        //Volume fraction of solids         [m3 m-3]
-        double sVolFrac = 1. - nodeSoil.Theta_s;
+        // Volume fraction of solids         [m3 m-3]
+        const double sVolFrac = 1.0 - nodeSoil.Theta_s;
 
-        //Volume fraction of air            [m3 m-3]
-        double aVolFrac = nodeSoil.Theta_s - wVolFrac;
+        // Volume fraction of air            [m3 m-3]
+        const double aVolFrac = nodeSoil.Theta_s - wVolFrac;
 
-        //Water return flow factor          []  (same in air conductivity)
-        double wRetFlowFactor = computeWaterReturnFlowFactor(wVolFrac, T, nodeSoil.clay);
+        // Water return flow factor          []  (same in air conductivity)
+        const double wRetFlowFactor = computeWaterReturnFlowFactor(wVolFrac, T, nodeSoil.clay);
 
-        //Thermal conductivity of water     [W m-1 K-1]
-        double wThermalK = 0.554 + 0.0024 * celsiusT - 0.00000987 * celsiusT * celsiusT;
+        // Thermal conductivity of water     [W m-1 K-1]
+        const double thermalK_zeroDegree = 0.554;
+        const double wThermalK = thermalK_zeroDegree + 0.0024 * celsiusT - 0.00000987 * celsiusT * celsiusT;
 
-        //Thermal conductivity of air       [W m-1 K-1]
-        double aThermalK = computeNodeHeatAirConductivity(nodeIndex, T, h);
+        // Thermal conductivity of air       [W m-1 K-1]
+        const double aThermalK = computeNodeHeatAirConductivity(nodeIndex, T, h);
 
-        //Thermal conductivity of fluids    [W m-1 K-1]
-        double fThermalK = aThermalK + wRetFlowFactor * (wThermalK - aThermalK);
+        // Thermal conductivity of fluids    [W m-1 K-1]
+        const double fThermalK = aThermalK + wRetFlowFactor * (wThermalK - aThermalK);
 
-        //deVries shape factor              []  (assume same for all mineral soils)
-        double ga = 0.088;
-        //Shape factor                      []
-        double gc = 1. - 2. * ga;
+        // deVries shape factor              [-]  (assume same for all mineral soils)
+        const double ga = 0.088;
+        // Shape factor                      [-]
+        const double gc = 1. - 2. * ga;
 
-        //Air weighting factor              []
-        double aWFactor = (2. / (1. + (aThermalK / fThermalK - 1.) * ga) + 1. / (1. + (aThermalK / fThermalK - 1.) * gc)) / 3.;
-        //Water weighting factor            []
-        double wWFactor = (2. / (1. + (wThermalK / fThermalK - 1.) * ga) + 1. / (1. + (wThermalK / fThermalK - 1.) * gc)) / 3.;
-        //Solid weighting factor            []
-        double sWFactor = (2. / (1. + (mineralHK / fThermalK - 1.) * ga) + 1. / (1. + (mineralHK / fThermalK - 1.) * gc)) / 3.;
+        // Air weighting factor              [-]
+        const double aWFactor = (2. / (1. + (aThermalK / fThermalK - 1.) * ga) + 1. / (1. + (aThermalK / fThermalK - 1.) * gc)) / 3.;
+        // Water weighting factor            [-]
+        const double wWFactor = (2. / (1. + (wThermalK / fThermalK - 1.) * ga) + 1. / (1. + (wThermalK / fThermalK - 1.) * gc)) / 3.;
+        // Solid weighting factor            [-]
+        const double sWFactor = (2. / (1. + (mineralHK / fThermalK - 1.) * ga) + 1. / (1. + (mineralHK / fThermalK - 1.) * gc)) / 3.;
 
-        //Total thermal conductivity[W m-1 K-1]
-        double nodeConductivity = (wVolFrac * wWFactor * wThermalK + aVolFrac * aWFactor * aThermalK + sVolFrac * sWFactor * mineralHK)
+        // Total thermal conductivity        [W m-1 K-1]
+        const double nodeConductivity = (wVolFrac * wWFactor * wThermalK + aVolFrac * aWFactor * aThermalK + sVolFrac * sWFactor * mineralHK)
                                     / (wWFactor * wVolFrac + aWFactor * aVolFrac + sWFactor * sVolFrac);
         return nodeConductivity;
     }
+
 
     /*!
      * \brief compute the nodeIndex node thermal air conductivity
@@ -852,6 +857,7 @@ namespace soilFluxes3D::v2::Heat
 
         return aThermalK;
     }
+
 
     /*!
      * \brief compute the nodeIndex node thermal vapor conductivity
@@ -901,6 +907,7 @@ namespace soilFluxes3D::v2::Heat
         return eta * vDiff * svcSlope * rH;
     }
 
+
     /*!
      * \brief compute the nodeIndex node isothermal vapor conductivity
      * \param T: node temperature [K]
@@ -911,17 +918,18 @@ namespace soilFluxes3D::v2::Heat
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
 
-        //Volumetric water content  [m3 m-3]
-        double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
+        // Volumetric water content  [m3 m-3]
+        const double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
 
-        //Vapor diffusivity         [m2 s-1]
-        double vDiff = computeSoilVaporDiffusivity(nodeSoil.Theta_s, theta, T);
+        // Vapor diffusivity         [m2 s-1]
+        const double vDiff = computeSoilVaporDiffusivity(nodeSoil.Theta_s, theta, T);
 
-        //Vapor concentration       [kg m-3]
-        double vConc = computeVapor_fromPsiTemp(h, T);
+        // Vapor concentration       [kg m-3]
+        const double vConc = computeVapor_fromPsiTemp(h, T);
 
         return (vDiff * vConc * MH2O) / (R_GAS * T);
     }
+
 
     /*!
      * \brief compute the nodeIndex node volumetric heat capacity
@@ -931,20 +939,21 @@ namespace soilFluxes3D::v2::Heat
      */
     __cudaSpec double computeNodeHeatCapacity(SF3Duint_t nodeIndex, double h, double T)
     {
-        double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
+        const double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
 
-        double bulkDensity = estimateNodeBulkDensity(nodeIndex);
+        const double bulkDensity = estimateNodeBulkDensity(nodeIndex);
         double heatCapacity = (bulkDensity / QUARTZ_DENSITY) * HEAT_CAPACITY_MINERAL + theta * HEAT_CAPACITY_WATER;
 
         if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
         {
             // vapor volumetric water equivalent [m3 m-3]
-            double thetaV = computeNodeVaporThetaV(nodeIndex, h, T);
+            const double thetaV = computeNodeVaporThetaV(nodeIndex, h, T);
             heatCapacity += thetaV * WATER_DENSITY * HEAT_CAPACITY_WATER_VAPOR;
         }
 
         return heatCapacity;
     }
+
 
     /*!
      * \brief compute the node vapor volumetric water equivalent
