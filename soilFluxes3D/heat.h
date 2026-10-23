@@ -30,7 +30,7 @@ namespace soilFluxes3D::v2::Heat
 
     SF3Derror_t updateConductance();
 
-    bool updateBoundaryHeatData(double maxTimeStep, double& actualTimeStep);
+    bool updateBoundaryHeatData(double maxTimeStep, double& currentTimeStep);
 
     __cudaSpec bool computeHeatLinkFluxes(double& matrixElement, SF3Duint_t& matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex,
                                           double dtHeat, double dtWater, double heatStartTime);
@@ -43,7 +43,6 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeIsothermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime);
     __cudaSpec double computeIsothermalLatentHeatFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime);
 
-    __cudaSpec double computeAdvectiveFlux(SF3Duint_t nIdx, u8_t lIdx);
     __cudaSpec double getLinkHeatFlux(const linkData_t &linkData, SF3Duint_t srcIndex, fluxTypes_t fluxType);
 
     __cudaSpec double conduction(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime);

@@ -909,6 +909,9 @@ namespace soilFluxes3D::v2
         if(nodeIdx >= nodeGrid.nrNodes)
             return;
 
+        //Reset invariant fluxes at each approximation: computeLinkFluxes accumulates (+=) the thermal fluxes
+        //(same effect of the memset in the CPU updateBoundaryWaterData when heat is active)
+        nodeGrid.waterData.invariantFluxes[nodeIdx] = 0.;
         if(nodeGrid.surfaceFlag[nodeIdx])
             return;
 
@@ -1126,6 +1129,7 @@ namespace soilFluxes3D::v2
         matrixA.d_diagonalValues[rowIdx] = 1.0;
     }
 
+
     __global__ void computeHeatLinearSystemElement_k(MatrixGPU matrixA, VectorGPU vectorB, const double* Cvalues, double timeStepHeat, double timeStepWater, double heatStartTime)
     {
         SF3Duint_t rowIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
@@ -1155,7 +1159,7 @@ namespace soilFluxes3D::v2
             return;
         }
 
-        double nodeT = nodeGrid.heatData.temperature[rowIdx];
+        const double nodeT = nodeGrid.heatData.temperature[rowIdx];
 
         const double hStart = getNodeH_fromTimeSteps(rowIdx, 0., timeStepWater, heatStartTime) - nodeGrid.z[rowIdx];
         const double hEnd   = getNodeH_fromTimeSteps(rowIdx, timeStepHeat, timeStepWater, heatStartTime) - nodeGrid.z[rowIdx];
@@ -1234,14 +1238,67 @@ namespace soilFluxes3D::v2
             matrixA.d_values[currentElementIndex] *= -(hWF);
         }
 
-        const double diagonalValue = sumDP + (Cvalues[rowIdx] / timeStepHeat);
+        // Reso mutabile per integrare l'avvezione
+        double diagonalValue = sumDP + (Cvalues[rowIdx] / timeStepHeat);
+
+        // ---> INIZIO NUOVO CODICE: Avvezione Implicita Upwind (GPU Sliced-ELL) <---
+        // Convenzione RIGOROSA: Positivo = Outflow (esce da rowIdx), Negativo = Inflow
+        if (simulationFlags.computeWater && simulationFlags.computeHeatAdvection)
+        {
+            for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
+            {
+                if(nodeGrid.linkData[lIdx].linkType[rowIdx] == linkType_t::NoLink) continue;
+
+                const SF3Duint_t linkedNode = nodeGrid.linkData[lIdx].linkIndex[rowIdx];
+                if(!isHeatNode(linkedNode)) continue;
+
+                // liquid water
+                const double qLiquid = nodeGrid.linkData[lIdx].waterFlux[rowIdx];
+                if (qLiquid > 0.)
+                {
+                    // Outflow: il calore ESCE. Aumenta la diagonale del nodo corrente
+                    diagonalValue += qLiquid * HEAT_CAPACITY_WATER;
+                }
+                else if (qLiquid < 0.)
+                {
+                    // Inflow: il calore ENTRA. Sottrae dall'extra-diagonale del nodo sorgente
+                    const double inflowC = std::fabs(qLiquid) * HEAT_CAPACITY_WATER;
+                    for(u32_t c = 0; c < numLinks; ++c) {
+                        SF3Duint_t currentElementIndexLoop = baseRowIndex + (c * blockDim.x);
+                        if(matrixA.d_columnIndeces[currentElementIndexLoop] == linkedNode) {
+                            matrixA.d_values[currentElementIndexLoop] -= inflowC;
+                            break;
+                        }
+                    }
+                }
+
+                // Vapor
+                const double qVapor = nodeGrid.linkData[lIdx].vaporFlux[rowIdx];
+                if (qVapor > 0.)
+                {
+                    diagonalValue += qVapor * HEAT_CAPACITY_WATER_VAPOR;
+                }
+                else if (qVapor < 0.)
+                {
+                    const double inflowC = std::fabs(qVapor) * HEAT_CAPACITY_WATER_VAPOR;
+                    for(u32_t c = 0; c < numLinks; ++c) {
+                        SF3Duint_t currentElementIndexLoop = baseRowIndex + (c * blockDim.x);
+                        if(matrixA.d_columnIndeces[currentElementIndexLoop] == linkedNode) {
+                            matrixA.d_values[currentElementIndexLoop] -= inflowC;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         // store the diagonal value
         matrixA.d_originalDiagonalValues[rowIdx] = diagonalValue;
         matrixA.d_diagonalValues[rowIdx] = diagonalValue;
 
         //Compute b element
         vectorB.d_values[rowIdx] = Cvalues[rowIdx] * nodeGrid.heatData.oldTemperature[rowIdx] / timeStepHeat - heatCapacity / timeStepHeat +
-                                 nodeGrid.heatData.heatFlux[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx] + sumF0;
+                                   nodeGrid.heatData.heatFlux[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx] + sumF0;
 
         //Preconditioning (CPU asserts diagonal > 0)
         assert(diagonalValue > 0);

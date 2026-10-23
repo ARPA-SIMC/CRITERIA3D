@@ -199,6 +199,7 @@ namespace soilFluxes3D::v2
     }
 
 
+    // NOT USED sostituito da taglio diretto nella soluzione del sistema lineare
     bool CPUSolver::checkSurfaceElements(double deltaT)
     {
         //__parforop(_parameters.enableOMP, max, courantMax)
@@ -207,17 +208,17 @@ namespace soilFluxes3D::v2
             double x = vectorB.values[index];
             for(u8_t j = 1; j < matrixA.numColsInRow[index]; ++j)
             {
-                double value = matrixA.values[index][j];
+                const double value = matrixA.values[index][j];
                 if (value != 0.)
                     x -= value * vectorX.values[matrixA.columnIndeces[index][j]];
             }
             x /= matrixA.values[index][0];
 
-            double h = x - nodeGrid.z[index];
+            const double h = x - nodeGrid.z[index];
             // avoid negative potentials
             if(h < -0.0001)
             {
-                double h0 = vectorX.values[index] - nodeGrid.z[index];
+                const double h0 = vectorX.values[index] - nodeGrid.z[index];
                 double ratio = 0.;
                 if (std::abs(h0) > EPSILON)
                     ratio = std::max(0., 1. - std::abs(h / h0));
@@ -535,7 +536,7 @@ namespace soilFluxes3D::v2
                 linkIdx++;
 
             // Compute flux lateral
-            for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx) //TO DO: implement real num lat links
+            for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
             {
                 isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.columnIndeces[rowIdx][linkIdx],
                                                  rowIdx, 2 + latIdx, timeStepHeat, timeStepWater, heatStartTime);
@@ -556,7 +557,62 @@ namespace soilFluxes3D::v2
             }
 
             matrixA.columnIndeces[rowIdx][0] = rowIdx;
-            matrixA.values[rowIdx][0] = sumDP + (vectorC.values[rowIdx] / timeStepHeat);  //Check if C values is correct
+            matrixA.values[rowIdx][0] = sumDP + (vectorC.values[rowIdx] / timeStepHeat);
+
+            // New code: implicit advection
+            // positive = Inflow (enter in rowIdx), negative = Outflow
+            if (simulationFlags.computeWater && simulationFlags.computeHeatAdvection)
+            {
+                for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
+                {
+                    if(nodeGrid.linkData[lIdx].linkType[rowIdx] == linkType_t::NoLink)
+                        continue;
+
+                    const SF3Duint_t linkedNode = nodeGrid.linkData[lIdx].linkIndex[rowIdx];
+                    if(! isHeatNode(linkedNode))
+                        continue;
+
+                    // liquid water
+                    const double qLiquid = nodeGrid.linkData[lIdx].waterFlux[rowIdx];
+                    if (qLiquid < 0.)
+                    {
+                        // Outflow: il calore esce. Sommiamo alla diagonale di rowIdx (LHS)
+                        matrixA.values[rowIdx][0] += std::fabs(qLiquid) * HEAT_CAPACITY_WATER;
+                    }
+                    else if (qLiquid > 0.)
+                    {
+                        // Inflow: il calore entra. Sottraiamo dall'extra-diagonale del nodo sorgente
+                        double inflowC = qLiquid * HEAT_CAPACITY_WATER;
+                        for(u8_t c = 1; c < matrixA.numColsInRow[rowIdx]; ++c)
+                        {
+                            if(matrixA.columnIndeces[rowIdx][c] == linkedNode)
+                            {
+                                matrixA.values[rowIdx][c] -= inflowC;
+                                break;
+                            }
+                        }
+                    }
+
+                    // vapor
+                    const double qVapor  = nodeGrid.linkData[lIdx].vaporFlux[rowIdx];
+                    if (qVapor < 0.)
+                    {
+                        matrixA.values[rowIdx][0] += std::fabs(qVapor) * HEAT_CAPACITY_WATER_VAPOR;
+                    }
+                    else if (qVapor > 0.)
+                    {
+                        const double inflowC = qVapor * HEAT_CAPACITY_WATER_VAPOR;
+                        for(u8_t c = 1; c < matrixA.numColsInRow[rowIdx]; ++c)
+                        {
+                            if(matrixA.columnIndeces[rowIdx][c] == linkedNode)
+                            {
+                                matrixA.values[rowIdx][c] -= inflowC;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
 
             // store the diagonal value
             vectorDiagOriginal.values[rowIdx] = matrixA.values[rowIdx][0];

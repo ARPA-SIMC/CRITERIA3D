@@ -35,7 +35,7 @@ namespace soilFluxes3D::v2::Water
      */
     SF3Derror_t initializeWaterBalance()
     {
-        double currentWC = computeTotalWaterContent();
+        const double currentWC = computeTotalWaterContent();
         balanceDataWholePeriod.waterStorage = currentWC;
         balanceDataCurrentPeriod.waterStorage = currentWC;
         balanceDataCurrentTimeStep.waterStorage = currentWC;
@@ -159,7 +159,7 @@ namespace soilFluxes3D::v2::Water
         balanceDataCurrentPeriod.waterMBE = deltaStoragePeriod - balanceDataCurrentPeriod.waterSinkSource;
         balanceDataWholePeriod.waterMBE = deltaStorageHistorical - balanceDataWholePeriod.waterSinkSource;
 
-        double referenceWater = SF3Dmax(0.001, balanceDataWholePeriod.waterSinkSource);
+        double referenceWater = SF3Dmax(0.001, std::fabs(balanceDataWholePeriod.waterSinkSource));
         balanceDataWholePeriod.waterMBR = balanceDataWholePeriod.waterMBE / referenceWater;
 
         balanceDataCurrentPeriod.waterStorage = balanceDataCurrentTimeStep.waterStorage;
@@ -276,15 +276,19 @@ namespace soilFluxes3D::v2::Water
         computeCurrentMassBalance(deltaT);
     }
 
+
     __cudaSpec void updateLinkFlux(SF3Duint_t nodeIndex, u8_t linkIndex, double deltaT)
     {
         if(nodeGrid.linkData[linkIndex].linkType[nodeIndex] == linkType_t::NoLink)
             return;
 
-        SF3Duint_t linkedNodeIndex = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
-        double matrixValue = getMatrixElement(nodeIndex, linkedNodeIndex);
-        nodeGrid.linkData[linkIndex].waterFlowSum[nodeIndex] += matrixValue * (nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.waterData.pressureHead[linkedNodeIndex]) * deltaT;
+        const SF3Duint_t linkedNodeIndex = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
+        const double matrixValue = getMatrixElement(nodeIndex, linkedNodeIndex);
+
+        nodeGrid.linkData[linkIndex].waterFlowSum[nodeIndex] += matrixValue * (nodeGrid.waterData.pressureHead[nodeIndex]
+                                                                               - nodeGrid.waterData.pressureHead[linkedNodeIndex]) * deltaT;
     }
+
 
     void computeCapacity(VectorCPU& vectorC)
     {
@@ -295,7 +299,7 @@ namespace soilFluxes3D::v2::Water
             nodeGrid.waterData.waterConductivity[nodeIndex] = computeNodeK(nodeIndex);
 
             // capacity vector
-            double dThetadH = computeNode_dTheta_dH(nodeIndex);
+            const double dThetadH = computeNode_dTheta_dH(nodeIndex);
             vectorC.values[nodeIndex] = nodeGrid.size[nodeIndex] * dThetadH;
 
             if(simulationFlags.computeHeat && simulationFlags.computeHeatVapor)
@@ -315,10 +319,10 @@ namespace soilFluxes3D::v2::Water
             return false;
 
         SF3Duint_t linkedNodeindex = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
-        bool isNodeSoil = ! nodeGrid.surfaceFlag[nodeIndex];
-        bool isLinkedSoil = ! nodeGrid.surfaceFlag[linkedNodeindex];
+        const bool isNodeSoil = ! nodeGrid.surfaceFlag[nodeIndex];
+        const bool isLinkedSoil = ! nodeGrid.surfaceFlag[linkedNodeindex];
 
-        double flowArea = nodeGrid.linkData[linkIndex].interfaceArea[nodeIndex];
+        const double flowArea = nodeGrid.linkData[linkIndex].interfaceArea[nodeIndex];
 
         if (isNodeSoil && isLinkedSoil)
         {
@@ -338,13 +342,13 @@ namespace soilFluxes3D::v2::Water
         // heat
         if(simulationFlags.computeHeat && isNodeSoil && isLinkedSoil)
         {
-            double thermalLiquidFlux = computeThermalLiquidFlux(nodeIndex, linkIndex, processType::Water);
+            const double thermalLiquidFlux = computeThermalLiquidFlux(nodeIndex, linkIndex, processType::Water);
             nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalLiquidFlux;
 
             // vapor
             if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
             {
-                double thermalVaporFlux = computeThermalVaporFlux(nodeIndex, linkIndex, processType::Water) / WATER_DENSITY;
+                const double thermalVaporFlux = computeThermalVaporFlux(nodeIndex, linkIndex, processType::Water) / WATER_DENSITY;
                 nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalVaporFlux;
             }
         }
@@ -444,14 +448,14 @@ namespace soilFluxes3D::v2::Water
         // 2. topographic control
         // -------------------------
 
-        double zi = nodeGrid.z[i] + nodeGrid.waterData.pond[i];
-        double zj = nodeGrid.z[j] + nodeGrid.waterData.pond[j];
+        const double zi = nodeGrid.z[i] + nodeGrid.waterData.pond[i];
+        const double zj = nodeGrid.z[j] + nodeGrid.waterData.pond[j];
 
-        double Hmax = SF3Dmax(Hi, Hj);
-        double zmax = SF3Dmax(zi, zj);
+        const double Hmax = SF3Dmax(Hi, Hj);
+        const double zmax = SF3Dmax(zi, zj);
 
         // height of free water surface [m]
-        double Hs = Hmax - zmax;
+        const double Hs = Hmax - zmax;
         if (Hs <= EPSILON_METER)
             return 0.0;
 
@@ -459,12 +463,12 @@ namespace soilFluxes3D::v2::Water
         // 3. geometry
         // -------------------------
 
-        double dxy = nodeDistance2D(i, j);
+        const double dxy = nodeDistance2D(i, j);
         if (dxy <= 0.0)
             return 0.0;
 
         // [s m-1/3] Manning roughness
-        double roughness = 0.5 * (nodeGrid.soilSurfacePointers[i].surfacePtr->roughness +
+        const double roughness = 0.5 * (nodeGrid.soilSurfacePointers[i].surfacePtr->roughness +
                                   nodeGrid.soilSurfacePointers[j].surfacePtr->roughness);
         if (roughness <= 0.0)
             return 0.0;
@@ -473,22 +477,22 @@ namespace soilFluxes3D::v2::Water
         // 4. Manning diffusive-wave
         // -------------------------
 
-        double A = flowSide * Hs;                       // [m²]
+        const double A = flowSide * Hs;                         // [m²]
 
         // cbrt is equivalent to pow(H_s, 2/3)
-        double Hs_2_3 = cbrt(Hs * Hs);
+        const double Hs_2_3 = cbrt(Hs * Hs);
 
-        double Kij = A * Hs_2_3 / (roughness * dxy);    // [m² s⁻¹]
+        const double Kij = A * Hs_2_3 / (roughness * dxy);      // [m² s⁻¹]
 
         // -------------------------
         // 5. Courant
         // -------------------------
 
-        double dH = abs(Hi - Hj);
-        double slope = (dH > EPSILON_METER) ? dH / dxy : 0.0;
+        const double dH = abs(Hi - Hj);
+        const double slope = (dH > EPSILON_METER) ? dH / dxy : 0.0;
 
         // [m s-1] Manning velocity
-        double v = Hs_2_3 * sqrt(slope) / roughness;
+        const double v = Hs_2_3 * sqrt(slope) / roughness;
 
         nodeGrid.waterData.partialCourantWater[i] = SF3Dmax(nodeGrid.waterData.partialCourantWater[i], v * deltaT / dxy );
 
@@ -507,7 +511,7 @@ namespace soilFluxes3D::v2::Water
             soilNodeIndex = i;
         }
 
-        double cellDistance = nodeGrid.z[surfNodeIndex] - nodeGrid.z[soilNodeIndex];
+        const double cellDistance = nodeGrid.z[surfNodeIndex] - nodeGrid.z[soilNodeIndex];
         soilData_t& soilData = *(nodeGrid.soilSurfacePointers[soilNodeIndex].soilPtr);
 
         double boundaryFactor = 1.;
@@ -522,28 +526,30 @@ namespace soilFluxes3D::v2::Water
                 break;
         }
 
-        // The soil node is saturated
+        // the soil node is saturated
         if(nodeGrid.waterData.pressureHead[soilNodeIndex] > nodeGrid.z[surfNodeIndex])
             return (soilData.K_sat * boundaryFactor * flowArea) / cellDistance;
 
-        double surfH = 0.5 * (nodeGrid.waterData.pressureHead[surfNodeIndex] + nodeGrid.waterData.oldPressureHead[surfNodeIndex]);
-        double soilH = 0.5 * (nodeGrid.waterData.pressureHead[soilNodeIndex] + nodeGrid.waterData.oldPressureHead[soilNodeIndex]);
+        const double surfH = 0.5 * (nodeGrid.waterData.pressureHead[surfNodeIndex] + nodeGrid.waterData.oldPressureHead[surfNodeIndex]);
+        const double soilH = 0.5 * (nodeGrid.waterData.pressureHead[soilNodeIndex] + nodeGrid.waterData.oldPressureHead[soilNodeIndex]);
 
-        double surfaceWater = SF3Dmax(surfH - nodeGrid.z[surfNodeIndex], 0.);           // [m]
-        double surfaceBoundaryFlow = nodeGrid.waterData.waterFlow[surfNodeIndex];       // [m3 s-1]
+        double surfaceWater = SF3Dmax(surfH - nodeGrid.z[surfNodeIndex], 0.);               // [m]
+        const double surfaceBoundaryFlow = nodeGrid.waterData.waterFlow[surfNodeIndex];     // [m3 s-1]
         if (surfaceBoundaryFlow < 0.)
         {
-            double boundary_m = (surfaceBoundaryFlow * deltaT) / nodeGrid.size[surfNodeIndex];
-            surfaceWater = SF3Dmax(0., surfaceWater + boundary_m);                       // [m]
+            const double boundary_m = (surfaceBoundaryFlow * deltaT) / nodeGrid.size[surfNodeIndex];
+            surfaceWater = SF3Dmax(0., surfaceWater + boundary_m);                          // [m]
         }
 
-        double maxInfRate = surfaceWater / deltaT;                                      // [m s-1]
-        if(maxInfRate < 2.78e-11)   // 0.0001 mm/hour
+        const double maxInfRate = surfaceWater / deltaT;                                    // [m s-1]
+
+        // 0.0001 mm/hour
+        if(maxInfRate < 2.78e-11)
             return 0.;
 
-        double dH = SF3Dmax(surfH - soilH, 1e-12);
-        double maxK = maxInfRate * (cellDistance / dH);
-        double meanK = computeMean(soilData.K_sat, nodeGrid.waterData.waterConductivity[soilNodeIndex], meanType);
+        const double dH = SF3Dmax(surfH - soilH, 1e-12);
+        const double maxK = maxInfRate * (cellDistance / dH);
+        const double meanK = computeMean(soilData.K_sat, nodeGrid.waterData.waterConductivity[soilNodeIndex], meanType);
 
         return (SF3Dmin(boundaryFactor * meanK, maxK) * flowArea) / cellDistance;
     }
@@ -551,9 +557,10 @@ namespace soilFluxes3D::v2::Water
 
     __cudaSpec double redistribution(SF3Duint_t i, SF3Duint_t j, double lateralVerticalRatio, double flowArea, linkType_t linkType, meanType_t meanType)
     {
-        double cellDistance;
         double k_i = nodeGrid.waterData.waterConductivity[i];
         double k_j = nodeGrid.waterData.waterConductivity[j];
+
+        double cellDistance;
         if(linkType == linkType_t::Lateral)
         {
             // horizontal
@@ -567,7 +574,7 @@ namespace soilFluxes3D::v2::Water
             cellDistance = std::fabs(nodeGrid.z[i] - nodeGrid.z[j]);
         }
 
-        double meanK = computeMean(k_i, k_j, meanType);
+        const double meanK = computeMean(k_i, k_j, meanType);
         return (meanK * flowArea) / cellDistance;
     }
 
@@ -627,7 +634,7 @@ namespace soilFluxes3D::v2::Water
             currentNorm = std::fabs(newCurrValue - vectorX.values[row]);
             vectorX.values[row] = newCurrValue;
 
-            double psi = newCurrValue - nodeGrid.z[row];
+            const double psi = newCurrValue - nodeGrid.z[row];
             if(psi > 1.)
                 currentNorm /= psi;
 
