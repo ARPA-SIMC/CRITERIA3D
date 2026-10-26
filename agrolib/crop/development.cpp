@@ -71,7 +71,7 @@ namespace leafDevelopment
 
 
     // Antonio - new LAI algorithm
-    double getNewLai(double fractionTranspirableSoilWater, double previousLai, double a, double b,double laiMIN,double laiMAX,double growthDD,double emergenceDD,double currentDD,double thermalUnits,bool *isSenescence,double* actualLaiMax)
+    double getLai_newMethod(double fractionTranspirableSoilWater, double previousLai, double a, double b,double laiMIN,double laiMAX,double growthDD,double emergenceDD,double currentDD,double thermalUnits,bool *isSenescence,double* actualLaiMax)
     {
         if (currentDD <= emergenceDD) return laiMIN;
 

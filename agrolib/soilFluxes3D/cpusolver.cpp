@@ -1,5 +1,6 @@
 #include <cstring>
 #include <cassert>
+#include <cmath>
 #include <omp.h>
 #include <iostream>
 
@@ -8,7 +9,6 @@
 #include "soilPhysics.h"
 #include "water.h"
 #include "heat.h"
-#include "otherFunctions.h"
 #include "linealia.hpp"
 
 using namespace soilFluxes3D::v2::Soil;
@@ -84,12 +84,18 @@ namespace soilFluxes3D::v2
                 const double dtWater = acceptedTimeStep;
                 double dtHeat = maxTimeStep;
                 double sumHeatTime = 0.;
-                while (sumHeatTime < maxTimeStep)
+                while ((maxTimeStep - sumHeatTime) > 1e-9)
                 {
                     dtHeat = SF3Dmin(dtHeat, maxTimeStep - sumHeatTime);
 
                     if (! heatLoop(dtHeat, dtWater, heatStartTime + sumHeatTime))
-                        dtHeat *= 0.5;
+                    {
+                        // step already at the minimum: halving again would never end
+                        if (dtHeat <= _parameters.deltaTmin)
+                            return SF3Derror_t::SolverError;
+
+                        dtHeat = SF3Dmax(dtHeat * 0.5, _parameters.deltaTmin);
+                    }
                     else
                         sumHeatTime += dtHeat;
                 }
@@ -193,6 +199,7 @@ namespace soilFluxes3D::v2
     }
 
 
+    // NOT USED sostituito da taglio diretto nella soluzione del sistema lineare
     bool CPUSolver::checkSurfaceElements(double deltaT)
     {
         //__parforop(_parameters.enableOMP, max, courantMax)
@@ -201,17 +208,17 @@ namespace soilFluxes3D::v2
             double x = vectorB.values[index];
             for(u8_t j = 1; j < matrixA.numColsInRow[index]; ++j)
             {
-                double value = matrixA.values[index][j];
+                const double value = matrixA.values[index][j];
                 if (value != 0.)
                     x -= value * vectorX.values[matrixA.columnIndeces[index][j]];
             }
             x /= matrixA.values[index][0];
 
-            double h = x - nodeGrid.z[index];
+            const double h = x - nodeGrid.z[index];
             // avoid negative potentials
             if(h < -0.0001)
             {
-                double h0 = vectorX.values[index] - nodeGrid.z[index];
+                const double h0 = vectorX.values[index] - nodeGrid.z[index];
                 double ratio = 0.;
                 if (std::abs(h0) > EPSILON)
                     ratio = std::max(0., 1. - std::abs(h / h0));
@@ -266,6 +273,10 @@ namespace soilFluxes3D::v2
         {
             _parameters.deltaTcurr /= nodeGrid.CourantWater;
 
+            // guard against non finite/zero values (the rescaling loop below would never end)
+            if (!std::isfinite(_parameters.deltaTcurr) || _parameters.deltaTcurr <= 0.)
+                _parameters.deltaTcurr = _parameters.deltaTmin;
+
             int multiply = 0;
             while (_parameters.deltaTcurr < 1.)
             {
@@ -309,33 +320,6 @@ namespace soilFluxes3D::v2
             rowValues[0] = 1.0;
         }
     }
-
-
-    /*
-    bool CPUSolver::isLinked(bool& isPrevious, double& matrixElement, SF3Duint_t& matrixIndex,
-                             SF3Duint_t nodeIndex, u8_t linkIndex)
-    {
-        if(nodeGrid.linkData[linkIndex].linkType[nodeIndex] == linkType_t::NoLink)
-            return false;
-
-        SF3Duint_t index = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
-        isPrevious = (index < nodeIndex);
-
-        if (! isPrevious)
-            return true;
-
-        for (u8_t j = 1; j < matrixA.numColsInRow[index]; ++j)
-        {
-            if (matrixA.columnIndeces[index][j] == nodeIndex)
-            {
-                matrixElement = matrixA.values[index][j];
-                matrixIndex = index;
-                return true;
-            }
-        }
-
-        return false;
-    }*/
 
 
     void CPUSolver::computeDiagonalElement(SF3Duint_t row, double deltaT)
@@ -522,7 +506,12 @@ namespace soilFluxes3D::v2
 
             double dTheta = computeNodeTheta_fromSignedPsi(rowIdx, hEnd) - computeNodeTheta_fromSignedPsi(rowIdx, hStart);
 
-            double heatCapacity = dTheta * HEAT_CAPACITY_WATER * nodeT;
+            // Heat stored/released by the change of liquid water content: it is consistent only if the heat carried by the
+            // liquid water flux is modelled (advective flux). Without advection the water content change must not exchange heat,
+            // otherwise every wetting removes ~ Cw * T * dTheta (T in K) from the soil (spurious cooling of tens of degrees).
+            double heatCapacity = 0.;
+            if(simulationFlags.computeWater && simulationFlags.computeHeatAdvection)
+                heatCapacity = dTheta * HEAT_CAPACITY_WATER * nodeT;
 
             if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
             {
@@ -552,7 +541,7 @@ namespace soilFluxes3D::v2
                 linkIdx++;
 
             // Compute flux lateral
-            for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx) //TO DO: implement real num lat links
+            for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
             {
                 isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.columnIndeces[rowIdx][linkIdx],
                                                  rowIdx, 2 + latIdx, timeStepHeat, timeStepWater, heatStartTime);
@@ -573,7 +562,62 @@ namespace soilFluxes3D::v2
             }
 
             matrixA.columnIndeces[rowIdx][0] = rowIdx;
-            matrixA.values[rowIdx][0] = sumDP + (vectorC.values[rowIdx] / timeStepHeat);  //Check if C values is correct
+            matrixA.values[rowIdx][0] = sumDP + (vectorC.values[rowIdx] / timeStepHeat);
+
+            // New code: implicit advection
+            // positive = Inflow (enter in rowIdx), negative = Outflow
+            if (simulationFlags.computeWater && simulationFlags.computeHeatAdvection)
+            {
+                for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
+                {
+                    if(nodeGrid.linkData[lIdx].linkType[rowIdx] == linkType_t::NoLink)
+                        continue;
+
+                    const SF3Duint_t linkedNode = nodeGrid.linkData[lIdx].linkIndex[rowIdx];
+                    if(! isHeatNode(linkedNode))
+                        continue;
+
+                    // liquid water
+                    const double qLiquid = nodeGrid.linkData[lIdx].waterFlux[rowIdx];
+                    if (qLiquid < 0.)
+                    {
+                        // Outflow: il calore esce. Sommiamo alla diagonale di rowIdx (LHS)
+                        matrixA.values[rowIdx][0] += std::fabs(qLiquid) * HEAT_CAPACITY_WATER;
+                    }
+                    else if (qLiquid > 0.)
+                    {
+                        // Inflow: il calore entra. Sottraiamo dall'extra-diagonale del nodo sorgente
+                        double inflowC = qLiquid * HEAT_CAPACITY_WATER;
+                        for(u8_t c = 1; c < matrixA.numColsInRow[rowIdx]; ++c)
+                        {
+                            if(matrixA.columnIndeces[rowIdx][c] == linkedNode)
+                            {
+                                matrixA.values[rowIdx][c] -= inflowC;
+                                break;
+                            }
+                        }
+                    }
+
+                    // vapor
+                    const double qVapor  = nodeGrid.linkData[lIdx].vaporFlux[rowIdx];
+                    if (qVapor < 0.)
+                    {
+                        matrixA.values[rowIdx][0] += std::fabs(qVapor) * HEAT_CAPACITY_WATER_VAPOR;
+                    }
+                    else if (qVapor > 0.)
+                    {
+                        const double inflowC = qVapor * HEAT_CAPACITY_WATER_VAPOR;
+                        for(u8_t c = 1; c < matrixA.numColsInRow[rowIdx]; ++c)
+                        {
+                            if(matrixA.columnIndeces[rowIdx][c] == linkedNode)
+                            {
+                                matrixA.values[rowIdx][c] -= inflowC;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
 
             // store the diagonal value
             vectorDiagOriginal.values[rowIdx] = matrixA.values[rowIdx][0];

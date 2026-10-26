@@ -304,7 +304,7 @@ namespace soilFluxes3D { inline namespace v2
         meanType_t meanType = meanType_t::Logarithmic;
 
         double lateralVerticalRatio = 4.;       // [-] default
-        double heatWeightFactor = 0.5;
+        double heatWeightFactor = 1.0;
 
         double CourantWaterThreshold = 0.5;     // used for evaluate stability
         double instabilityFactor = 10.;         // used for evaluate stability

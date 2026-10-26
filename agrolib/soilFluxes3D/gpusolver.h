@@ -23,23 +23,23 @@ namespace soilFluxes3D::v2
             SF3Duint_t numThreadsPerBlock;
             SF3Duint_t numBlocks;
 
-            void waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
+            bool waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
+            bool checkCourant(double deltaT);
 
             bool heatLoop(double timeStepHeat, double timeStepWater, double heatStartTime = 0.);
 
             bool solveLinearSystem(u8_t approximationNumber, processType computationType) override;
 
-            //TEMP: maybe can be unified with CPU code in single __host__ __device__ function
             balanceResult_t evaluateWaterBalance_m(u8_t approxNr, double& bestMBRerror, double deltaT);
             void computeCurrentMassBalance_m(double deltaT);
             void acceptStep_m(double deltaT);
             void restoreBestStep_m(double deltaT);
 
-            void evaluateHeatBalance_m(double dtHeat, double dtWater);
+            void evaluateHeatBalance_m(double dtHeat, double dtWater, double heatStartTime = 0.);
 
             SF3Derror_t resetFluxValues_m(bool flagHeat, bool flagWater);
-            SF3Derror_t saveHeatFluxValues_m(double dtHeat, double dtWater);
+            SF3Derror_t saveHeatFluxValues_m(double dtHeat, double dtWater, double heatStartTime = 0.);
 
             SF3Derror_t upCopyData();
             SF3Derror_t upMoveVectorPtrs();
@@ -57,9 +57,10 @@ namespace soilFluxes3D::v2
             SF3Derror_t clean() override;
     };
 
+
     inline __cudaSpec double GPUSolver::getMatrixElementValue(SF3Duint_t rowIndex, SF3Duint_t colIndex) const noexcept
     {
-        //Valori diagonali
+        // diagonal
         if(rowIndex == colIndex)
             return iterationMatrix.d_originalDiagonalValues[rowIndex];
 
@@ -81,12 +82,12 @@ namespace soilFluxes3D::v2
     __global__ void computeCapacityWater_k(double *Cvalues);
     __global__ void updateBoundaryWaterData_k(double deltaT);
 
-    __global__ void computeCapacityHeat_k(double *Cvalues, double timeStepHeat, double timeStepWater);
+    __global__ void computeCapacityHeat_k(double *Cvalues, double timeStepHeat, double timeStepWater, double heatStartTime);
 
     __global__ void computeWaterLinearSystemElement_k(MatrixGPU matrixA, VectorGPU vectorB, const double* Cvalues, u8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType);
-    __global__ void computeHeatLinearSystemElement_k(MatrixGPU matrixA, VectorGPU vectorB, const double* Cvalues, double timeStepHeat, double timeStepWater);
+    __global__ void computeHeatLinearSystemElement_k(MatrixGPU matrixA, VectorGPU vectorB, const double* Cvalues, double timeStepHeat, double timeStepWater, double heatStartTime);
 
-    __global__ void computeNormalizedError(double *vectorNorm, double *vectorX, const double *previousX);
+    __global__ void computeNormalizedError(double *vectorNorm, double *vectorX, const double *previousX, bool isWaterProcess);
 
     __global__ void updateSaturationDegree_k();
     __global__ void updateWaterConductivity_k();
@@ -94,9 +95,9 @@ namespace soilFluxes3D::v2
     __global__ void computeWaterContent_k(double* outVector);
 
     __global__ void computeCurrentHeatSinkSource_k(double* d_heatSinkSourceVector, double dtHeat);
-    __global__ void computeCurrentHeatStorage_k(double* d_heatSinkSourceVector, double = noDataD, double dtHeat = noDataD);
+    __global__ void computeCurrentHeatStorage_k(double* d_heatSinkSourceVector, double dtWater = noDataD, double dtHeat = noDataD, double heatStartTime = 0.);
 
-    __global__ void saveHeatFluxValues_k(double dtHeat, double dtWater);
+    __global__ void saveHeatFluxValues_k(double dtHeat, double dtWater, double heatStartTime);
 
     template<typename deviceError_t>
     inline SF3Derror_t solverDeviceCheckError(deviceError_t retError, solverStatus& status, const SF3Derror_t contextErrorType)

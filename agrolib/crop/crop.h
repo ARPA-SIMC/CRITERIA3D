@@ -67,6 +67,7 @@
         double LAIstartSenescence;
         int daysSinceIrrigation;
         std::vector<double> layerTranspiration;
+        std::vector<bool>isLayerStressed;
 
         Crit3DCrop();
 
@@ -85,12 +86,12 @@
         double getDailyDegreeIncrease(double tmin, double tmax);
 
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
-        bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
+        bool needReset(const Crit3DDate &myDate, double latitude, double waterTableDepth);
         void resetCrop(unsigned int nrLayers);
 
         bool updateLAI(double latitude, unsigned int nrLayers, int currentDoy);
         void updateRootDepth(double currentDD, double waterTableDepth);
-        double computeRootLength(double currentDD, double waterTableDepth);
+        double computeRootLength(double currentDD, double waterTableDepth) const;
 
         void computeRootLength3D(double currentDD, double totalSoilDepth);
 

@@ -60,8 +60,9 @@ void Crit3DRoot::clear()
     lastRootLayer = NODATA;
     currentRootLength = NODATA;
     rootDepth = NODATA;
-    rootDensity.clear();
     rootsAdditionalCohesion = NODATA;
+
+    rootDensity.clear();
 }
 
 
@@ -196,19 +197,22 @@ namespace root
         if (isEqual(number, 0.0))
             return 0;
 
-        int order = floor(log10(fabs(number)));
+        int order = (int)floor(log10(fabs(number)));
         return order;
     }
 
 
     int getNrAtoms(const std::vector<soil::Crit1DLayer> &soilLayers, double &minThickness, std::vector<int> &atoms)
     {
-        unsigned int nrLayers = unsigned(soilLayers.size());
-        int multiplicationFactor = 1;
+        const unsigned int nrLayers = unsigned(soilLayers.size());
+
+        if (nrLayers < 2 || atoms.size() < soilLayers.size())
+            return 0;
 
         minThickness = soilLayers[1].thickness;
 
-        double tmp = minThickness * 1.001;
+        const double tmp = minThickness * 1.001;
+        int multiplicationFactor = 1;
         if (tmp < 1)
             multiplicationFactor = int(pow(10.0, -orderOfMagnitude(tmp)));
 
@@ -217,11 +221,10 @@ namespace root
             minThickness = 1./multiplicationFactor;
         }
 
-        int value;
         int counter = 0;
         for(unsigned int i=0; i < nrLayers; i++)
         {
-           value = int(round(multiplicationFactor * soilLayers[i].thickness));
+           const int value = int(round(multiplicationFactor * soilLayers[i].thickness));
            atoms[i] = value;
            counter += value;
         }
@@ -318,14 +321,15 @@ namespace root
 
         deformation = std::clamp(deformation, 0.0, 2.0);
 
-        int nrLunette = 2*nrLayersWithRoot;
-        double equalDensity = 1.0 / nrLunette;
+        const int nrLunette = 2 * nrLayersWithRoot;
+        const double equalDensity = 1.0 / nrLunette;
+
         // initialize not deformed cylinder
         std::vector<double> cylinderDensity(nrLunette, equalDensity);
 
         // linear deformation
         double rootDensitySum = 0.0;
-        double deltaDeformation = deformation - 1.0;
+        const double deltaDeformation = deformation - 1.0;
 
         for (int i = 0 ; i < nrLunette; i++)
         {

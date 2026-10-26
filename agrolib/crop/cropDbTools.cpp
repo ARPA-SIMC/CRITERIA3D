@@ -22,26 +22,27 @@ bool openDbCrop(QSqlDatabase &dbCrop, const QString &dbName, QString &errorStr)
 }
 
 
-bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &myCrop, QString& errorStr)
+bool loadCropParameters(const QSqlDatabase &dbCrop, const QString &idCrop, Crit3DCrop &myCrop, QString& errorStr)
 {
     myCrop.clear();
-    QString idCropString = idCrop;
-    QString queryString = "SELECT * FROM crop WHERE id_crop = '" + idCrop + "'";
 
-    QSqlQuery query = dbCrop.exec(queryString);
+    QSqlQuery query(dbCrop);
+    query.prepare("SELECT * FROM crop WHERE id_crop = :idCrop");
+    query.bindValue(":idCrop", idCrop);
+    query.exec();
     query.last();
 
     if (! query.isValid())
     {
         if (query.lastError().isValid())
-            errorStr = "Error in reading crop parameters of " + idCropString + "\n" + query.lastError().text();
+            errorStr = "Error in reading crop parameters of " + idCrop + "\n" + query.lastError().text();
         else
-            errorStr = "Missing crop: " + idCropString;
+            errorStr = "Missing crop: " + idCrop;
 
         return false;
     }
 
-    myCrop.idCrop = idCropString.toStdString();
+    myCrop.idCrop = idCrop.toStdString();
     myCrop.name = query.value("crop_name").toString().toStdString();
     myCrop.type = getCropType(query.value("type").toString().toStdString());
     myCrop.plantCycle = query.value("plant_cycle_max_duration").toInt();
@@ -85,11 +86,11 @@ bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &
 
     // WATER NEEDS
     myCrop.kcMax = query.value("kc_max").toDouble();
-    // [cm]
+
     if (! getValue(query.value("psi_leaf"), &(myCrop.psiLeaf)))
     {
         // default
-        myCrop.psiLeaf = 16000;          // Attenzione Giulia! [cm]
+        myCrop.psiLeaf = 16000;          // [cm]
     }
 
     myCrop.stressTolerance = query.value("stress_tolerance").toDouble();
