@@ -1166,7 +1166,12 @@ namespace soilFluxes3D::v2
 
         double dTheta = computeNodeTheta_fromSignedPsi(rowIdx, hEnd) - computeNodeTheta_fromSignedPsi(rowIdx, hStart);
 
-        double heatCapacity = dTheta * HEAT_CAPACITY_WATER * nodeT;
+        // Heat stored/released by the change of liquid water content: it is consistent only if the heat carried by the
+        // liquid water flux is modelled (advective flux). Without advection the water content change must not exchange heat,
+        // otherwise every wetting removes ~ Cw * T * dTheta (T in K) from the soil (spurious cooling of tens of degrees).
+        double heatCapacity = 0.;
+        if(simulationFlags.computeWater && simulationFlags.computeHeatAdvection)
+            heatCapacity = dTheta * HEAT_CAPACITY_WATER * nodeT;
 
         if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
         {
