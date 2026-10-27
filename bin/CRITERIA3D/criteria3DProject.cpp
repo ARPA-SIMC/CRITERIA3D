@@ -1859,9 +1859,9 @@ void Crit3DProject::computeSnowPoint(Crit3DSnow &snowPoint, int row, int col)
     double beamRad = radiationMaps->beamRadiationMap->value[row][col];
     double transmissivity = radiationMaps->transmissivityMap->value[row][col];
     double clearSkyTrans = radSettings.getClearSky();
-    double myWaterContent = 0;                              // [mm]
+    double surfaceWaterContent = 0;                                            // TODO [mm]
 
-    snowPoint.setSnowInputData(airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, myWaterContent);
+    snowPoint.setSnowInputData(airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, surfaceWaterContent);
 
     snowPoint.computeSnowBrooksModel();
 

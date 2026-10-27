@@ -60,7 +60,6 @@
         void computeSnowBrooksModel();
 
         double getSnowFall() { return _precSnow; }
-        double getSnowMelt() { return MAXVALUE(_snowMelt, 0); }
         double getDeltaSWE() { return _deltaSWE; }
         double getRainFall() { return _precRain; }
         double getEvaporation() { return _evaporation; }
@@ -68,6 +67,8 @@
         /*! water that is not retained by the pack [mm]: liquid excess over holding capacity,
          *  or water lost when the pack disappears. On snow-free cells it equals rain + surface water. */
         double getWaterOutflow() { return _waterOutflow; }
+
+        double getSnowMelt() { return _snowMelt; }
 
         double getSensibleHeat() { return _sensibleHeat; }
         double getLatentHeat() { return _latentHeat; }
@@ -109,9 +110,9 @@
         double _evaporation;                /*!<   [mm] */
         double _precRain;                   /*!<   [mm] */
         double _precSnow;                   /*!<   [mm] */
-        double _snowMelt;                   /*!<   [mm] */
         double _deltaSWE;                   /*!<   [mm] */
         double _waterOutflow;               /*!<   [mm] */
+        double _snowMelt;                   /*!<   [mm] */
         double _sensibleHeat;               /*!<   [kJ m-2] */
         double _latentHeat;                 /*!<   [kJ m-2] */
 

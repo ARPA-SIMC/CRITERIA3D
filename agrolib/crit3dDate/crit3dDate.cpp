@@ -178,23 +178,23 @@ Crit3DDate Crit3DDate::addDays(long offset) const
 {
     if (offset == 0) return (*this);
 
-    long julianDay = getJulianDay(day, month, year);
+    const long julianDay = getJulianDay(day, month, year);
     return getDateFromJulianDay(julianDay + offset);
 }
 
 
 int Crit3DDate::daysTo(const Crit3DDate& newDate) const
 {
-    long j1 = getJulianDay(this->day, this->month, this->year);
-    long j2 = getJulianDay(newDate.day, newDate.month, newDate.year);
+    const long j1 = getJulianDay(this->day, this->month, this->year);
+    const long j2 = getJulianDay(newDate.day, newDate.month, newDate.year);
     return j2-j1;
 }
 
 
 int daysTo(const Crit3DDate& firstDate, const Crit3DDate& lastDate)
 {
-    long j1 = getJulianDay(firstDate.day, firstDate.month, firstDate.year);
-    long j2 = getJulianDay(lastDate.day, lastDate.month, lastDate.year);
+    const long j1 = getJulianDay(firstDate.day, firstDate.month, firstDate.year);
+    const long j2 = getJulianDay(lastDate.day, lastDate.month, lastDate.year);
     return j2-j1;
 }
 
@@ -342,7 +342,7 @@ static inline long floordiv(long a, long b)
     return q;
 }
 
-inline long getJulianDay(int day, int month, int year)
+long getJulianDay(int day, int month, int year)
 {
     // Adjust for no year 0
     if (year < 0)

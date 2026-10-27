@@ -441,14 +441,15 @@ double emissivityFromVaporPressure(double myVP)
  * \param relHumidity [%] air relative humidity
  * \return leafW
  */
-bool computeLeafWetness(double prec, double relHumidity, short* leafW)
+bool computeLeafWetness(double prec, double relHumidity, short& leafW)
 {
-    *leafW = 0;
+    leafW = 0;
 
-    if (isEqual(relHumidity, NODATA) || isEqual(prec, NODATA)) return false;
+    if (isEqual(relHumidity, NODATA) || isEqual(prec, NODATA))
+        return false;
 
     if (prec > 0 || relHumidity > DEFAULT_LEAFWETNESS_RH_THRESHOLD)
-        *leafW = 1;
+        leafW = 1;
 
     return true;
 }
@@ -793,10 +794,6 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             setRelativeHumidityScale(colorScale);
             break;
         case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt: case snowFall:
-            setPrecipitationScale(colorScale);
-            reverseColorScale(colorScale);
-            colorScale->setHideZero(true);
-            break;
         case precipitation: case dailyPrecipitation: case monthlyPrecipitation:
             setPrecipitationScale(colorScale);
             colorScale->setHideZero(true);

@@ -97,9 +97,10 @@
             bool isUTC;
             bool isForecast;
             int hourlyFraction;
-            long nrObsDataDaysH;
-            long nrObsDataDaysD;
-            long nrObsDataDaysM;
+
+            int nrObsDataDaysH = 0;
+            int nrObsDataDaysD = 0;
+            int nrObsDataDaysM = 0;
 
             std::vector<TObsDataD> obsDataD;
             std::vector<TObsDataM> obsDataM;
@@ -188,7 +189,7 @@
                                          Crit3DMeteoSettings *meteoSettings, Crit3DQuality *qualityCheck, Crit3DClimateParameters *climateParam);
 
             void initializeObsDataDFromMp(unsigned int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint &meteoPoint);
-            void initializeObsDataHFromMp(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint &meteoPoint);
+            void initializeObsDataHFromMp(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate, const Crit3DMeteoPoint &meteoPoint);
             float getPercValueVariable(const Crit3DDate &firstDate, const Crit3DDate &lastDate, meteoVariable dailyMeteoVar);
 
             bool getDailyDataCsv_TPrec(std::string &outStr);
