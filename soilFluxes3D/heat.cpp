@@ -487,6 +487,26 @@ namespace soilFluxes3D::v2::Heat
     }
 
 
+    // heat associated to the change of liquid water content during the heat step, at the mean temperature [J]
+    static double computeImplicitWaterContentHeat(double dtHeat, double dtWater, double heatStartTime)
+    {
+        double implicitHeat = 0.;
+        __parforop(__ompStatus, +, implicitHeat)
+        for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
+        {
+            if(nodeGrid.surfaceFlag[nodeIdx])
+                continue;
+
+            const double hStart = getNodeH_fromTimeSteps(nodeIdx, 0., dtWater, heatStartTime) - nodeGrid.z[nodeIdx];
+            const double hEnd = getNodeH_fromTimeSteps(nodeIdx, dtHeat, dtWater, heatStartTime) - nodeGrid.z[nodeIdx];
+            const double dTheta = Soil::computeNodeTheta_fromSignedPsi(nodeIdx, hEnd) - Soil::computeNodeTheta_fromSignedPsi(nodeIdx, hStart);
+            const double meanT = 0.5 * (nodeGrid.heatData.temperature[nodeIdx] + nodeGrid.heatData.oldTemperature[nodeIdx]);
+
+            implicitHeat += dTheta * HEAT_CAPACITY_WATER * meanT * nodeGrid.size[nodeIdx];
+        }
+        return implicitHeat;
+    }
+
     void evaluateHeatBalance(double dtHeat, double dtWater, double heatStartTime)
     {
         // Heat storage
@@ -494,7 +514,13 @@ namespace soilFluxes3D::v2::Heat
         balanceDataCurrentTimeStep.heatStorage = heatStorage;
 
         // Heat sink/source
-        const double heatSinkSource = computeCurrentHeatSinkSource(dtHeat);
+        double heatSinkSource = computeCurrentHeatSinkSource(dtHeat);
+
+        // Without advection the heat of the liquid water-content change is not modelled in the equation (see heatLoop),
+        // but it is still part of the storage: account it as an implicit source, so the balance checks the heat solver only
+        if(simulationFlags.computeWater && !simulationFlags.computeHeatAdvection)
+            heatSinkSource += computeImplicitWaterContentHeat(dtHeat, dtWater, heatStartTime);
+
         balanceDataCurrentTimeStep.heatSinkSource = heatSinkSource;
 
         // Heat MBE
