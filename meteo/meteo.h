@@ -345,7 +345,7 @@
     float dailyAverageT(float tMin, float tMax);
     float dailyEtpHargreaves(float Tmin, float Tmax, const Crit3DDate& date, double latitude, Crit3DMeteoSettings *meteoSettings);
     float dewPoint(float relHumAir, float tempAir);
-    bool computeLeafWetness(double prec, double relHumidity, short* leafW);
+    bool computeLeafWetness(double prec, double relHumidity, short &leafW);
 
     double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalIrradiance,
                     double airTemp, double airHum, double windSpeed10);
