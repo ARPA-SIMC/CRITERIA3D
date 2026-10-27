@@ -94,7 +94,7 @@ namespace soilFluxes3D::v2
     __global__ void updateWaterFlows_k(double deltaT);
     __global__ void computeWaterContent_k(double* outVector);
 
-    __global__ void computeCurrentHeatSinkSource_k(double* d_heatSinkSourceVector, double dtHeat);
+    __global__ void computeCurrentHeatSinkSource_k(double* d_heatSinkSourceVector, double dtHeat, double dtWater, double heatStartTime);
     __global__ void computeCurrentHeatStorage_k(double* d_heatSinkSourceVector, double dtWater = noDataD, double dtHeat = noDataD, double heatStartTime = 0.);
 
     __global__ void saveHeatFluxValues_k(double dtHeat, double dtWater, double heatStartTime);

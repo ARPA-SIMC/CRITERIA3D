@@ -3,7 +3,6 @@
 #include "soilPhysics.h"
 #include "water.h"
 #include "heat.h"
-#include "otherFunctions.h"
 
 #include <cassert>
 #include <type_traits>
@@ -558,7 +557,7 @@ namespace soilFluxes3D::v2
         double* d_heatSinkSourceVector = nullptr;
         deviceAlloc(d_heatSinkSourceVector, nodeGrid.nrNodes);
         deviceReset(d_heatSinkSourceVector, nodeGrid.nrNodes);      //kernel writes only a subset of nodes
-        launchKernel(computeCurrentHeatSinkSource_k, d_heatSinkSourceVector, dtHeat);
+        launchKernel(computeCurrentHeatSinkSource_k, d_heatSinkSourceVector, dtHeat, dtWater, heatStartTime);
         double heatSinkSource = deviceSum(d_heatSinkSourceVector, nodeGrid.nrNodes);
         deviceFree(d_heatSinkSourceVector);
 
@@ -1379,7 +1378,7 @@ namespace soilFluxes3D::v2
     }
 
 
-    __global__ void computeCurrentHeatSinkSource_k(double* d_heatSinkSourceVector, double dtHeat)
+    __global__ void computeCurrentHeatSinkSource_k(double* d_heatSinkSourceVector, double dtHeat, double dtWater, double heatStartTime)
     {
         SF3Duint_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.nrNodes)
@@ -1388,8 +1387,23 @@ namespace soilFluxes3D::v2
         if(nodeGrid.surfaceFlag[nodeIdx])
             return;
 
+        double nodeSinkSource = 0.;
         if(nodeGrid.heatData.heatFlux[nodeIdx] != 0.)
-            d_heatSinkSourceVector[nodeIdx] = nodeGrid.heatData.heatFlux[nodeIdx] * dtHeat;
+            nodeSinkSource = nodeGrid.heatData.heatFlux[nodeIdx] * dtHeat;
+
+        // Without advection the heat of the liquid water-content change is not modelled in the equation,
+        // but it is still part of the storage: account it as an implicit source (same as CPU evaluateHeatBalance)
+        if(simulationFlags.computeWater && !simulationFlags.computeHeatAdvection)
+        {
+            const double hStart = getNodeH_fromTimeSteps(nodeIdx, 0., dtWater, heatStartTime) - nodeGrid.z[nodeIdx];
+            const double hEnd = getNodeH_fromTimeSteps(nodeIdx, dtHeat, dtWater, heatStartTime) - nodeGrid.z[nodeIdx];
+            const double dTheta = computeNodeTheta_fromSignedPsi(nodeIdx, hEnd) - computeNodeTheta_fromSignedPsi(nodeIdx, hStart);
+            const double meanT = 0.5 * (nodeGrid.heatData.temperature[nodeIdx] + nodeGrid.heatData.oldTemperature[nodeIdx]);
+
+            nodeSinkSource += dTheta * HEAT_CAPACITY_WATER * meanT * nodeGrid.size[nodeIdx];
+        }
+
+        d_heatSinkSourceVector[nodeIdx] = nodeSinkSource;
 
         return;
     }
