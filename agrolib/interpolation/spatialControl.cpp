@@ -9,6 +9,7 @@
 #include "interpolationSettings.h"
 #include "statistics.h"
 #include "meteo.h"
+#include "quality.h"
 
 
 float getSpatialThresholdVar(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,

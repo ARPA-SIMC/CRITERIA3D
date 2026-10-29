@@ -82,7 +82,6 @@ void Project::initializeProject()
     meteoPointsDbLastTime.setSecsSinceEpoch(0);
 
     meteoSettings->initialize();
-    quality->initialize();
     checkSpatialQuality = true;
 
     parametersSettings = nullptr;
@@ -1026,16 +1025,7 @@ void Project::cleanMeteoPointsData()
 void Project::clearMeteoPoints()
 {
     for (size_t i = 0; i < meteoPoints.size(); i++)
-    {
         meteoPoints[i].cleanAllData();
-        meteoPoints[i].proxyValues.clear();
-
-        if (meteoPoints[i].topographicDistance != nullptr)
-        {
-            meteoPoints[i].topographicDistance->clear();
-            delete meteoPoints[i].topographicDistance;
-        }
-    }
 
     meteoPoints.clear();
 }
@@ -3735,7 +3725,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
                 if (freq == hourly)
                 {
-                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysH == 0)
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->obsDataH.size() == 0)
                         meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataH(1, 1, myTime.date);
 
                     meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar, float(interpolatedValue));
@@ -3743,7 +3733,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 }
                 else if (freq == daily)
                 {
-                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysD == 0)
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->obsDataD.empty())
                         meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataD(1, myTime.date);
 
                     meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueD(myTime.date, myVar, float(interpolatedValue));
@@ -3858,7 +3848,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
                 if (freq == hourly)
                 {
-                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysH == 0)
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->obsDataH.size() == 0)
                         meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataH(1, 1, myTime.date);
 
                     myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue;
@@ -3872,7 +3862,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 }
                 else if (freq == daily)
                 {
-                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysD == 0)
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->obsDataD.empty())
                         meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataD(1, myTime.date);
 
                     myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue;
@@ -4528,15 +4518,15 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         }
     }
 
-    logInfoGUI("Loading data...");
+    logInfoGUI("Check date...");
 
     // check dates
-    QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, idMeteoPoint).date();
-    QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, idMeteoPoint).date();
+    QDate firstDaily = meteoPointsDbHandler->getFirstDatePoint(daily, idMeteoPoint).date();
+    QDate lastDaily = meteoPointsDbHandler->getLastDatePoint(daily, idMeteoPoint).date();
     bool hasDailyData = !(firstDaily.isNull() || lastDaily.isNull());
 
-    QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, idMeteoPoint);
-    QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, idMeteoPoint);
+    QDateTime firstHourly = meteoPointsDbHandler->getFirstDatePoint(hourly, idMeteoPoint);
+    QDateTime lastHourly = meteoPointsDbHandler->getLastDatePoint(hourly, idMeteoPoint);
     bool hasHourlyData = !(firstHourly.isNull() || lastHourly.isNull());
 
     if (! hasDailyData && ! hasHourlyData)
@@ -4544,6 +4534,8 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         logInfoGUI("No data.");
         return;
     }
+
+    logInfoGUI("Loading data...");
 
     // set minimum and maximum dates
     QDate firstDate, lastDate;
@@ -6175,7 +6167,7 @@ bool Project::waterTableComputeSingleWell(int indexWell)
         logError("Missing weather data near well: " + idStr);
         return false;
     }
-    if (linkedMeteoPoint.nrObsDataDaysD == 0)
+    if (linkedMeteoPoint.obsDataD.empty())
     {
         logError("Missing weather data near well: " + idStr);
         return false;
@@ -6185,7 +6177,7 @@ bool Project::waterTableComputeSingleWell(int indexWell)
     std::vector<float> inputTMax;
     std::vector<float> inputPrec;
 
-    for (int i = 0; i < linkedMeteoPoint.nrObsDataDaysD; i++)
+    for (int i = 0; i < linkedMeteoPoint.obsDataD.size(); i++)
     {
         Crit3DDate myDate = linkedMeteoPoint.getFirstDailyData().addDays(i);
         float Tmin = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin);
@@ -6275,7 +6267,6 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtm
             linkedMeteoPoint->id = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->id;
             linkedMeteoPoint->name = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->name;
             linkedMeteoPoint->latitude = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->latitude;
-            linkedMeteoPoint->nrObsDataDaysD = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->nrObsDataDaysD;
             linkedMeteoPoint->obsDataD = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->obsDataD;
         }
     }
@@ -6310,7 +6301,6 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtm
             linkedMeteoPoint->id = meteoPoints[assignNearestIndex].id;
             linkedMeteoPoint->name = meteoPoints[assignNearestIndex].name;
             linkedMeteoPoint->latitude = meteoPoints[assignNearestIndex].latitude;
-            linkedMeteoPoint->nrObsDataDaysD = meteoPoints[assignNearestIndex].nrObsDataDaysD;
             linkedMeteoPoint->obsDataD = meteoPoints[assignNearestIndex].obsDataD;
         }
     }
