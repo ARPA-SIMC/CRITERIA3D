@@ -13,6 +13,14 @@
         #include <map>
     #endif
 
+    // Magnus-Tetens equation
+    // [-]
+    #define MAGNUS_B 17.27
+    // [°C]
+    #define MAGNUS_C 237.3
+
+    #define DEFAULT_LAPSERATE -0.006f
+
     #define DEFAULT_MIN_PERCENTAGE 80
     #define DEFAULT_RAINFALL_THRESHOLD 0.2f
     #define DEFAULT_LEAFWETNESS_RH_THRESHOLD 87
@@ -20,7 +28,7 @@
     #define DEFAULT_TEMPERATURE_THRESHOLD 30
     #define DEFAULT_TRANSMISSIVITY_SAMANI 0.17f
     #define DEFAULT_HOURLY_INTERVALS 1
-    #define DEFAULT_WIND_INTENSITY 2.0f
+    #define DEFAULT_WIND_INTENSITY 2.0
     #define DEFAULT_AUTOMATIC_TMED true
     #define DEFAULT_AUTOMATIC_ET0HS true
     #define DDHEATING_THRESHOLD 20
@@ -42,32 +50,59 @@
 
         void initialize();
 
-        float getMinimumPercentage() const;
-        void setMinimumPercentage(float value);
+        float getMinimumPercentage() const
+        { return minimumPercentage; }
 
-        float getRainfallThreshold() const;
-        void setRainfallThreshold(float value);
+        void setMinimumPercentage(float value)
+        { minimumPercentage = value; }
 
-        float getThomThreshold() const;
-        void setThomThreshold(float value);
+        float getRainfallThreshold() const
+        { return rainfallThreshold; }
 
-        float getTemperatureThreshold() const;
-        void setTemperatureThreshold(float value);
+        void setRainfallThreshold(float value)
+        { rainfallThreshold = value; }
 
-        float getTransSamaniCoefficient() const;
-        void setTransSamaniCoefficient(float value);
+        float getTransSamaniCoefficient() const
+        { return transSamaniCoefficient; }
 
-        int getHourlyIntervals() const;
-        void setHourlyIntervals(int value);
+        void setTransSamaniCoefficient(float value)
+        { transSamaniCoefficient = value; }
 
-        float getWindIntensityDefault() const;
-        void setWindIntensityDefault(float value);
+        int getHourlyIntervals() const
+        { return hourlyIntervals; }
 
-        bool getAutomaticTavg() const;
-        void setAutomaticTavg(bool value);
+        void setHourlyIntervals(int value)
+        { hourlyIntervals = value; }
 
-        bool getAutomaticET0HS() const;
-        void setAutomaticET0HS(bool value);
+        float getWindIntensityDefault() const
+        { return windIntensityDefault; }
+
+        void setWindIntensityDefault(float value)
+        { windIntensityDefault = value; }
+
+        float getThomThreshold() const
+        { return thomThreshold; }
+
+        float getTemperatureThreshold() const
+        { return temperatureThreshold; }
+
+        void setThomThreshold(float value)
+        { thomThreshold = value; }
+
+        void setTemperatureThreshold(float value)
+        { temperatureThreshold = value; }
+
+        bool getAutomaticTavg() const
+        { return automaticTavg; }
+
+        void setAutomaticTavg(bool value)
+        { automaticTavg = value; }
+
+        bool getAutomaticET0HS() const
+        { return automaticET0HS; }
+
+        void setAutomaticET0HS(bool value)
+        { automaticET0HS = value; }
 
     private:
         float minimumPercentage;
@@ -286,7 +321,6 @@
         { {atmPressure}, "hPa"} ,
     };
 
-
     const std::map<criteria3DVariable, std::string> MapCriteria3DVarToString = {
         { volumetricWaterContent , "VOL_WC" },
         { waterTotalPotential , "TOT_WP" },
@@ -304,7 +338,6 @@
         { "SATDEG", degreeOfSaturation },
         { "FOS", factorOfSafety }
     };
-
 
     enum frequencyType {hourly, daily, monthly, noFrequency};
 
@@ -326,34 +359,34 @@
         std::vector <float> tdMinLapseRate;
         std::vector <float> tdMaxLapseRate;
 
-        float getClimateLapseRate(meteoVariable myVar, const Crit3DTime& myTime);
-        float getClimateLapseRate(meteoVariable myVar, int month);
-        float getClimateVar(meteoVariable myVar, int month, float height, float refHeight);
+        float getClimateLapseRate(meteoVariable myVar, const Crit3DTime& myTime) const;
+        float getClimateLapseRate(meteoVariable myVar, int month) const;
+        float getClimateVar(meteoVariable myVar, int month, float height, float refHeight) const;
     };
 
     bool computeWindCartesian(float intensity, float direction, float* u, float* v);
     bool computeWindPolar(float u, float v, float* intensity, float* direction);
 
     float relHumFromTdew(float Td, float T);
-    float tDewFromRelHum(float RH, float T);
+    double relHumFromTdew(double Td, double T);
 
+    float tDewFromRelHum(float RH, float T);
     double tDewFromRelHum(double RH, double T);
-    double tDewFromRelHum(double RH, double T);
+    float dewPoint(float relHumAir, float tempAir);
 
     float computeDailyBIC(float prec, float etp);
     float dailyThermalRange(float tMin, float tMax);
     float dailyAverageT(float tMin, float tMax);
     float dailyEtpHargreaves(float Tmin, float Tmax, const Crit3DDate& date, double latitude, Crit3DMeteoSettings *meteoSettings);
-    float dewPoint(float relHumAir, float tempAir);
+
     bool computeLeafWetness(double prec, double relHumidity, short &leafW);
 
-    double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalIrradiance,
+    double ET0_Penman_hourly(double height, double clearSkyIndex, double globalIrradiance,
                     double airTemp, double airHum, double windSpeed10);
 
-    double ET0_Penman_hourly_net_rad(double heigth, double netRadiation, double airTemp, double airHum, double windSpeed10);
+    double ET0_Penman_hourly_net_rad(double height, double netRadiation, double airTemp, double airHum, double windSpeed10);
 
-    double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
-                            double myTmin, double myTmax, double myTminDayAfter,
+    double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude, double myTmin, double myTmax,
                             double myUmed, double myVmed10, double mySWGlobRad);
 
     double ET0_Hargreaves(double KT, double myLat, int myDoy, double tmax, double tmin);

@@ -28,6 +28,7 @@
 #include "meteoGrid.h"
 #include "statistics.h"
 #include "math.h"
+#include "gis.h"
 
 Crit3DMeteoGridStructure::Crit3DMeteoGridStructure()
 {    
@@ -664,6 +665,7 @@ void Crit3DMeteoGrid::findGridAggregationPoints(gis::Crit3DRasterGrid* myDEM)
     _isAggregationDefined = true;
 }
 
+
 void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gis::Crit3DRasterGrid* myDEM, bool excludeNoData)
 {
 
@@ -690,9 +692,9 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
 
             _meteoPoints[row][col]->aggregationPointsMaxNr = 0;
 
-            for (double x = utmLL.x; x < utmUR.x; x=x+myDEM->header->cellSize)
+            for (double x = utmLL.x; x < utmUR.x; x += myDEM->header->cellSize)
             {
-                for (double y = utmLL.y; x < utmUR.y; y=y+myDEM->header->cellSize)
+                for (double y = utmLL.y; x < utmUR.y; y += myDEM->header->cellSize)
                 {
                     _meteoPoints[row][col]->aggregationPointsMaxNr = _meteoPoints[row][col]->aggregationPointsMaxNr + 1;
                     if (!excludeNoData || gis::getValueFromXY(*myDEM, x, y) != myDEM->header->flag )
@@ -1171,7 +1173,7 @@ void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyTy
 
                         if (freq == hourly)
                         {
-                            if (_meteoPoints[row][col]->nrObsDataDaysH == 0)
+                            if (_meteoPoints[row][col]->obsDataH.empty())
                                 _meteoPoints[row][col]->initializeObsDataH(1, numberOfDays, date);
 
                             _meteoPoints[row][col]->setMeteoPointValueH(date, hour, minute, myVar, float(myValue));
@@ -1179,7 +1181,7 @@ void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyTy
                         }
                         else if (freq == daily)
                         {
-                            if (_meteoPoints[row][col]->nrObsDataDaysD == 0)
+                            if (_meteoPoints[row][col]->obsDataD.empty())
                                 _meteoPoints[row][col]->initializeObsDataD(numberOfDays, date);
 
                             _meteoPoints[row][col]->setMeteoPointValueD(date, myVar, float(myValue));

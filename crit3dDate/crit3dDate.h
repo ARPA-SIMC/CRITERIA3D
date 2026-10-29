@@ -76,6 +76,7 @@
         void setNullTime();
 
         bool setFromISOString(const std::string &dateTimeStr);
+        bool setFromISOString_fast(const std::string &dateTimeStr);
 
         int getHour() const;
         int getNearestHour() const;
