@@ -82,7 +82,6 @@ void Project::initializeProject()
     meteoPointsDbLastTime.setSecsSinceEpoch(0);
 
     meteoSettings->initialize();
-    quality->initialize();
     checkSpatialQuality = true;
 
     parametersSettings = nullptr;
@@ -182,33 +181,37 @@ void Project::clearProxyDEM()
 }
 
 
-void Project::setProxyDEM()
+bool Project::setProxyDEM()
 {
+    if (! DEM.isLoaded)
+        return false;
+
     int index = interpolationSettings.getIndexHeight();
     int indexQuality = qualityInterpolationSettings.getIndexHeight();
 
     // if no elevation proxy defined nothing to do
-    if (index == NODATA && indexQuality == NODATA) return;
-
-    Crit3DProxy* proxyHeight;
+    if (index == NODATA && indexQuality == NODATA)
+        return false;
 
     if (index != NODATA)
     {
-        proxyHeight = interpolationSettings.getProxy(unsigned(index));
+        Crit3DProxy* currentProxyHeight = interpolationSettings.getProxy(unsigned(index));
 
-        // if no alternative DEM defined and project DEM loaded, use it for elevation proxy
-        if (proxyHeight->getGridName() == "" && DEM.isLoaded)
-        {
-            proxyHeight->setGrid(&DEM);
-        }
+        // if no alternative grid is defined, use DEM as elevation proxy
+        if (currentProxyHeight->getGridName().empty())
+            currentProxyHeight->setGrid(&DEM);
     }
 
     if (indexQuality != NODATA)
     {
-        proxyHeight = qualityInterpolationSettings.getProxy(unsigned(indexQuality));
-        if (proxyHeight->getGridName() == "" && DEM.isLoaded)
-            proxyHeight->setGrid(&DEM);
+        Crit3DProxy* currentProxyHeight = qualityInterpolationSettings.getProxy(unsigned(indexQuality));
+
+        // if no alternative grid is defined, use DEM as elevation proxy
+        if (currentProxyHeight->getGridName().empty())
+            currentProxyHeight->setGrid(&DEM);
     }
+
+    return true;
 }
 
 
@@ -353,7 +356,8 @@ bool Project::addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque 
     }
 
     for (unsigned i = 0; i < interpolationSettings.getProxyNr(); i++)
-        if (getProxyPragaName(interpolationSettings.getProxy(i)->getName()) == proxyHeight) setProxyDEM();
+        if (getProxyPragaName(interpolationSettings.getProxy(i)->getName()) == proxyHeight)
+            setProxyDEM();
 
     return true;
 }
@@ -1026,16 +1030,7 @@ void Project::cleanMeteoPointsData()
 void Project::clearMeteoPoints()
 {
     for (size_t i = 0; i < meteoPoints.size(); i++)
-    {
         meteoPoints[i].cleanAllData();
-        meteoPoints[i].proxyValues.clear();
-
-        if (meteoPoints[i].topographicDistance != nullptr)
-        {
-            meteoPoints[i].topographicDistance->clear();
-            delete meteoPoints[i].topographicDistance;
-        }
-    }
 
     meteoPoints.clear();
 }
@@ -1129,7 +1124,8 @@ bool Project::loadDEM(const QString &fileName)
     radiationMaps = new Crit3DRadiationMaps(DEM, gisSettings);
 
     // initialize hourly meteo maps
-    if (hourlyMeteoMaps != nullptr) hourlyMeteoMaps->clear();
+    if (hourlyMeteoMaps != nullptr)
+        hourlyMeteoMaps->clear();
     hourlyMeteoMaps = new Crit3DHourlyMeteoMaps(DEM);
 
     // reset aggregationPoints meteoGrid
@@ -1219,7 +1215,6 @@ bool Project::loadMeteoPointsDB(QString fileName)
     // find dates
     logInfoGUI("Check meteopoints last date...");
     meteoPointsDbLastTime = findDbPointLastTime();
-    QString tmp = meteoPointsDbLastTime.toString("yyyy-MM-dd hh");
     meteoPointsDbFirstTime.setSecsSinceEpoch(0);
 
     if(! meteoPointsDbLastTime.isNull())
@@ -1987,11 +1982,9 @@ void Project::checkMeteoPointsDEM()
 {
     for (size_t i=0; i < meteoPoints.size(); i++)
     {
-        if (! gis::isOutOfGridXY(meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, DEM.header)
-                && (! isEqual(gis::getValueFromXY(DEM, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y), DEM.header->flag)))
-             meteoPoints[i].isInsideDem = true;
-        else
-            meteoPoints[i].isInsideDem = false;
+        const float value = gis::getValueFromXY(DEM, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y);
+
+        meteoPoints[i].isInsideDem = (! isEqual(value, DEM.header->flag));
     }
 }
 
@@ -2281,7 +2274,7 @@ bool Project::updateProxy()
     if (interpolationSettings.getProxyLoaded())
         return true;
 
-    if (!loadProxyGrids())
+    if (! loadProxyGrids())
         return false;
 
     interpolationSettings.setProxyLoaded(true);
@@ -2423,8 +2416,8 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
                 logInfo(QString::fromStdString(fileName) + " successfully created!");
         }
 
-        meteoPoints[i].topographicDistance = new gis::Crit3DRasterGrid();
-        if (! gis::readEsriGridFlt(fileName, meteoPoints[i].topographicDistance, myError))
+        meteoPoints[i].topographicDistanceMap = new gis::Crit3DRasterGrid();
+        if (! gis::readEsriGridFlt(fileName, meteoPoints[i].topographicDistanceMap, myError))
         {
             logError(QString::fromStdString(myError));
             return false;
@@ -2564,7 +2557,12 @@ bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations, 
 
     if (! loadGlocalStationsCsv(fileNameStations, areaPoints)) return false;
 
-    loadGlocalStationsCsv(fileNameStationsCV, areaPointsCV); //mancanza di file CV non pregiudica il proseguimento. controllo presenza fuori da funzione
+    if (! fileNameStationsCV.isEmpty())
+    {
+        loadGlocalStationsCsv(fileNameStationsCV, areaPointsCV); //mancanza di file CV non pregiudica il proseguimento. controllo presenza fuori da funzione
+    }
+    else
+        logInfo("Glocal CV will be run on single points.");
 
     //salva in vettore gli indici dei meteopoints che appartengono a area n, infine salva quel vettore
     std::vector<int> temp;
@@ -3417,7 +3415,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     if (! radiationMaps->slopeMap->isLoaded || ! radiationMaps->aspectMap->isLoaded)
         return false;
 
-    radiationMaps->initialize();
+    radiationMaps->initializeData();
 
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
@@ -3730,7 +3728,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
                 if (freq == hourly)
                 {
-                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysH == 0)
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->obsDataH.size() == 0)
                         meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataH(1, 1, myTime.date);
 
                     meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar, float(interpolatedValue));
@@ -3738,7 +3736,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 }
                 else if (freq == daily)
                 {
-                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysD == 0)
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->obsDataD.empty())
                         meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataD(1, myTime.date);
 
                     meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueD(myTime.date, myVar, float(interpolatedValue));
@@ -3853,7 +3851,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
                 if (freq == hourly)
                 {
-                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysH == 0)
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->obsDataH.size() == 0)
                         meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataH(1, 1, myTime.date);
 
                     myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue;
@@ -3867,7 +3865,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 }
                 else if (freq == daily)
                 {
-                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysD == 0)
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->obsDataD.empty())
                         meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataD(1, myTime.date);
 
                     myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue;
@@ -4523,15 +4521,15 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         }
     }
 
-    logInfoGUI("Loading data...");
+    logInfoGUI("Check date...");
 
     // check dates
-    QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, idMeteoPoint).date();
-    QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, idMeteoPoint).date();
+    QDate firstDaily = meteoPointsDbHandler->getFirstDatePoint(daily, idMeteoPoint).date();
+    QDate lastDaily = meteoPointsDbHandler->getLastDatePoint(daily, idMeteoPoint).date();
     bool hasDailyData = !(firstDaily.isNull() || lastDaily.isNull());
 
-    QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, idMeteoPoint);
-    QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, idMeteoPoint);
+    QDateTime firstHourly = meteoPointsDbHandler->getFirstDatePoint(hourly, idMeteoPoint);
+    QDateTime lastHourly = meteoPointsDbHandler->getLastDatePoint(hourly, idMeteoPoint);
     bool hasHourlyData = !(firstHourly.isNull() || lastHourly.isNull());
 
     if (! hasDailyData && ! hasHourlyData)
@@ -4539,6 +4537,8 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         logInfoGUI("No data.");
         return;
     }
+
+    logInfoGUI("Loading data...");
 
     // set minimum and maximum dates
     QDate firstDate, lastDate;
@@ -6170,7 +6170,7 @@ bool Project::waterTableComputeSingleWell(int indexWell)
         logError("Missing weather data near well: " + idStr);
         return false;
     }
-    if (linkedMeteoPoint.nrObsDataDaysD == 0)
+    if (linkedMeteoPoint.obsDataD.empty())
     {
         logError("Missing weather data near well: " + idStr);
         return false;
@@ -6180,7 +6180,7 @@ bool Project::waterTableComputeSingleWell(int indexWell)
     std::vector<float> inputTMax;
     std::vector<float> inputPrec;
 
-    for (int i = 0; i < linkedMeteoPoint.nrObsDataDaysD; i++)
+    for (int i = 0; i < linkedMeteoPoint.obsDataD.size(); i++)
     {
         Crit3DDate myDate = linkedMeteoPoint.getFirstDailyData().addDays(i);
         float Tmin = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin);
@@ -6270,7 +6270,6 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtm
             linkedMeteoPoint->id = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->id;
             linkedMeteoPoint->name = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->name;
             linkedMeteoPoint->latitude = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->latitude;
-            linkedMeteoPoint->nrObsDataDaysD = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->nrObsDataDaysD;
             linkedMeteoPoint->obsDataD = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->obsDataD;
         }
     }
@@ -6305,7 +6304,6 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtm
             linkedMeteoPoint->id = meteoPoints[assignNearestIndex].id;
             linkedMeteoPoint->name = meteoPoints[assignNearestIndex].name;
             linkedMeteoPoint->latitude = meteoPoints[assignNearestIndex].latitude;
-            linkedMeteoPoint->nrObsDataDaysD = meteoPoints[assignNearestIndex].nrObsDataDaysD;
             linkedMeteoPoint->obsDataD = meteoPoints[assignNearestIndex].obsDataD;
         }
     }

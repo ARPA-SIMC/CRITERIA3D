@@ -170,9 +170,10 @@
         bool writeMeteoPointsProperties(const QList<QString> &joinedPropertiesList,
                                         const QList<QString> &csvFields, const QList<QList<QString>> &csvData);
 
-        void clearGeometry();
-        bool initializeGeometry();
-        void shadowDtmColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col);
+        void clearGlGeometry();
+        bool initializeGlGeometry();
+        void shadowDtmColor(const Crit3DColor &colorIn, Crit3DColor &colorOut,
+                            float slopeAmplification, int row, int col);
         bool update3DColors(gis::Crit3DRasterGrid *rasterPointer = nullptr);
         void getMixedColor(gis::Crit3DRasterGrid *rasterPointer, int row, int col,
                            double variableRange, const Crit3DColor& dtmColor, Crit3DColor& otutColor);

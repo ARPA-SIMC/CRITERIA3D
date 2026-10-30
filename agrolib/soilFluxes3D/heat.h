@@ -10,37 +10,44 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec bool isHeatNode(SF3Duint_t nodeIndex);
 
     double computeCurrentHeatSinkSource(double dtHeat);
-    double computeCurrentHeatStorage(double dtWater = noDataD, double dtHeat = noDataD);
+    double computeCurrentHeatStorage(double dtHeat = noDataD, double dtWater = noDataD, double heatStartTime = 0.);
     SF3Derror_t initializeHeatBalance();
-    void evaluateHeatBalance(double dtHeat, double dtWater);
+
+    void evaluateHeatBalance(double dtHeat, double dtWater, double heatStartTime);
+
     void updateHeatBalanceData();
     void updateHeatBalanceDataWholePeriod();
 
     SF3Derror_t resetFluxValues(bool flagHeat, bool flagWater);
     SF3Derror_t saveWaterFluxValues(double dtHeat, double dtWater);
-    __cudaSpec SF3Derror_t saveNodeWaterFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater);
-    SF3Derror_t saveHeatFluxValues(double dtHeat, double dtWater);
-    __cudaSpec SF3Derror_t saveNodeHeatFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater);
+
+    __cudaSpec SF3Derror_t saveNodeWaterFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime = 0.);
+
+    SF3Derror_t saveHeatFluxValues(double dtHeat, double dtWater, double heatStartTime);
+    __cudaSpec SF3Derror_t saveNodeHeatFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime);
+
     __cudaSpec SF3Derror_t saveNodeHeatSpecificFlux(SF3Duint_t nIdx, u8_t lIdx, fluxTypes_t fluxType, double fluxValue);
 
     SF3Derror_t updateConductance();
 
-    bool updateBoundaryHeatData(double maxTimeStep, double& actualTimeStep);
+    bool updateBoundaryHeatData(double maxTimeStep, double& currentTimeStep);
 
-    __cudaSpec bool computeHeatLinkFluxes(double& matrixElement, SF3Duint_t& matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex, double dtHeat, double dtWater);
+    __cudaSpec bool computeHeatLinkFluxes(double& matrixElement, SF3Duint_t& matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex,
+                                          double dtHeat, double dtWater, double heatStartTime);
 
-    __cudaSpec double computeThermalLiquidFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat = noDataD, double dtWater = noDataD);
-    __cudaSpec double computeThermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat = noDataD, double dtWater = noDataD);
-    __cudaSpec double computeIsothermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater);
-    __cudaSpec double computeIsothermalLatentHeatFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater);
-    __cudaSpec double computeAdvectiveFlux(SF3Duint_t nIdx, u8_t lIdx);     //originally double&: check if needed somewhere
+    __cudaSpec double computeThermalLiquidFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat = noDataD,
+                                               double dtWater = noDataD, double heatStartTime = 0.);
+    __cudaSpec double computeThermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat = noDataD,
+                                              double dtWater = noDataD, double heatStartTime = 0.);
+
+    __cudaSpec double computeIsothermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime);
+    __cudaSpec double computeIsothermalLatentHeatFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime);
+
     __cudaSpec double getLinkHeatFlux(const linkData_t &linkData, SF3Duint_t srcIndex, fluxTypes_t fluxType);
 
-    __cudaSpec double conduction(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater);
+    __cudaSpec double conduction(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime);
 
     double GaussSeidelHeatCPU(VectorCPU& vectorX, const MatrixCPU& matrixA, const VectorCPU& vectorB);
-
-    __cudaSpec double getNodeH_fromTimeSteps(SF3Duint_t nodeIndex, double dtHeat, double dtWater);
 
     __cudaSpec double computeNodeHeatSoilConductivity(SF3Duint_t nodeIndex, double T, double h);
     __cudaSpec double computeNodeHeatAirConductivity(SF3Duint_t nodeIndex, double T, double h);
@@ -53,10 +60,6 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeNodeAtmosphericLatentHeatFlux(SF3Duint_t nodeIndex);
     __cudaSpec double computeNodeAtmosphericLatentVaporFlux(SF3Duint_t nodeIndex);
     __cudaSpec double computeNodeAtmosphericLatentSurfaceWaterFlux(SF3Duint_t nodeIndex);
-
-    //Move to soilPhysics (update comment in mathFunctions/physics.h)
-    __cudaSpec double estimateNodeBulkDensity(SF3Duint_t nodeIndex);
-    __cudaSpec double estimateSoilParticleDensity(double organicMatter);
 
     __cudaSpec double computeVapor_fromPsiTemp(double h, double T);
     __cudaSpec double computeLatentVaporizationHeat(double T);
@@ -75,4 +78,7 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeVaporBinaryDiffusivity(double T);
 
     __cudaSpec double computeThermalLiquidConductivity(double T, double h, double ILK);
+
+    __cudaSpec double getNodeH_fromTimeSteps(SF3Duint_t nodeIndex, double dtHeat, double dtWater, double heatStartTime);
+    __cudaSpec double getNodeAvgH_fromTimeSteps(SF3Duint_t nodeIndex, double dtHeat, double dtWater, double heatStartTime);
 }

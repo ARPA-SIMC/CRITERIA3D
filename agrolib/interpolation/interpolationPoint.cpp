@@ -40,7 +40,7 @@ Crit3DInterpolationDataPoint::Crit3DInterpolationDataPoint()
 
     lapseRateCode = primary;
 
-    topographicDistance = nullptr;
+    topographicDistanceMap = nullptr;
 
     point = new gis::Crit3DPoint();
     proxyValues.clear();

@@ -4,14 +4,11 @@
 #include "types_cpu.h"
 #include "water.h"
 #include "soilPhysics.h"
-#include "otherFunctions.h"
 #include "commonConstants.h"
+#include "basicMath.h"
+
 #include <algorithm>
 
-using namespace soilFluxes3D::v2;
-using namespace soilFluxes3D::v2::Soil;
-using namespace soilFluxes3D::v2::Water;
-using namespace soilFluxes3D::v2::Math;
 
 namespace soilFluxes3D::v2
 {
@@ -20,6 +17,12 @@ namespace soilFluxes3D::v2
     extern __cudaMngd balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
     extern __cudaMngd simulationFlags_t simulationFlags;
 }
+
+using namespace soilFluxes3D::v2;
+using namespace soilFluxes3D::v2::Soil;
+using namespace soilFluxes3D::v2::Water;
+using namespace soilFluxes3D::v2::Math;
+
 
 namespace soilFluxes3D::v2::Heat
 {
@@ -39,9 +42,9 @@ namespace soilFluxes3D::v2::Heat
         balanceDataCurrentPeriod.heatMBE = 0.;
         balanceDataCurrentTimeStep.heatMBE = 0.;
 
-        balanceDataWholePeriod.heatMBE = 0.;
-        balanceDataCurrentPeriod.heatMBE = 0.;
-        balanceDataCurrentTimeStep.heatMBE = 0.;
+        balanceDataWholePeriod.heatMBR = 0.;
+        balanceDataCurrentPeriod.heatMBR = 0.;
+        balanceDataCurrentTimeStep.heatMBR = 0.;
 
         double heatStorage = computeCurrentHeatStorage();
         balanceDataWholePeriod.heatStorage = heatStorage;
@@ -51,6 +54,7 @@ namespace soilFluxes3D::v2::Heat
 
         return SF3Derror_t::SF3Dok;
     }
+
 
     SF3Derror_t resetFluxValues(bool flagHeat, bool flagWater)
     {
@@ -106,38 +110,64 @@ namespace soilFluxes3D::v2::Heat
         return SF3Derror_t::SF3Dok;
     }
 
-    __cudaSpec SF3Derror_t saveNodeWaterFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater)
+
+    // time-step weighted pressure head
+    __cudaSpec double getNodeH_fromTimeSteps(SF3Duint_t nodeIndex, double dtHeat, double dtWater, double heatStartTime)
+    {
+        if(dtHeat == noDataD || dtWater == noDataD || heatStartTime == noDataD || dtWater <= 0.)
+            return nodeGrid.waterData.pressureHead[nodeIndex];
+
+        const double deltaH = nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.waterData.oldPressureHead[nodeIndex];
+        double dt = (heatStartTime + dtHeat) / dtWater;
+        dt = SF3Dmin(SF3Dmax(dt, 0.), 1.);
+        return nodeGrid.waterData.oldPressureHead[nodeIndex] + deltaH * dt;
+    }
+
+
+    // mean matric potential during heat time step [m]
+    __cudaSpec double getNodeAvgH_fromTimeSteps(SF3Duint_t nodeIndex, double dtHeat, double dtWater, double heatStartTime)
+    {
+        const double H0 = getNodeH_fromTimeSteps(nodeIndex, 0, dtWater, heatStartTime);
+        const double H1 = getNodeH_fromTimeSteps(nodeIndex, dtHeat, dtWater, heatStartTime);
+        return computeMean(H0, H1, meanType_t::Arithmetic) - nodeGrid.z[nodeIndex];
+    }
+
+
+    __cudaSpec SF3Derror_t saveNodeWaterFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime)
     {
         SF3Duint_t dIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
-        double scrAvgH = getNodeH_fromTimeSteps(nIdx, dtHeat, dtWater);
-        double dstAvgH = getNodeH_fromTimeSteps(dIdx, dtHeat, dtWater);
+        const double srcH = getNodeH_fromTimeSteps(nIdx, dtHeat, dtWater, heatStartTime);
+        const double dstH = getNodeH_fromTimeSteps(dIdx, dtHeat, dtWater, heatStartTime);
 
-        //Flux value as saved in the iteration matrix for water process
-        double matrixValue = getMatrixElement(nIdx, dIdx);
+        // flux value as saved in the iteration matrix for water process
+        const double matrixValue = getMatrixElement(nIdx, dIdx);
 
-        double isothermalLiquidFlux = matrixValue * (scrAvgH - dstAvgH);
+        const double isothermalLiquidFlux = matrixValue * (srcH - dstH);
 
-        bool deepLink = !nodeGrid.surfaceFlag[nIdx] && !nodeGrid.surfaceFlag[dIdx];
-        double isothermalVaporFlux = deepLink ? computeIsothermalVaporFlux(nIdx, lIdx, dtHeat, dtWater)                 : 0.;
-        double thermalLiquidFlux   = deepLink ? computeThermalLiquidFlux(nIdx, lIdx, processType::Heat, dtHeat, dtWater): 0.;
-        double thermalVaporflux    = deepLink ? computeThermalVaporFlux(nIdx, lIdx, processType::Heat, dtHeat, dtWater) : 0.;
+        const bool deepLink = !nodeGrid.surfaceFlag[nIdx] && !nodeGrid.surfaceFlag[dIdx];
 
-        nodeGrid.linkData[lIdx].waterFlux[nIdx] = static_cast<float>(isothermalLiquidFlux - isothermalVaporFlux / WATER_DENSITY + thermalLiquidFlux);
-        nodeGrid.linkData[lIdx].vaporFlux[nIdx] = static_cast<float>(isothermalVaporFlux + thermalVaporflux);
+        const double isothermalVaporFlux = deepLink ? computeIsothermalVaporFlux(nIdx, lIdx,
+                                                                                 dtHeat, dtWater, heatStartTime) : 0.;
+        const double thermalLiquidFlux = deepLink ? computeThermalLiquidFlux(nIdx, lIdx, processType::Heat,
+                                                                            dtHeat, dtWater, heatStartTime) : 0.;
+        const double thermalVaporflux = deepLink ? computeThermalVaporFlux(nIdx, lIdx, processType::Heat,
+                                                                            dtHeat, dtWater, heatStartTime) : 0.;
+        nodeGrid.linkData[lIdx].waterFlux[nIdx] = isothermalLiquidFlux - isothermalVaporFlux / WATER_DENSITY + thermalLiquidFlux;
+        nodeGrid.linkData[lIdx].vaporFlux[nIdx] = isothermalVaporFlux + thermalVaporflux;
 
         if(simulationFlags.HFsaveMode == heatFluxSaveMode_t::All)
         {
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidIsothermal)][nIdx] = static_cast<float>(isothermalLiquidFlux);
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidThermal)][nIdx] = static_cast<float>(thermalLiquidFlux);
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporIsothermal)][nIdx] = static_cast<float>(isothermalVaporFlux);
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporThermal)][nIdx] = static_cast<float>(thermalVaporflux);
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidIsothermal)][nIdx] = isothermalLiquidFlux;
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidThermal)][nIdx] = thermalLiquidFlux;
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporIsothermal)][nIdx] = isothermalVaporFlux;
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporThermal)][nIdx] = thermalVaporflux;
         }
 
         return SF3Derror_t::SF3Dok;
     }
 
-    SF3Derror_t saveHeatFluxValues(double dtHeat, double dtWater)
+    SF3Derror_t saveHeatFluxValues(double dtHeat, double dtWater, double heatStartTime)
     {
         if(!simulationFlags.computeHeat)
             return SF3Derror_t::SF3Dok;
@@ -152,26 +182,69 @@ namespace soilFluxes3D::v2::Heat
                 continue;
 
             for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
-                saveNodeHeatFluxes(nIdx, lIdx, dtHeat, dtWater);
+                saveNodeHeatFluxes(nIdx, lIdx, dtHeat, dtWater, heatStartTime);
         }
         return SF3Derror_t::SF3Dok;
     }
 
-    __cudaSpec SF3Derror_t saveNodeHeatFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater)
+
+    __cudaSpec SF3Derror_t saveNodeHeatFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime)
     {
         if(nodeGrid.linkData[lIdx].linkType[nIdx] == linkType_t::NoLink)
-            return SF3Derror_t::ParameterError;     //Check if is correct
+            return SF3Derror_t::SF3Dok;
 
         SF3Duint_t linkedIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
         if(!isHeatNode(nIdx) || !isHeatNode(linkedIdx))
-            return SF3Derror_t::ParameterError;     //Check if is correct
+            return SF3Derror_t::SF3Dok;
 
         double matrixValue = getMatrixElement(nIdx, linkedIdx);
 
-        double heatWF = solver->getHeatWF();
-        double heatDiff = matrixValue * (nodeGrid.heatData.temperature[nIdx] - nodeGrid.heatData.temperature[linkedIdx]) * heatWF +
-                          matrixValue * (nodeGrid.heatData.oldTemperature[nIdx] - nodeGrid.heatData.oldTemperature[linkedIdx]) * (1. - heatWF);
+        // RIPULIAMO LA MATRICE DALL'AVVEZIONE PER IL SALVATAGGIO
+        double implicitAdvectiveCapacity = 0.;
+
+        if (simulationFlags.computeWater && simulationFlags.computeHeatAdvection)
+        {
+            const double qLiquid = nodeGrid.linkData[lIdx].waterFlux[nIdx];
+            const double qVapor  = nodeGrid.linkData[lIdx].vaporFlux[nIdx];
+
+            if (qLiquid > 0.)
+                implicitAdvectiveCapacity += (qLiquid * HEAT_CAPACITY_WATER);
+            if (qVapor > 0.)
+                implicitAdvectiveCapacity += (qVapor * HEAT_CAPACITY_WATER_VAPOR);
+
+            matrixValue += implicitAdvectiveCapacity;   // Ripristina la matrice per il calcolo diffusivo
+        }
+
+        const double heatWF = solver->getHeatWF();
+        const double deltaT0 = nodeGrid.heatData.oldTemperature[nIdx] - nodeGrid.heatData.oldTemperature[linkedIdx];
+        const double deltaT1 = nodeGrid.heatData.temperature[nIdx] - nodeGrid.heatData.temperature[linkedIdx];
+
+        // 1. Flusso diffusivo puro
+        double heatDiff = (matrixValue / heatWF) * (heatWF * deltaT1 + (1.0 - heatWF) * deltaT0);
+
+        // advective flux
+        double advFlux = 0.0;
+        if (simulationFlags.computeWater && simulationFlags.computeHeatAdvection)
+        {
+            const double qLiquid = nodeGrid.linkData[lIdx].waterFlux[nIdx];
+            const double qVapor = nodeGrid.linkData[lIdx].vaporFlux[nIdx];
+
+            const double Tn0 = nodeGrid.heatData.oldTemperature[nIdx];
+            const double Tn1 = nodeGrid.heatData.temperature[nIdx];
+
+            const double Tl0 = nodeGrid.heatData.oldTemperature[linkedIdx];
+            const double Tl1 = nodeGrid.heatData.temperature[linkedIdx];
+
+            const double Tliquid = heatWF * ((qLiquid > 0.0) ? Tl1 : Tn1) +
+                                (1.0 - heatWF) * ((qLiquid > 0.0) ? Tl0 : Tn0);
+
+            const double Tvapor = heatWF * ((qVapor > 0.0) ? Tl1 : Tn1) +
+                                (1.0 - heatWF) * ((qVapor > 0.0) ? Tl0 : Tn0);
+
+            advFlux += HEAT_CAPACITY_WATER * qLiquid * Tliquid;
+            advFlux += HEAT_CAPACITY_WATER_VAPOR * qVapor * Tvapor;
+        }
 
         switch(simulationFlags.HFsaveMode)
         {
@@ -180,9 +253,15 @@ namespace soilFluxes3D::v2::Heat
                 break;
 
             case heatFluxSaveMode_t::All:
-                if(simulationFlags.computeHeatVapor)
+                if(simulationFlags.computeWater && simulationFlags.computeHeatAdvection)
+                    saveNodeHeatSpecificFlux(nIdx, lIdx, fluxTypes_t::HeatAdvective, advFlux);
+
+                if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
                 {
-                    double thermalLatentFlux = computeThermalVaporFlux(nIdx, lIdx, processType::Heat, dtHeat, dtWater) * computeLatentVaporizationHeat(nodeGrid.heatData.temperature[nIdx] - ZEROCELSIUS);
+                    const double thermalVaporFlux = computeThermalVaporFlux(nIdx, lIdx, processType::Heat, dtHeat, dtWater, heatStartTime);
+                    const double LatentVapHeat = computeLatentVaporizationHeat(nodeGrid.heatData.temperature[nIdx] - ZEROCELSIUS);
+                    const double thermalLatentFlux = thermalVaporFlux * LatentVapHeat;
+
                     saveNodeHeatSpecificFlux(nIdx, lIdx, fluxTypes_t::HeatLatentThermal, thermalLatentFlux);
                     heatDiff -= thermalLatentFlux;
                 }
@@ -195,15 +274,14 @@ namespace soilFluxes3D::v2::Heat
         return SF3Derror_t::SF3Dok;
     }
 
+
     __cudaSpec SF3Derror_t saveNodeHeatSpecificFlux(SF3Duint_t nIdx, u8_t lIdx, fluxTypes_t fluxType, double fluxValue)
     {
         if(simulationFlags.HFsaveMode == heatFluxSaveMode_t::None)
             return SF3Derror_t::ParameterError;
 
-        fluxValue = static_cast<float>(fluxValue);
-
         double& totalFlux = nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::HeatTotal)][nIdx];
-        totalFlux = static_cast<float>((totalFlux == noDataD) ? fluxValue : totalFlux + fluxValue);
+        totalFlux = (totalFlux == noDataD) ? fluxValue : totalFlux + fluxValue;
 
         if(simulationFlags.HFsaveMode == heatFluxSaveMode_t::All)
             nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxType)][nIdx] = fluxValue;
@@ -234,11 +312,13 @@ namespace soilFluxes3D::v2::Heat
         return SF3Derror_t::SF3Dok;
     }
 
-    bool updateBoundaryHeatData(double maxTimeStep, double& actualTimeStep)
+
+    bool updateBoundaryHeatData(double maxTimeStep, double& currentTimeStep)
     {
-        double heatBoundaryCourantValue = 0.;
+        double heatBoundaryCourantValue = 0.;               // Courant computed as temperatures [K]
         double* tempCourantValues = nullptr;
         hostAlloc(tempCourantValues, nodeGrid.nrNodes);
+        hostFill(tempCourantValues, nodeGrid.nrNodes, 0.);
 
         __parfor(__ompStatus)
         for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.nrNodes; ++nodeIndex)
@@ -251,95 +331,126 @@ namespace soilFluxes3D::v2::Heat
             if(nodeGrid.boundaryData.boundaryType[nodeIndex] == boundaryType_t::NoBoundary)
                 continue;
 
-            double upLinkArea = nodeGrid.linkData[0].interfaceArea[nodeIndex];  //linkType_t::Up
+            double upLinkArea = nodeGrid.linkData[0].interfaceArea[nodeIndex];  // linkType_t::Up
 
             switch(nodeGrid.boundaryData.boundaryType[nodeIndex])
             {
                 case boundaryType_t::HeatSurface:
+                {
                     nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex] = 0.;
                     nodeGrid.boundaryData.sensibleFlux[nodeIndex] = 0.;
                     nodeGrid.boundaryData.latentFlux[nodeIndex] = 0.;
                     nodeGrid.boundaryData.radiativeFlux[nodeIndex] = 0.;
 
                     if(nodeGrid.boundaryData.netIrradiance[nodeIndex] != noDataD)
+                    {
                         nodeGrid.boundaryData.radiativeFlux[nodeIndex] = nodeGrid.boundaryData.netIrradiance[nodeIndex];
+                    }
 
                     nodeGrid.boundaryData.sensibleFlux[nodeIndex] += computeNodeAtmosphericSensibleHeatFlux(nodeIndex);
 
                     if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
+                    {
                         nodeGrid.boundaryData.latentFlux[nodeIndex] += computeNodeAtmosphericLatentHeatFlux(nodeIndex) / upLinkArea;
+                    }
 
                     if(simulationFlags.computeWater && simulationFlags.computeHeatAdvection)
                     {
                         double advT = nodeGrid.boundaryData.temperature[nodeIndex];
+                        const double waterFlux = nodeGrid.linkData[0].waterFlux[nodeIndex];   //linkType_t::Up
 
-                        //Advective heat from rain
-                        double waterFlux = nodeGrid.linkData[0].waterFlux[nodeIndex];   //linkType_t::Up
-                        if(waterFlux > 0.)
+                        if(waterFlux > 0. && advT != noDataD && advT > (-50.0 + ZEROCELSIUS))
+                        {
+                            // advective heat from rain
                             nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex] = waterFlux * HEAT_CAPACITY_WATER * advT / upLinkArea;
+                        }
 
-                        //Advective heat from evaporation/condensation
                         if(nodeGrid.boundaryData.waterFlowRate[nodeIndex] < 0.)
+                        {
                             advT = nodeGrid.heatData.temperature[nodeIndex];
+                        }
 
-                        nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex] += nodeGrid.boundaryData.waterFlowRate[nodeIndex] * WATER_DENSITY * HEAT_CAPACITY_WATER_VAPOR * advT / upLinkArea;
+                        if(advT != noDataD && advT > (-50.0 + ZEROCELSIUS))
+                        {
+                            // advective heat from evaporation/condensation
+                            nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex] += nodeGrid.boundaryData.waterFlowRate[nodeIndex]
+                                                                            * WATER_DENSITY * HEAT_CAPACITY_WATER_VAPOR * advT
+                                                                            / upLinkArea;
+                        }
                     }
 
                     nodeGrid.heatData.heatFlux[nodeIndex] += upLinkArea * (nodeGrid.boundaryData.radiativeFlux[nodeIndex] +
                                                                            nodeGrid.boundaryData.sensibleFlux[nodeIndex] +
                                                                            nodeGrid.boundaryData.latentFlux[nodeIndex] +
                                                                            nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex]);
-                    double heatCapacity;
-                    heatCapacity = computeNodeHeatCapacity(nodeIndex, nodeGrid.waterData.oldPressureHead[nodeIndex], nodeGrid.heatData.oldTemperature[nodeIndex]);
-                    tempCourantValues[nodeIndex] = std::fabs(nodeGrid.heatData.heatFlux[nodeIndex]) * maxTimeStep / (heatCapacity * nodeGrid.size[nodeIndex]);
+
+                    const double oldPsi = nodeGrid.waterData.oldPressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
+                    const double heatCapacity = computeNodeHeatCapacity(nodeIndex, oldPsi, nodeGrid.heatData.oldTemperature[nodeIndex]);
+                    tempCourantValues[nodeIndex] = std::fabs(nodeGrid.heatData.heatFlux[nodeIndex]) * maxTimeStep
+                                                   / (heatCapacity * nodeGrid.size[nodeIndex]);
                     break;
+                }
 
                 case boundaryType_t::FreeDrainage:
                 case boundaryType_t::PrescribedTotalWaterPotential:
+                {
                     if(simulationFlags.computeWater && simulationFlags.computeHeatAdvection)
                     {
-                        double waterFlux = nodeGrid.boundaryData.waterFlowRate[nodeIndex];
-                        double advT = (waterFlux < 0) ? nodeGrid.heatData.temperature[nodeIndex] : nodeGrid.boundaryData.fixedTemperatureValue[nodeIndex];
+                        const double waterFlux = nodeGrid.boundaryData.waterFlowRate[nodeIndex];
+                        const double fixedT = nodeGrid.boundaryData.fixedTemperatureValue[nodeIndex];
 
-                        nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex] = waterFlux * HEAT_CAPACITY_WATER * advT / upLinkArea;
-                        nodeGrid.heatData.heatFlux[nodeIndex] += upLinkArea * nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex];
+                        // outflow carries the node temperature; inflow carries the boundary temperature
+                        // (if undefined, no inflow advection is applied)
+                        const double advT = (waterFlux < 0.) ? nodeGrid.heatData.temperature[nodeIndex] : fixedT;
+
+                        if(advT != noDataD && advT > (-50.0 + ZEROCELSIUS))
+                        {
+                            nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex] = waterFlux * HEAT_CAPACITY_WATER * advT / upLinkArea;
+                            nodeGrid.heatData.heatFlux[nodeIndex] += upLinkArea * nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex];
+                        }
+                        else
+                        {
+                            nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex] = 0.;
+                        }
                     }
 
                     if(nodeGrid.boundaryData.fixedTemperatureValue[nodeIndex] != noDataD)
                     {
-                        double avgH = computeMean(nodeGrid.waterData.pressureHead[nodeIndex], nodeGrid.waterData.oldPressureHead[nodeIndex], meanType_t::Arithmetic);
-                        double boundaryHeatK = computeNodeHeatSoilConductivity(nodeIndex, nodeGrid.heatData.temperature[nodeIndex], avgH - nodeGrid.z[nodeIndex]);
-                        double deltaT = nodeGrid.boundaryData.fixedTemperatureValue[nodeIndex] - nodeGrid.heatData.temperature[nodeIndex];
+                        const double avgH = computeMean(nodeGrid.waterData.pressureHead[nodeIndex], nodeGrid.waterData.oldPressureHead[nodeIndex], meanType_t::Arithmetic);
+                        const double boundaryHeatK = computeNodeHeatSoilConductivity(nodeIndex, nodeGrid.heatData.temperature[nodeIndex], avgH - nodeGrid.z[nodeIndex]);
+                        const double deltaT = nodeGrid.boundaryData.fixedTemperatureValue[nodeIndex] - nodeGrid.heatData.temperature[nodeIndex];
 
                         nodeGrid.heatData.heatFlux[nodeIndex] += boundaryHeatK * deltaT / nodeGrid.boundaryData.fixedTemperatureDepth[nodeIndex] * upLinkArea;
                     }
                     break;
+                }
+
                 default:
                     break;
             }
         }
 
-        //Reduction
+        // Courant reduction
         __parforop(__ompStatus, max, heatBoundaryCourantValue)
         for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.nrNodes; ++nodeIndex)
             heatBoundaryCourantValue = SF3Dmax(heatBoundaryCourantValue, tempCourantValues[nodeIndex]);
 
         hostFree(tempCourantValues);
 
-        //Check Value and operation on deltaT
+        // check CourantT value: reduce time step if deltaT > 1 degree
         double minTimeStep = solver->getMinTimeStep();
-        if(heatBoundaryCourantValue > 1. && maxTimeStep > minTimeStep)
+        if(heatBoundaryCourantValue > 1.0 && maxTimeStep > minTimeStep)
         {
-            actualTimeStep = SF3Dmax(minTimeStep, maxTimeStep / heatBoundaryCourantValue);
-            if(actualTimeStep > 1.)
-                actualTimeStep = std::floor(actualTimeStep);
-
+            currentTimeStep = SF3Dmax(minTimeStep, maxTimeStep / heatBoundaryCourantValue);
             return false;
         }
+
         return true;
     }
 
-    double computeCurrentHeatStorage(double dtWater, double dtHeat)
+
+    // total current heat storage [J]
+    double computeCurrentHeatStorage(double dtHeat, double dtWater, double heatStartTime)
     {
         double heatStorage = 0.;
         __parforop(__ompStatus, +, heatStorage)
@@ -348,9 +459,15 @@ namespace soilFluxes3D::v2::Heat
             if(nodeGrid.surfaceFlag[nodeIdx])
                 continue;
 
-            double nodeH = (dtHeat != noDataD && dtWater != noDataD) ? getNodeH_fromTimeSteps(nodeIdx, dtHeat, dtWater) : nodeGrid.waterData.pressureHead[nodeIdx];
-            heatStorage += getNodeHeatStorage(nodeIdx, nodeH - nodeGrid.z[nodeIdx]);
+            const double nodeH = (dtHeat != noDataD && dtWater != noDataD) ? getNodeH_fromTimeSteps(nodeIdx, dtHeat, dtWater, heatStartTime)
+                                                                     : nodeGrid.waterData.pressureHead[nodeIdx];
+
+            double nodeStorage;
+            SF3Derror_t result = getNodeHeatStorage(nodeIdx, nodeH - nodeGrid.z[nodeIdx], nodeStorage);
+            if (result == SF3Derror_t::SF3Dok)
+                heatStorage += nodeStorage;
         }
+
         return heatStorage;
     }
 
@@ -370,23 +487,51 @@ namespace soilFluxes3D::v2::Heat
     }
 
 
-    void evaluateHeatBalance(double dtHeat, double dtWater)
+    // heat associated to the change of liquid water content during the heat step, at the mean temperature [J]
+    static double computeImplicitWaterContentHeat(double dtHeat, double dtWater, double heatStartTime)
     {
-        // Heat sink/source
-        double heatSinkSource = computeCurrentHeatSinkSource(dtHeat);
-        balanceDataCurrentTimeStep.heatSinkSource = heatSinkSource;
+        double implicitHeat = 0.;
+        __parforop(__ompStatus, +, implicitHeat)
+        for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
+        {
+            if(nodeGrid.surfaceFlag[nodeIdx])
+                continue;
 
+            const double hStart = getNodeH_fromTimeSteps(nodeIdx, 0., dtWater, heatStartTime) - nodeGrid.z[nodeIdx];
+            const double hEnd = getNodeH_fromTimeSteps(nodeIdx, dtHeat, dtWater, heatStartTime) - nodeGrid.z[nodeIdx];
+            const double dTheta = Soil::computeNodeTheta_fromSignedPsi(nodeIdx, hEnd) - Soil::computeNodeTheta_fromSignedPsi(nodeIdx, hStart);
+            const double meanT = 0.5 * (nodeGrid.heatData.temperature[nodeIdx] + nodeGrid.heatData.oldTemperature[nodeIdx]);
+
+            implicitHeat += dTheta * HEAT_CAPACITY_WATER * meanT * nodeGrid.size[nodeIdx];
+        }
+        return implicitHeat;
+    }
+
+    void evaluateHeatBalance(double dtHeat, double dtWater, double heatStartTime)
+    {
         // Heat storage
-        double heatStorage = computeCurrentHeatStorage(dtWater, dtHeat);
+        const double heatStorage = computeCurrentHeatStorage(dtHeat, dtWater, heatStartTime);
         balanceDataCurrentTimeStep.heatStorage = heatStorage;
 
-        // Heat MBE
-        double deltaHeatStorage = balanceDataCurrentTimeStep.heatStorage - balanceDataPreviousTimeStep.heatStorage;
-        balanceDataCurrentTimeStep.heatMBE = deltaHeatStorage - balanceDataCurrentTimeStep.heatSinkSource;
+        // Heat sink/source
+        double heatSinkSource = computeCurrentHeatSinkSource(dtHeat);
 
-        // Heat MBR (minimum 1 Joule)
-        double referenceHeat = SF3Dmax(heatStorage * 1e-6, std::fabs(balanceDataCurrentTimeStep.heatSinkSource));
-        balanceDataCurrentTimeStep.heatMBR = balanceDataCurrentTimeStep.heatMBE / referenceHeat;
+        // Without advection the heat of the liquid water-content change is not modelled in the equation (see heatLoop),
+        // but it is still part of the storage: account it as an implicit source, so the balance checks the heat solver only
+        if(simulationFlags.computeWater && !simulationFlags.computeHeatAdvection)
+            heatSinkSource += computeImplicitWaterContentHeat(dtHeat, dtWater, heatStartTime);
+
+        balanceDataCurrentTimeStep.heatSinkSource = heatSinkSource;
+
+        // Heat MBE
+        const double deltaHeatStorage = balanceDataCurrentTimeStep.heatStorage - balanceDataPreviousTimeStep.heatStorage;
+        const double massBalanceError = deltaHeatStorage - heatSinkSource;
+        balanceDataCurrentTimeStep.heatMBE = massBalanceError;
+
+        // Heat MBR
+        const double referenceHeat = SF3Dmax(heatStorage * 1e-6, std::fabs(balanceDataCurrentTimeStep.heatSinkSource));
+        const double massBalanceErrorRatio = massBalanceError / referenceHeat;
+        balanceDataCurrentTimeStep.heatMBR = massBalanceErrorRatio;
     }
 
 
@@ -413,37 +558,34 @@ namespace soilFluxes3D::v2::Heat
     }
 
 
-    __cudaSpec bool computeHeatLinkFluxes(double& matrixElement, SF3Duint_t& matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex, double dtHeat, double dtWater)
+    // new code: removed advection (now implicit)
+    __cudaSpec bool computeHeatLinkFluxes(double& matrixElement, SF3Duint_t& matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex,
+                                          double dtHeat, double dtWater, double heatStartTime)
     {
         if(nodeGrid.linkData[linkIndex].linkType[nodeIndex] == linkType_t::NoLink)
             return false;
 
-        SF3Duint_t linkedNodeIndex = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
+        const SF3Duint_t linkedNodeIndex = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
 
-        if(!isHeatNode(linkedNodeIndex))
+        if(! isHeatNode(linkedNodeIndex))
             return false;
 
-        matrixElement = conduction(nodeIndex, linkIndex, dtHeat, dtWater);
+        matrixElement = conduction(nodeIndex, linkIndex, dtHeat, dtWater, heatStartTime);
         matrixIndex = linkedNodeIndex;
 
-        if(!simulationFlags.computeWater)
+        if(! simulationFlags.computeWater)
             return true;
 
-        double advectiveFlux = 0., latentFlux = 0.;
+        double latentFlux = 0.;
 
-        if(simulationFlags.computeHeatVapor)
+        if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
         {
-            latentFlux = computeIsothermalLatentHeatFlux(nodeIndex, linkIndex, dtHeat, dtWater);
+            latentFlux = computeIsothermalLatentHeatFlux(nodeIndex, linkIndex, dtHeat, dtWater, heatStartTime);
             saveNodeHeatSpecificFlux(nodeIndex, linkIndex, fluxTypes_t::HeatLatentIsothermal, latentFlux);
         }
 
-        if(simulationFlags.computeHeatAdvection)
-        {
-            advectiveFlux = computeAdvectiveFlux(nodeIndex, linkIndex);
-            saveNodeHeatSpecificFlux(nodeIndex, linkIndex, fluxTypes_t::HeatAdvective, advectiveFlux);
-        }
+        nodeGrid.waterData.invariantFluxes[nodeIndex] += latentFlux;
 
-        nodeGrid.waterData.invariantFluxes[nodeIndex] += advectiveFlux + latentFlux;
         return true;
     }
 
@@ -455,7 +597,8 @@ namespace soilFluxes3D::v2::Heat
      * \param process: type of calculation that call the function [Water/Heat]
      * \return Thermal liquid flux [m3 s-1]
      */
-    __cudaSpec double computeThermalLiquidFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat, double dtWater)
+    __cudaSpec double computeThermalLiquidFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat,
+                                               double dtWater, double heatStartTime)
     {
         SF3Duint_t dIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
         double srcAvgT, dstAvgT, srcAvgH, dstAvgH;
@@ -470,35 +613,38 @@ namespace soilFluxes3D::v2::Heat
                 srcAvgH = nodeGrid.waterData.pressureHead[nIdx] - nodeGrid.z[nIdx];
                 dstAvgH = nodeGrid.waterData.pressureHead[dIdx] - nodeGrid.z[dIdx];
                 break;
+
             case processType::Heat:
-                if(!simulationFlags.computeHeat)
+                if(! simulationFlags.computeHeat)
                     return noDataD;
 
                 srcAvgT = nodeGrid.heatData.temperature[nIdx];
                 dstAvgT = nodeGrid.heatData.temperature[dIdx];
-                if(dtHeat != dtWater)
-                {
-                    srcAvgH = computeMean(getNodeH_fromTimeSteps(nIdx, dtHeat, dtWater), nodeGrid.waterData.oldPressureHead[nIdx], meanType_t::Arithmetic) - nodeGrid.z[nIdx];
-                    dstAvgH = computeMean(getNodeH_fromTimeSteps(dIdx, dtHeat, dtWater), nodeGrid.waterData.oldPressureHead[dIdx], meanType_t::Arithmetic) - nodeGrid.z[dIdx];
-                }
-                else
-                {
-                    srcAvgH = computeMean(nodeGrid.waterData.pressureHead[nIdx], nodeGrid.waterData.oldPressureHead[nIdx], meanType_t::Arithmetic) - nodeGrid.z[nIdx];
-                    dstAvgH = computeMean(nodeGrid.waterData.pressureHead[dIdx], nodeGrid.waterData.oldPressureHead[dIdx], meanType_t::Arithmetic) - nodeGrid.z[dIdx];
-                }
+                srcAvgH = getNodeAvgH_fromTimeSteps(nIdx, dtHeat, dtWater, heatStartTime);
+                dstAvgH = getNodeAvgH_fromTimeSteps(dIdx, dtHeat, dtWater, heatStartTime);
                 break;
+
             default:
                 return noDataD;
         }
 
-        //Thermal liquid conductivity
-        double scrTLK = computeThermalLiquidConductivity(srcAvgT - ZEROCELSIUS, srcAvgH, nodeGrid.waterData.waterConductivity[nIdx]);
-        double dstTLK = computeThermalLiquidConductivity(dstAvgT - ZEROCELSIUS, dstAvgH, nodeGrid.waterData.waterConductivity[dIdx]);
+        // degree of saturation
+        const double Se_n = (srcAvgH < 0.) ? computeNodeSe_fromPsi(nIdx, std::fabs(srcAvgH)) : 1.0;
+        const double Se_d = (dstAvgH < 0.) ? computeNodeSe_fromPsi(dIdx, std::fabs(dstAvgH)) : 1.0;
+
+        // water conductivity
+        const double k_n = computeMualemSoilConductivity(*(nodeGrid.soilSurfacePointers[nIdx].soilPtr), Se_n);
+        const double k_d = computeMualemSoilConductivity(*(nodeGrid.soilSurfacePointers[dIdx].soilPtr), Se_d);
+
+        // thermal liquid conductivity
+        double scrTLK = computeThermalLiquidConductivity(srcAvgT - ZEROCELSIUS, srcAvgH, k_n);
+        double dstTLK = computeThermalLiquidConductivity(dstAvgT - ZEROCELSIUS, dstAvgH, k_d);
         double avgTLK = computeMean(scrTLK, dstTLK);
 
-        //Flow density [m s-1]
+        // flow density [m s-1]
         double flowDensity = avgTLK * (dstAvgT - srcAvgT) / nodeDistance3D(nIdx, dIdx);
-        //Flow [m3 s-1]
+
+        // flow [m3 s-1]
         double flow = flowDensity * nodeGrid.linkData[lIdx].interfaceArea[nIdx];
 
         return flow;
@@ -509,9 +655,10 @@ namespace soilFluxes3D::v2::Heat
      * \param dtHeat: time step for the heat calculation [s]
      * \param dtWater: time step for the water calculation [s]
      * \param process: type of calculation that call the function [Water/Heat]
-     * \return Thermal vapor flux [m3 s-1]
+     * \return Thermal vapor flux [kg s-1]
      */
-    __cudaSpec double computeThermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat, double dtWater)
+    __cudaSpec double computeThermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat,
+                                              double dtWater, double heatStartTime)
     {
         SF3Duint_t dIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
         double srcAvgT, dstAvgT, srcAvgH, dstAvgH;
@@ -526,28 +673,30 @@ namespace soilFluxes3D::v2::Heat
                 srcAvgH = nodeGrid.waterData.pressureHead[nIdx] - nodeGrid.z[nIdx];
                 dstAvgH = nodeGrid.waterData.pressureHead[dIdx] - nodeGrid.z[dIdx];
                 break;
+
             case processType::Heat:
-                if(!simulationFlags.computeHeat)
+                if(! simulationFlags.computeHeat)
                     return noDataD;
 
                 srcAvgT = nodeGrid.heatData.temperature[nIdx];
                 dstAvgT = nodeGrid.heatData.temperature[dIdx];
-                srcAvgH = computeMean(getNodeH_fromTimeSteps(nIdx, dtHeat, dtWater), nodeGrid.waterData.oldPressureHead[nIdx], meanType_t::Arithmetic) - nodeGrid.z[nIdx];
-                dstAvgH = computeMean(getNodeH_fromTimeSteps(dIdx, dtHeat, dtWater), nodeGrid.waterData.oldPressureHead[dIdx], meanType_t::Arithmetic) - nodeGrid.z[dIdx];
+                srcAvgH = getNodeAvgH_fromTimeSteps(nIdx, dtHeat, dtWater, heatStartTime);
+                dstAvgH = getNodeAvgH_fromTimeSteps(dIdx, dtHeat, dtWater, heatStartTime);
                 break;
+
             default:
                 return noDataD;
         }
 
-        //Thermal liquid conductivity
-        double scrTVK = computeNodeThermalVaporConductivity(nIdx, srcAvgT, srcAvgH);
-        double dstTVK = computeNodeThermalVaporConductivity(dIdx, dstAvgT, dstAvgH);
-        double avgTVK = computeMean(scrTVK, dstTVK);
+        // Thermal vapor conductivity
+        const double scrTVK = computeNodeThermalVaporConductivity(nIdx, srcAvgT, srcAvgH);
+        const double dstTVK = computeNodeThermalVaporConductivity(dIdx, dstAvgT, dstAvgH);
+        const double avgTVK = computeMean(scrTVK, dstTVK);                                    // [kg m-1 s-1 K-1]
 
-        //Flow density [m s-1]
-        double flowDensity = avgTVK * (dstAvgT - srcAvgT) / nodeDistance3D(nIdx, dIdx);
-        //Flow [m3 s-1]
-        double flow = flowDensity * nodeGrid.linkData[lIdx].interfaceArea[nIdx];
+        //Flow density [kg m-2 s-1]
+        const double flowDensity = avgTVK * (dstAvgT - srcAvgT) / nodeDistance3D(nIdx, dIdx);
+        //Flow [kg s-1]
+        const double flow = flowDensity * nodeGrid.linkData[lIdx].interfaceArea[nIdx];
 
         return flow;
     }
@@ -558,25 +707,26 @@ namespace soilFluxes3D::v2::Heat
      * \param dtWater: time step for the water calculation [s]
      * \return Isothermal vapor flux [kg s-1]
      */
-    __cudaSpec double computeIsothermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater)
+    __cudaSpec double computeIsothermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat,
+                                                 double dtWater, double heatStartTime)
     {
         SF3Duint_t dIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
-        double srcAvgH = computeMean(getNodeH_fromTimeSteps(nIdx, dtHeat, dtWater), nodeGrid.waterData.oldPressureHead[nIdx], meanType_t::Arithmetic) - nodeGrid.z[nIdx];
-        double dstAvgH = computeMean(getNodeH_fromTimeSteps(dIdx, dtHeat, dtWater), nodeGrid.waterData.oldPressureHead[dIdx], meanType_t::Arithmetic) - nodeGrid.z[dIdx];
+        const double srcAvgH = getNodeAvgH_fromTimeSteps(nIdx, dtHeat, dtWater, heatStartTime);
+        const double dstAvgH = getNodeAvgH_fromTimeSteps(dIdx, dtHeat, dtWater, heatStartTime);
 
         //Isothermal vapor conductivity [kg s m-3]
-        double scrIVK = computeNodeIsothermalVaporConductivity(nIdx, nodeGrid.heatData.temperature[nIdx], srcAvgH);
-        double dstIVK = computeNodeIsothermalVaporConductivity(dIdx, nodeGrid.heatData.temperature[dIdx], dstAvgH);
-        double avgIVK = computeMean(scrIVK, dstIVK);
+        const double scrIVK = computeNodeIsothermalVaporConductivity(nIdx, nodeGrid.heatData.temperature[nIdx], srcAvgH);
+        const double dstIVK = computeNodeIsothermalVaporConductivity(dIdx, nodeGrid.heatData.temperature[dIdx], dstAvgH);
+        const double avgIVK = computeMean(scrIVK, dstIVK);
 
         //Water matric potential [J kg-1] = [m2 s-2]
-        double srcPsi = srcAvgH * GRAVITY;
-        double dstPsi = dstAvgH * GRAVITY;
-        double deltaPsi = dstPsi - srcPsi;
+        const double srcPsi = srcAvgH * GRAVITY;
+        const double dstPsi = dstAvgH * GRAVITY;
+        const double deltaPsi = dstPsi - srcPsi;
 
         //Flux [kg s-1]
-        double flux = avgIVK * deltaPsi / nodeDistance3D(nIdx, dIdx) *  nodeGrid.linkData[lIdx].interfaceArea[nIdx];
+        const double flux = avgIVK * deltaPsi / nodeDistance3D(nIdx, dIdx) *  nodeGrid.linkData[lIdx].interfaceArea[nIdx];
 
         return flux;
     }
@@ -587,50 +737,59 @@ namespace soilFluxes3D::v2::Heat
      * \param dtWater: time step for the water calculation [s]
      * \return Isothermal latent heat flux [W]
      */
-    __cudaSpec double computeIsothermalLatentHeatFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater)
+    __cudaSpec double computeIsothermalLatentHeatFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime)
     {
         SF3Duint_t dIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
         //Latent heat of vaporization [J kg-1]
-        double nLambda = computeLatentVaporizationHeat(nodeGrid.heatData.temperature[nIdx] - ZEROCELSIUS);
-        double lLambda = computeLatentVaporizationHeat(nodeGrid.heatData.temperature[dIdx] - ZEROCELSIUS);
-        double avgLambda = computeMean(nLambda, lLambda, meanType_t::Arithmetic);
+        const double nLambda = computeLatentVaporizationHeat(nodeGrid.heatData.temperature[nIdx] - ZEROCELSIUS);
+        const double lLambda = computeLatentVaporizationHeat(nodeGrid.heatData.temperature[dIdx] - ZEROCELSIUS);
+        const double avgLambda = computeMean(nLambda, lLambda, meanType_t::Arithmetic);
 
-        return avgLambda * computeIsothermalVaporFlux(nIdx, lIdx, dtHeat, dtWater);
+        return avgLambda * computeIsothermalVaporFlux(nIdx, lIdx, dtHeat, dtWater, heatStartTime);
     }
+
 
     /*!
      * \brief compute the advective liquid water heat flux at lIdx link of the nIdx node
+     * Positive water and vapor fluxes indicate inflow into node nIdx.
      * \return Advective liquid water heat flux [W]
      */
-    __cudaSpec double computeAdvectiveFlux(SF3Duint_t nIdx, u8_t lIdx) //TO DO: change param lIdx with a linkData_t const ref
+    __cudaSpec double computeAdvectiveFlux_old(SF3Duint_t nIdx, u8_t lIdx)
     {
         SF3Duint_t linkedNodeIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
-        double liquidWaterFlux = nodeGrid.linkData[lIdx].waterFlux[nIdx];
-        double liquidAdvT = nodeGrid.heatData.temperature[(liquidWaterFlux < 0.) ? nIdx : linkedNodeIdx];
+        // Liquid water volumetric flux [m3 s-1], positive for inflow
+        const double liquidWaterFlux = nodeGrid.linkData[lIdx].waterFlux[nIdx];
+        // [W K-1]
+        const double AdvFlux = HEAT_CAPACITY_WATER * liquidWaterFlux;
 
-        double AdvFluxCourant = HEAT_CAPACITY_WATER * liquidWaterFlux;
+        // Vapor mass flux [kg s-1], positive for inflow
+        const double vaporWaterFlux = nodeGrid.linkData[lIdx].vaporFlux[nIdx];
+        // [W K-1]
+        const double vapFlux = HEAT_CAPACITY_WATER_VAPOR * vaporWaterFlux;
 
-        double vaporWaterFlux = nodeGrid.linkData[lIdx].vaporFlux[nIdx];
-        double vaporAdvT = nodeGrid.heatData.temperature[(vaporWaterFlux < 0.) ? nIdx : linkedNodeIdx];
+        // Upwind temperatures: use the source node for each flux
+        const double liquidAdvT = nodeGrid.heatData.temperature[(liquidWaterFlux < 0.) ? nIdx : linkedNodeIdx];
+        const double vaporAdvT = nodeGrid.heatData.temperature[(vaporWaterFlux < 0.) ? nIdx : linkedNodeIdx];
 
-        double vapFluxCourant = HEAT_CAPACITY_WATER_VAPOR * vaporWaterFlux;
-
-        return AdvFluxCourant * liquidAdvT + vapFluxCourant * vaporAdvT;
+        return AdvFlux * liquidAdvT + vapFlux * vaporAdvT;                          // [W]
     }
+
 
     __cudaSpec double getLinkHeatFlux(const linkData_t& linkData, SF3Duint_t srcIndex, fluxTypes_t fluxType)
     {
-        if(!simulationFlags.computeHeat)
+        if(! simulationFlags.computeHeat)
             return noDataD;
 
         switch(simulationFlags.HFsaveMode)
         {
             case heatFluxSaveMode_t::Total:
                 if(fluxType == fluxTypes_t::HeatTotal)
+                {
                     return linkData.fluxes[toUnderlyingT(fluxType)][srcIndex];
-                return noDataD;
+                }
+                else return noDataD;
                 break;
             case heatFluxSaveMode_t::All:
                 return linkData.fluxes[toUnderlyingT(fluxType)][srcIndex];
@@ -640,30 +799,29 @@ namespace soilFluxes3D::v2::Heat
         }
     }
 
-    __cudaSpec double conduction(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater)
+
+    __cudaSpec double conduction(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater, double heatStartTime)
     {
         SF3Duint_t linkedNodeIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
-        double distance = nodeDistance3D(nIdx, linkedNodeIdx);
-        double zeta = nodeGrid.linkData[lIdx].interfaceArea[nIdx] / distance;
+        const double distance = nodeDistance3D(nIdx, linkedNodeIdx);
+        const double zeta = nodeGrid.linkData[lIdx].interfaceArea[nIdx] / distance;
 
-        double nodeH = getNodeH_fromTimeSteps(nIdx, dtHeat, dtWater);
-        double linkH = getNodeH_fromTimeSteps(linkedNodeIdx, dtHeat, dtWater);
+        const double nodeAvgH = getNodeAvgH_fromTimeSteps(nIdx, dtHeat, dtWater, heatStartTime);
+        const double linkAvgH = getNodeAvgH_fromTimeSteps(linkedNodeIdx, dtHeat, dtWater, heatStartTime);
 
-        double nodeAvgH = computeMean(nodeH, nodeGrid.waterData.oldPressureHead[nIdx], meanType_t::Arithmetic) - nodeGrid.z[nIdx];
-        double linkAvgH = computeMean(linkH, nodeGrid.waterData.oldPressureHead[linkedNodeIdx], meanType_t::Arithmetic) - nodeGrid.z[linkedNodeIdx];
+        const double nodeK = computeNodeHeatSoilConductivity(nIdx, nodeGrid.heatData.temperature[nIdx], nodeAvgH);
+        const double linkK = computeNodeHeatSoilConductivity(linkedNodeIdx, nodeGrid.heatData.temperature[linkedNodeIdx], linkAvgH);
 
-        double nodeK = computeNodeHeatSoilConductivity(nIdx, nodeGrid.heatData.temperature[nIdx], nodeAvgH);
-        double linkK = computeNodeHeatSoilConductivity(linkedNodeIdx, nodeGrid.heatData.temperature[linkedNodeIdx], linkAvgH);
-
-        double meanK = computeMean(nodeK, linkK);
+        const double meanK = computeMean(nodeK, linkK);
         return zeta * meanK;
     }
 
 
     double GaussSeidelHeatCPU(VectorCPU& vectorX, const MatrixCPU& matrixA, const VectorCPU& vectorB)
     {
-        double infinityNorm = -1;
+        double infinityNorm = 0.0;
+
         for(SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             if(nodeGrid.surfaceFlag[rowIdx])
@@ -676,6 +834,11 @@ namespace soilFluxes3D::v2::Heat
             for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
                 newXvalue -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.columnIndeces[rowIdx][colIdx]];
 
+            // Protezione da NaN / Inf
+            if (!std::isfinite(newXvalue)) {
+                return std::numeric_limits<double>::infinity();
+            }
+
             double deltaX = std::fabs(newXvalue - vectorX.values[rowIdx]);
             vectorX.values[rowIdx] = newXvalue;
             infinityNorm = std::max(infinityNorm, deltaX);
@@ -684,14 +847,6 @@ namespace soilFluxes3D::v2::Heat
         return infinityNorm;
     }
 
-    /* TODO
-     *
-     */
-    __cudaSpec double getNodeH_fromTimeSteps(SF3Duint_t nodeIndex, double dtHeat, double dtWater)
-    {
-        double deltaH = nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.waterData.oldPressureHead[nodeIndex];
-        return nodeGrid.waterData.oldPressureHead[nodeIndex] + deltaH * dtHeat / dtWater;
-    }
 
     /*!
      * \brief compute the nodeIndex node thermal soil conductivity according to Campbell et al. Soil Sci. 158:307-313
@@ -702,46 +857,48 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeNodeHeatSoilConductivity(SF3Duint_t nodeIndex, double T, double h)
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
-        double celsiusT = T - ZEROCELSIUS;
+        const double celsiusT = T - ZEROCELSIUS;
 
-        //Volume fraction of water          [m3 m-3]
-        double wVolFrac = computeNodeTheta_fromSignedPsi(nodeIndex, h);
+        // Volume fraction of water          [m3 m-3]
+        const double wVolFrac = computeNodeTheta_fromSignedPsi(nodeIndex, h);
 
-        //Volume fraction of solids         [m3 m-3]
-        double sVolFrac = 1. - nodeSoil.Theta_s;
+        // Volume fraction of solids         [m3 m-3]
+        const double sVolFrac = 1.0 - nodeSoil.Theta_s;
 
-        //Volume fraction of air            [m3 m-3]
-        double aVolFrac = nodeSoil.Theta_s - wVolFrac;
+        // Volume fraction of air            [m3 m-3]
+        const double aVolFrac = nodeSoil.Theta_s - wVolFrac;
 
-        //Water return flow factor          []  (same in air conductivity)
-        double wRetFlowFactor = computeWaterReturnFlowFactor(wVolFrac, T, nodeSoil.clay);
+        // Water return flow factor          []  (same in air conductivity)
+        const double wRetFlowFactor = computeWaterReturnFlowFactor(wVolFrac, T, nodeSoil.clay);
 
-        //Thermal conductivity of water     [W m-1 K-1]
-        double wThermalK = 0.554 + 0.0024 * celsiusT - 0.00000987 * celsiusT * celsiusT;
+        // Thermal conductivity of water     [W m-1 K-1]
+        const double thermalK_zeroDegree = 0.554;
+        const double wThermalK = thermalK_zeroDegree + 0.0024 * celsiusT - 0.00000987 * celsiusT * celsiusT;
 
-        //Thermal conductivity of air       [W m-1 K-1]
-        double aThermalK = computeNodeHeatAirConductivity(nodeIndex, T, h);
+        // Thermal conductivity of air       [W m-1 K-1]
+        const double aThermalK = computeNodeHeatAirConductivity(nodeIndex, T, h);
 
-        //Thermal conductivity of fluids    [W m-1 K-1]
-        double fThermalK = aThermalK + wRetFlowFactor * (wThermalK - aThermalK);
+        // Thermal conductivity of fluids    [W m-1 K-1]
+        const double fThermalK = aThermalK + wRetFlowFactor * (wThermalK - aThermalK);
 
-        //deVries shape factor              []  (assume same for all mineral soils)
-        double ga = 0.088;
-        //Shape factor                      []
-        double gc = 1. - 2. * ga;
+        // deVries shape factor              [-]  (assume same for all mineral soils)
+        const double ga = 0.088;
+        // Shape factor                      [-]
+        const double gc = 1. - 2. * ga;
 
-        //Air weighting factor              []
-        double aWFactor = (2. / (1. + (aThermalK / fThermalK - 1.) * ga) + 1. / (1. + (aThermalK / fThermalK - 1.) * gc)) / 3.;
-        //Water weighting factor            []
-        double wWFactor = (2. / (1. + (wThermalK / fThermalK - 1.) * ga) + 1. / (1. + (wThermalK / fThermalK - 1.) * gc)) / 3.;
-        //Solid weighting factor            []
-        double sWFactor = (2. / (1. + (mineralHK / fThermalK - 1.) * ga) + 1. / (1. + (mineralHK / fThermalK - 1.) * gc)) / 3.;
+        // Air weighting factor              [-]
+        const double aWFactor = (2. / (1. + (aThermalK / fThermalK - 1.) * ga) + 1. / (1. + (aThermalK / fThermalK - 1.) * gc)) / 3.;
+        // Water weighting factor            [-]
+        const double wWFactor = (2. / (1. + (wThermalK / fThermalK - 1.) * ga) + 1. / (1. + (wThermalK / fThermalK - 1.) * gc)) / 3.;
+        // Solid weighting factor            [-]
+        const double sWFactor = (2. / (1. + (mineralHK / fThermalK - 1.) * ga) + 1. / (1. + (mineralHK / fThermalK - 1.) * gc)) / 3.;
 
-        //Total thermal conductivity[W m-1 K-1]
-        double nodeConductivity = (wVolFrac * wWFactor * wThermalK + aVolFrac * aWFactor * aThermalK + sVolFrac * sWFactor * mineralHK)
+        // Total thermal conductivity        [W m-1 K-1]
+        const double nodeConductivity = (wVolFrac * wWFactor * wThermalK + aVolFrac * aWFactor * aThermalK + sVolFrac * sWFactor * mineralHK)
                                     / (wWFactor * wVolFrac + aWFactor * aVolFrac + sWFactor * sVolFrac);
         return nodeConductivity;
     }
+
 
     /*!
      * \brief compute the nodeIndex node thermal air conductivity
@@ -751,25 +908,26 @@ namespace soilFluxes3D::v2::Heat
      */
     __cudaSpec double computeNodeHeatAirConductivity(SF3Duint_t nodeIndex, double T, double h)
     {
-        double celsiusT = T - ZEROCELSIUS;
+        const double celsiusT = T - ZEROCELSIUS;
 
         //Thermal conductivity of (dry) air     [W m-1 K-1]
         double aThermalK = 0.024 + 0.0000773 * celsiusT - 0.000000026 * celsiusT * celsiusT;
 
-        if(simulationFlags.computeWater)
+        if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
         {
             //Latent heat of vaporization       [J kg-1]
-            double lamdba = computeLatentVaporizationHeat(celsiusT);
+            const double lambda = computeLatentVaporizationHeat(celsiusT);
 
             //Non isothermal vapor conductivity [kg m-1 s-1 K-1]
-            double niVK = computeNodeThermalVaporConductivity(nodeIndex, T, h);
+            const double niVK = computeNodeThermalVaporConductivity(nodeIndex, T, h);
 
             //Thermal conductivity of air     [W m-1 K-1]
-            aThermalK += lamdba * niVK;
+            aThermalK += lambda * niVK;
         }
 
         return aThermalK;
     }
+
 
     /*!
      * \brief compute the nodeIndex node thermal vapor conductivity
@@ -780,43 +938,45 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeNodeThermalVaporConductivity(SF3Duint_t nodeIndex, double T, double h)
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
-        double celsiusT = T - ZEROCELSIUS;
+        const double celsiusT = T - ZEROCELSIUS;
 
         //Total air pressure        [Pa]
-        double aPressure = computePressure_fromAltitude(nodeGrid.z[nodeIndex]);
+        const double aPressure = computePressure_fromAltitude(nodeGrid.z[nodeIndex]);
 
         //Volumetric water content  [m3 m-3]
-        double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
+        const double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
 
         //Vapor diffusivity         [m2 s-1]
-        double vDiff = computeSoilVaporDiffusivity(nodeSoil.Theta_s, theta, T);
+        const double vDiff = computeSoilVaporDiffusivity(nodeSoil.Theta_s, theta, T);
 
         //Saturation vapor pressure [Pa]
-        double svPressure = computeSaturationVaporPressure(celsiusT);
+        const double svPressure = computeSaturationVaporPressure(celsiusT);
 
-        //Slope of saturation vapor pressure        [Pa K-1]
-        double svpSlope = computeSVPSlope(celsiusT, svPressure / 1000);
+        //Slope of saturation vapor pressure  [Pa K-1]
+        const double svpSlope = computeSVPSlope(celsiusT, svPressure);
 
         //Slope of saturation vapor concentration   [kg m-3 K-1]
-        double svcSlope = svpSlope * MH2O * computeAirMolarDensity(aPressure, T) / aPressure;
+        const double svcSlope = svpSlope * MH2O * computeAirMolarDensity(aPressure, T) / aPressure;
 
         //Vapor concentration       [kg m-3]
-        double vConcentration = computeVapor_fromPsiTemp(h, T);
+        const double vConcentration = computeVapor_fromPsiTemp(h, T);
 
         //Vapor pressure            [Pa]
-        double vPressure = computeVaporPressure_fromConcentration(vConcentration, T);
+        const double vPressure = computeVaporPressure_fromConcentration(vConcentration, T);
 
         //Relative humidity         []
-        double rH = vPressure / svPressure;
+        const double rH = vPressure / svPressure;
 
         //Degree of saturation      []
-        double satDegree = theta / nodeSoil.Theta_s;
+        const double satDegree = theta / nodeSoil.Theta_s;
 
         //Enhancement factor        [] (Cass et al. 1984)
-        double eta = 9.5 + 3. * satDegree - 8.5 * std::exp(-std::pow((1. + 2.6 / std::sqrt(nodeSoil.clay)) * satDegree, 4));
+        const double sqrtClay = std::sqrt(std::max(EPSILON, nodeSoil.clay));
+        const double eta = 9.5 + 3. * satDegree - 8.5 * std::exp(-std::pow((1.0 + 2.6 / sqrtClay) * satDegree, 4));
 
         return eta * vDiff * svcSlope * rH;
     }
+
 
     /*!
      * \brief compute the nodeIndex node isothermal vapor conductivity
@@ -828,17 +988,18 @@ namespace soilFluxes3D::v2::Heat
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
 
-        //Volumetric water content  [m3 m-3]
-        double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
+        // Volumetric water content  [m3 m-3]
+        const double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
 
-        //Vapor diffusivity         [m2 s-1]
-        double vDiff = computeSoilVaporDiffusivity(nodeSoil.Theta_s, theta, T);
+        // Vapor diffusivity         [m2 s-1]
+        const double vDiff = computeSoilVaporDiffusivity(nodeSoil.Theta_s, theta, T);
 
-        //Vapor concentration       [kg m-3]
-        double vConc = computeVapor_fromPsiTemp(h, T);
+        // Vapor concentration       [kg m-3]
+        const double vConc = computeVapor_fromPsiTemp(h, T);
 
         return (vDiff * vConc * MH2O) / (R_GAS * T);
     }
+
 
     /*!
      * \brief compute the nodeIndex node volumetric heat capacity
@@ -848,19 +1009,24 @@ namespace soilFluxes3D::v2::Heat
      */
     __cudaSpec double computeNodeHeatCapacity(SF3Duint_t nodeIndex, double h, double T)
     {
-        double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
+        const double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
 
-        double bulkDensity = estimateNodeBulkDensity(nodeIndex);
+        const double bulkDensity = computeNodeBulkDensity(nodeIndex);
         double heatCapacity = (bulkDensity / QUARTZ_DENSITY) * HEAT_CAPACITY_MINERAL + theta * HEAT_CAPACITY_WATER;
 
-        if(simulationFlags.computeHeatVapor)
-            heatCapacity += computeNodeVaporThetaV(nodeIndex, h, T) * HEAT_CAPACITY_AIR;
+        if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
+        {
+            // vapor volumetric water equivalent [m3 m-3]
+            const double thetaV = computeNodeVaporThetaV(nodeIndex, h, T);
+            heatCapacity += thetaV * WATER_DENSITY * HEAT_CAPACITY_WATER_VAPOR;
+        }
 
         return heatCapacity;
     }
 
+
     /*!
-     * \brief compute the nodeIndex node vapor volumetric water equivalent
+     * \brief compute the node vapor volumetric water equivalent
      * \param h: node water matric potential [m]
      * \param T: node temperature [K]
      * \return vapor volumetric water equivalent [m3 m-3]
@@ -868,8 +1034,8 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeNodeVaporThetaV(SF3Duint_t nodeIndex, double h, double T)
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
-        double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
-        double vaporConcentration = computeVapor_fromPsiTemp(h, T);
+        const double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
+        const double vaporConcentration = computeVapor_fromPsiTemp(h, T);
 
         return vaporConcentration / WATER_DENSITY * (nodeSoil.Theta_s - theta);
     }
@@ -882,73 +1048,72 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeNodeAerodynamicConductance(SF3Duint_t nodeIndex)
     {
         //Node parameters
-        double heightTemperature = nodeGrid.boundaryData.heightTemperature[nodeIndex];
-        double heightWind = nodeGrid.boundaryData.heightWind[nodeIndex];
-        double soilSurfaceTemperature = nodeGrid.heatData.temperature[nodeIndex];
-        double rHeight = nodeGrid.boundaryData.roughnessHeight[nodeIndex];
-        double airTemperature = nodeGrid.boundaryData.temperature[nodeIndex];
-        double windSpeed = SF3Dmax(nodeGrid.boundaryData.windSpeed[nodeIndex], 0.01);
+        const double heightTemperature = nodeGrid.boundaryData.heightTemperature[nodeIndex];    // [m]
+        const double heightWind = nodeGrid.boundaryData.heightWind[nodeIndex];                  // [m]
+        const double rHeight = nodeGrid.boundaryData.roughnessHeight[nodeIndex];                // [m]
+        const double soilSurfaceTemperature = nodeGrid.heatData.temperature[nodeIndex];         // [K]
+        const double airTemperature = nodeGrid.boundaryData.temperature[nodeIndex];             // [K]
+        const double windSpeed = SF3Dmax(nodeGrid.boundaryData.windSpeed[nodeIndex], 0.01);     // [m s-1]
 
-        //Zero place displacement   [m]
-        double zeroPlane = 0.77 * rHeight;
+        // Zero place displacement and effective heights [m]
+        const double zeroPlane = 0.77 * rHeight;
+        const double zEffectiveWind = SF3Dmax(heightWind - zeroPlane, 0.01);
+        const double zEffectiveTemp = SF3Dmax(heightTemperature - zeroPlane, 0.01);
 
-        //Surface roughness parameters for momentum and heat
-        double rMomentum = 0.13 * rHeight;
-        double rHeat = 0.2 * rMomentum;
+        // Surface roughness parameters for momentum and heat
+        const double rMomentum = 0.13 * rHeight;
+        const double rHeat = 0.2 * rMomentum;
 
-        //Diabatic correction factors for momentum and for heat
+        // Volumetric specific heat of air [J m-3 K-1]
+        const double cH = computeAirVolumetricSpecificHeat(computePressure_fromAltitude(heightWind), airTemperature);
+
+        //Diabatic correction factors for momentum and heat
         double psiM = 0.;
         double psiH = 0.;
 
-        // Volumetric specific heat of air [J m-3 K-1]
-        double cH = computeAirVolumetricSpecificHeat(computePressure_fromAltitude(heightWind), airTemperature);
+        double H = noDataD;                 // [W m-2] Sensible heat flux
+        double oldH = noDataD;              // [W m-2]
+        double conductance = noDataD;       // [m s-1] Aereodynamic conductance
 
-        bool isFirstIteration = true;
-        double dH = 1000;           // [W m-2]
-        double oldH = noDataD;      // [W m-2]
-        double K = noDataD;         // [m s-1]
         for(u8_t counter = 0; counter < 100; ++counter)
         {
-            // Friction velocity [m s-1]
-            double uStar = VON_KARMAN_CONST * windSpeed / (std::log((heightWind - zeroPlane + rMomentum) / rMomentum) + psiM);
+            // Friction velocity
+            const double uStar = VON_KARMAN_CONST * windSpeed / (std::log((zEffectiveWind + rMomentum) / rMomentum) + psiM);
 
-            // Aereodynamic conductance [m s-1]
-            K = VON_KARMAN_CONST * uStar / (std::log((heightTemperature - zeroPlane + rHeat) / rHeat) + psiH);
+            // Aereodynamic conductance
+            conductance = VON_KARMAN_CONST * uStar / (std::log((zEffectiveTemp + rHeat) / rHeat) + psiH);
 
-            // Sensible heat flux [W m-2]
-            double H = K * cH * (soilSurfaceTemperature - airTemperature);
+            // Sensible heat flux (con sotto-rilassamento per evitare stalli oscillatori)
+            double newH = conductance * cH * (soilSurfaceTemperature - airTemperature);
+            H = (counter == 0) ? newH : 0.5 * H + 0.5 * newH;
 
             // Stability parameter
-            double sP = -VON_KARMAN_CONST * heightWind * GRAVITY * H / (cH * airTemperature * (std::pow(uStar, 3)));
+            const double sP = -VON_KARMAN_CONST * zEffectiveWind * GRAVITY * H / (cH * airTemperature * (std::pow(uStar, 3)));
 
             // Check stability
             if(sP > 0)
             {
-                psiH = 6 * std::log(1 + sP);
+                psiH = 6.0 * std::log(1.0 + sP);
                 psiM = psiH;
             }
             else
             {
-                psiH = -2 * std::log((1 + std::sqrt(1 - 16 * sP)) / 2);
+                psiH = -2 * std::log((1.0 + std::sqrt(1.0 - 16.0 * sP)) / 2.0);
                 psiM = 0.6 * psiH;
             }
 
-            if(isFirstIteration)
+            if(counter > 0)
             {
-                isFirstIteration = false;
-            }
-            else
-            {
-                dH = std::fabs(H - oldH);
+                double dH = std::fabs(H - oldH);
                 if(dH < 0.01)
                     break;
             }
-
             oldH = H;
         }
 
-        return K;
+        return conductance;
     }
+
 
     /*!
      * \brief compute the nodeIndex node atmospheric sensible heat flux
@@ -974,10 +1139,10 @@ namespace soilFluxes3D::v2::Heat
     __cudaSpec double computeNodeAtmosphericLatentHeatFlux(SF3Duint_t nodeIndex)
     {
         SF3Duint_t upIndex = nodeGrid.linkData[0].linkIndex[nodeIndex];    //linkType_t::Up
-        if(!nodeGrid.surfaceFlag[upIndex])
+        if(! nodeGrid.surfaceFlag[upIndex])
             return 0.;
 
-        double lambda = computeLatentVaporizationHeat(nodeGrid.heatData.temperature[nodeIndex] - ZEROCELSIUS);
+        const double lambda = computeLatentVaporizationHeat(nodeGrid.heatData.temperature[nodeIndex] - ZEROCELSIUS);
         return nodeGrid.boundaryData.waterFlowRate[nodeIndex] * WATER_DENSITY * lambda;
     }
 
@@ -1037,32 +1202,6 @@ namespace soilFluxes3D::v2::Heat
 
 
     /*!
-     * \brief estimate the nodeIndex node bulk density
-     * \return bulk density [Mg m-3]
-     */
-    __cudaSpec double estimateNodeBulkDensity(SF3Duint_t nodeIndex)
-    {
-        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
-        double particleDensity = estimateSoilParticleDensity(nodeSoil.organicMatter);
-        double totalPorosity = nodeSoil.Theta_s;
-
-        return (1. - totalPorosity) * particleDensity;
-    }
-
-    /*!
-     * \brief estimate soil particle density (Driessen, 1986)
-     * \param organicMatter: fraction of organic matter
-     * \return soil particle density [Mg m-3]
-     */
-    __cudaSpec double estimateSoilParticleDensity(double organicMatter)
-    {
-        if(organicMatter == noDataD)
-            organicMatter = 0.02;
-
-        return 1. / ((1. - organicMatter) / QUARTZ_DENSITY + organicMatter / 1.43);
-    }
-
-    /*!
      * \brief compute vapor concentration from matric potential and temperature
      * \param h: matric potential [J kg-1]
      * \param T: temperature [K]
@@ -1091,7 +1230,7 @@ namespace soilFluxes3D::v2::Heat
      * \brief compute the water return flow factor (Campbell, 1994)
      * \param theta: volumetric water content [m3 m-3]
      * \param T: temperature [K]
-     * \param clayFraction: fraction of clay in the soil mixrure
+     * \param clayFraction: fraction of clay in the soil mixture
      * \return water return flow factor [-]
      */
     __cudaSpec double computeWaterReturnFlowFactor(double theta, double T, double clayFraction)
@@ -1163,14 +1302,14 @@ namespace soilFluxes3D::v2::Heat
      */
     __cudaSpec double computeSaturationVaporPressure(double T)
     {
-        return 611 * std::exp(17.502 * T / (T + 240.97));
+        return 611. * std::exp(17.502 * T / (T + 240.97));
     }
 
     /*!
      * \brief compute the slope of saturation vapor pressure curve
      * \param T: temperature [°C]
-     * \param svp: saturation vapor pressure [kPa]
-     * \return slope [kPa °C-1]
+     * \param svp: saturation vapor pressure [Pa]
+     * \return slope [Pa °C-1] equivalent to [Pa K-1]
      */
     __cudaSpec double computeSVPSlope(double T, double svp)
     {
@@ -1241,13 +1380,13 @@ namespace soilFluxes3D::v2::Heat
      */
     __cudaSpec double computeThermalLiquidConductivity(double T, double h, double ILK)
     {
-        //Gain factor (temperature dependence of soil water retention curve) []
-        double Gwt = 4.;
+        //Gain factor (temperature dependence of soil water retention curve) [-]
+        const double Gwt = 4.;
+
         //Derivative of surface tension with respect to temperature [g s-2 K-1]
-        double dGammadT = -0.1425 - 0.000576 * T;
+        const double dGammadT = -0.1425 - 0.000576 * T;
 
         return SF3Dmax(0., ILK * h * Gwt * dGammadT / GAMMA0);
     }
-
 
 }

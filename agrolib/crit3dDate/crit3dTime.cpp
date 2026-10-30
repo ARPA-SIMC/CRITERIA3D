@@ -44,6 +44,47 @@ Crit3DTime::Crit3DTime(const Crit3DDate &myDate, int mySeconds)
 }
 
 
+bool Crit3DTime::setFromISOString_fast(const std::string &dateTimeStr)
+{
+    // Una stringa ISO valida fino ai minuti richiede almeno 16 caratteri: "YYYY-MM-DDTHH:MM"
+    if (dateTimeStr.size() < 16)
+        return false;
+
+    const char* str = dateTimeStr.data();
+
+    // Opzionale ma consigliato: controllo rapido sulla validità del formato fisso
+    if (str[4] != '-' || str[7] != '-')
+        return false;
+
+    // Parsing data
+    date.year  = (str[0] - '0') * 1000 + (str[1] - '0') * 100 + (str[2] - '0') * 10 + (str[3] - '0');
+    date.month = (str[5] - '0') * 10   + (str[6] - '0');
+    date.day   = (str[8] - '0') * 10   + (str[9] - '0');
+
+    // Il carattere in posizione 10 è il separatore ('T' o ' '), lo ignoriamo direttamente
+
+    // Parsing orario (ore e minuti sono garantiti se size >= 16)
+    const int hour = (str[11] - '0') * 10 + (str[12] - '0');
+    const int minutes = (str[14] - '0') * 10 + (str[15] - '0');
+    int seconds = 0;
+
+    // Controllo se i secondi sono presenti ("YYYY-MM-DDTHH:MM:SS")
+    if (dateTimeStr.size() >= 19 && str[16] == ':')
+    {
+        seconds = (str[17] - '0') * 10 + (str[18] - '0');
+    }
+
+    // Validazione base per intercettare caratteri non numerici che hanno sfalsato l'ASCII math
+    // (es. se al posto di un numero c'è una lettera, il calcolo dà un risultato anomalo)
+    if (date.month > 12 || date.day > 31 || hour > 23 || minutes > 59 || seconds > 60)
+        return false;
+
+    time = hour * HOUR_SECONDS + minutes * 60 + seconds;
+
+    return true;
+}
+
+
 bool Crit3DTime::setFromISOString(const std::string &dateTimeStr)
 {
     if (dateTimeStr.size() < 16)

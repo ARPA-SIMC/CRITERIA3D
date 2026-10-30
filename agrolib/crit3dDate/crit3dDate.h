@@ -76,6 +76,7 @@
         void setNullTime();
 
         bool setFromISOString(const std::string &dateTimeStr);
+        bool setFromISOString_fast(const std::string &dateTimeStr);
 
         int getHour() const;
         int getNearestHour() const;
@@ -102,7 +103,7 @@
 
     int difference(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
 
-    inline long getJulianDay(int day, int month, int year);
+    long getJulianDay(int day, int month, int year);
     Crit3DDate getDateFromJulianDay(long julianDay);
 
     int daysTo(const Crit3DDate& firstDate, const Crit3DDate& lastDate);

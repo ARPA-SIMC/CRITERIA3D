@@ -1296,7 +1296,7 @@ void MainWindow::refreshViewer3D()
             myProject.update3DColors();
         }
 
-        viewer3D->glWidget->update();
+        viewer3D->glWidget->updateColorBuffer();
     }
 }
 
@@ -2041,6 +2041,7 @@ void MainWindow::on_actionInterpolationSettings_triggered()
     myInterpolationDialog->close();
 }
 
+
 void MainWindow::on_actionProxy_analysis_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
@@ -2049,8 +2050,8 @@ void MainWindow::on_actionProxy_analysis_triggered()
         return;
     }
 
-    std::vector<Crit3DProxy> proxy = myProject.interpolationSettings.getCurrentProxy();
-    if (proxy.size() == 0)
+    std::vector<Crit3DProxy> proxyList = myProject.interpolationSettings.getCurrentProxyList();
+    if (proxyList.empty())
     {
         myProject.logError("No proxy loaded");
         return;
@@ -2058,6 +2059,7 @@ void MainWindow::on_actionProxy_analysis_triggered()
 
     return myProject.showProxyGraph(NODATA);
 }
+
 
 void MainWindow::on_actionComputeHour_meteoVariables_triggered()
 {
@@ -3495,7 +3497,7 @@ void MainWindow::on_actionTopographicDistanceMapLoad_triggered()
 
 void MainWindow::on_viewer3DClosed()
 {
-    myProject.clearGeometry();
+    myProject.clearGlGeometry();
     viewer3D = nullptr;
 }
 
@@ -3517,7 +3519,7 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
         return;
     }
 
-    if (! myProject.initializeGeometry())
+    if (! myProject.initializeGlGeometry())
     {
         myProject.logError();
         return;
@@ -3673,6 +3675,26 @@ void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
 void MainWindow::on_flag_increase_slope_triggered(bool isChecked)
 {
     myProject.increaseSlope = isChecked;
+    if (isChecked)
+    {
+        float increaseValue = 1.0;
+        QString valueStr = editValue("Choose slope increase ratio [-]", QString::number(increaseValue));
+        if (valueStr == "")
+            return;
+
+        bool isOk;
+        double value = valueStr.toDouble(&isOk);
+        if (! isOk)
+            return;
+
+        if ((value < 1.0) || (value > 2.0))
+        {
+            myProject.logWarning("Wrong value: insert a number in [1.0, 2.0]");
+            return;
+        }
+
+        myProject.slopeIncreaseRatio = value;
+    }
 }
 
 

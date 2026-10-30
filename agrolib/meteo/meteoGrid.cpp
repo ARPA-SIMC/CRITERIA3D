@@ -28,6 +28,7 @@
 #include "meteoGrid.h"
 #include "statistics.h"
 #include "math.h"
+#include "gis.h"
 
 Crit3DMeteoGridStructure::Crit3DMeteoGridStructure()
 {    
@@ -186,6 +187,7 @@ Crit3DMeteoGrid::~Crit3DMeteoGrid()
 
         for (unsigned int j = 0; j < meteoPointVector.size(); j++)
         {
+            meteoPointVector[j]->cleanAllData();
             free(meteoPointVector[j]);
         }
     }
@@ -652,6 +654,7 @@ bool Crit3DMeteoGrid::findFirstActiveMeteoPoint(std::string* id, int* row, int* 
     return false;
 }
 
+
 void Crit3DMeteoGrid::findGridAggregationPoints(gis::Crit3DRasterGrid* myDEM)
 {
     bool excludeNoData = false;
@@ -664,9 +667,9 @@ void Crit3DMeteoGrid::findGridAggregationPoints(gis::Crit3DRasterGrid* myDEM)
     _isAggregationDefined = true;
 }
 
+
 void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gis::Crit3DRasterGrid* myDEM, bool excludeNoData)
 {
-
     gis::Crit3DUtmPoint utmLL, utmUR;
     gis::Crit3DUtmPoint utmPoint;
     gis::Crit3DPoint point;
@@ -680,7 +683,6 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
     {
         if (_gridStructure.isUTM())
         {
-
             _meteoPoints[row][col]->aggregationPoints.clear();
 
             utmLL.x = _meteoPoints[row][col]->point.utm.x - (_gridStructure.header().dx / 2) + (myDEM->header->cellSize / 2);
@@ -690,9 +692,9 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
 
             _meteoPoints[row][col]->aggregationPointsMaxNr = 0;
 
-            for (double x = utmLL.x; x < utmUR.x; x=x+myDEM->header->cellSize)
+            for (double x = utmLL.x; x < utmUR.x; x += myDEM->header->cellSize)
             {
-                for (double y = utmLL.y; x < utmUR.y; y=y+myDEM->header->cellSize)
+                for (double y = utmLL.y; x < utmUR.y; y += myDEM->header->cellSize)
                 {
                     _meteoPoints[row][col]->aggregationPointsMaxNr = _meteoPoints[row][col]->aggregationPointsMaxNr + 1;
                     if (!excludeNoData || gis::getValueFromXY(*myDEM, x, y) != myDEM->header->flag )
@@ -1132,8 +1134,9 @@ void Crit3DMeteoGrid::fixDailyThermalConsistency(const Crit3DDate myDate)
         }
 }
 
-void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute,
-                                         gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab)
+void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, const Crit3DDate &date,
+                                                int  hour, int minute, gis::Crit3DRasterGrid* myDEM,
+                                                gis::Crit3DRasterGrid *myRaster, aggregationMethod aggrMethod)
 {
     int numberOfDays = 1;
 
@@ -1167,11 +1170,11 @@ void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyTy
                     if ( (validValues / _meteoPoints[row][col]->aggregationPointsMaxNr) > ( GRID_MIN_COVERAGE / 100 ) )
                     {
 
-                        double myValue = spatialAggregateMeteoGridPoint(*(_meteoPoints[row][col]), elab);
+                        double myValue = spatialAggregateMeteoGridPoint(*(_meteoPoints[row][col]), aggrMethod);
 
                         if (freq == hourly)
                         {
-                            if (_meteoPoints[row][col]->nrObsDataDaysH == 0)
+                            if (_meteoPoints[row][col]->obsDataH.empty())
                                 _meteoPoints[row][col]->initializeObsDataH(1, numberOfDays, date);
 
                             _meteoPoints[row][col]->setMeteoPointValueH(date, hour, minute, myVar, float(myValue));
@@ -1179,7 +1182,7 @@ void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyTy
                         }
                         else if (freq == daily)
                         {
-                            if (_meteoPoints[row][col]->nrObsDataDaysD == 0)
+                            if (_meteoPoints[row][col]->obsDataD.empty())
                                 _meteoPoints[row][col]->initializeObsDataD(numberOfDays, date);
 
                             _meteoPoints[row][col]->setMeteoPointValueD(date, myVar, float(myValue));
@@ -1195,11 +1198,9 @@ void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyTy
 }
 
 
-double Crit3DMeteoGrid::spatialAggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab)
+double Crit3DMeteoGrid::spatialAggregateMeteoGridPoint(const Crit3DMeteoPoint &myPoint, aggregationMethod aggrMethod)
 {
-
     std::vector <float> validValues;
-
 
     for (unsigned int i = 0; i < myPoint.aggregationPoints.size(); i++)
     {
@@ -1219,16 +1220,16 @@ double Crit3DMeteoGrid::spatialAggregateMeteoGridPoint(Crit3DMeteoPoint myPoint,
         return NODATA;
     }
 
-    if (elab == aggregationMethod::aggrAverage)
+    if (aggrMethod == aggregationMethod::aggrAverage)
     {
         return statistics::mean(validValues.data(), int(validValues.size()));
     }
-    else if (elab == aggregationMethod::aggrMedian)
+    else if (aggrMethod == aggregationMethod::aggrMedian)
     {
         int size = int(validValues.size());
         return sorting::percentile(validValues, size, 50.0, true);
     }
-    else if (elab == aggregationMethod::aggrStdDeviation)
+    else if (aggrMethod == aggregationMethod::aggrStdDeviation)
     {
         return statistics::standardDeviation(validValues.data(), int(validValues.size()));
     }

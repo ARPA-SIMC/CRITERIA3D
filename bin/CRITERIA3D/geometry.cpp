@@ -58,9 +58,9 @@ void Crit3DGeometry::addVertexColor(const Crit3DColor &color)
     m_colors.push_back(color.blue);
 }
 
-void Crit3DGeometry::setVertexColor(int i, const Crit3DColor &color)
+void Crit3DGeometry::setVertexColor(long i, const Crit3DColor &color)
 {
-    if (i > vertexCount())
+    if (i < 0 || i >= vertexCount())
         return;
 
     m_colors[i*3] = color.red;
@@ -71,6 +71,9 @@ void Crit3DGeometry::setVertexColor(int i, const Crit3DColor &color)
 
 void Crit3DGeometry::setMagnify(float magnify)
 {
+    if (magnify <= 0.f || m_magnify <= 0.f)
+        return;
+
     const float ratio = magnify / m_magnify;
 
     for (int i = 0; i < vertexCount(); i++)

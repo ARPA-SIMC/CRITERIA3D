@@ -1,14 +1,9 @@
 #include "soilPhysics.h"
 #include "solver.h"
-#include "otherFunctions.h"
+#include "heat.h"
+
 #include <cassert>
 
-using namespace soilFluxes3D::v2;
-using namespace soilFluxes3D::v2::Math;
-
-//Temp
-#include "heat.h"
-using namespace soilFluxes3D::v2::Heat;
 
 namespace soilFluxes3D::v2
 {
@@ -16,6 +11,61 @@ namespace soilFluxes3D::v2
     extern __cudaMngd Solver* solver;
     extern __cudaMngd simulationFlags_t simulationFlags;
 }
+
+using namespace soilFluxes3D::v2;
+using namespace soilFluxes3D::v2::Math;
+using namespace soilFluxes3D::v2::Heat;
+
+
+namespace soilFluxes3D::v2::Math
+{
+    __cudaSpec double computeMean(double v1, double v2, meanType_t type)
+    {
+        switch(type)
+        {
+        case meanType_t::Arithmetic:
+            return (v1 + v2) * 0.5;
+        case meanType_t::Geometric:
+            return geometricMean(v1, v2);
+        case meanType_t::Logarithmic:
+            return logarithmicMean(v1, v2);
+        default:
+            return logarithmicMean(v1, v2);
+        }
+    }
+
+    __cudaSpec double geometricMean(double v1, double v2)
+    {
+        int8_t sign = (v1 > 0) - (v1 < 0);
+        return sign * std::sqrt(v1 * v2);
+    }
+
+    __cudaSpec double logarithmicMean(double v1, double v2)
+    {
+        if (v1 <= 0.0 || v2 <= 0.0)
+            return 0.0;
+
+        // protezione numerica: se i valori sono molto vicini,
+        // la media logaritmica è numericamente instabile ma converge a quella aritmetica.
+        const double diff = std::fabs(v1 - v2);
+        if (diff < 1e-6 * std::max(v1, v2))
+            return (v1 + v2) * 0.5;
+
+        return (v1 - v2) / std::log(v1 / v2);
+    }
+
+    __cudaSpec double vectorNorm(const double *vector, std::size_t size)
+    {
+        double norm = 0;
+        for (std::size_t idx = 0; idx < size; ++idx)
+            norm += (vector[idx] * vector[idx]);
+
+        return std::sqrt(norm);
+    }
+
+} // end namespace math
+
+
 
 namespace soilFluxes3D::v2::Soil
 {
@@ -67,7 +117,7 @@ namespace soilFluxes3D::v2::Soil
      */
     __cudaSpec double computeNodeSe(SF3Duint_t nodeIndex)
     {
-        bool isSaturated = nodeGrid.waterData.pressureHead[nodeIndex] >= nodeGrid.z[nodeIndex];
+        const bool isSaturated = nodeGrid.waterData.pressureHead[nodeIndex] >= nodeGrid.z[nodeIndex];
         return isSaturated ? 1. : computeNodeSe_unsat(nodeIndex);
     }
 
@@ -78,7 +128,7 @@ namespace soilFluxes3D::v2::Soil
      */
     __cudaSpec double computeNodeSe_unsat(SF3Duint_t nodeIndex)
     {
-        double nodePsi = std::fabs(nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]);
+        const double nodePsi = std::fabs(nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]);
         return computeNodeSe_fromPsi(nodeIndex, nodePsi);
     }
 
@@ -163,10 +213,15 @@ namespace soilFluxes3D::v2::Soil
      */
     __cudaSpec double computeNodeK(SF3Duint_t nodeIndex)
     {
-        double k = computeMualemSoilConductivity(*(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr), nodeGrid.waterData.saturationDegree[nodeIndex]);
+        double k = computeMualemSoilConductivity(*(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr),
+                                                 nodeGrid.waterData.saturationDegree[nodeIndex]);
 
         if(simulationFlags.computeHeat && simulationFlags.computeHeatVapor)
-            k += computeNodeIsothermalVaporConductivity(nodeIndex, getNodeMeanTemperature(nodeIndex), nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]) * (GRAVITY / WATER_DENSITY);
+        {
+            const double h = nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
+            const double isothermalVaporK = computeNodeIsothermalVaporConductivity(nodeIndex, getNodeMeanTemperature(nodeIndex), h);
+            k += isothermalVaporK * (GRAVITY / WATER_DENSITY);
+        }
     
         return k;
     }
@@ -183,7 +238,7 @@ namespace soilFluxes3D::v2::Soil
         if (Se >= 1.0)
             return soil.K_sat;
 
-        double inv_m = 1.0 / soil.VG_m;
+        const double inv_m = 1.0 / soil.VG_m;
         double temp;
 
         WRCModel model = solver->getWRCModel();
@@ -191,17 +246,17 @@ namespace soilFluxes3D::v2::Soil
         {
             case WRCModel::VanGenuchten:
             {
-                double Se_pow = std::pow(Se, inv_m);
+                const double Se_pow = std::pow(Se, inv_m);
                 temp = 1.0 - std::pow(1.0 - Se_pow, soil.VG_m);
                 break;
             }
             case WRCModel::ModifiedVanGenuchten:
             {
-                double SeSc_pow = std::pow(Se * soil.VG_Sc, inv_m);
-                double Sc_pow   = std::pow(soil.VG_Sc, inv_m);
+                const double SeSc_pow = std::pow(Se * soil.VG_Sc, inv_m);
+                const double Sc_pow   = std::pow(soil.VG_Sc, inv_m);
 
-                double tNum = 1.0 - std::pow(1.0 - SeSc_pow, soil.VG_m);
-                double tDen = 1.0 - std::pow(1.0 - Sc_pow, soil.VG_m);
+                const double tNum = 1.0 - std::pow(1.0 - SeSc_pow, soil.VG_m);
+                const double tDen = 1.0 - std::pow(1.0 - Sc_pow, soil.VG_m);
 
                 temp = tNum / tDen;
                 break;
@@ -211,6 +266,33 @@ namespace soilFluxes3D::v2::Soil
         }
 
         return soil.K_sat * std::pow(Se, soil.Mualem_L) * (temp * temp);
+    }
+
+
+    /*!
+     * \brief estimate the nodeIndex node bulk density
+     * \return bulk density [Mg m-3]
+     */
+    __cudaSpec double computeNodeBulkDensity(SF3Duint_t nodeIndex)
+    {
+        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
+        const double particleDensity = computeSoilParticleDensity(nodeSoil.organicMatter);
+        const double totalPorosity = nodeSoil.Theta_s;
+
+        return (1. - totalPorosity) * particleDensity;
+    }
+
+    /*!
+     * \brief estimate soil particle density (Driessen, 1986)
+     * \param organicMatter: fraction of organic matter
+     * \return soil particle density [Mg m-3]
+     */
+    __cudaSpec double computeSoilParticleDensity(double organicMatter)
+    {
+        if(organicMatter == noDataD)
+            organicMatter = 0.02;
+
+        return 1. / ((1. - organicMatter) / QUARTZ_DENSITY + organicMatter / 1.43);
     }
 
 
@@ -286,14 +368,16 @@ namespace soilFluxes3D::v2::Soil
      */
     __cudaSpec double computeNodedThetaVdH(SF3Duint_t nodeIndex, double temperature, double dThetadH)
     {
-        double h = nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
-        double rH = computeSoilRelativeHumidity(h, temperature);
+        const double h = nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
+        const double rH = computeSoilRelativeHumidity(h, temperature);
 
-        double saturationVP = computeSaturationVaporPressure(temperature - ZEROCELSIUS);
-        double saturationVC = computeVaporConcentration_fromPressure(saturationVP, temperature);
+        const double saturationVP = computeSaturationVaporPressure(temperature - ZEROCELSIUS);
+        const double saturationVC = computeVaporConcentration_fromPressure(saturationVP, temperature);
 
-        double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
-        double dThetaVdPsi = (saturationVC * rH / WATER_DENSITY) * ((nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_s - theta) * MH2O / (R_GAS * temperature) - dThetadH / GRAVITY);
+        const double theta = computeNodeTheta_fromSignedPsi(nodeIndex, h);
+        const double dThetaVdPsi = (saturationVC * rH / WATER_DENSITY)
+                                   * ( (nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_s - theta)
+                                        * MH2O / (R_GAS * temperature) - dThetadH / GRAVITY );
 
         return dThetaVdPsi * GRAVITY;
     }
@@ -304,7 +388,7 @@ namespace soilFluxes3D::v2::Soil
      */
     __cudaSpec double getNodeMeanTemperature(SF3Duint_t nodeIndex)
     {
-        if(!simulationFlags.computeHeat)   //Add control over heat data
+        if(!simulationFlags.computeHeat)
             return noDataD;
 
         return computeMean(nodeGrid.heatData.temperature[nodeIndex], nodeGrid.heatData.oldTemperature[nodeIndex], meanType_t::Arithmetic);
@@ -319,8 +403,8 @@ namespace soilFluxes3D::v2::Soil
         if(!nodeGrid.surfaceFlag[nodeIndex])
             return 0.;
 
-        double hV = SF3Dmax(0., nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]);
-        double h0 = SF3Dmax(0.001, nodeGrid.waterData.pond[nodeIndex]);
+        const double hV = SF3Dmax(0., nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]);
+        const double h0 = SF3Dmax(0.001, nodeGrid.waterData.pond[nodeIndex]);
 
         return SF3Dmin(1., hV / h0);
     }
@@ -337,4 +421,4 @@ namespace soilFluxes3D::v2::Soil
         return vectorNorm(vec, 3);
     }
 
-} //namespace
+} //end namespace soil

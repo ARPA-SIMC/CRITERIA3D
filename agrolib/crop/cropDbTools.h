@@ -9,7 +9,7 @@
 
     bool deleteCropData(QSqlDatabase &dbCrop, const QString& cropName, QString& errorStr);
 
-    bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &myCrop, QString& errorStr);
+    bool loadCropParameters(const QSqlDatabase &dbCrop, const QString& idCrop, Crit3DCrop &myCrop, QString& errorStr);
 
     bool updateCropLAIparam(QSqlDatabase &dbCrop, const Crit3DCrop &myCrop, QString &errorStr);
 

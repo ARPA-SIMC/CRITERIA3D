@@ -396,12 +396,12 @@ void ProxyDialog::changedProxy(bool savePrevious)
 
     if (proxyIndex != _proxyCombo.currentIndex() && savePrevious)
     {
-        Crit3DProxy *myProxy = &(_proxy.at(unsigned(proxyIndex)));
+        Crit3DProxy *myProxy = &(_proxyList.at(unsigned(proxyIndex)));
         saveProxy(myProxy);
     }
 
     proxyIndex = _proxyCombo.currentIndex();
-    Crit3DProxy *myProxy = &(_proxy.at(unsigned(proxyIndex)));
+    Crit3DProxy *myProxy = &(_proxyList.at(unsigned(proxyIndex)));
 
     int index = _table.findText(QString::fromStdString(myProxy->getProxyTable()));
     _table.setCurrentIndex(index);
@@ -492,8 +492,8 @@ void ProxyDialog::listProxies()
     _proxyCombo.blockSignals(true);
 
     _proxyCombo.clear();
-    for (unsigned int i = 0; i < _proxy.size(); i++)
-         _proxyCombo.addItem(QString::fromStdString(_proxy[i].getName()));
+    for (unsigned int i = 0; i < _proxyList.size(); i++)
+         _proxyCombo.addItem(QString::fromStdString(_proxyList[i].getName()));
 
     _proxyCombo.blockSignals(false);
 }
@@ -508,7 +508,7 @@ void ProxyDialog::addProxy()
     {
         Crit3DProxy myProxy;
         myProxy.setName(proxyName.toStdString());
-        _proxy.push_back(myProxy);
+        _proxyList.push_back(myProxy);
         listProxies();
         _proxyCombo.setCurrentIndex(_proxyCombo.count()-1);
     }
@@ -528,7 +528,7 @@ void ProxyDialog::deleteProxy()
         proxyIndex = NODATA;
     }
 
-    _proxy.erase(_proxy.begin() + _proxyCombo.currentIndex());
+    _proxyList.erase(_proxyList.begin() + _proxyCombo.currentIndex());
     listProxies();
     changedProxy(false);
 }
@@ -610,7 +610,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
     this->resize(300, 100);
 
     _project = myProject;
-    _proxy = _project->interpolationSettings.getCurrentProxy();
+    _proxyList = _project->interpolationSettings.getCurrentProxyList();
 
     setWindowTitle(tr("Interpolation proxy"));
 
@@ -690,35 +690,35 @@ ProxyDialog::ProxyDialog(Project *myProject)
     std::vector<double> parametersMin, parametersMax;
     if (proxyIndex != NODATA)
     {
-        parametersMin = _proxy[proxyIndex].getFittingParametersMin();
-        parametersMax = _proxy[proxyIndex].getFittingParametersMax();
+        parametersMin = _proxyList[proxyIndex].getFittingParametersMin();
+        parametersMax = _proxyList[proxyIndex].getFittingParametersMax();
 
         if ((parametersMin.empty() || parametersMax.empty()) && _project->interpolationSettings.getSelectedCombination().isProxyActive(proxyIndex))
         {
             //se il proxy è stato attivato e non ci sono parametri caricati in precedenza, carica i default
-            if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseTwo)
+            if (_proxyList[proxyIndex].getFittingFunctionName() == piecewiseTwo)
             {
-                _proxy[proxyIndex].setFittingParametersRange({0, -20, SLOPE_MIN, INVSLOPE_MIN,
+                _proxyList[proxyIndex].setFittingParametersRange({0, -20, SLOPE_MIN, INVSLOPE_MIN,
                                                               H0_MAX, 40, SLOPE_MAX, INVSLOPE_MAX});
-                _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1});
+                _proxyList[proxyIndex].setFittingFirstGuess({0,1,1,1});
             }
-            else if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseThree)
+            else if (_proxyList[proxyIndex].getFittingFunctionName() == piecewiseThree)
             {
-                _proxy[proxyIndex].setFittingParametersRange({H0_MIN, -20, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN,
+                _proxyList[proxyIndex].setFittingParametersRange({H0_MIN, -20, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN,
                                                               H0_MAX, 40, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX});
-                _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1,1});
+                _proxyList[proxyIndex].setFittingFirstGuess({0,1,1,1,1});
             }
-            else if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseThreeFree)
+            else if (_proxyList[proxyIndex].getFittingFunctionName() == piecewiseThreeFree)
             {
-                _proxy[proxyIndex].setFittingParametersRange({H0_MIN, -20, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN, INVSLOPE_MIN,
+                _proxyList[proxyIndex].setFittingParametersRange({H0_MIN, -20, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN, INVSLOPE_MIN,
                                                               H0_MAX, 40, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX, INVSLOPE_MAX});
-                _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1,1,1});
+                _proxyList[proxyIndex].setFittingFirstGuess({0,1,1,1,1,1});
             }
             else
-                _proxy[proxyIndex].setFittingParametersRange({-1, 50, 1, -40});
+                _proxyList[proxyIndex].setFittingParametersRange({-1, 50, 1, -40});
 
-            parametersMin = _proxy[proxyIndex].getFittingParametersMin();
-            parametersMax = _proxy[proxyIndex].getFittingParametersMax();
+            parametersMin = _proxyList[proxyIndex].getFittingParametersMin();
+            parametersMax = _proxyList[proxyIndex].getFittingParametersMax();
         }
 
         _param0.setText(QString("%1").arg(parametersMin[0], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[0], 0, 'f', 4));
@@ -788,19 +788,19 @@ bool ProxyDialog::checkProxies(QString *error)
     QList<QString> fields;
     std::string table_;
 
-    for (unsigned i=0; i < _proxy.size(); i++)
+    for (unsigned i=0; i < _proxyList.size(); i++)
     {
-        if (!_project->checkProxy(_proxy[i], error, _project->interpolationSettings.getSelectedCombination().isProxyActive(i)))
+        if (!_project->checkProxy(_proxyList[i], error, _project->interpolationSettings.getSelectedCombination().isProxyActive(i)))
             return false;
 
-        table_ = _proxy[i].getProxyTable();
+        table_ = _proxyList[i].getProxyTable();
         if (table_ != "")
         {
             QSqlDatabase db = _project->meteoPointsDbHandler->getDb();
             fields = getFields(&db, QString::fromStdString(table_));
             if (fields.filter("id_point").isEmpty())
             {
-                *error = "no id_point field found in table " + QString::fromStdString(table_) + " for proxy " + QString::fromStdString(_proxy[i].getName());
+                *error = "no id_point field found in table " + QString::fromStdString(table_) + " for proxy " + QString::fromStdString(_proxyList[i].getName());
                 return false;
             }
         }
@@ -812,16 +812,16 @@ bool ProxyDialog::checkProxies(QString *error)
 void ProxyDialog::saveProxies()
 {
     Crit3DProxyCombination myCombination = _project->interpolationSettings.getSelectedCombination();
-    _project->interpolationSettings.initializeProxy();
-    _project->qualityInterpolationSettings.initializeProxy();
+    _project->interpolationSettings.initializeProxyList();
+    _project->qualityInterpolationSettings.initializeProxyList();
 
     std::vector <Crit3DProxy> proxyList;
     std::deque <bool> proxyActive;
     std::vector <int> proxyOrder;
 
-    for (unsigned i=0; i < _proxy.size(); i++)
+    for (unsigned i=0; i < _proxyList.size(); i++)
     {
-        proxyList.push_back(_proxy[i]);
+        proxyList.push_back(_proxyList[i]);
         proxyActive.push_back(myCombination.isProxyActive(i));
         proxyOrder.push_back(i+1);
     }
@@ -834,7 +834,7 @@ void ProxyDialog::accept()
 {
     if (_proxyCombo.count() > 0)
     {
-        Crit3DProxy *myProxy = &(_proxy.at(unsigned(_proxyCombo.currentIndex())));
+        Crit3DProxy *myProxy = &(_proxyList.at(unsigned(_proxyCombo.currentIndex())));
         saveProxy(myProxy);
     }
 

@@ -105,6 +105,7 @@
 
         bool showEachTimeStep;
         bool increaseSlope;
+        double slopeIncreaseRatio;
 
         bool isLinealFound;
         bool isModelRunning, isModelPaused, isModelStopped;

@@ -191,7 +191,7 @@
         bool loadParameters(QString parametersFileName);
         bool loadRadiationGrids();
 
-        void setProxyDEM();
+        bool setProxyDEM();
         void clearProxyDEM();
         bool checkProxy(Crit3DProxy &myProxy, QString *error, bool isActive);
         bool addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque <bool> proxyActive, std::vector <int> proxyOrder);

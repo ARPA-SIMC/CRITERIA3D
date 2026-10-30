@@ -431,9 +431,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
 Crit3DMeteoWidget::~Crit3DMeteoWidget()
 {
     for (int i = 0; i < _meteoPoints.size(); i++)
-    {
         _meteoPoints[i].cleanAllData();
-    }
+
     _meteoPoints.clear();
 }
 
@@ -496,7 +495,7 @@ void Crit3DMeteoWidget::updateTimeRange()
             myDailyDateFirst.setDate(_meteoPoints[i].obsDataD[0].date.year,
                                      _meteoPoints[i].obsDataD[0].date.month,
                                      _meteoPoints[i].obsDataD[0].date.day);
-            myDailyDateLast = myDailyDateFirst.addDays(_meteoPoints[i].nrObsDataDaysD-1);
+            myDailyDateLast = myDailyDateFirst.addDays(_meteoPoints[i].obsDataD.size()-1);
         }
         // updates daily range
         if (myDailyDateFirst.isValid() &&
@@ -514,7 +513,7 @@ void Crit3DMeteoWidget::updateTimeRange()
         myHourlyDateFirst.setDate(_meteoPoints[i].getMeteoPointHourlyValuesDate(0).year,
                                   _meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
                                   _meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
-        QDate myHourlyDateLast = myHourlyDateFirst.addDays(_meteoPoints[i].nrObsDataDaysH-1);
+        QDate myHourlyDateLast = myHourlyDateFirst.addDays(_meteoPoints[i].obsDataH.size()-1);
         // updates hourly range
         if (myHourlyDateFirst.isValid() &&
             (! firstHourlyDate.isValid() || firstHourlyDate.year() == 1800 || myHourlyDateFirst < firstHourlyDate))
@@ -534,7 +533,7 @@ void Crit3DMeteoWidget::updateTimeRange()
             myMonthlyDateFirst.setDate(_meteoPoints[i].obsDataM[0]._year,
                                        _meteoPoints[i].obsDataM[0]._month,
                                        1);
-            myMonthlyDateLast = myMonthlyDateFirst.addMonths(_meteoPoints[i].nrObsDataDaysM-1);
+            myMonthlyDateLast = myMonthlyDateFirst.addMonths(_meteoPoints[i].obsDataM.size()-1);
         }
         // updates monthly range
         if (myMonthlyDateFirst.isValid() &&
@@ -662,7 +661,7 @@ void Crit3DMeteoWidget::drawEnsemble()
     QDate myHourlyDateFirst;
     QDate myHourlyDateLast;
     myDailyDateFirst.setDate(_meteoPointsEnsemble[0].obsDataD[0].date.year, _meteoPointsEnsemble[0].obsDataD[0].date.month, _meteoPointsEnsemble[0].obsDataD[0].date.day);
-    myDailyDateLast = myDailyDateFirst.addDays(_meteoPointsEnsemble[0].nrObsDataDaysD-1);
+    myDailyDateLast = myDailyDateFirst.addDays(_meteoPointsEnsemble[0].obsDataD.size()-1);
     if (myDailyDateFirst.isValid() && myDailyDateFirst < firstDailyDate)
     {
         firstDailyDate = myDailyDateFirst;
@@ -674,7 +673,7 @@ void Crit3DMeteoWidget::drawEnsemble()
 
     myHourlyDateFirst.setDate(_meteoPointsEnsemble[0].getMeteoPointHourlyValuesDate(0).year, _meteoPointsEnsemble[0].getMeteoPointHourlyValuesDate(0).month,
                               _meteoPointsEnsemble[0].getMeteoPointHourlyValuesDate(0).day);
-    myHourlyDateLast = myHourlyDateFirst.addDays(_meteoPointsEnsemble[0].nrObsDataDaysH-1);
+    myHourlyDateLast = myHourlyDateFirst.addDays(_meteoPointsEnsemble[0].obsDataH.size()-1);
 
     if (myHourlyDateFirst.isValid() && myHourlyDateFirst < firstHourlyDate)
     {
@@ -3219,7 +3218,7 @@ void Crit3DMeteoWidget::on_actionDataAvailability()
                 QLabel* labelDaily = new QLabel(infoDaily);
                 vbox->addWidget(labelDaily);
                 myFirstDailyDate = getQDate(_meteoPoints[mp].getFirstDailyData());
-                myLastDailyDate = myFirstDailyDate.addDays(_meteoPoints[mp].nrObsDataDaysD-1);
+                myLastDailyDate = getQDate(_meteoPoints[mp].getLastDailyData());
                 QString dailyInfo = QString("%1 - %2")
                                         .arg(myFirstDailyDate.toString("yyyy/MM/dd"), myLastDailyDate.toString("yyyy/MM/dd"));
                 QTextEdit* dailyTextEdit = new QTextEdit(dailyInfo);
@@ -3236,7 +3235,7 @@ void Crit3DMeteoWidget::on_actionDataAvailability()
                 QLabel* labelHourly = new QLabel(infoHourly);
                 vbox->addWidget(labelHourly);
                 myFirstHourlyDate = getQDate(_meteoPoints[mp].getMeteoPointHourlyValuesDate(0));
-                myLastHourlyDate = myFirstHourlyDate.addDays(_meteoPoints[mp].nrObsDataDaysH-1);
+                myLastHourlyDate = myFirstHourlyDate.addDays(_meteoPoints[mp].obsDataH.size()-1);
 
                 QString hourlyInfo = QString("%1 - %2")
                                          .arg(myFirstHourlyDate.toString("yyyy/MM/dd"), myLastHourlyDate.toString("yyyy/MM/dd"));

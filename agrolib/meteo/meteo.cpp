@@ -23,7 +23,6 @@
     ftomei@arpae.it
 */
 
-#include <iostream>
 #include <math.h>
 #include <algorithm>
 #include <unordered_map>
@@ -55,95 +54,6 @@ void Crit3DMeteoSettings::initialize()
     automaticET0HS = DEFAULT_AUTOMATIC_ET0HS;
 }
 
-float Crit3DMeteoSettings::getMinimumPercentage() const
-{
-    return minimumPercentage;
-}
-
-void Crit3DMeteoSettings::setMinimumPercentage(float value)
-{
-    minimumPercentage = value;
-}
-
-float Crit3DMeteoSettings::getRainfallThreshold() const
-{
-    return rainfallThreshold;
-}
-
-void Crit3DMeteoSettings::setRainfallThreshold(float value)
-{
-    rainfallThreshold = value;
-}
-
-float Crit3DMeteoSettings::getTransSamaniCoefficient() const
-{
-    return transSamaniCoefficient;
-}
-
-void Crit3DMeteoSettings::setTransSamaniCoefficient(float value)
-{
-    transSamaniCoefficient = value;
-}
-
-int Crit3DMeteoSettings::getHourlyIntervals() const
-{
-    return hourlyIntervals;
-}
-
-void Crit3DMeteoSettings::setHourlyIntervals(int value)
-{
-    hourlyIntervals = value;
-}
-
-float Crit3DMeteoSettings::getWindIntensityDefault() const
-{
-    return windIntensityDefault;
-}
-
-void Crit3DMeteoSettings::setWindIntensityDefault(float value)
-{
-    windIntensityDefault = value;
-}
-
-float Crit3DMeteoSettings::getThomThreshold() const
-{
-    return thomThreshold;
-}
-
-float Crit3DMeteoSettings::getTemperatureThreshold() const
-{
-    return temperatureThreshold;
-}
-
-void Crit3DMeteoSettings::setThomThreshold(float value)
-{
-    thomThreshold = value;
-}
-
-void Crit3DMeteoSettings::setTemperatureThreshold(float value)
-{
-    temperatureThreshold = value;
-}
-
-bool Crit3DMeteoSettings::getAutomaticTavg() const
-{
-    return automaticTavg;
-}
-
-void Crit3DMeteoSettings::setAutomaticTavg(bool value)
-{
-    automaticTavg = value;
-}
-
-bool Crit3DMeteoSettings::getAutomaticET0HS() const
-{
-    return automaticET0HS;
-}
-
-void Crit3DMeteoSettings::setAutomaticET0HS(bool value)
-{
-    automaticET0HS = value;
-}
 
 Crit3DClimateParameters::Crit3DClimateParameters()
 {
@@ -181,16 +91,13 @@ float computeTminHourlyWeight(int myHour)
 }
 
 
-float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, const Crit3DTime &myTime)
+float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, const Crit3DTime &myTime) const
 {
-    const float DEFAULT_LAPSERATE = -0.006f;
-
     Crit3DDate myDate = myTime.date;
     int myHour = myTime.getNearestHour();
 
-    // TODO improve!
     if (myDate.isNullDate() || myHour == NODATA)
-        return DEFAULT_LAPSERATE;
+        return NODATA;
 
     unsigned int indexMonth = unsigned(myDate.month - 1);
 
@@ -221,137 +128,109 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, const Cr
     }
 }
 
-float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, int month)
+float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, int month) const
 {
-    // TODO improve!
-    if (month == NODATA)
-        return -0.006f;
+    if (month > 12 || month < 1 || month == NODATA)
+        return NODATA;
 
-    unsigned int indexMonth = unsigned(month - 1);
+    const unsigned idx = unsigned(month - 1);
 
     if (myVar == dailyAirTemperatureMin)
-        return tminLapseRate[indexMonth];
+        return tminLapseRate[idx];
     else if (myVar == dailyAirTemperatureMax)
-        return tmaxLapseRate[indexMonth];
+        return tmaxLapseRate[idx];
     else if (myVar == dailyAirTemperatureAvg)
-        return (tmaxLapseRate[indexMonth] + tminLapseRate[indexMonth]) / 2;
+        return (tmaxLapseRate[idx] + tminLapseRate[idx]) / 2;
     else
         return NODATA;
 }
 
 
-float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, int month, float height, float refHeight)
+float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, int month, float height, float refHeight) const
 {
-    unsigned int indexMonth = unsigned(month - 1);
-    float climateVar = NODATA;
-
-    switch(myVar)
-    {
-    case dailyAirTemperatureMin:
-        climateVar = tmin[indexMonth];
-        break;
-    case dailyAirTemperatureMax:
-        climateVar = tmax[indexMonth];
-        break;
-    case dailyAirRelHumidityMin:
-        climateVar = tdmin[indexMonth];
-        break;
-    case dailyAirRelHumidityMax:
-        climateVar = tdmax[indexMonth];
-        break;
-    default:
-        return NODATA;
-    }
-
-    if (climateVar != NODATA && height != NODATA)
-    {
-        climateVar += getClimateLapseRate(myVar, month) * (height - refHeight);
-    }
-
-    return climateVar;
-}
-
-
-float tDewFromRelHum(float RH, float T)
-{
-    if (isEqual(RH, NODATA) || isEqual(T, NODATA) || RH == 0)
+    if (month > 12 || month < 1)
         return NODATA;
 
-    RH = MINVALUE(100, RH);
+    const unsigned idx = unsigned(month - 1);
+    float climateVar, lapseRate;
 
-    double mySaturatedVaporPres = exp((16.78 * double(T) - 116.9) / (double(T) + 237.3));
-    double actualVaporPres = double(RH) / 100. * mySaturatedVaporPres;
-    return float((log(actualVaporPres) * 237.3 + 116.9) / (16.78 - log(actualVaporPres)));
+    switch (myVar)
+    {
+    case dailyAirTemperatureMin:    climateVar = tmin[idx];  lapseRate = tminLapseRate[idx];   break;
+    case dailyAirTemperatureMax:    climateVar = tmax[idx];  lapseRate = tmaxLapseRate[idx];   break;
+    case dailyAirRelHumidityMin:    climateVar = tdmin[idx]; lapseRate = tdMinLapseRate[idx];  break;
+    case dailyAirRelHumidityMax:    climateVar = tdmax[idx]; lapseRate = tdMaxLapseRate[idx];  break;
+    default:                        return NODATA;
+    }
+
+    if (isEqual(climateVar, NODATA) || isEqual(height, NODATA))
+        return climateVar;
+
+    if (isEqual(lapseRate, NODATA))
+        return NODATA;              // cannot correct for height
+
+    return climateVar + lapseRate * (height - refHeight);
 }
 
 
 double tDewFromRelHum(double RH, double T)
 {
-    if (isEqual(RH, NODATA) || isEqual(T, NODATA) || RH == 0)
+    if (isEqual(RH, NODATA) || isEqual(T, NODATA) || RH <= 0)
         return NODATA;
 
-    RH = MINVALUE(100, RH);
-
-    double mySaturatedVaporPres = exp((16.78 * T - 116.9) / (T + 237.3));
-    double actualVaporPres = RH / 100. * mySaturatedVaporPres;
-    return (log(actualVaporPres) * 237.3 + 116.9) / (16.78 - log(actualVaporPres));
+    RH = std::min(RH, 100.);
+    const double g = std::log(RH / 100.) + MAGNUS_B * T / (MAGNUS_C + T);
+    return MAGNUS_C * g / (MAGNUS_B - g);
 }
 
-
-float relHumFromTdew(float Td, float T)
+float tDewFromRelHum(float RH, float T)
 {
-    if (isEqual(Td, NODATA) || isEqual(T, NODATA))
-        return NODATA;
-
-    double d = 237.3;
-    double c = 17.2693882;
-    double esp = 1 / (double(T) + d);
-    double rh = pow(exp((c * double(Td)) - ((c * double(T) / (double(T) + d))) * (double(Td) + d)), esp);
-    rh *= 100;
-
-    if (rh > 100) return 100;
-
-    return std::max(1.f, float(rh));
+    return float(tDewFromRelHum(double(RH), double(T)));
 }
-
 
 double relHumFromTdew(double Td, double T)
 {
     if (isEqual(Td, NODATA) || isEqual(T, NODATA))
         return NODATA;
 
-    double d = 237.3;
-    double c = 17.2693882;
-    double esp = 1 / (double(T) + d);
-    double rh = pow(exp((c * Td) - (c * T / (T + d)) * (Td + d)), esp);
-    rh *= 100;
+    const double rh = 100. * std::exp(MAGNUS_B * Td / (MAGNUS_C + Td) - MAGNUS_B * T / (MAGNUS_C + T));
+    return std::min(100., std::max(1., rh));
+}
 
-    if (rh > 100) return 100;
+float relHumFromTdew(float Td, float T)
+{
+    return float(relHumFromTdew(double(Td), double(T)));
+}
 
-    return std::max(1., rh);
+float dewPoint(float relHumAir, float tempAir)
+{
+    return tDewFromRelHum(relHumAir, tempAir);
 }
 
 
-double dailyExtrRadiation(double myLat, int myDoy)
-{
-    /*!
+/*!
     2011 GA
     da quaderno FAO
     MJ m-2 d-1
     */
+double dailyExtrRadiation(double myLat, int myDoy)
+{
+    const double doy = double(myDoy);
 
-    double OmegaS;                               /*!< [rad] sunset hour angle */
-    double Phi;                                  /*!< [rad] latitude in radiants */
-    double delta;                                /*!< [rad] solar declination */
-    double dr;                                   /*!< [-] inverse Earth-Sun relative distance */
-    double doy = double(myDoy);
+    const double phi = PI / 180. * myLat;                               /*!< [rad] latitude in radiants */
+    const double delta = 0.4093 * sin((2. * PI / 365.) * doy - 1.39);   /*!< [rad] solar declination */
 
-    Phi = PI / 180. * myLat;
-    delta = 0.4093 * sin((2. * PI / 365.) * doy - 1.39);
-    dr = 1. + 0.033 * cos(2. * PI * doy / 365.);
-    OmegaS = acos(-tan(Phi) * tan(delta));
+    const double dr = 1. + 0.033 * cos(2. * PI * doy / 365.);           /*!< [-] inverse Earth-Sun relative distance */
 
-    return SOLAR_CONSTANT * DAY_SECONDS / 1000000. * dr / PI * (OmegaS * sin(Phi) * sin(delta) + cos(Phi) * cos(delta) * sin(OmegaS));
+    // avoid NaN at the poles
+    double tanTerm = -tan(phi) * tan(delta);
+    tanTerm = std::max(-1.0, std::min(1.0, tanTerm));
+
+    const double omegaS = acos(tanTerm);                                /*!< [rad] sunset hour angle */
+
+
+    return SOLAR_CONSTANT * DAY_SECONDS / 1000000. * dr / PI * (omegaS * sin(phi) * sin(delta)
+                                                                + cos(phi) * cos(delta) * sin(omegaS));
 }
 
 
@@ -399,6 +278,9 @@ float dailyAverageT(float tMin, float tMax)
 
 float dailyEtpHargreaves(float Tmin, float Tmax, const Crit3DDate &date, double latitude, Crit3DMeteoSettings* meteoSettings)
 {
+    if (meteoSettings == nullptr)
+        return NODATA;
+
     Crit3DQuality qualityCheck;
 
     quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
@@ -407,21 +289,10 @@ float dailyEtpHargreaves(float Tmin, float Tmax, const Crit3DDate &date, double 
     if (qualityTmin != quality::accepted || qualityTmax != quality::accepted)
         return NODATA;
 
-    int dayOfYear = getDoyFromDate(date);
-    return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin));
-}
+    const int dayOfYear = getDoyFromDate(date);
+    const double et0 = ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin);
 
-
-float dewPoint(float relHumAir, float tempAir)
-{
-    if (relHumAir == NODATA || relHumAir == 0 || tempAir == NODATA)
-        return NODATA;
-
-    relHumAir = MINVALUE(100, relHumAir);
-
-    double saturatedVaporPres = exp((16.78 * tempAir - 116.9) / (tempAir + 237.3));
-    double actualVaporPres = relHumAir / 100 * saturatedVaporPres;
-    return float((log(actualVaporPres) * 237.3 + 116.9) / (16.78 - log(actualVaporPres)));
+    return float(et0);
 }
 
 
@@ -441,115 +312,127 @@ double emissivityFromVaporPressure(double myVP)
  * \param relHumidity [%] air relative humidity
  * \return leafW
  */
-bool computeLeafWetness(double prec, double relHumidity, short* leafW)
+bool computeLeafWetness(double prec, double relHumidity, short& leafW)
 {
-    *leafW = 0;
+    leafW = 0;
 
-    if (isEqual(relHumidity, NODATA) || isEqual(prec, NODATA)) return false;
+    if (isEqual(relHumidity, NODATA) || isEqual(prec, NODATA))
+        return false;
 
-    if (prec > 0 || relHumidity > DEFAULT_LEAFWETNESS_RH_THRESHOLD)
-        *leafW = 1;
+    if (prec > 0.0 || relHumidity > DEFAULT_LEAFWETNESS_RH_THRESHOLD)
+        leafW = 1;
 
     return true;
 }
 
 /*!
  * \brief 2016 GA. comments: G is currently ignored (if heat flux is active, should be added)
- * \param myDOY [] day of year
- * \param myElevation
+ * \param myDOY [-] day of year
+ * \param myElevation [m]
  * \param myLatitude [°] latitude in decimal degrees
  * \param myTmin [°C] daily minimum temperature
  * \param myTmax [°C] daily maximum temperature
- * \param myTminDayAfter
  * \param myUmed [%] daily average relative humidity
  * \param myVmed10 [m s-1] daily average wind intensity
  * \param mySWGlobRad [MJ m-2 d-1] daily global short wave radiation
- * \return result
+ * \return ET0 daily [mm]
  */
-double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
-                        double myTmin, double myTmax, double myTminDayAfter,
+double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude, double myTmin, double myTmax,
                         double myUmed, double myVmed10, double mySWGlobRad)
 {
-        double MAXTRANSMISSIVITY = 0.75;
+    double MAXTRANSMISSIVITY = 0.75;
 
-        double myPressure;                   /*!<  [kPa] atmospheric pressure */
-        double myDailySB;                    /*!<  [MJ m-2 d-1 K-4] Stefan Boltzmann constant */
-        double myPsychro;                    /*!<  [kPa °C-1] psychrometric instrument constant */
-        double myTmed;                       /*!<  [°C] daily average temperature */
-        double myTransmissivity;             /*!<  [] global atmospheric trasmissivity */
-        double myVapPress;                   /*!<  [kPa] actual vapor pressure */
-        double mySatVapPress;                /*!<  [kPa] actual average vapor pressure */
-        double myExtraRad;                   /*!<  [MJ m-2 d-1] extraterrestrial radiation */
-        double mySWNetRad;                   /*!<  [MJ m-2 d-1] net short wave radiation */
-        double myLWNetRad;                   /*!<  [MJ m-2 d-1] net long wave emitted radiation */
-        double myNetRad;                     /*!<  [MJ m-2 d-1] net surface radiation */
-        double delta;                        /*!<  [kPa °C-1] slope of vapour pressure curve */
-        double vmed2;                        /*!<  [m s-1] average wind speed estimated at 2 meters */
-        double EvapDemand;                   /*!<  [mm d-1] evaporative demand of atmosphere */
-        double myEmissivity;                 /*!<  [] surface emissivity */
-        double myLambda;                     /*!<  [MJ kg-1] latent heat of vaporization */
+    double myPressure;                   /*!<  [kPa] atmospheric pressure */
+    double myDailySB;                    /*!<  [MJ m-2 d-1 K-4] Stefan Boltzmann constant */
+    double myPsychro;                    /*!<  [kPa °C-1] psychrometric instrument constant */
+    double myTmed;                       /*!<  [°C] daily average temperature */
+    double myTransmissivity;             /*!<  [-] global atmospheric trasmissivity */
+    double myVapPress;                   /*!<  [kPa] actual vapor pressure */
+    double mySatVapPress;                /*!<  [kPa] actual average vapor pressure */
+    double myExtraRad;                   /*!<  [MJ m-2 d-1] extraterrestrial radiation */
+    double mySWNetRad;                   /*!<  [MJ m-2 d-1] net short wave radiation */
+    double myLWNetRad;                   /*!<  [MJ m-2 d-1] net long wave emitted radiation */
+    double myNetRad;                     /*!<  [MJ m-2 d-1] net surface radiation */
+    double delta;                        /*!<  [kPa °C-1] slope of vapour pressure curve */
+    double windSpeed2;                   /*!<  [m s-1] average wind speed estimated at 2 meters */
+    double evapDemand;                   /*!<  [mm d-1] evaporative demand of atmosphere */
+    double emissivity;                   /*!<  [-] surface emissivity */
+    double lambda;                       /*!<  [MJ kg-1] latent heat of vaporization */
 
 
-        if (myTmin == NODATA || myTmax == NODATA || myVmed10 == NODATA || myUmed == NODATA || myUmed < 0 || myUmed > 100 || myTminDayAfter == NODATA)
-            return NODATA;
+    if (myTmin == NODATA || myTmax == NODATA || myVmed10 == NODATA
+        || mySWGlobRad == NODATA || myUmed == NODATA
+        || myUmed > 100 || myUmed < 0)
+        return NODATA;
 
-        myTmed = 0.5 * (myTmin + myTmax);
+    myTmed = 0.5 * (myTmin + myTmax);
 
-        myExtraRad = dailyExtrRadiation(myLatitude, myDOY);
-        if (myExtraRad > 0)
-            myTransmissivity = MINVALUE(MAXTRANSMISSIVITY, mySWGlobRad / myExtraRad);
-        else
-            myTransmissivity = 0;
+    myExtraRad = dailyExtrRadiation(myLatitude, myDOY);
+    if (myExtraRad > 0)
+        myTransmissivity = MINVALUE(MAXTRANSMISSIVITY, mySWGlobRad / myExtraRad);
+    else
+        myTransmissivity = 0;
 
-        myPressure = 101.3 * pow(((293 - 0.0065 * myElevation) / 293), 5.26);
+    myPressure = 101.3 * pow(((293 - 0.0065 * myElevation) / 293), 5.26);
 
-        myPsychro = psychro(myPressure, myTmed);
+    myPsychro = psychro(myPressure, myTmed);
 
-        /*!
-        \brief
-        differs from the one presented in the FAO Irrigation and Drainage Paper N° 56.
-        Analysis with several climatic data sets proved that more accurate estimates of ea can be
-        obtained using es(Tmed) than with the equation reported in the FAO paper if only mean
-        relative humidity is available (G. Van Halsema and G. Muñoz, Personal communication).
-        */
+    /*!
+    \brief
+    differs from the one presented in the FAO Irrigation and Drainage Paper N° 56.
+    Analysis with several climatic data sets proved that more accurate estimates of ea can be
+    obtained using es(Tmed) than with the equation reported in the FAO paper if only mean
+    relative humidity is available (G. Van Halsema and G. Muñoz, Personal communication).
+    */
 
-        /*! Monteith and Unsworth (2008) */
-        mySatVapPress = 0.61078 * exp(17.27 * myTmed / (myTmed + 237.3));
-        myVapPress = mySatVapPress * myUmed / 100;
-        delta = saturationSlope(myTmed, mySatVapPress);
+    /*! Monteith and Unsworth (2008) */
+    mySatVapPress = 0.61078 * exp(17.27 * myTmed / (myTmed + 237.3));
+    myVapPress = mySatVapPress * myUmed / 100;
+    delta = saturationSlope(myTmed, mySatVapPress);
 
-        myDailySB = STEFAN_BOLTZMANN * DAY_SECONDS / 1000000;       /*!<   to MJ */
-        myEmissivity = emissivityFromVaporPressure(myVapPress);
-        myLWNetRad = myDailySB * (pow(myTmax + 273, 4) + pow(myTmin + 273, 4) / 2) * myEmissivity * (1.35 * (myTransmissivity / MAXTRANSMISSIVITY) - 0.35);
+    myDailySB = STEFAN_BOLTZMANN * DAY_SECONDS / 1000000;       /*!<   to MJ */
 
-        mySWNetRad = mySWGlobRad * (1 - ALBEDO_CROP_REFERENCE);
-        myNetRad = (mySWNetRad - myLWNetRad);
+    emissivity = emissivityFromVaporPressure(myVapPress);
 
-        myLambda = latentHeatVaporization(myTmed) / 1000000; /*!<  to MJ */
+    myLWNetRad = myDailySB * (pow(myTmax + ZEROCELSIUS, 4) + pow(myTmin + ZEROCELSIUS, 4)) / 2 * emissivity
+                 * (1.35 * (myTransmissivity / MAXTRANSMISSIVITY) - 0.35);
 
-        vmed2 = myVmed10 * 0.748;
+    mySWNetRad = mySWGlobRad * (1 - ALBEDO_CROP_REFERENCE);
+    myNetRad = (mySWNetRad - myLWNetRad);
 
-        EvapDemand = 900 / (myTmed + 273) * vmed2 * (mySatVapPress - myVapPress);
+    lambda = latentHeatVaporization(myTmed) / 1000000;        /*!<  to MJ */
 
-        return (delta * myNetRad + myPsychro * EvapDemand / myLambda) / (delta + myPsychro * (1 + 0.34 * vmed2));
+    constexpr double WIND_SPEED_10M_TO_2M = 0.748;
+    windSpeed2 = myVmed10 * WIND_SPEED_10M_TO_2M;
 
+    evapDemand = 900 / (myTmed + ZEROCELSIUS) * windSpeed2 * (mySatVapPress - myVapPress);
+
+    const double denominator = delta + myPsychro * (1 + 0.34 * windSpeed2);
+    const double firstTerm = (delta * myNetRad) / (lambda * denominator);
+    const double secondTerm = (myPsychro * evapDemand) / denominator;
+
+    return std::max(firstTerm + secondTerm, 0.0);
 }
-
 
 
 /*!
  * \brief ET0_Penman_hourly http://www.cimis.water.ca.gov/cimis/infoEtoPmEquation.jsp
- * \param heigth elevation above mean sea level (meters)
+ * \param height elevation above mean sea level (meters)
  * \param normalizedTransmissivity normalized tramissivity [0-1] ()
- * \param globalIrradiance global surface downwelling irradiance (W m-2)
+ * \param myGlobalIrradiance global surface downwelling irradiance (W m-2)
  * \param airTemp air temperature (C)
  * \param airHum relative humidity (%)
  * \param windSpeed10 wind speed at 10 meters (m s-1)
- * \return result
+ * \return ET0 hourly (mm)
  */
-double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double globalIrradiance,
-                double airTemp, double airHum, double windSpeed10)
+double ET0_Penman_hourly(double height, double normalizedTransmissivity, double myGlobalIrradiance,
+                         double airTemp, double airHum, double windSpeed10)
 {
+    if (height == NODATA || airTemp == NODATA
+        || normalizedTransmissivity == NODATA || myGlobalIrradiance == NODATA
+        || airHum == NODATA || windSpeed10 == NODATA)
+        return NODATA;
+
     double mySigma;                              /*!<  Steffan-Boltzman constant J m-2 h-1 K-4 */
     double es;                                   /*!<  saturation vapor pressure (kPa) at the mean hourly air temperature in C */
     double ea;                                   /*!<  actual vapor pressure (kPa) at the mean hourly air temperature in C */
@@ -566,19 +449,19 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
     double pressure;                             /*!<  barometric pressure (kPa) */
     double lambda;                               /*!<  latent heat of vaporization in (J kg-1) */
     double gamma;                                /*!<  psychrometric constant (kPa C-1) */
-    double firstTerm, secondTerm, denominator;
-
 
     es = saturationVaporPressure(airTemp) / 1000.;
     ea = airHum * es / 100.0;
     emissivity = emissivityFromVaporPressure(ea);
     tAirK = airTemp + ZEROCELSIUS;
     mySigma = STEFAN_BOLTZMANN * HOUR_SECONDS;
-    cloudFactor = MAXVALUE(0, 1.35 * MINVALUE(normalizedTransmissivity, 1) - 0.35);
+
+    cloudFactor = std::max(0.0, 1.35 * std::min(normalizedTransmissivity, 1.0) - 0.35);
+
     netLWRadiation = cloudFactor * emissivity * mySigma * (pow(tAirK, 4));
 
     /*!   from [W m-2] to [J h-1 m-2] */
-    netSWRadiation = (3600 * globalIrradiance);
+    netSWRadiation = (3600 * myGlobalIrradiance);
     netRadiation = (1 - ALBEDO_CROP_REFERENCE) * netSWRadiation - netLWRadiation;
 
     /*!   values for grass */
@@ -594,7 +477,7 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
 
     delta = saturationSlope(airTemp, es);
 
-    pressure = pressureFromAltitude(heigth) / 1000.;
+    pressure = pressureFromAltitude(height) / 1000.;
 
     gamma = psychro(pressure, airTemp);
     lambda = latentHeatVaporization(airTemp);
@@ -602,24 +485,24 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
     constexpr double WIND_SPEED_10M_TO_2M = 0.748;
     windSpeed2 = windSpeed10 * WIND_SPEED_10M_TO_2M;
 
-    denominator = delta + gamma * (1 + Cd * windSpeed2);
-    firstTerm = delta * (netRadiation - g) / (lambda * denominator);
-    secondTerm = (gamma * (37 / tAirK) * windSpeed2 * (es - ea)) / denominator;
+    const double denominator = delta + gamma * (1 + Cd * windSpeed2);
+    const double firstTerm = delta * (netRadiation - g) / (lambda * denominator);
+    const double secondTerm = (gamma * (37 / tAirK) * windSpeed2 * (es - ea)) / denominator;
 
-    return MAXVALUE(firstTerm + secondTerm, 0);
+    return std::max(firstTerm + secondTerm, 0.0);
 }
 
 
 /*!
  * \brief ET0_Penman_hourly_net_rad http://www.cimis.water.ca.gov/cimis/infoEtoPmEquation.jsp
  * \param heigth elevation above mean sea level (meters)
- * \param netIrradiance net surface irradiance (W m-2)
+ * \param myNetRadiation net surface irradiance (W m-2)
  * \param airTemp air temperature (C)
  * \param airHum relative humidity (%)
  * \param windSpeed10 wind speed at 10 meters (m s-1)
- * \return result
+ * \return hourly ET0 (mm)
  */
-double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double airTemp, double airHum, double windSpeed10)
+double ET0_Penman_hourly_net_rad(double height, double myNetRadiation, double airTemp, double airHum, double windSpeed10)
 {
     double netRadiation;                         /*!<  net radiation (J m-2) */
     double es;                                   /*!<  saturation vapor pressure (kPa) at the mean hourly air temperature in C */
@@ -632,12 +515,12 @@ double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double air
     double pressure;                             /*!<  barometric pressure (kPa) */
     double lambda;                               /*!<  latent heat of vaporization in (J kg-1) */
     double gamma;                                /*!<  psychrometric constant (kPa C-1) */
-    double firstTerm, secondTerm, denominator;
 
-    if (heigth == NODATA || netIrradiance == NODATA || airTemp == NODATA || airHum == NODATA || windSpeed10 == NODATA)
+    if (height == NODATA || myNetRadiation == NODATA || airTemp == NODATA
+        || airHum == NODATA || windSpeed10 == NODATA)
         return NODATA;
 
-    netRadiation = 3600 * netIrradiance;
+    netRadiation = 3600 * myNetRadiation;
 
     es = saturationVaporPressure(airTemp) / 1000.;
     ea = airHum * es / 100.0;
@@ -657,45 +540,46 @@ double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double air
 
     delta = saturationSlope(airTemp, es);
 
-    pressure = pressureFromAltitude(heigth) / 1000.;
+    pressure = pressureFromAltitude(height) / 1000.;
 
     gamma = psychro(pressure, airTemp);
     lambda = latentHeatVaporization(airTemp);
 
-    windSpeed2 = windSpeed10 * 0.748;
+    constexpr double WIND_SPEED_10M_TO_2M = 0.748;
+    windSpeed2 = windSpeed10 * WIND_SPEED_10M_TO_2M;
 
-    denominator = delta + gamma * (1 + Cd * windSpeed2);
-    firstTerm = delta * (netRadiation - g) / (lambda * denominator);
-    secondTerm = (gamma * (37 / tAirK) * windSpeed2 * (es - ea)) / denominator;
+    const double denominator = delta + gamma * (1 + Cd * windSpeed2);
+    const double firstTerm = delta * (netRadiation - g) / (lambda * denominator);
+    const double secondTerm = (gamma * (37 / tAirK) * windSpeed2 * (es - ea)) / denominator;
 
-    return MAXVALUE(firstTerm + secondTerm, 0);
+    return std::max(firstTerm + secondTerm, 0.0);
 }
 
 
 /*!
- * \brief computes [mm d-1] potential evapotranspiration. Trange minimum: 0.25°C  equivalent to 8.5% transimissivity
+ * \brief computes [mm d-1] potential evapotranspiration.
+ * Trange minimum: 0.25°C  equivalent to 8.5% transimissivity
  * \param KT [-] Samani empirical coefficient
  * \param myLat [degrees] Latitude
  * \param myDoy [-] Day number (Jan 1st = 1)
  * \param tmax [°C] daily maximum air temperature
  * \param tmin [°C] daily minimum air temperature
- * \return result
+ * \return daily ETO [mm]
  */
 double ET0_Hargreaves(double KT, double myLat, int myDoy, double tmax, double tmin)
 {
-    double tavg, deltaT, extraTerrRadiation;
-
     if (tmax == NODATA || tmin == NODATA || KT == NODATA || myLat == NODATA || myDoy == NODATA)
         return NODATA;
 
-    extraTerrRadiation = dailyExtrRadiation(myLat, myDoy);
-    deltaT = MAXVALUE(fabs(tmax - tmin), 0.25);
+    const double extraTerrRadiation = dailyExtrRadiation(myLat, myDoy);
 
-    tavg = (tmax + tmin) * 0.5;
+    const double deltaT = std::max(tmax - tmin, 0.25);
+    const double tAvg = (tmax + tmin) * 0.5;
 
-    return std::max(0., 0.0135 * (tavg + 17.78) * KT * (extraTerrRadiation / 2.456) * sqrt(deltaT));
-    
-    // 2.456 MJ kg-1 latent heat of vaporization
+    const double latentHeatVap = latentHeatVaporization(tAvg) * 1E-6;      // [MJ kg-1]
+    const double et0 = 0.0135 * (tAvg + 17.78) * KT * (extraTerrRadiation / latentHeatVap) * sqrt(deltaT);
+
+    return std::max(et0, 0.0);
 }
 
 
@@ -728,16 +612,18 @@ float computeThomIndex(float temp, float relHum)
 
 bool computeWindCartesian(float intensity, float direction, float* u, float* v)
 {
+    *u = NODATA;
+    *v = NODATA;
+
     if (isEqual(intensity, NODATA) || isEqual(direction, NODATA))
         return false;
 
-    float angle;
-    angle = 90 - direction;
-    if (angle < 0) angle = angle + 360;
+    float angle = 90 - direction;
+    if (angle < 0)
+        angle += 360;
 
     *u = -intensity * getCosDecimalDegree(angle);
     *v = -intensity * getSinDecimalDegree(angle);
-
     return true;
 }
 
@@ -792,14 +678,8 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case thom: case dailyThomMax: case dailyThomAvg: case dailyThomHoursAbove: case dailyThomDaytime: case dailyThomNighttime:
             setRelativeHumidityScale(colorScale);
             break;
-        case precipitation:
-        case snowWaterEquivalent: case snowMelt: case snowFall: case snowLiquidWaterContent:
-            setPrecipitationScale(colorScale);
-            colorScale->setHideZero(true);
-            colorScale->setHideMinimum(true);
-            colorScale->setTransparent(true);
-            break;
-        case dailyPrecipitation: case monthlyPrecipitation:
+        case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt: case snowFall:
+        case precipitation: case dailyPrecipitation: case monthlyPrecipitation:
             setPrecipitationScale(colorScale);
             colorScale->setHideZero(true);
             break;
@@ -977,6 +857,21 @@ std::string getKeyStringMeteoMap(const std::map<std::string, meteoVariable> &map
 
 
 std::string getUnitFromVariable(meteoVariable var)
+{
+    static const std::unordered_map<meteoVariable, std::string> unitMap = []
+    {
+        std::unordered_map<meteoVariable, std::string> m;
+        for (const auto& item : MapVarUnit)
+            for (meteoVariable v : item.first)
+                m.emplace(v, item.second);
+        return m;
+    }();
+
+    auto it = unitMap.find(var);
+    return (it != unitMap.end()) ? it->second : "";
+}
+
+std::string getUnitFromVariable_old(meteoVariable var)
 {
     std::string unit = "";
     std::map<std::vector<meteoVariable>, std::string>::const_iterator it;

@@ -7,9 +7,8 @@ using namespace soilFluxes3D::v2;
 
 namespace soilFluxes3D::v2::Water
 {
-    //Water simulation functions
     SF3Derror_t initializeWaterBalance();
-    double computeTotalWaterContent();                               //TO DO: check pragma vs device code
+    double computeTotalWaterContent();
 
     void computeCurrentMassBalance(double deltaT);
     double computeWaterSinkSourceFlowsSum(double deltaT);

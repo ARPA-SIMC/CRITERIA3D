@@ -16,11 +16,11 @@
     #endif
 
     #ifndef MAXVALUE3
-        #define MAXVALUE3(a, b, c) ((MAXVALUE((a), (b))),(c))
+        #define MAXVALUE3(a, b, c) MAXVALUE(MAXVALUE((a), (b)), (c))
     #endif
 
     #ifndef MINVALUE3
-        #define MINVALUE3(a, b, c) ((MINVALUE((a), (b))),(c))
+        #define MINVALUE3(a, b, c) MINVALUE(MINVALUE((a), (b)), (c))
     #endif
 
     #ifndef sgnVariable
@@ -231,7 +231,7 @@
     #define	 VAPOR_DIFFUSIVITY0 0.0000212
 
     // [J kg-1] latent heat of vaporization
-    #define LATENT_HEAT_VAPORIZATION 2.45e6;
+    #define LATENT_HEAT_VAPORIZATION 2.45e6
 
     // [Pa] default atmospheric pressure at sea level
     //#define SEA_LEVEL_PRESSURE 101325.

@@ -31,6 +31,7 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <iomanip> // std::fixed
 #include <limits>
 #include <sstream>
 #include <string>
@@ -1419,6 +1420,9 @@ bool writeEsriGridHeader(const string& fileName,
 
         return false;
     }
+
+    // force fixed notation (not scientific)
+    file << std::fixed;
 
     file << "ncols         "
          << header->nrCols << '\n';

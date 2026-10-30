@@ -30,7 +30,26 @@
 #include "meteo.h"
 
 
-void Crit3DQuality::initialize()
+Crit3DQuality::Crit3DQuality()
+    : qualityHourlyT(-60, 60),
+    qualityHourlyTd(-60, 50),
+    qualityHourlyP(0, 300),             // [mm]
+    qualityHourlyRH(1, 104),
+    qualityHourlyWInt(0, 150),
+    qualityHourlyWDir(0, 360),
+    qualityHourlyGIrr(-20, 1353),
+    qualityHourlyET0(0, 5),             // [mm]
+    qualityHourlyleafWetness(0, 1),
+    qualityTransmissivity(0, 1),
+    qualityDailyT(-60, 60),
+    qualityDailyP(0, 999),              // [mm]
+    qualityDailyRH(1, 104),
+    qualityDailyWInt(0, 150),
+    qualityDailyWDir(0, 360),
+    qualityDailyGRad(-20, 120),
+    qualityDailyET0(0, 20),             // [mm]
+    qualityDailyBIC(-20, 999),          // [mm]
+    qualityMissing(NODATA, NODATA)
 {
     referenceHeight = DEF_VALUE_REF_HEIGHT;
     relHumTolerance = DEF_VALUE_REL_HUM_TOLERANCE;
@@ -38,59 +57,7 @@ void Crit3DQuality::initialize()
 }
 
 
-Crit3DQuality::Crit3DQuality()
-{
-    qualityHourlyT = new quality::Range(-60, 60);
-    qualityHourlyTd = new quality::Range(-60, 50);
-    qualityHourlyP = new quality::Range(0, 300);            // [mm]
-    qualityHourlyRH = new quality::Range(1, 104);
-    qualityHourlyWInt = new quality::Range(0, 150);
-    qualityHourlyWDir = new quality::Range(0, 360);
-    qualityHourlyGIrr = new quality::Range(-20, 1353);
-    qualityHourlyET0 = new quality::Range(0, 5);            // [mm]
-    qualityHourlyleafWetness = new quality::Range(0, 1);
-
-    qualityTransmissivity = new quality::Range(0, 1);
-
-    qualityDailyT = new quality::Range(-60, 60);
-    qualityDailyP = new quality::Range(0, 999);             // [mm]
-    qualityDailyRH = new quality::Range(1, 104);
-    qualityDailyWInt = new quality::Range(0, 150);
-    qualityDailyWDir = new quality::Range(0, 360);
-    qualityDailyGRad = new quality::Range(-20, 120);
-    qualityDailyET0 = new quality::Range(0, 20);            // [mm]
-    qualityDailyBIC = new quality::Range(-20, 999);         // [mm]
-
-    initialize();
-}
-
-
-Crit3DQuality::~Crit3DQuality()
-{
-    delete qualityHourlyT;
-    delete qualityHourlyTd;
-    delete qualityHourlyP;
-    delete qualityHourlyRH;
-    delete qualityHourlyWInt;
-    delete qualityHourlyWDir;
-    delete qualityHourlyGIrr;
-    delete qualityHourlyET0;
-    delete qualityHourlyleafWetness;
-
-    delete qualityTransmissivity;
-
-    delete qualityDailyT;
-    delete qualityDailyP;
-    delete qualityDailyRH;
-    delete qualityDailyWInt;
-    delete qualityDailyWDir;
-    delete qualityDailyGRad;
-    delete qualityDailyET0;
-    delete qualityDailyBIC;
-}
-
-
-quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
+const quality::Range &Crit3DQuality::getQualityRange(meteoVariable myVar)
 {
     // hourly
     if (myVar == airTemperature)
@@ -139,7 +106,7 @@ quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
     else if (myVar == dailyBIC)
         return qualityDailyBIC;
 
-    return nullptr;
+    return qualityMissing;
 }
 
 
@@ -148,14 +115,17 @@ void Crit3DQuality::syntacticQualityControl(meteoVariable myVar, std::vector<Cri
     float qualityMin = NODATA;
     float qualityMax = NODATA;
 
-    quality::Range* myRange = this->getQualityRange(myVar);
-    if (myRange != nullptr)
+    bool hasRange = false;
+    const quality::Range& myRange = getQualityRange(myVar);
+
+    if (! isEqual(myRange.getMin(), NODATA) && ! isEqual(myRange.getMax(), NODATA))
     {
-        qualityMin = myRange->getMin();
-        qualityMax = myRange->getMax();
+        hasRange = true;
+        qualityMin = myRange.getMin();
+        qualityMax = myRange.getMax();
     }
 
-    for (int i = 0; i < (int)meteoPoints.size(); i++)
+    for (size_t i = 0; i < meteoPoints.size(); ++i)
     {
         if (isEqual(meteoPoints[i].currentValue, NODATA))
         {
@@ -163,7 +133,7 @@ void Crit3DQuality::syntacticQualityControl(meteoVariable myVar, std::vector<Cri
         }
         else
         {
-            if (myRange == nullptr)
+            if (! hasRange)
             {
                 meteoPoints[i].quality = quality::accepted;
             }
@@ -188,18 +158,21 @@ quality::qualityType Crit3DQuality::syntacticQualitySingleValue(meteoVariable my
     float qualityMin = NODATA;
     float qualityMax = NODATA;
 
-    quality::Range* myRange = this->getQualityRange(myVar);
-    if (myRange != nullptr)
+    bool hasRange = false;
+    const quality::Range& myRange = getQualityRange(myVar);
+
+    if (! isEqual(myRange.getMin(), NODATA) && ! isEqual(myRange.getMax(), NODATA))
     {
-        qualityMin = myRange->getMin();
-        qualityMax = myRange->getMax();
+        hasRange = true;
+        qualityMin = myRange.getMin();
+        qualityMax = myRange.getMax();
     }
 
-    if (int(myValue) == int(NODATA))
+    if (isEqual(myValue, NODATA))
         return quality::missing_data;
     else
     {
-        if (myRange == nullptr)
+        if (! hasRange)
             return quality::accepted;
 
         else if (myValue < qualityMin || myValue > qualityMax)
@@ -211,7 +184,7 @@ quality::qualityType Crit3DQuality::syntacticQualitySingleValue(meteoVariable my
 }
 
 
-quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, const Crit3DClimateParameters &climateParam,
                                                                     float myValue, int month, float height)
 {
     if (isEqual(myValue, NODATA))
@@ -223,44 +196,46 @@ quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariabl
 }
 
 
-bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, const Crit3DClimateParameters &climateParam,
                                                 float myValue, int month, float height)
 {
     if (myVar == dailyAirTemperatureMin || myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureAvg)
     {
-        float tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
-        float tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
+        float tminClima = climateParam.getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
+        float tmaxClima = climateParam.getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
 
         if (isEqual(tminClima, NODATA) || isEqual(tmaxClima, NODATA))
         {
-            return (myValue < qualityDailyT->getMin() || myValue > qualityDailyT->getMax());
+            return (myValue < qualityDailyT.getMin()
+                    || myValue > qualityDailyT.getMax());
         }
 
         if (myVar == dailyAirTemperatureMin)
         {
-            if (myValue < qualityDailyT->getMin() + tminClima ||
-                myValue > qualityDailyT->getMax() + tminClima)
+            if (myValue < qualityDailyT.getMin() + tminClima
+                || myValue > qualityDailyT.getMax() + tminClima)
                 return true;
         }
         else if (myVar == dailyAirTemperatureAvg)
         {
-            if (myValue < qualityDailyT->getMin() + tminClima ||
-                myValue > qualityDailyT->getMax() + tmaxClima)
+            if (myValue < qualityDailyT.getMin() + tminClima
+                || myValue > qualityDailyT.getMax() + tmaxClima)
                 return true;
         }
         else if (myVar == dailyAirTemperatureMax)
         {
-            if (myValue < qualityDailyT->getMin() + tmaxClima ||
-                myValue > qualityDailyT->getMax() + tmaxClima)
+            if (myValue < qualityDailyT.getMin() + tmaxClima
+                || myValue > qualityDailyT.getMax() + tmaxClima)
                 return true;
         }
     }
     else
     {
-        quality::Range* qualityRange = getQualityRange(myVar);
-        if (qualityRange != nullptr)
+        const quality::Range& myRange = getQualityRange(myVar);
+
+        if (! isEqual(myRange.getMin(), NODATA) && ! isEqual(myRange.getMax(), NODATA))
         {
-            if (myValue < qualityRange->getMin() || myValue > qualityRange->getMax())
+            if (myValue < myRange.getMin() || myValue > myRange.getMax())
                 return true;
         }
     }
@@ -269,7 +244,8 @@ bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClima
 }
 
 
-quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
+quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariable myVar, const Crit3DClimateParameters &climateParam,
+                                                                     float myValue, int month, float height)
 {
     if (isEqual(myValue, NODATA))
         return quality::missing_data;
@@ -280,46 +256,45 @@ quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariab
 }
 
 
-bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, const Crit3DClimateParameters &climateParam,
                                                  float myValue, int month, float height)
 {
     switch (myVar)
     {
     case airTemperature:
     {
-        float tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
-        float tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
+        float tminClima = climateParam.getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
+        float tmaxClima = climateParam.getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
         if (isEqual(tminClima, NODATA) || isEqual(tmaxClima, NODATA))
             return false;
 
-        if (myValue < qualityHourlyT->getMin() + tminClima ||
-            myValue > qualityHourlyT->getMax() + tmaxClima)
+        if (myValue < qualityHourlyT.getMin() + tminClima ||
+            myValue > qualityHourlyT.getMax() + tmaxClima)
             return true;
         break;
     }
 
     case airDewTemperature:
     {
-        float tdminClima = climateParam->getClimateVar(dailyAirRelHumidityMin, month, height, getReferenceHeight());
-        float tdmaxClima = climateParam->getClimateVar(dailyAirRelHumidityMax, month, height, getReferenceHeight());
+        float tdminClima = climateParam.getClimateVar(dailyAirRelHumidityMin, month, height, getReferenceHeight());
+        float tdmaxClima = climateParam.getClimateVar(dailyAirRelHumidityMax, month, height, getReferenceHeight());
         if (isEqual(tdminClima, NODATA) || isEqual(tdmaxClima, NODATA))
             return false;
 
-        if (myValue < qualityHourlyTd->getMin() + tdminClima ||
-            myValue > qualityHourlyTd->getMax() + tdmaxClima)
+        if (myValue < qualityHourlyTd.getMin() + tdminClima ||
+            myValue > qualityHourlyTd.getMax() + tdmaxClima)
             return true;
         break;
     }
 
     default:
-    {
-        quality::Range* qualityRange = getQualityRange(myVar);
-        if (qualityRange != nullptr)
+        const quality::Range& myRange = getQualityRange(myVar);
+
+        if (! isEqual(myRange.getMin(), NODATA) && ! isEqual(myRange.getMax(), NODATA))
         {
-            if (myValue < qualityRange->getMin() || myValue > qualityRange->getMax())
+            if (myValue < myRange.getMin() || myValue > myRange.getMax())
                 return true;
         }
-    }
     }
 
     return false;

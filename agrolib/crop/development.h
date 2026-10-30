@@ -6,11 +6,18 @@
 
     namespace leafDevelopment {
 
-        double getNewLai(double fractionTranspirableSoilWater, double lai, double a, double b,double laiMIN,double laiMAX,double growthDD,double emergenceDD,double currentDD,double thermalUnits,bool *isSenescence,double* actualLaiMax);
+        double getLai_newMethod(double fractionTranspirableSoilWater, double lai, double a, double b,
+                            double laiMIN,double laiMAX,double growthDD,double emergenceDD,double currentDD,
+                            double thermalUnits,bool *isSenescence,double* actualLaiMax);
+
         double getLaiStressCoefficient(double fractionTranspirableSoilWaterAverage);
+
         double getDDfromLAIGrowth(double lai, double a, double b,double laiMIN,double laiMAX);
+
         double getTheoreticalLAIGrowth(double DD, double a, double b,double laiMIN,double laiMAX);
+
         double getLAISenescence(double LaiMin, double LAIStartSenescence, int daysFromStartSenescence);
+
         double getLAICriteria(const Crit3DCrop *crop, double degreeDays);
     }
 
