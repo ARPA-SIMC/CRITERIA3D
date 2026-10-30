@@ -38,9 +38,9 @@ Crit3DQuality::Crit3DQuality()
     qualityHourlyWInt(0, 150),
     qualityHourlyWDir(0, 360),
     qualityHourlyGIrr(-20, 1353),
+    qualityTransmissivity(0, 1),
     qualityHourlyET0(0, 5),             // [mm]
     qualityHourlyleafWetness(0, 1),
-    qualityTransmissivity(0, 1),
     qualityDailyT(-60, 60),
     qualityDailyP(0, 999),              // [mm]
     qualityDailyRH(1, 104),
