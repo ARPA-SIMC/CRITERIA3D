@@ -381,10 +381,10 @@
 
     bool computeLeafWetness(double prec, double relHumidity, short &leafW);
 
-    double ET0_Penman_hourly(double height, double clearSkyIndex, double globalIrradiance,
-                    double airTemp, double airHum, double windSpeed10);
+    double ET0_Penman_hourly(double height, double normalizedTransmissivity, double myGlobalIrradiance,
+                             double airTemp, double airHum, double windSpeed10);
 
-    double ET0_Penman_hourly_net_rad(double height, double netRadiation, double airTemp, double airHum, double windSpeed10);
+    double ET0_Penman_hourly_net_rad(double height, double myNetRadiation, double airTemp, double airHum, double windSpeed10);
 
     double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude, double myTmin, double myTmax,
                             double myUmed, double myVmed10, double mySWGlobRad);

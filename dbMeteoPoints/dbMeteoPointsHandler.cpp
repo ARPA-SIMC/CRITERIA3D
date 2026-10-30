@@ -7,7 +7,7 @@
 
 #include <QtSql>
 
-#define MAX_TABLES_CHECK_NR 200
+#define MAX_TABLES_CHECK_NR 100
 
 Crit3DMeteoPointsDbHandler::Crit3DMeteoPointsDbHandler()
 {

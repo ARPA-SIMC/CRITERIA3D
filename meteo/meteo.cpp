@@ -361,7 +361,8 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude, double
 
 
     if (myTmin == NODATA || myTmax == NODATA || myVmed10 == NODATA
-        || myUmed == NODATA || myUmed > 100 || myUmed < 0)
+        || mySWGlobRad == NODATA || myUmed == NODATA
+        || myUmed > 100 || myUmed < 0)
         return NODATA;
 
     myTmed = 0.5 * (myTmin + myTmax);
@@ -418,15 +419,20 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude, double
  * \brief ET0_Penman_hourly http://www.cimis.water.ca.gov/cimis/infoEtoPmEquation.jsp
  * \param height elevation above mean sea level (meters)
  * \param normalizedTransmissivity normalized tramissivity [0-1] ()
- * \param globalIrradiance global surface downwelling irradiance (W m-2)
+ * \param myGlobalIrradiance global surface downwelling irradiance (W m-2)
  * \param airTemp air temperature (C)
  * \param airHum relative humidity (%)
  * \param windSpeed10 wind speed at 10 meters (m s-1)
  * \return ET0 hourly (mm)
  */
-double ET0_Penman_hourly(double height, double normalizedTransmissivity, double globalIrradiance,
+double ET0_Penman_hourly(double height, double normalizedTransmissivity, double myGlobalIrradiance,
                          double airTemp, double airHum, double windSpeed10)
 {
+    if (height == NODATA || airTemp == NODATA
+        || normalizedTransmissivity == NODATA || myGlobalIrradiance == NODATA
+        || airHum == NODATA || windSpeed10 == NODATA)
+        return NODATA;
+
     double mySigma;                              /*!<  Steffan-Boltzman constant J m-2 h-1 K-4 */
     double es;                                   /*!<  saturation vapor pressure (kPa) at the mean hourly air temperature in C */
     double ea;                                   /*!<  actual vapor pressure (kPa) at the mean hourly air temperature in C */
@@ -455,7 +461,7 @@ double ET0_Penman_hourly(double height, double normalizedTransmissivity, double 
     netLWRadiation = cloudFactor * emissivity * mySigma * (pow(tAirK, 4));
 
     /*!   from [W m-2] to [J h-1 m-2] */
-    netSWRadiation = (3600 * globalIrradiance);
+    netSWRadiation = (3600 * myGlobalIrradiance);
     netRadiation = (1 - ALBEDO_CROP_REFERENCE) * netSWRadiation - netLWRadiation;
 
     /*!   values for grass */
@@ -490,13 +496,13 @@ double ET0_Penman_hourly(double height, double normalizedTransmissivity, double 
 /*!
  * \brief ET0_Penman_hourly_net_rad http://www.cimis.water.ca.gov/cimis/infoEtoPmEquation.jsp
  * \param heigth elevation above mean sea level (meters)
- * \param netIrradiance net surface irradiance (W m-2)
+ * \param myNetRadiation net surface irradiance (W m-2)
  * \param airTemp air temperature (C)
  * \param airHum relative humidity (%)
  * \param windSpeed10 wind speed at 10 meters (m s-1)
  * \return hourly ET0 (mm)
  */
-double ET0_Penman_hourly_net_rad(double height, double netIrradiance, double airTemp, double airHum, double windSpeed10)
+double ET0_Penman_hourly_net_rad(double height, double myNetRadiation, double airTemp, double airHum, double windSpeed10)
 {
     double netRadiation;                         /*!<  net radiation (J m-2) */
     double es;                                   /*!<  saturation vapor pressure (kPa) at the mean hourly air temperature in C */
@@ -510,10 +516,11 @@ double ET0_Penman_hourly_net_rad(double height, double netIrradiance, double air
     double lambda;                               /*!<  latent heat of vaporization in (J kg-1) */
     double gamma;                                /*!<  psychrometric constant (kPa C-1) */
 
-    if (height == NODATA || netIrradiance == NODATA || airTemp == NODATA || airHum == NODATA || windSpeed10 == NODATA)
+    if (height == NODATA || myNetRadiation == NODATA || airTemp == NODATA
+        || airHum == NODATA || windSpeed10 == NODATA)
         return NODATA;
 
-    netRadiation = 3600 * netIrradiance;
+    netRadiation = 3600 * myNetRadiation;
 
     es = saturationVaporPressure(airTemp) / 1000.;
     ea = airHum * es / 100.0;
