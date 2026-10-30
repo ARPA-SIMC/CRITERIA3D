@@ -182,29 +182,26 @@ bool Crit3DTime::isEqual(const Crit3DTime& myTime) const
     return (date == myTime.date && time == myTime.time);
 }
 
-
 Crit3DTime Crit3DTime::addSeconds(long mySeconds) const
 {
-    Crit3DTime myTime = *this;
-    myTime.time += mySeconds;
+    Crit3DTime newDateTime = *this;
 
-    while (!((myTime.time >= 0) && (myTime.time < DAY_SECONDS)))
+    const long total = newDateTime.time + mySeconds;
+    long dayShift = total / DAY_SECONDS;
+    long remain = total % DAY_SECONDS;
+    if (remain < 0)
     {
-        if (myTime.time >= DAY_SECONDS)
-        {
-            ++(myTime.date);
-            myTime.time -= DAY_SECONDS;
-        }
-        else if (myTime.time < 0)
-        {
-            --(myTime.date);
-            myTime.time += DAY_SECONDS;
-        }
+        remain += DAY_SECONDS;
+        --dayShift;
     }
 
-    return myTime;
-}
+    newDateTime.time = int(remain);
 
+    if (dayShift != 0)
+        newDateTime.date = newDateTime.date.addDays(dayShift);
+
+    return newDateTime;
+}
 
 int Crit3DTime::hourTo(const Crit3DTime &newTime)
 {
@@ -213,7 +210,6 @@ int Crit3DTime::hourTo(const Crit3DTime &newTime)
     return nrDays * 24 + nrHours;
 }
 
-
 std::string Crit3DTime::toISOString() const
 {
     char myStr[17];
@@ -221,7 +217,6 @@ std::string Crit3DTime::toISOString() const
 
     return std::string(myStr);
 }
-
 
 std::string Crit3DTime::toString() const
 {

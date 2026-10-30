@@ -69,10 +69,12 @@ Crit3DDate::Crit3DDate(int myDay, int myMonth, int myYear)
 }
 
 
-// myDate have to be in ISO 8601 form (YYYY-MM-DD)
-Crit3DDate::Crit3DDate(std::string myDate)
+// The string must be in ISO 8601 format (YYYY-MM-DD)
+Crit3DDate::Crit3DDate(const std::string &myDate)
 {
-    sscanf(myDate.data(), "%d-%02d-%02d", &year, &month, &day);
+    day = month = year = 0;
+    if (sscanf(myDate.c_str(), "%d-%d-%d", &year, &month, &day) != 3)
+        day = month = year = 0;
 }
 
 
@@ -183,7 +185,7 @@ Crit3DDate Crit3DDate::addDays(long offset) const
 }
 
 
-int Crit3DDate::daysTo(const Crit3DDate& newDate) const
+long Crit3DDate::daysTo(const Crit3DDate& newDate) const
 {
     const long j1 = getJulianDay(this->day, this->month, this->year);
     const long j2 = getJulianDay(newDate.day, newDate.month, newDate.year);
@@ -191,7 +193,7 @@ int Crit3DDate::daysTo(const Crit3DDate& newDate) const
 }
 
 
-int daysTo(const Crit3DDate& firstDate, const Crit3DDate& lastDate)
+long daysTo(const Crit3DDate& firstDate, const Crit3DDate& lastDate)
 {
     const long j1 = getJulianDay(firstDate.day, firstDate.month, firstDate.year);
     const long j2 = getJulianDay(lastDate.day, lastDate.month, lastDate.year);
