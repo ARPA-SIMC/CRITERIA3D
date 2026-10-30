@@ -327,7 +327,7 @@ void Crit3DMeteoPoint::emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& m
     int i = obsDataH[0].date.daysTo(myDate);
     residual = NODATA;
 
-    if (i >= 0 && i < obsDataH.size())
+    if (i >= 0 && i < (int)obsDataH.size())
         if (obsDataH[i].date == myDate)
             for (int j = 0; j < nrDayValues; j++)
             {
@@ -691,7 +691,7 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
     const int subH = (myMinutes + minutesPerStep - 1) / minutesPerStep;
 
     // if +1 day exceed, accept only 00:00
-    if (iDay == obsDataH.size() && (myHour != 0 || subH != 0))
+    if (iDay == int(obsDataH.size()) && (myHour != 0 || subH != 0))
         return false;
 
     // hour 00:00 becomes hour 24 of the previous day
@@ -762,8 +762,8 @@ bool Crit3DMeteoPoint::setMeteoPointValueD(const Crit3DDate& myDate, meteoVariab
     if (obsDataD.empty() || myVar == noMeteoVar)
         return false;
 
-    int index = obsDataD[0].date.daysTo(myDate);
-    if ((index < 0) || (index >= obsDataD.size()))
+    const int index = obsDataD[0].date.daysTo(myDate);
+    if ((index < 0) || (index >= int(obsDataD.size())))
         return false;
 
     const unsigned i = unsigned(index);
@@ -825,7 +825,7 @@ bool Crit3DMeteoPoint::setMeteoPointValueM(const Crit3DDate &myDate, meteoVariab
 
     const int index = (myDate.year - obsDataM[0]._year) * 12 + (myDate.month - obsDataM[0]._month);
 
-    if ((index < 0) || (index >= obsDataM.size()))
+    if (index < 0 || index >= int(obsDataM.size()))
         return false;
 
     const unsigned i = unsigned(index);
@@ -868,7 +868,7 @@ float Crit3DMeteoPoint::getMeteoPointValueH(const Crit3DDate& myDate, int myHour
     const int subH = (myMinutes + minutesPerStep - 1) / minutesPerStep;
 
     // if +1 day exceed, accept only 00:00
-    if (iDay == obsDataH.size() && (myHour != 0 || subH != 0))
+    if (iDay == int(obsDataH.size()) && (myHour != 0 || subH != 0))
         return NODATA;
 
     // hour 00:00 becomes hour 24 of the previous day
@@ -914,7 +914,7 @@ float Crit3DMeteoPoint::getMeteoPointValueH(const Crit3DDate& myDate, int myHour
 
 Crit3DDate Crit3DMeteoPoint::getMeteoPointHourlyValuesDate(int index) const
 {
-    if (obsDataH.empty() || index < 0 || index >= obsDataH.size())
+    if (obsDataH.empty() || index < 0 || index >= int(obsDataH.size()))
         return NO_DATE;
 
     return obsDataH[index].date;
@@ -926,8 +926,8 @@ bool Crit3DMeteoPoint::getMeteoPointValueDayH(const Crit3DDate& myDate, TObsData
     if (obsDataH.empty())
         return false;
 
-    int d = obsDataH[0].date.daysTo(myDate);
-    if (d < 0 || d >= obsDataH.size())
+    const int d = obsDataH[0].date.daysTo(myDate);
+    if (d < 0 || d >= int(obsDataH.size()))
         return false;
 
     hourlyValues = &(obsDataH[d]);
@@ -943,7 +943,7 @@ bool Crit3DMeteoPoint::existDailyData(const Crit3DDate& myDate) const
 
     const int index = obsDataD[0].date.daysTo(myDate);
 
-    if (index < 0 || index >= obsDataD.size() )
+    if (index < 0 || index >= int(obsDataD.size()) )
         return false;
 
     return true;
@@ -1052,7 +1052,7 @@ float Crit3DMeteoPoint::getMeteoPointValueM(const Crit3DDate &myDate, meteoVaria
 
     const int index = (myDate.year - obsDataM[0]._year) * 12 + (myDate.month - obsDataM[0]._month);
 
-    if (index < 0 || index >= obsDataM.size())
+    if (index < 0 || index >= int(obsDataM.size()))
         return NODATA;
 
     const unsigned i = unsigned(index);
