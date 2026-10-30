@@ -1,7 +1,7 @@
 #ifndef CRITERIA3DPROJECT_H
 #define CRITERIA3DPROJECT_H
 
-    #define CRITERIA3D_VERSION "v1.4.2 (2026.10)"
+    #define CRITERIA3D_VERSION "v1.4.3 (2026.11)"
 
     #ifndef SOIL_H
         #include "soil.h"
