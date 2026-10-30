@@ -1253,7 +1253,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
         // initialize radiation maps
         if (processes.computeRadiation)
         {
-            radiationMaps->initialize();
+            radiationMaps->initializeData();
         }
 
         logInfo("\nComputation start: " + QDateTime::currentDateTime().toString(Qt::ISODate));
@@ -1494,7 +1494,7 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
         return false;
 
     //TODO: integrate with a specific flag in the UI and/or a specific shell command
-    soilFluxes3D::initializeLog(getFilePath(getCompleteFileName(logFileName, PATH_LOG)).toStdString(), getProjectName().toStdString());
+    //soilFluxes3D::initializeLog(getFilePath(getCompleteFileName(logFileName, PATH_LOG)).toStdString(), getProjectName().toStdString());
 
     if (meteoPointsLoaded)
     {

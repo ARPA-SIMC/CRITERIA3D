@@ -1871,7 +1871,7 @@ bool Project3D::interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& 
         {
             QString timeStr = myTime.toString("yyyy-MM-dd hh:mm");
             QString varStr = QString::fromStdString(MapHourlyMeteoVarToString.at(myVar));
-            errorString = "Error in interpolation of " + varStr + " at time: " + timeStr;
+            errorString += "\nError in interpolation of " + varStr + " at time: " + timeStr;
             return false;
         }
     }

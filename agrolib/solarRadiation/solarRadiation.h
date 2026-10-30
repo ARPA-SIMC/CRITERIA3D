@@ -32,7 +32,8 @@
         Crit3DRadiationMaps& operator=(const Crit3DRadiationMaps&) = delete;
 
         void clear();
-        void initialize();
+
+        void initializeData();
 
         bool getComputed() const { return isComputed; }
         void setComputed(bool value) { isComputed = value; }

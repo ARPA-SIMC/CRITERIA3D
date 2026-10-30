@@ -2041,6 +2041,7 @@ void MainWindow::on_actionInterpolationSettings_triggered()
     myInterpolationDialog->close();
 }
 
+
 void MainWindow::on_actionProxy_analysis_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
@@ -2049,8 +2050,8 @@ void MainWindow::on_actionProxy_analysis_triggered()
         return;
     }
 
-    std::vector<Crit3DProxy> proxy = myProject.interpolationSettings.getCurrentProxy();
-    if (proxy.size() == 0)
+    std::vector<Crit3DProxy> proxyList = myProject.interpolationSettings.getCurrentProxyList();
+    if (proxyList.empty())
     {
         myProject.logError("No proxy loaded");
         return;
@@ -2058,6 +2059,7 @@ void MainWindow::on_actionProxy_analysis_triggered()
 
     return myProject.showProxyGraph(NODATA);
 }
+
 
 void MainWindow::on_actionComputeHour_meteoVariables_triggered()
 {

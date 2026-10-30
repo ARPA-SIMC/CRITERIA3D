@@ -289,12 +289,14 @@ namespace gis
     }
 
 
-    // clean the grid (set all NO DATA)
+    // clean the data (set all NO DATA)
     void Crit3DRasterGrid::emptyGrid()
     {
-        for (int row = 0; row < header->nrRows; row++)
-            for (int col = 0; col < header->nrCols; col++)
-                value[row][col] = header->flag;
+        const float flag = header->flag;
+
+        for (int row = 0; row < header->nrRows; ++row)
+            for (int col = 0; col < header->nrCols; ++col)
+                value[row][col] = flag;
     }
 
 

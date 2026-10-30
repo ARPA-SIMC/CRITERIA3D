@@ -73,6 +73,7 @@ namespace {
 
 Crit3DMeteoPoint::Crit3DMeteoPoint()
 {
+    this->topographicDistanceMap = nullptr;
     this->clear();
 }
 
@@ -112,7 +113,7 @@ void Crit3DMeteoPoint::clear()
     this->selected = false;
     this->marked = false;
 
-    lapseRateCode = primary;
+    this->lapseRateCode = primary;
 
     this->cleanAllData();
 }
@@ -128,11 +129,11 @@ void Crit3DMeteoPoint::cleanAllData()
     glocalWeights.clear();
     aggregationPoints.clear();
 
-    if (topographicDistance != nullptr)
+    if (topographicDistanceMap != nullptr)
     {
-        topographicDistance->clear();
-        delete topographicDistance;
-        topographicDistance = nullptr;
+        topographicDistanceMap->clear();
+        delete topographicDistanceMap;
+        topographicDistanceMap = nullptr;
     }
 
     quality = quality::missing_data;
@@ -156,12 +157,15 @@ void Crit3DMeteoPoint::setLapseRateCode(const std::string &lapseRateCodeStr)
 }
 
 
-void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate)
+bool Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate)
 {
     obsDataH.clear();
 
     if (numberOfDays <= 0)
-        return;
+        return false;
+
+    if (myHourlyFraction <= 0 || 60 % myHourlyFraction != 0)
+        return false;
 
     obsDataH.resize(numberOfDays);
     hourlyFraction = myHourlyFraction;
@@ -193,6 +197,8 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
 
         ++myDate;
     }
+
+    return true;
 }
 
 
@@ -1155,7 +1161,7 @@ bool Crit3DMeteoPoint::computeHourlyDerivedVar(const Crit3DTime &dateTime, meteo
 
 bool Crit3DMeteoPoint::computeDailyDerivedVar(const Crit3DDate &date, meteoVariable myVar, Crit3DMeteoSettings& meteoSettings)
 {
-    float value;
+    float value = NODATA;
 
     if (myVar == dailyReferenceEvapotranspirationHS)
     {
@@ -1166,7 +1172,22 @@ bool Crit3DMeteoPoint::computeDailyDerivedVar(const Crit3DDate &date, meteoVaria
         setMeteoPointValueD(date, dailyReferenceEvapotranspirationHS, value);
     }
 
-    return true;
+    if (myVar == dailyBIC)
+    {
+        const float et0 = dailyEtpHargreaves(getMeteoPointValueD(date, dailyAirTemperatureMin),
+                                   getMeteoPointValueD(date, dailyAirTemperatureMax),
+                                   date, latitude, &meteoSettings);
+
+        if (! isEqual(et0, NODATA))
+        {
+            value = computeDailyBIC(getMeteoPointValueD(date, dailyPrecipitation), et0);
+            setMeteoPointValueD(date, dailyBIC, value);
+        }
+    }
+
+    const bool isComputed = !isEqual(value, NODATA);
+
+    return isComputed;
 }
 
 

@@ -1,9 +1,8 @@
 #ifndef METEOPOINT_H
 #define METEOPOINT_H
 
-    #ifndef _STRING_
-        #include <string>
-    #endif
+    #include <string>
+
     #ifndef CRIT3DDATE_H
         #include "crit3dDate.h"
     #endif
@@ -112,19 +111,20 @@
             bool selected;
             bool marked;
 
+            lapseRateCodeType lapseRateCode;
+
             std::vector <float> proxyValues;
             std::vector<float> glocalWeights;
-            lapseRateCodeType lapseRateCode;
 
             std::vector<gis::Crit3DPoint> aggregationPoints;
             long aggregationPointsMaxNr;
 
-            gis::Crit3DRasterGrid* topographicDistance = nullptr;
+            gis::Crit3DRasterGrid* topographicDistanceMap;
 
             Crit3DMeteoPoint();
             void clear();
 
-            void initializeObsDataH(int hourlyFraction, int numberOfDays, const Crit3DDate& firstDate);
+            bool initializeObsDataH(int hourlyFraction, int numberOfDays, const Crit3DDate& firstDate);
             void initializeObsDataD(unsigned int numberOfDays, const Crit3DDate& firstDate);
             void initializeObsDataM(unsigned int numberOfMonths, unsigned int month, int year);
 

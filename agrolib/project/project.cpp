@@ -181,33 +181,37 @@ void Project::clearProxyDEM()
 }
 
 
-void Project::setProxyDEM()
+bool Project::setProxyDEM()
 {
+    if (! DEM.isLoaded)
+        return false;
+
     int index = interpolationSettings.getIndexHeight();
     int indexQuality = qualityInterpolationSettings.getIndexHeight();
 
     // if no elevation proxy defined nothing to do
-    if (index == NODATA && indexQuality == NODATA) return;
-
-    Crit3DProxy* proxyHeight;
+    if (index == NODATA && indexQuality == NODATA)
+        return false;
 
     if (index != NODATA)
     {
-        proxyHeight = interpolationSettings.getProxy(unsigned(index));
+        Crit3DProxy* currentProxyHeight = interpolationSettings.getProxy(unsigned(index));
 
-        // if no alternative DEM defined and project DEM loaded, use it for elevation proxy
-        if (proxyHeight->getGridName() == "" && DEM.isLoaded)
-        {
-            proxyHeight->setGrid(&DEM);
-        }
+        // if no alternative grid is defined, use DEM as elevation proxy
+        if (currentProxyHeight->getGridName().empty())
+            currentProxyHeight->setGrid(&DEM);
     }
 
     if (indexQuality != NODATA)
     {
-        proxyHeight = qualityInterpolationSettings.getProxy(unsigned(indexQuality));
-        if (proxyHeight->getGridName() == "" && DEM.isLoaded)
-            proxyHeight->setGrid(&DEM);
+        Crit3DProxy* currentProxyHeight = qualityInterpolationSettings.getProxy(unsigned(indexQuality));
+
+        // if no alternative grid is defined, use DEM as elevation proxy
+        if (currentProxyHeight->getGridName().empty())
+            currentProxyHeight->setGrid(&DEM);
     }
+
+    return true;
 }
 
 
@@ -352,7 +356,8 @@ bool Project::addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque 
     }
 
     for (unsigned i = 0; i < interpolationSettings.getProxyNr(); i++)
-        if (getProxyPragaName(interpolationSettings.getProxy(i)->getName()) == proxyHeight) setProxyDEM();
+        if (getProxyPragaName(interpolationSettings.getProxy(i)->getName()) == proxyHeight)
+            setProxyDEM();
 
     return true;
 }
@@ -1119,7 +1124,8 @@ bool Project::loadDEM(const QString &fileName)
     radiationMaps = new Crit3DRadiationMaps(DEM, gisSettings);
 
     // initialize hourly meteo maps
-    if (hourlyMeteoMaps != nullptr) hourlyMeteoMaps->clear();
+    if (hourlyMeteoMaps != nullptr)
+        hourlyMeteoMaps->clear();
     hourlyMeteoMaps = new Crit3DHourlyMeteoMaps(DEM);
 
     // reset aggregationPoints meteoGrid
@@ -1209,7 +1215,6 @@ bool Project::loadMeteoPointsDB(QString fileName)
     // find dates
     logInfoGUI("Check meteopoints last date...");
     meteoPointsDbLastTime = findDbPointLastTime();
-    QString tmp = meteoPointsDbLastTime.toString("yyyy-MM-dd hh");
     meteoPointsDbFirstTime.setSecsSinceEpoch(0);
 
     if(! meteoPointsDbLastTime.isNull())
@@ -1977,11 +1982,9 @@ void Project::checkMeteoPointsDEM()
 {
     for (size_t i=0; i < meteoPoints.size(); i++)
     {
-        if (! gis::isOutOfGridXY(meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, DEM.header)
-                && (! isEqual(gis::getValueFromXY(DEM, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y), DEM.header->flag)))
-             meteoPoints[i].isInsideDem = true;
-        else
-            meteoPoints[i].isInsideDem = false;
+        const float value = gis::getValueFromXY(DEM, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y);
+
+        meteoPoints[i].isInsideDem = (! isEqual(value, DEM.header->flag));
     }
 }
 
@@ -2271,7 +2274,7 @@ bool Project::updateProxy()
     if (interpolationSettings.getProxyLoaded())
         return true;
 
-    if (!loadProxyGrids())
+    if (! loadProxyGrids())
         return false;
 
     interpolationSettings.setProxyLoaded(true);
@@ -2413,8 +2416,8 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
                 logInfo(QString::fromStdString(fileName) + " successfully created!");
         }
 
-        meteoPoints[i].topographicDistance = new gis::Crit3DRasterGrid();
-        if (! gis::readEsriGridFlt(fileName, meteoPoints[i].topographicDistance, myError))
+        meteoPoints[i].topographicDistanceMap = new gis::Crit3DRasterGrid();
+        if (! gis::readEsriGridFlt(fileName, meteoPoints[i].topographicDistanceMap, myError))
         {
             logError(QString::fromStdString(myError));
             return false;
@@ -3412,7 +3415,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     if (! radiationMaps->slopeMap->isLoaded || ! radiationMaps->aspectMap->isLoaded)
         return false;
 
-    radiationMaps->initialize();
+    radiationMaps->initializeData();
 
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
