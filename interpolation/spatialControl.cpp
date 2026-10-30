@@ -443,7 +443,7 @@ bool spatialQualityControl(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &m
                                             float(meteoPoints[listIndex[i]].point.utm.x),
                                             float(meteoPoints[listIndex[i]].point.utm.y),
                                             float(meteoPoints[listIndex[i]].point.z),
-                                            meteoPoints[i].getProxyValues(),
+                                            meteoPoints[listIndex[i]].getProxyValues(),
                                             false);
 
                     myValue = meteoPoints[listIndex[i]].currentValue;
