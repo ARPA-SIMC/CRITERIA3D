@@ -840,10 +840,10 @@ bool Crit3DProject::setRothCVariables(int row, int col, const QDate &myDate)
 
     // yield table must be used when initialising rothC or for first year of simulation of hydrall+rothC
     // hydrall still hasn't produced its first carbon output
-    if (! processes.computeHydrall || isEqual(hydrallOutputC, NODATA))
+    if (! processes.computeHydrall || isEqual(hydrallOutputC, NODATA) || hydrallOutputC < EPSILON)
         inputCTable = getRothCYield(row, col);
 
-    if (processes.computeHydrall && !isEqual(hydrallOutputC, NODATA))
+    if (processes.computeHydrall && !isEqual(hydrallOutputC, NODATA) && hydrallOutputC > EPSILON)
     {
         rothCModel.setInputC(hydrallOutputC / 12.0);
     }
@@ -1276,14 +1276,14 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             dailyUpdatePond();
         }
 
-        if (processes.computeRothC && myDate.day() == 1)
-        {
-            updateRothC(myDate);
-        }
-
         if (processes.computeHydrall && myDate.dayOfYear() == 1)
         {
             updateHydrall(myDate);
+        }
+
+        if (processes.computeRothC && myDate.day() == 1)
+        {
+            updateRothC(myDate); //da mettere dopo hydrall altrimenti perdiamo il primo anno di hydrall
         }
 
         if (isSaveOutputRaster())
