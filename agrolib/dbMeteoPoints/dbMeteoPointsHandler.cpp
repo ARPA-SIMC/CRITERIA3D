@@ -327,9 +327,6 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
 // return a null datetime if the table doesn't exist or table is void
 QDateTime Crit3DMeteoPointsDbHandler::getFirstDatePoint(frequencyType frequency, const std::string &idMeteoPoint)
 {
-    QDateTime firstDate;
-    QDate myDate;
-    QTime myTime;
     QString tableName;
     if (frequency == daily)
         tableName = QString::fromStdString(idMeteoPoint + "_D");
@@ -337,23 +334,24 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDatePoint(frequencyType frequency,
         tableName = QString::fromStdString(idMeteoPoint + "_H");
 
     QSqlQuery qry(_db);
-    QString statement = QString( "SELECT MIN(date_time) FROM `%1` AS dateTime").arg(tableName);
+    const QString statement = QString( "SELECT MIN(date_time) FROM `%1` AS dateTime").arg(tableName);
 
+    QDateTime firstDate;
     if(qry.exec(statement))
     {
         if (qry.next())
         {
-            QString dateStr = qry.value(0).toString();
-            if (!dateStr.isEmpty())
+            const QString dateStr = qry.value(0).toString();
+            if (! dateStr.isEmpty())
             {
                 if (frequency == daily)
                 {
-                    firstDate = QDateTime::fromString(dateStr,"yyyy-MM-dd");
+                    firstDate = QDateTime::fromString(dateStr, "yyyy-MM-dd");
                 }
                 else if (frequency == hourly)
                 {
-                    myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
-                    myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
+                    const QDate myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
+                    const QTime myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
                     firstDate = QDateTime(myDate, myTime, Qt::UTC);
                 }
             }
@@ -367,9 +365,6 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDatePoint(frequencyType frequency,
 // return a null datetime if the table doesn't exist or table is void
 QDateTime Crit3DMeteoPointsDbHandler::getLastDatePoint(frequencyType frequency, const std::string &idMeteoPoint)
 {
-    QDateTime lastDate;
-    QDate myDate;
-    QTime myTime;
     QString tableName;
     if (frequency == daily)
         tableName = QString::fromStdString(idMeteoPoint + "_D");
@@ -377,23 +372,24 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDatePoint(frequencyType frequency, 
         tableName = QString::fromStdString(idMeteoPoint + "_H");
 
     QSqlQuery qry(_db);
-    QString statement = QString( "SELECT MAX(date_time) FROM `%1` AS dateTime").arg(tableName);
+    const QString statement = QString( "SELECT MAX(date_time) FROM `%1` AS dateTime").arg(tableName);
 
+    QDateTime lastDate;
     if(qry.exec(statement))
     {
         if (qry.next())
         {
-            QString dateStr = qry.value(0).toString();
+            const QString dateStr = qry.value(0).toString();
             if (!dateStr.isEmpty())
             {
                 if (frequency == daily)
                 {
-                    lastDate = QDateTime::fromString(dateStr,"yyyy-MM-dd");
+                    lastDate = QDateTime::fromString(dateStr, "yyyy-MM-dd");
                 }
                 else if (frequency == hourly)
                 {
-                    myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
-                    myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
+                    const QDate myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
+                    const QTime myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
                     lastDate = QDateTime(myDate, myTime, Qt::UTC);
                 }
             }
