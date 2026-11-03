@@ -9,6 +9,7 @@
 #include "interpolationSettings.h"
 #include "statistics.h"
 #include "meteo.h"
+#include "quality.h"
 
 
 float getSpatialThresholdVar(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
@@ -577,7 +578,7 @@ bool passDataToInterpolation(const std::vector<Crit3DMeteoPoint> &meteoPoints,
             myPoint.point->z = meteoPoints[i].point.z;
             myPoint.lapseRateCode = meteoPoints[i].lapseRateCode;
             myPoint.proxyValues = meteoPoints[i].proxyValues;
-            myPoint.topographicDistance = meteoPoints[i].topographicDistance;
+            myPoint.topographicDistanceMap = meteoPoints[i].topographicDistanceMap;
             myPoint.isActive = true;
             myPoint.isMarked = meteoPoints[i].marked;
 

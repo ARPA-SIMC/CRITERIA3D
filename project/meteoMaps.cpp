@@ -287,8 +287,8 @@ bool Crit3DHourlyMeteoMaps::computeLeafWetnessMap()
             if (! isEqual(relHumidity, mapHourlyRelHum->header->flag)
                     && ! isEqual(precipitation, mapHourlyPrec->header->flag))
             {
-                if (computeLeafWetness(precipitation, relHumidity, &leafWetness))
-                    mapHourlyLeafW->value[row][col] = leafWetness;
+                if (computeLeafWetness(precipitation, relHumidity, leafWetness))
+                    mapHourlyLeafW->value[row][col] = float(leafWetness);
             }
         }
 

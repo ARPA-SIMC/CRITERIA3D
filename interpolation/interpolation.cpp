@@ -188,13 +188,13 @@ std::vector<float> computeDistances(meteoVariable myVar, const std::vector <Crit
                 if (kh != 0)
                 {
                     topoDistance = NODATA;
-                    if (myPoints[i].topographicDistance != nullptr)
+                    if (myPoints[i].topographicDistanceMap != nullptr)
                     {
-                        if (! gis::isOutOfGridXY(x, y, myPoints[i].topographicDistance->header))
+                        if (! gis::isOutOfGridXY(x, y, myPoints[i].topographicDistanceMap->header))
                         {
                             int row, col;
-                            gis::getRowColFromXY(*(myPoints[i].topographicDistance->header), x, y, &row, &col);
-                            topoDistance = myPoints[i].topographicDistance->value[row][col];
+                            gis::getRowColFromXY(*(myPoints[i].topographicDistanceMap->header), x, y, &row, &col);
+                            topoDistance = myPoints[i].topographicDistanceMap->value[row][col];
                         }
                     }
 

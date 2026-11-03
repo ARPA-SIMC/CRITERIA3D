@@ -22,7 +22,7 @@
         float value;
         float regressionWeight;
         lapseRateCodeType lapseRateCode;
-        gis::Crit3DRasterGrid* topographicDistance;
+        gis::Crit3DRasterGrid* topographicDistanceMap;
         std::vector<float> proxyValues;
 
         Crit3DInterpolationDataPoint();

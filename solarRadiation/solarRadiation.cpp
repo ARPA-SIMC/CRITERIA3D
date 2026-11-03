@@ -51,7 +51,6 @@ Crit3DRadiationMaps::Crit3DRadiationMaps()
     sunElevationMap = new gis::Crit3DRasterGrid;
 
     isComputed = false;
-
 }
 
 Crit3DRadiationMaps::Crit3DRadiationMaps(const gis::Crit3DRasterGrid& dem, const gis::Crit3DGisSettings& gisSettings)
@@ -88,19 +87,7 @@ Crit3DRadiationMaps::Crit3DRadiationMaps(const gis::Crit3DRasterGrid& dem, const
 
 Crit3DRadiationMaps::~Crit3DRadiationMaps()
 {
-    // release raster data, then the objects
     clear();
-
-    delete latMap;
-    delete lonMap;
-    delete slopeMap;
-    delete aspectMap;
-    delete transmissivityMap;
-    delete globalRadiationMap;
-    delete beamRadiationMap;
-    delete diffuseRadiationMap;
-    delete reflectedRadiationMap;
-    delete sunElevationMap;
 }
 
 
@@ -118,18 +105,28 @@ void Crit3DRadiationMaps::clear()
     reflectedRadiationMap->clear();
     sunElevationMap->clear();
 
-    isComputed = false;
+    delete latMap;
+    delete lonMap;
+    delete slopeMap;
+    delete aspectMap;
+    delete transmissivityMap;
+    delete globalRadiationMap;
+    delete beamRadiationMap;
+    delete diffuseRadiationMap;
+    delete reflectedRadiationMap;
+    delete sunElevationMap;
 }
 
 
-void Crit3DRadiationMaps::initialize()
+
+void Crit3DRadiationMaps::initializeData()
 {
     transmissivityMap->emptyGrid();
-    globalRadiationMap->emptyGrid();
+    sunElevationMap->emptyGrid();
     beamRadiationMap->emptyGrid();
     diffuseRadiationMap->emptyGrid();
     reflectedRadiationMap->emptyGrid();
-    sunElevationMap->emptyGrid();
+    globalRadiationMap->emptyGrid();
 
     isComputed = false;
 }

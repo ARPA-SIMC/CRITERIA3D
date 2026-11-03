@@ -20,18 +20,22 @@
     private:
         std::string name;
         std::string gridName;
-        gis::Crit3DRasterGrid* grid;
+
         std::string proxyTable;
         std::string proxyField;
+
         bool forQualityControl;
 
         float regressionR2;
         float regressionSlope;
         float regressionIntercept;
         TFittingFunction fittingFunctionName;
+
         std::vector <double> fittingParametersRange;
         std::vector <int> fittingFirstGuess;
         std::vector <std::vector <double>> firstGuessCombinations;
+
+        gis::Crit3DRasterGrid* _gridPtr;
 
         float avg;
         float stdDev;
@@ -48,12 +52,14 @@
     public:
         Crit3DProxy();
 
+        void clear();
+
         void initializeOrography();
 
         std::string getName() const;
         void setName(const std::string &value);
         gis::Crit3DRasterGrid *getGrid() const;
-        void setGrid(gis::Crit3DRasterGrid *value);
+        void setGrid(gis::Crit3DRasterGrid *gridPointer);
         std::string getGridName() const;
         void setGridName(const std::string &value);
         void setRegressionR2(float myValue);
@@ -75,8 +81,10 @@
         void setProxyTable(const std::string &value);
         std::string getProxyField() const;
         void setProxyField(const std::string &value);
+
         std::vector<gis::Crit3DRasterGrid *> getGridSeries() const;
         void setGridSeries(const std::vector<gis::Crit3DRasterGrid *> &value);
+
         float getLapseRateT0() const;
         void setLapseRateT0(float newLapseRateT0);
         float getLapseRateT1() const;
@@ -226,7 +234,8 @@
         std::vector <double> Kh_error_series;
 
         bool proxyLoaded;
-        std::vector <Crit3DProxy> currentProxy;
+        std::vector <Crit3DProxy> currentProxyList;
+
         Crit3DProxyCombination selectedCombination;
         Crit3DProxyCombination currentCombination;
         unsigned indexHeight;
@@ -243,13 +252,13 @@
         Crit3DInterpolationSettings();
 
         void initialize();
-        void initializeProxy();
+        void initializeProxyList();
 
-        Crit3DProxy* getProxy(unsigned pos) { return &(currentProxy[pos]); }
+        Crit3DProxy* getProxy(unsigned pos) { return &(currentProxyList[pos]); }
 
-        std::string getProxyName(unsigned pos) const { return currentProxy[pos].getName(); }
+        std::string getProxyName(unsigned pos) const { return currentProxyList[pos].getName(); }
 
-        size_t getProxyNr() const { return currentProxy.size(); }
+        size_t getProxyNr() const { return currentProxyList.size(); }
 
         bool getUseThermalInversion() const { return (useThermalInversion);}
 
@@ -374,8 +383,10 @@
         Crit3DProxyCombination getCurrentCombination() const;
         void setCurrentCombination(Crit3DProxyCombination value);
         void setSignificantCurrentCombination(unsigned int index, bool isSignificant);
-        std::vector<Crit3DProxy> getCurrentProxy() const;
-        void setCurrentProxy(const std::vector<Crit3DProxy> &value);
+
+        const std::vector<Crit3DProxy> &getCurrentProxyList() const;
+        void setCurrentProxyList(const std::vector<Crit3DProxy> &proxyList);
+
         void setUseInterpolatedTForRH(bool value);
         void setProxyLoaded(bool value);
         void setKh_series(const std::vector<double> &newKh_series);

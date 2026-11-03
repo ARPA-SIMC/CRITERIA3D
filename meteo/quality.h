@@ -8,7 +8,7 @@
         #include "commonConstants.h"
     #endif
 
-    // default
+    // default values
     // [m]
     #define DEF_VALUE_REF_HEIGHT 300
     // [%]
@@ -32,8 +32,8 @@
 
                 Range(float min, float max): _min(min), _max(max) { }
 
-                float getMin() { return _min; }
-                float getMax() { return _max; }
+                float getMin() const { return _min; }
+                float getMax() const { return _max; }
         };
     }
 
@@ -41,38 +41,36 @@
     class Crit3DQuality {
 
     private:
-        quality::Range* qualityHourlyT;
-        quality::Range* qualityHourlyTd;
-        quality::Range* qualityHourlyP;
-        quality::Range* qualityHourlyRH;
-        quality::Range* qualityHourlyWInt;
-        quality::Range* qualityHourlyWDir;
-        quality::Range* qualityHourlyGIrr;
-        quality::Range* qualityTransmissivity;
-        quality::Range* qualityHourlyET0;
-        quality::Range* qualityHourlyleafWetness;
+        quality::Range qualityHourlyT;
+        quality::Range qualityHourlyTd;
+        quality::Range qualityHourlyP;
+        quality::Range qualityHourlyRH;
+        quality::Range qualityHourlyWInt;
+        quality::Range qualityHourlyWDir;
+        quality::Range qualityHourlyGIrr;
+        quality::Range qualityTransmissivity;
+        quality::Range qualityHourlyET0;
+        quality::Range qualityHourlyleafWetness;
 
-        quality::Range* qualityDailyT;
-        quality::Range* qualityDailyP;
-        quality::Range* qualityDailyRH;
-        quality::Range* qualityDailyWInt;
-        quality::Range* qualityDailyWDir;
-        quality::Range* qualityDailyGRad;
-        quality::Range* qualityDailyET0;
-        quality::Range* qualityDailyBIC;
+        quality::Range qualityDailyT;
+        quality::Range qualityDailyP;
+        quality::Range qualityDailyRH;
+        quality::Range qualityDailyWInt;
+        quality::Range qualityDailyWDir;
+        quality::Range qualityDailyGRad;
+        quality::Range qualityDailyET0;
+        quality::Range qualityDailyBIC;
+
+        quality::Range qualityMissing;
 
         float referenceHeight;
         float relHumTolerance;
         float waterTableMaximumDepth;
 
     public:
-
         Crit3DQuality();
-        ~Crit3DQuality();
 
-        void initialize();
-
-        quality::Range* getQualityRange(meteoVariable myVar);
+        const quality::Range& getQualityRange(meteoVariable myVar);
 
         void syntacticQualityControl(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints);
 
@@ -87,16 +85,16 @@
         float getWaterTableMaximumDepth() const { return waterTableMaximumDepth; }
         void setWaterTableMaximumDepth(float value) { waterTableMaximumDepth = value; }
 
-        quality::qualityType checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam,
+        quality::qualityType checkFastValueDaily_SingleValue(meteoVariable myVar, const Crit3DClimateParameters& climateParam,
                                                              float myValue, int month, float height);
 
-        bool wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam,
+        bool wrongValueDaily_SingleValue(meteoVariable myVar, const Crit3DClimateParameters& climateParam,
                                          float myValue, int month, float height);
 
-        quality::qualityType checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+        quality::qualityType checkFastValueHourly_SingleValue(meteoVariable myVar, const Crit3DClimateParameters& climateParam,
                                                               float myValue, int month, float height);
 
-        bool wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+        bool wrongValueHourly_SingleValue(meteoVariable myVar, const Crit3DClimateParameters& climateParam,
                                           float myValue, int month, float height);
 
     };

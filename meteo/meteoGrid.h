@@ -136,8 +136,12 @@
             void emptyGridData(Crit3DDate dateIni, Crit3DDate dateFin);
             void findGridAggregationPoints(gis::Crit3DRasterGrid* myDEM);
             void assignCellAggregationPoints(unsigned row, unsigned col, gis::Crit3DRasterGrid* myDEM, bool excludeNoData);
-            void spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute, gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab);
-            double spatialAggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab);
+
+            void spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, const Crit3DDate& date,
+                                           int  hour, int minute, gis::Crit3DRasterGrid* myDEM,
+                                           gis::Crit3DRasterGrid *myRaster, aggregationMethod aggrMethod);
+
+            double spatialAggregateMeteoGridPoint(const Crit3DMeteoPoint& myPoint, aggregationMethod aggrMethod);
 
             void assignGridProxyValues(gis::Crit3DRasterGrid* myRaster);
             void assignCellProxyValues(unsigned row, unsigned col, gis::Crit3DRasterGrid* myRaster, bool excludeNoData);

@@ -50,8 +50,8 @@
 
         QDateTime getFirstDate(frequencyType frequency);
         QDateTime getLastDate(frequencyType frequency);
-        QDateTime getFirstDate(frequencyType frequency, const std::string& idMeteoPoint);
-        QDateTime getLastDate(frequencyType frequency, const std::string& idMeteoPoint);
+        QDateTime getFirstDatePoint(frequencyType frequency, const std::string& idMeteoPoint);
+        QDateTime getLastDatePoint(frequencyType frequency, const std::string& idMeteoPoint);
 
         bool hasData(frequencyType frequency, const std::string &idMeteoPoint) const;
 
@@ -111,7 +111,6 @@
         bool isActivePoint(const QString &pointId);
 
         bool deleteAllPointsFromIdList(const QList<QString> &pointList);
-        bool deleteAllPointsFromGeoPointList(const QList<gis::Crit3DGeoPoint>& pointList);
         bool deleteAllPointsFromDataset(QList<QString> datasets);
 
         QList<QString> getIdList();

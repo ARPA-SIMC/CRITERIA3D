@@ -105,12 +105,13 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     par5.setMaximumHeight(25);
     par5.setEnabled(false);
 
-    std::vector<Crit3DProxy> proxy = _interpolationSettings.getCurrentProxy();
+    std::vector<Crit3DProxy> proxyList = _interpolationSettings.getCurrentProxyList();
 
-    for(int i=0; i<int(proxy.size()); i++)
+    for(size_t i=0; i < proxyList.size(); i++)
     {
-        comboAxisX.addItem(QString::fromStdString(proxy[i].getName()));
+        comboAxisX.addItem(QString::fromStdString(proxyList[i].getName()));
     }
+
     proxyPos = 0;
     comboAxisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
 

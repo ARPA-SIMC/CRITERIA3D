@@ -28,7 +28,7 @@
 
         Crit3DDate();
         Crit3DDate(int myDay, int myMonth, int myYear);
-        Crit3DDate(std::string myDate);
+        Crit3DDate(const std::string& myDate);
 
         friend bool operator == (const Crit3DDate& myFirstDate, const Crit3DDate& mySecondDate);
         friend bool operator != (const Crit3DDate& myFirstDate, const Crit3DDate& mySecondDate);
@@ -45,7 +45,7 @@
         void setNullDate();
 
         Crit3DDate addDays(long offset) const;
-        int daysTo(const Crit3DDate& newDate) const;
+        long daysTo(const Crit3DDate& newDate) const;
 
         std::string toISOString() const;
 
@@ -76,6 +76,7 @@
         void setNullTime();
 
         bool setFromISOString(const std::string &dateTimeStr);
+        bool setFromISOString_fast(const std::string &dateTimeStr);
 
         int getHour() const;
         int getNearestHour() const;
@@ -102,10 +103,10 @@
 
     int difference(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
 
-    inline long getJulianDay(int day, int month, int year);
+    long getJulianDay(int day, int month, int year);
     Crit3DDate getDateFromJulianDay(long julianDay);
 
-    int daysTo(const Crit3DDate& firstDate, const Crit3DDate& lastDate);
+    long daysTo(const Crit3DDate& firstDate, const Crit3DDate& lastDate);
 
 
 #endif // CRIT3DDATE_H

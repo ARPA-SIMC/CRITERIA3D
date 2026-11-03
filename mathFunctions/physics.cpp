@@ -144,7 +144,6 @@ double getAirVaporDeficit(double myT, double myVapor)
 /*!
  * \brief [J kg-1] latent heat of vaporization
  * \param myTCelsius
- * \return result
  */
 double latentHeatVaporization(double myTCelsius)
 {
@@ -156,7 +155,6 @@ double latentHeatVaporization(double myTCelsius)
  * \brief [kPa °C-1] psychrometric instrument constant
  * \param myPressure [kPa]
  * \param myTemp [°C]
- * \return result
  */
 double psychro(double myPressure, double myTemp)
 {

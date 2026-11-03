@@ -170,7 +170,7 @@ bool getValueCrit3DTime(const QVariant &myRs, Crit3DTime* dateTime)
     if (myRs.isNull())
         return false;
 
-    return dateTime->setFromISOString(myRs.toString().toStdString());
+    return dateTime->setFromISOString_fast(myRs.toString().toStdString());
 }
 
 

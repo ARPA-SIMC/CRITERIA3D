@@ -2441,7 +2441,10 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(const QString &met
         return dailyVarList;
     }
 
-    QString statement = QString("SELECT `%3`,`Value` FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3`").arg(tableD).arg(varCode).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
+    QString statement = QString("SELECT `%3`,`Value` FROM `%1` "
+                                "WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' "
+                                "ORDER BY `%3`").arg(tableD).arg(varCode)
+                                .arg(_tableDaily.fieldTime, first.toString("yyyy-MM-dd"), last.toString("yyyy-MM-dd"));
 
     if(! qry.exec(statement) )
     {
@@ -2647,7 +2650,8 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVarFixedFields(const Q
         }
     }
 
-    QString statement = QString("SELECT `%1`, `%2` FROM `%3` WHERE `%1` >= '%4' AND `%1` <= '%5' ORDER BY `%1`").arg(_tableDaily.fieldTime).arg(varField).arg(tableD).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
+    QString statement = QString("SELECT `%1`, `%2` FROM `%3` WHERE `%1` >= '%4' AND `%1` <= '%5' ORDER BY `%1`")
+                                .arg(_tableDaily.fieldTime, varField, tableD, first.toString("yyyy-MM-dd"), last.toString("yyyy-MM-dd"));
     if(! qry.exec(statement) )
     {
         errorStr = qry.lastError().text();
@@ -2994,9 +2998,11 @@ bool Crit3DMeteoGridDbHandler::saveListHourlyData(QString &errorStr, const QStri
     int nHours = values.size();
 
     QDateTime last = firstDateTime.addSecs(3600*(nHours-1));
-    statement = QString("DELETE FROM `%1` WHERE %2 BETWEEN CAST('%3' AS DATETIME) AND CAST('%4' AS DATETIME) AND VariableCode = '%5'")
-                            .arg(tableH, _tableHourly.fieldTime).arg(firstDateTime.toString("yyyy-MM-dd hh:mm:00")).arg(last.toString("yyyy-MM-dd hh:mm:00")).arg(varCode);
-    if( !qry.exec(statement) )
+    statement = QString("DELETE FROM `%1` WHERE %2 BETWEEN CAST('%3' AS DATETIME) "
+                        "AND CAST('%4' AS DATETIME) AND VariableCode = '%5'")
+                        .arg(tableH, _tableHourly.fieldTime, firstDateTime.toString("yyyy-MM-dd hh:mm:00"),
+                         last.toString("yyyy-MM-dd hh:mm:00")).arg(varCode);
+    if(! qry.exec(statement) )
     {
         errorStr = qry.lastError().text();
         return false;

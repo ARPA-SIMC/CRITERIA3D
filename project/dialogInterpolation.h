@@ -93,7 +93,7 @@
 
         private:
             Project *_project;
-            std::vector <Crit3DProxy> _proxy;
+            std::vector <Crit3DProxy> _proxyList;
     };
 
 

@@ -91,14 +91,14 @@ void Crit3DInterpolationSettings::setSignificantCurrentCombination(unsigned int 
     currentCombination.setProxySignificant(index, isSignificant);
 }
 
-std::vector<Crit3DProxy> Crit3DInterpolationSettings::getCurrentProxy() const
+const std::vector<Crit3DProxy>& Crit3DInterpolationSettings::getCurrentProxyList() const
 {
-    return currentProxy;
+    return currentProxyList;
 }
 
-void Crit3DInterpolationSettings::setCurrentProxy(const std::vector<Crit3DProxy> &value)
+void Crit3DInterpolationSettings::setCurrentProxyList(const std::vector<Crit3DProxy> &proxyList)
 {
-    currentProxy = value;
+    currentProxyList = proxyList;
 }
 
 void Crit3DInterpolationSettings::setUseInterpolatedTForRH(bool value)
@@ -315,14 +315,17 @@ Crit3DInterpolationSettings::Crit3DInterpolationSettings()
     initialize();
 }
 
-void Crit3DInterpolationSettings::initializeProxy()
+void Crit3DInterpolationSettings::initializeProxyList()
 {
-    proxyLoaded = false;
+    for (Crit3DProxy& proxy : currentProxyList)
+        proxy.clear();
 
-    currentProxy.clear();
+    currentProxyList.clear();
+
     selectedCombination.clear();
 
     indexHeight = unsigned(NODATA);
+    proxyLoaded = false;
 }
 
 void Crit3DInterpolationSettings::initialize()
@@ -361,7 +364,7 @@ void Crit3DInterpolationSettings::initialize()
     Kh_series.clear();
     Kh_error_series.clear();
 
-    initializeProxy();
+    initializeProxyList();
 }
 
 
@@ -491,12 +494,12 @@ void Crit3DProxy::setName(const std::string &value)
 
 gis::Crit3DRasterGrid *Crit3DProxy::getGrid() const
 {
-    return grid;
+    return _gridPtr;
 }
 
-void Crit3DProxy::setGrid(gis::Crit3DRasterGrid *value)
+void Crit3DProxy::setGrid(gis::Crit3DRasterGrid *gridPointer)
 {
-    grid = value;
+    _gridPtr = gridPointer;
 }
 
 std::string Crit3DProxy::getGridName() const
@@ -677,7 +680,9 @@ Crit3DProxy::Crit3DProxy()
 {
     name = "";
     gridName = "";
-    grid = new gis::Crit3DRasterGrid();
+
+    _gridPtr = new gis::Crit3DRasterGrid();
+
     forQualityControl = false;
 
     regressionR2 = NODATA;
@@ -688,6 +693,7 @@ Crit3DProxy::Crit3DProxy()
     lapseRateT1 = NODATA;
     inversionLapseRate = NODATA;
     inversionIsSignificative = false;
+
     fittingParametersRange.clear();
     fittingFirstGuess.clear();
     firstGuessCombinations.clear();
@@ -699,6 +705,22 @@ Crit3DProxy::Crit3DProxy()
     proxyTable = "";
     proxyField = "";
 }
+
+
+void Crit3DProxy::clear()
+{
+    if (_gridPtr != nullptr)
+    {
+        _gridPtr->clear();
+        delete _gridPtr;
+        _gridPtr = nullptr;
+    }
+
+    fittingParametersRange.clear();
+    fittingFirstGuess.clear();
+    firstGuessCombinations.clear();
+}
+
 
 float Crit3DProxy::getLapseRateH1() const
 {
@@ -777,10 +799,10 @@ void Crit3DProxy::initializeOrography()
 
 void Crit3DInterpolationSettings::addProxy(Crit3DProxy myProxy, bool isActive_)
 {
-    currentProxy.push_back(myProxy);
+    currentProxyList.push_back(myProxy);
 
     if (getProxyPragaName(myProxy.getName()) == proxyHeight)
-        setIndexHeight(int(currentProxy.size())-1);
+        setIndexHeight(int(currentProxyList.size()-1));
 
     selectedCombination.addProxyActive(isActive_);
     selectedCombination.addProxySignificant(false);
@@ -789,8 +811,8 @@ void Crit3DInterpolationSettings::addProxy(Crit3DProxy myProxy, bool isActive_)
 
 double Crit3DInterpolationSettings::getProxyValue(unsigned pos, std::vector <double> proxyValues) const
 {
-    if (pos < currentProxy.size())
-        return currentProxy[pos].getValue(pos, proxyValues);
+    if (pos < currentProxyList.size())
+        return currentProxyList[pos].getValue(pos, proxyValues);
     else
         return NODATA;
 }
