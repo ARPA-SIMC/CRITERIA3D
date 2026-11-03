@@ -1213,7 +1213,7 @@ bool Crit3DMeteoGridDbHandler::newCellProperties(QString &errorStr)
 }
 
 
-bool Crit3DMeteoGridDbHandler::writeCellProperties(Crit3DMeteoGridStructure myStructure, QString &errorStr)
+bool Crit3DMeteoGridDbHandler::writeCellProperties(const Crit3DMeteoGridStructure& myStructure, QString &errorStr)
 {
     QSqlQuery qry(_db);
     QString table = "CellsProperties";

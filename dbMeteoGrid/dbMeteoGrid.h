@@ -103,7 +103,7 @@
 
         bool loadCellProperties(QString &errorStr);
         bool newCellProperties(QString &errorStr);
-        bool writeCellProperties(Crit3DMeteoGridStructure myStructure, QString &errorStr);
+        bool writeCellProperties(const Crit3DMeteoGridStructure &myStructure, QString &errorStr);
         bool loadIdMeteoProperties(QString &errorStr, const QString &idMeteo);
         bool updateMeteoGridDate(QString &errorStr);
 
