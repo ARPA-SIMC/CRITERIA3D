@@ -1863,7 +1863,8 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyMeteoPrec(QString &errorStr, const Q
 }
 
 
-bool Crit3DMeteoGridDbHandler::loadGridDailyDataEnsemble(QString &errorStr, QString meteoPoint, int memberNr, QDate first, QDate last)
+bool Crit3DMeteoGridDbHandler::loadGridDailyDataEnsemble(QString &errorStr, const QString& meteoPoint,
+                                                         int memberNr, QDate first, QDate last)
 {
     errorStr = "";
 
