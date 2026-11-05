@@ -10,7 +10,6 @@
 #include "gis.h"
 #include "shapeToRaster.h"
 #include "shapeHandler.h"
-#include "formInfo.h"
 
 
 bool initializeRasterFromShape(const Crit3DShapeHandler &shapeHandler, gis::Crit3DRasterGrid &newRaster, double cellSize)
@@ -30,21 +29,21 @@ bool initializeRasterFromShape(const Crit3DShapeHandler &shapeHandler, gis::Crit
         return false;
 
     // ensures that the limits are included
-    xmin = floor(xmin / cellSize) * cellSize;
-    ymin = floor(ymin / cellSize) * cellSize;
+    const double x0 = floor(xmin / cellSize) * cellSize;
+    const double y0 = floor(ymin / cellSize) * cellSize;
 
-    xmax = ceil(xmax / cellSize) * cellSize;
-    ymax = ceil(ymax / cellSize) * cellSize;
+    const double x1 = ceil(xmax / cellSize) * cellSize;
+    const double y1 = ceil(ymax / cellSize) * cellSize;
 
     gis::Crit3DRasterHeader header;
 
     header.cellSize = cellSize;
     header.invCellSize = 1.0 / cellSize;
-    header.llCorner.x = xmin;
-    header.llCorner.y = ymin;
+    header.llCorner.x = x0;
+    header.llCorner.y = y0;
 
-    header.nrRows = static_cast<int>(std::round((ymax - ymin) / cellSize));
-    header.nrCols = static_cast<int>(std::round((xmax - xmin) / cellSize));
+    header.nrRows = static_cast<int>(std::round((y1 - y0) / cellSize));
+    header.nrCols = static_cast<int>(std::round((x1 - x0) / cellSize));
 
     if (header.nrRows <= 0 || header.nrCols <= 0)
         return false;
@@ -113,8 +112,7 @@ bool fillRasterWithShapeIndex(gis::Crit3DRasterGrid &raster, const Crit3DShapeHa
 
 bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGrid &newRaster,
                     const Crit3DShapeHandler &shapeHandler, const std::string &fieldName, double cellSizeRef = NODATA,
-                    int sampleGrid = 1, double coverageThreshold = 0.5,
-                    bool useReferenceRaster = true, bool showInfo = false)
+                    int sampleGrid = 1, double coverageThreshold = 0.5, bool useReferenceRaster = true)
 {    
     if (useReferenceRaster)
     {
@@ -180,17 +178,8 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
     const size_t nrCells = static_cast<size_t>(nrRows) * static_cast<size_t>(nrCols);
     std::vector<uint8_t> coverageCount(nrCells, 0);
 
-    FormInfo formInfo;
-    if (showInfo)
-    {
-        formInfo.start("Fill raster...", nrShape);
-    }
-
     for (int shapeIndex = 0; shapeIndex < nrShape; ++shapeIndex)
     {
-        if (showInfo)
-            formInfo.setValue(shapeIndex);
-
         ShapeObject object;
         shapeHandler.getShape(shapeIndex, object);
 
@@ -273,9 +262,6 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
             }
         }
     }
-
-    if (showInfo)
-        formInfo.close();
 
     return true;
 }
