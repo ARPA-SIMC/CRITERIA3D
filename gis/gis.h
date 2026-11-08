@@ -160,23 +160,20 @@
             Crit3DRasterHeader* header;
             Crit3DColorScale* colorScale;
             float** value;
+
             float minimum, maximum;
             bool isLoaded;
             Crit3DTime mapTime;
 
-            Crit3DUtmPoint* utmPoint(int myRow, int myCol);
-            void getXY(int myRow, int myCol, double &x, double &y) const;
-            void getRowCol(double x, double y, int& row, int& col) const;
-            Crit3DPoint getCenter();
-            Crit3DGeoPoint getCenterLatLon(const Crit3DGisSettings &gisSettings);
-
-            void clear();
-            void emptyGrid();
-
             Crit3DRasterGrid();
             ~Crit3DRasterGrid();
 
-            void setConstantValue(float initValue);
+            void clear();
+            void initialize();
+            void emptyGrid();
+
+            Crit3DRasterGrid(const Crit3DRasterGrid&) = delete;
+            Crit3DRasterGrid& operator=(const Crit3DRasterGrid&) = delete;
 
             bool initializeGrid();
             bool initializeGrid(float initValue);
@@ -184,6 +181,15 @@
             bool initializeGrid(const Crit3DRasterHeader& initHeader);
             bool initializeGrid(const Crit3DLatLonHeader& latLonHeader);
             bool initializeGrid(const Crit3DRasterGrid& initGrid, float initValue);
+
+            void setConstantValue(float initValue);
+
+            Crit3DUtmPoint utmPoint(int myRow, int myCol) const;
+            void getXY(int myRow, int myCol, double &x, double &y) const;
+            void getRowCol(double x, double y, int& row, int& col) const;
+
+            Crit3DPoint getCenter();
+            Crit3DGeoPoint getCenterLatLon(const Crit3DGisSettings &gisSettings);
 
             bool copyGrid(const Crit3DRasterGrid& initGrid);
 
@@ -213,8 +219,12 @@
         double computeDistance(double x1, double y1, double x2, double y2);
 
         double computeDistancePoint(Crit3DUtmPoint *p0, Crit3DUtmPoint *p1);
-        std::vector<float> computeEuclideanDistanceStation2Area(std::vector<std::vector<int>>& cells,std::vector<std::vector<int>>& stations);
-        std::vector<int> computeMetropolisDistanceStation2Area(std::vector<std::vector<int>>& cells,std::vector<std::vector<int>>& stations);
+
+        std::vector<float> computeEuclideanDistanceStation2Area(const std::vector<std::vector<int>>& cells,
+                                                                const std::vector<std::vector<int>>& stations);
+        std::vector<int> computeManhattanDistanceStation2Area(const std::vector<std::vector<int>>& cells,
+                                                               const std::vector<std::vector<int>>& stations);
+
         bool updateMinMaxRasterGrid(Crit3DRasterGrid *rasterGrid);
         void convertFlagToNodata(Crit3DRasterGrid& myGrid);
         bool updateColorScale(Crit3DRasterGrid* rasterGrid, int row0, int col0, int row1, int col1);
@@ -223,7 +233,8 @@
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, double x, double y, int& row, int& col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, const Crit3DUtmPoint& p, int *row, int *col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, const Crit3DUtmPoint& p, Crit3DRasterCell* v);
-        void getRowColFromLonLat(const Crit3DLatLonHeader& myHeader, double lon, double lat, int *row, int *col);
+
+        void getRowColFromLonLat_zeroSouth(const Crit3DLatLonHeader& myHeader, double lon, double lat, int *row, int *col);
 
         void getRowColFromLatLon(const Crit3DLatLonHeader &latLonHeader, const Crit3DGeoPoint& p, int *myRow, int *myCol);
 
@@ -309,7 +320,7 @@
         bool temporalYearlyInterpolation(const gis::Crit3DRasterGrid& firstGrid, const gis::Crit3DRasterGrid& secondGrid,
                                          int myYear, float minValue, float maxValue, gis::Crit3DRasterGrid* outGrid);
 
-        bool rasterSummary(Crit3DRasterGrid *myGrid, int &nrValids, float &avgValue, std::string &error);
+        bool rasterSummary(Crit3DRasterGrid *myGrid, int &nrValids, float &avgValue, std::string &errorStr);
 
         bool deleteRangeOfValuesRaster(gis::Crit3DRasterGrid* refRaster, float minValue, float maxValue, gis::Crit3DRasterGrid* outputRaster);
 

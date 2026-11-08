@@ -190,17 +190,18 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
         return false;
     }
 
-    firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
-    secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));
-
     // use first as reference if different resolution when resampling
     if (! gis::compareGrids(firstGrid, secondGrid))
     {
-        tmpGrid = secondGrid;
-        secondGrid.clear();
+        gis::Crit3DRasterGrid tmpGrid;
+        if (! tmpGrid.copyGrid(secondGrid))
+            return false;
+
         gis::resampleGrid(tmpGrid, &secondGrid, firstGrid.header, aggrAverage, 0);
-        tmpGrid.initializeGrid();
     }
+
+    firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
+    secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));
 
     float myMin = MINVALUE(firstGrid.minimum, secondGrid.minimum);
     float myMax = MAXVALUE(firstGrid.maximum, secondGrid.maximum);
@@ -281,17 +282,18 @@ bool modifiedInterpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, Q
         return false;
     }
 
-    firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
-    secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));
-
     // use first as reference if different resolution when resampling
     if (! gis::compareGrids(firstGrid, secondGrid))
     {
-        tmpGrid = secondGrid;
-        secondGrid.clear();
+        gis::Crit3DRasterGrid tmpGrid;
+        if (! tmpGrid.copyGrid(secondGrid))
+            return false;
+
         gis::resampleGrid(tmpGrid, &secondGrid, firstGrid.header, aggrAverage, 0);
-        tmpGrid.initializeGrid();
     }
+
+    firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first], 1, 1), 0));
+    secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second], 1, 1), 0));
 
     float myMin = MINVALUE(firstGrid.minimum, secondGrid.minimum);
     float myMax = MAXVALUE(firstGrid.maximum, secondGrid.maximum);
