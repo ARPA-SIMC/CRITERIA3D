@@ -6180,12 +6180,12 @@ bool Project::waterTableComputeSingleWell(int indexWell)
     std::vector<float> inputTMax;
     std::vector<float> inputPrec;
 
-    for (int i = 0; i < linkedMeteoPoint.obsDataD.size(); i++)
+    for (size_t i = 0; i < linkedMeteoPoint.obsDataD.size(); ++i)
     {
         Crit3DDate myDate = linkedMeteoPoint.getFirstDailyData().addDays(i);
-        float Tmin = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin);
-        float Tmax = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMax);
-        float prec = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyPrecipitation);
+        const float Tmin = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin);
+        const float Tmax = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+        const float prec = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyPrecipitation);
         inputTMin.push_back(Tmin);
         inputTMax.push_back(Tmax);
         inputPrec.push_back(prec);
@@ -6221,13 +6221,13 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtm
 
     if (isMeteoGrid)
     {
+        int zoneNumber;
+        const QDate lastDate = this->meteoGridDbHandler->getLastDailyDate();
+        const QDate firstDate = std::max(firstMeteoDate, this->meteoGridDbHandler->getFirstDailyDate());
+
         std::string assignNearestId;
         unsigned int assignNearestRow;
         unsigned int assignNearestCol;
-        int zoneNumber;
-        QDate lastDate = this->meteoGridDbHandler->getLastDailyDate();
-        QDate firstDate = std::max(firstMeteoDate, this->meteoGridDbHandler->getFirstDailyDate());
-
         for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
         {
             for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
@@ -6239,12 +6239,12 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtm
                 double utmY = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->point.utm.y;
                 if (utmX == NODATA || utmY == NODATA)
                 {
-                    double lat = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->latitude;
-                    double lon = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->longitude;
+                    const double lat = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->latitude;
+                    const double lon = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->longitude;
                     gis::latLonToUtm(lat, lon, &utmX, &utmY, &zoneNumber);
                 }
 
-                float myDistance = gis::computeDistance(wellUtmX, wellUtmY, utmX, utmY);
+                const float myDistance = gis::computeDistance(wellUtmX, wellUtmY, utmX, utmY);
                 if (myDistance >= MAXWELLDISTANCE)
                     continue;
 
@@ -6281,9 +6281,9 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtm
 
         for (size_t i = 0; i < meteoPoints.size(); i++)
         {
-            double utmX = meteoPoints[i].point.utm.x;
-            double utmY = meteoPoints[i].point.utm.y;
-            float myDistance = gis::computeDistance(wellUtmX, wellUtmY, utmX, utmY);
+            const double utmX = meteoPoints[i].point.utm.x;
+            const double utmY = meteoPoints[i].point.utm.y;
+            const float myDistance = gis::computeDistance(wellUtmX, wellUtmY, utmX, utmY);
             if (myDistance >= MAXWELLDISTANCE )
                 continue;
 

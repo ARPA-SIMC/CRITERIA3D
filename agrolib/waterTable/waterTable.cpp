@@ -3,6 +3,7 @@
 #include "furtherMathFunctions.h"
 #include "basicMath.h"
 #include "crit3dDate.h"
+#include "statistics.h"
 
 #include <math.h>
 

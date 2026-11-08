@@ -1309,17 +1309,17 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DProx
                 Crit3DInterpolationSettings &interpolationSettings, Crit3DClimateParameters* climateParameters,
                 meteoVariable myVar, Crit3DTime myTime)
 {
-    if (! getUseDetrendingVar(myVar)) return;
-
-    Crit3DProxy* myProxy;
+    if (! getUseDetrendingVar(myVar))
+        return;
 
     interpolationSettings.setCurrentCombination(inCombination);
+    const int numberOfproxy = (int)interpolationSettings.getProxyNr();
 
-    for (int pos=0; pos < interpolationSettings.getProxyNr(); pos++)
+    for (int pos=0; pos < numberOfproxy; pos++)
     {
         if (inCombination.isProxyActive(pos))
         {
-            myProxy = interpolationSettings.getProxy(pos);
+            Crit3DProxy* myProxy = interpolationSettings.getProxy(pos);
             interpolationSettings.setSignificantCurrentCombination(pos, false);
 
             if (getProxyPragaName(myProxy->getName()) == proxyHeight)
