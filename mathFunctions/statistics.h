@@ -11,7 +11,8 @@
                             differenceWithThreshold, lastDayBelowThreshold,
                             sumAbove, avgAbove, stdDevAbove,
                             percentile, percentileRainThreshold, median, freqPositive,
-                            daysAbove, daysBelow, consecutiveDaysAbove, consecutiveDaysBelow,
+                            daysAbove, daysBelow,
+                            consecutiveDaysAbove, consecutiveDaysBelow, nonConsecutiveDaysAbove,
                             prevailingWindDir,
                             trend, mannKendall,
                             phenology,
@@ -42,7 +43,8 @@
         void weightedMultiRegressionLinearWithStatsNoOffset(const std::vector <std::vector <float>> &x, std::vector <float> &y, const std::vector <float> &weight,std::vector <float> &m,bool calculateR2, bool calculateStdError,float* R2, float* stdError, float *qSE,std::vector <float> &mSE);
         void multiRegressionLinear(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors);
         void linearRegression(float* x, float* y, long nrItems, bool zeroIntercept, float* y_intercept, float* mySlope, float* r2);
-        void linearRegression( std::vector<float> x,  std::vector<float> y, long nrItems, bool zeroIntercept, float* y_intercept, float* mySlope, float* r2);
+        void linearRegression(const std::vector<float>& x, const std::vector<float>& y,
+                              long nrItems, bool zeroIntercept, float* y_intercept, float* mySlope, float* r2);
         float standardDeviation(float *myList, int nrList);
         float standardDeviation(std::vector<float> myList, int nrList);
         double standardDeviation(std::vector<double> myList, int nrList);
@@ -60,17 +62,21 @@
         float coefficientPearson(float *myList1, int nrList1,float *myList2, int nrList2);
         float** covariancesMatrix(int nrRowCol, float**myLists,int nrLists);
         void correlationsMatrix(int nrRowCol, double**myLists,int nrLists, double** c);
-        float maxList(std::vector<float> values, int nValue);
-        float minList(std::vector<float> values, int nValue);
-        float sumList(std::vector<float> values, int nValue);
-        float sumListThreshold(std::vector<float> values, int nValue, float threshold);
-        float diffListThreshold(std::vector<float> values, int nValue, float threshold);
-        float countAbove(std::vector<float> values, int nValue, float threshold);
-        float countBelow(std::vector<float> values, int nValue, float threshold);
-        float countConsecutive(std::vector<float> values, int nValue, float threshold, bool isPositive);
-        float frequencyPositive(std::vector<float> values, int nValue);
-        float trend(std::vector<float> values, int nValues, float myFirstYear);
-        float mannKendall(std::vector<float> values, int nValues);
+
+        float maxList(const std::vector<float> &values, int nValue);
+        float minList(const std::vector<float> &values, int nValue);
+        float sumList(const std::vector<float> &values, int nValue);
+        float sumListThreshold(const std::vector<float> &values, int nValue, float threshold);
+        float diffListThreshold(const std::vector<float> &values, int nValue, float threshold);
+        float countAbove(const std::vector<float> &values, int nValue, float threshold);
+        float countBelow(const std::vector<float> &values, int nValue, float threshold);
+        float countConsecutive(const std::vector<float> &values, int nValue, float threshold, bool isPositive);
+        float countNotConsecutive(const std::vector<float> &values, int nValue,
+                                  float threshold, int minimumGap, bool isPositive);
+        float frequencyPositive(const std::vector<float> &values, int nValue);
+        float trend(const std::vector<float> &values, int nValues, float myFirstYear);
+        float mannKendall(const std::vector<float> &values, int nValues);
+
         bool rollingAverage(double* arrayInput, int sizeArray, int lag,double* arrayOutput);
 
         double meanNoCheck(double *myList, int nrList);
