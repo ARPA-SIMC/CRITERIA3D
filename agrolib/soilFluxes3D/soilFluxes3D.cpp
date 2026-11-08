@@ -472,6 +472,17 @@ namespace soilFluxes3D::v2
     }
 
 
+    void setCurrentDeltaT(double currentDeltaT)
+    {
+        currentDeltaT = SF3Dmax(currentDeltaT, solver->getMinTimeStep());
+        currentDeltaT = SF3Dmin(currentDeltaT, solver->getMaxTimeStep());
+
+        SolverParametersPartial paramTemp;
+        paramTemp.deltaTcurr = currentDeltaT;
+
+        solver->updateParameters(paramTemp);
+    }
+
     /*!
      *  \brief sets numerical parameters of the solver
      *  \return Ok/Error

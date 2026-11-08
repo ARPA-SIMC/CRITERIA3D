@@ -30,8 +30,8 @@
         int indexTimeDim, indexYLonDim, indexXLatDim;
         int idTime, idTimeBnds, idX, idY, idLat, idLon;
 
-        float *x, *y;
-        float *lat, *lon;
+        double *x, *y;
+        double *lat, *lon;
         double *time;
         bool isYincreasing;
 
