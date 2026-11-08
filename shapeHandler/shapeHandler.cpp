@@ -291,7 +291,7 @@ bool Crit3DShapeHandler::open_old(const std::string &filename, bool isWrite)
 */
 
 
-bool Crit3DShapeHandler::getBounds(double &xMin, double &yMin, double &xMax, double &yMax) const
+bool Crit3DShapeHandler::getBounds(double &xMin, double &xMax, double &yMin, double &yMax) const
 {
     if (! m_handle || ! m_count)
         return false;
