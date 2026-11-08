@@ -1,19 +1,20 @@
-#include <float.h>
-#include <math.h>
-#include <limits>
+#include <cfloat>
+#include <cmath>
 #include <cstdint>
+#include <limits>
+#include <vector>
+#include <algorithm>
 
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "gis.h"
 #include "shapeToRaster.h"
 #include "shapeHandler.h"
-#include "formInfo.h"
 
 
 bool initializeRasterFromShape(const Crit3DShapeHandler &shapeHandler, gis::Crit3DRasterGrid &newRaster, double cellSize)
 {
-    int nrShape = shapeHandler.getShapeCount();
+    const int nrShape = shapeHandler.getShapeCount();
 
     // check void shapefile
     if (nrShape <= 0) 
@@ -23,38 +24,30 @@ bool initializeRasterFromShape(const Crit3DShapeHandler &shapeHandler, gis::Crit
     if (cellSize <= 0 || isEqual(cellSize, NODATA))
         return false;
 
-    gis::Crit3DRasterHeader header;
-    ShapeObject object;
-
-    double ymin =  std::numeric_limits<double>::max();
-    double xmin =  std::numeric_limits<double>::max();
-    double ymax =  std::numeric_limits<double>::lowest();
-    double xmax =  std::numeric_limits<double>::lowest();
-
-    for (int i = 0; i < nrShape; i++)
-    {
-        shapeHandler.getShape(i, object);
-        const auto& bounds = object.getBounds();
-
-        xmin = std::min(xmin, bounds.xmin);
-        ymin = std::min(ymin, bounds.ymin);
-        xmax = std::max(xmax, bounds.xmax);
-        ymax = std::max(ymax, bounds.ymax);
-    }
+    double xmin, xmax, ymin, ymax;
+    if (! shapeHandler.getBounds(xmin, xmax, ymin, ymax))
+        return false;
 
     // ensures that the limits are included
-    xmin = floor(xmin / cellSize) * cellSize;
-    ymin = floor(ymin / cellSize) * cellSize;
+    const double x0 = floor(xmin / cellSize) * cellSize;
+    const double y0 = floor(ymin / cellSize) * cellSize;
 
-    xmax = ceil(xmax / cellSize) * cellSize;
-    ymax = ceil(ymax / cellSize) * cellSize;
+    const double x1 = ceil(xmax / cellSize) * cellSize;
+    const double y1 = ceil(ymax / cellSize) * cellSize;
+
+    gis::Crit3DRasterHeader header;
 
     header.cellSize = cellSize;
     header.invCellSize = 1.0 / cellSize;
-    header.llCorner.x = xmin;
-    header.llCorner.y = ymin;
-    header.nrRows = static_cast<int>(std::ceil((ymax - ymin) / cellSize));
-    header.nrCols = static_cast<int>(std::ceil((xmax - xmin) / cellSize));
+    header.llCorner.x = x0;
+    header.llCorner.y = y0;
+
+    header.nrRows = static_cast<int>(std::round((y1 - y0) / cellSize));
+    header.nrCols = static_cast<int>(std::round((x1 - x0) / cellSize));
+
+    if (header.nrRows <= 0 || header.nrCols <= 0)
+        return false;
+
     header.flag = NODATA;
 
     return newRaster.initializeGrid(header);
@@ -71,7 +64,6 @@ bool fillRasterWithShapeIndex(gis::Crit3DRasterGrid &raster, const Crit3DShapeHa
 
     raster.emptyGrid();
 
-    #pragma omp parallel for
     for (int shapeIndex = 0; shapeIndex < nrShapes; ++shapeIndex)
     {
         ShapeObject object;
@@ -88,15 +80,16 @@ bool fillRasterWithShapeIndex(gis::Crit3DRasterGrid &raster, const Crit3DShapeHa
             c1 < 0 || c0 >= header.nrCols)
             continue;
 
-        r0 = MAXVALUE(r0 - 1, 0);
-        r1 = MINVALUE(r1 + 1, header.nrRows - 1);
-        c0 = MAXVALUE(c0 - 1, 0);
-        c1 = MINVALUE(c1 + 1, header.nrCols - 1);
+        r0 = std::max(r0 - 1, 0);
+        r1 = std::min(r1 + 1, header.nrRows - 1);
+        c0 = std::max(c0 - 1, 0);
+        c1 = std::min(c1 + 1, header.nrCols - 1);
 
+        #pragma omp parallel for if (r1 - r0 > 30)
         for (int row = r0; row <= r1; ++row)
         {
-            double y = header.llCorner.y + (header.nrRows - row - 0.5) * header.cellSize;
-            double x0 = header.llCorner.x + (c0 + 0.5) * header.cellSize;
+            const double y = header.llCorner.y + (header.nrRows - row - 0.5) * header.cellSize;
+            const double x0 = header.llCorner.x + (c0 + 0.5) * header.cellSize;
 
             double x = x0;
             for (int col = c0; col <= c1; ++col)
@@ -119,11 +112,12 @@ bool fillRasterWithShapeIndex(gis::Crit3DRasterGrid &raster, const Crit3DShapeHa
 
 bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGrid &newRaster,
                     const Crit3DShapeHandler &shapeHandler, const std::string &fieldName, double cellSizeRef = NODATA,
-                    int sampleGrid = 1, double coverageThreshold = 0.5,
-                    bool useReferenceRaster = true, bool showInfo = false)
-{
+                    int sampleGrid = 1, double coverageThreshold = 0.5, bool useReferenceRaster = true)
+{    
     if (useReferenceRaster)
     {
+        if (refRaster == nullptr || refRaster->header == nullptr)
+            return false;
         if (! newRaster.initializeGrid(*(refRaster->header)))
             return false;
     }
@@ -155,10 +149,7 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
     coverageThreshold = std::max(0.0, std::min(1.0, coverageThreshold));
 
     const int nrSamples = sampleGrid * sampleGrid;
-
-    int halfSamples = nrSamples / 2;
-    if (nrSamples % 2 == 1)
-        halfSamples++;
+    const int halfSamples = (nrSamples + 1) / 2;
 
     const int minPoints = std::max(1, static_cast<int>(std::ceil(coverageThreshold * nrSamples)));
 
@@ -184,19 +175,11 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
     }
 
     // tmp coverage raster
-    std::vector<uint8_t> coverageCount(nrRows * nrCols, 0);
-
-    FormInfo formInfo;
-    if (showInfo)
-    {
-        formInfo.start("Fill raster...", nrShape);
-    }
+    const size_t nrCells = static_cast<size_t>(nrRows) * static_cast<size_t>(nrCols);
+    std::vector<uint8_t> coverageCount(nrCells, 0);
 
     for (int shapeIndex = 0; shapeIndex < nrShape; ++shapeIndex)
     {
-        if (showInfo)
-            formInfo.setValue(shapeIndex);
-
         ShapeObject object;
         shapeHandler.getShape(shapeIndex, object);
 
@@ -219,14 +202,16 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
             c1 < 0 || c0 >= nrCols)
             continue;
 
-        r0 = MAXVALUE(r0 - 1, 0);
-        r1 = MINVALUE(r1 + 1, nrRows - 1);
-        c0 = MAXVALUE(c0 - 1, 0);
-        c1 = MINVALUE(c1 + 1, nrCols - 1);
+        r0 = std::max(r0 - 1, 0);
+        r1 = std::min(r1 + 1, nrRows - 1);
+        c0 = std::max(c0 - 1, 0);
+        c1 = std::min(c1 + 1, nrCols - 1);
 
-        #pragma omp parallel for
+        #pragma omp parallel for if (r1 - r0 > 30)
         for (int row = r0; row <= r1; ++row)
         {
+            const double yc = header.llCorner.y + (header.nrRows - row - 0.5) * header.cellSize;
+
             for (int col = c0; col <= c1; ++col)
             {
                 if (useReferenceRaster)
@@ -236,15 +221,14 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
                         continue;
                 }
 
-                const int index = row * nrCols + col;
+                const size_t index = static_cast<size_t>(row) * nrCols + col;
 
                 // just covered
                 const int currentCoverage = coverageCount[index];
                 if (currentCoverage >= halfSamples)
                     continue;
 
-                double xc, yc;
-                newRaster.getXY(row, col, xc, yc);
+                const double xc = header.llCorner.x + (col + 0.5) * header.cellSize;
 
                 uint8_t inside = 0;
                 int remaining = nrSamples;
@@ -278,9 +262,6 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
             }
         }
     }
-
-    if (showInfo)
-        formInfo.close();
 
     return true;
 }

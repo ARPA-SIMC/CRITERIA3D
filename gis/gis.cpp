@@ -313,6 +313,7 @@ namespace gis
 
     bool Crit3DRasterGrid::initializeGrid()
     {
+<<<<<<< HEAD
         value = new float*[unsigned(header->nrRows)]();
 
         for (int row = 0; row < header->nrRows; row++)
@@ -324,6 +325,25 @@ namespace gis
                 clear();
                 return false;
             }
+=======
+        const int nrRows = header->nrRows;
+        const int nrCols = header->nrCols;
+
+        if (nrRows <= 0 || nrCols <= 0)
+            return false;
+
+        try
+        {
+            value = new float*[nrRows]();       // () zero-initializes
+
+            for (int row = 0; row < nrRows; ++row)
+                value[row] = new float[nrCols];
+        }
+        catch (const std::bad_alloc&)
+        {
+            clear();                            // Memory error: file too big
+            return false;
+>>>>>>> 60f284df39760b6f37c5e1ca936734f48bed5c33
         }
 
         isLoaded = true;

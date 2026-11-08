@@ -27,7 +27,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <float.h>
-#include <algorithm>    // std::find
+#include <algorithm>
 #include <vector>
 
 #include "commonConstants.h"
@@ -59,6 +59,11 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
             return statistics::countBelow(values, nValues, param);
         case consecutiveDaysAbove:
             return statistics::countConsecutive(values, nValues, param, true);
+        case nonConsecutiveDaysAbove:
+        {
+            const int minimumGap = 3;
+            return statistics::countNotConsecutive(values, nValues, param, minimumGap, true);
+        }
         case consecutiveDaysBelow:
             return statistics::countConsecutive(values, nValues, param, false);
         case percentile:
@@ -811,6 +816,8 @@ namespace statistics
         free(X2Inverse);
         free(roots);
     }
+
+
     void weightedMultiRegressionLinearWithStatsNoOffset(const std::vector <std::vector <float>> &x, std::vector <float> &y, const std::vector <float> &weight,std::vector <float> &m,bool calculateR2, bool calculateStdError,float* R2, float* stdError, float *qSE,std::vector <float> &mSE)
     {
         int nrPredictors = int(x[0].size());
@@ -943,87 +950,46 @@ namespace statistics
         free(X2);
         free(X2Inverse);
         free(roots);
-
     }
 
 
-    void multiRegressionLinear(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors)
+    void multiRegressionLinear(float** x, float* y, long nrItems,
+                               float* q, float* m, int nrPredictors)
     {
-        double* SUMx;
-        double* SUMxx;
-        double* SUMxy;
-        double SUMy = 0;
-        SUMx = (double*)calloc(nrPredictors, sizeof(double));
-        SUMxx = (double*)calloc(nrPredictors, sizeof(double));
-        SUMxy = (double*)calloc(nrPredictors, sizeof(double));
-        for(int i = 0;i<nrPredictors;i++)
+        const int n = nrPredictors + 1;                     // unknowns: m[0..p-1], then q
+
+        std::vector<double> constantTerm(n, 0.0);
+        std::vector<double> roots(n, 0.0);
+        std::vector<std::vector<double>> A(n, std::vector<double>(n, 0.0));
+
+        for (int k = 0; k < nrPredictors; k++)
         {
-            SUMx[i] = 0.;
-            SUMxx[i] = 0.;
-            SUMxy[i] = 0.;
-            for (int j = 0; j<nrItems;j++)
+            for (int l = 0; l < nrPredictors; l++)
+                for (long j = 0; j < nrItems; j++)
+                    A[k][l] += (double)x[k][j] * x[l][j];      // cross-products
+
+            for (long j = 0; j < nrItems; j++)
             {
-                SUMx[i] += x[i][j];
-                SUMxx[i] += x[i][j]*x[i][j];
-                SUMxy[i] += x[i][j]*y[j];
+                A[k][nrPredictors] += x[k][j];                 // coefficient of q
+                constantTerm[k]    += (double)x[k][j] * y[j];
             }
-        }
-        for (int j = 0; j<nrItems;j++)
-        {
-            SUMy += y[j];
-        }
-        int matrixSize = nrPredictors+1;
-        double* roots = (double*)calloc(matrixSize, sizeof(double));
-        double* constantTerm=(double*)calloc(matrixSize, sizeof(double));
-        double** coefficientMatrix = (double**)calloc(matrixSize, sizeof(double*));
-        for(int i = 0;i<matrixSize;i++)
-        {
-            coefficientMatrix[i] = (double*)calloc(matrixSize, sizeof(double));
+            A[nrPredictors][k] = A[k][nrPredictors];           // symmetric
         }
 
-        // set the constant term
-        for (int j = 0; j<nrPredictors;j++)
-        {
-            constantTerm[j] = SUMxy[j];
-        }
-        constantTerm[nrPredictors] = SUMy;
-        // set the coefficient matrix
-        for (int k = 0; k<nrPredictors;k++)
-        {
-            for (int j = 0; j<matrixSize;j++)
-            {
-                if (k != j)
-                {
-                    coefficientMatrix[k][j] = SUMx[k];
-                }
-                else
-                {
-                    coefficientMatrix[k][j] = SUMxx[k];
-                }
-            }
-        }
-        for (int j = 0; j<nrPredictors;j++)
-        {
-            coefficientMatrix[nrPredictors][j] = SUMx[nrPredictors];
-        }
-        coefficientMatrix[nrPredictors][nrPredictors] = 1.0*nrItems;
+        A[nrPredictors][nrPredictors] = (double)nrItems;
+        for (long j = 0; j < nrItems; j++)
+            constantTerm[nrPredictors] += y[j];
 
-        matricial::linearSystemResolutionByCramerMethod(constantTerm,coefficientMatrix,matrixSize,roots);
-        for (int j = 0; j<nrPredictors;j++)
-        {
-            m[j] = (float)(roots[j]);
-        }
-        *q = (float)(roots[nrPredictors]);
+        // Cramer's method needs raw arrays, so adapt to your signature
+        std::vector<double*> rows(n);
+        for (int i = 0; i < n; i++) rows[i] = A[i].data();
 
-        for (int j = 0; j<matrixSize;j++)
-        {
-            free(coefficientMatrix[j]);
-        }
-        free(coefficientMatrix);
-        free(roots);
-        free(constantTerm);
-        free(SUMx);
-        free(SUMxx);
+        matricial::linearSystemResolutionByCramerMethod(constantTerm.data(), rows.data(), n, roots.data());
+
+        for (int k = 0; k < nrPredictors; k++)
+            m[k] = (float)roots[k];
+
+        *q = (float)roots[nrPredictors];
     }
 
 
@@ -1091,7 +1057,67 @@ namespace statistics
         *r2 = float((SUMres - SUM_dy) / SUMres);
     }
 
-    void linearRegression( std::vector<float> x,  std::vector<float> y, long nrItems, bool zeroIntercept, float* y_intercept, float* mySlope, float* r2)
+
+    void linearRegression(const std::vector<float>& x, const std::vector<float>& y,
+                          long nrItems, bool zeroIntercept,
+                          float* y_intercept, float* mySlope, float* r2)
+    {
+        // initialize
+        *mySlope = NODATA;              // slope of regression line
+        *y_intercept = NODATA;          // y intercept of regression line
+        *r2 = 0;                        // coefficient of determination
+
+        nrItems = std::min<long>(nrItems, std::min(x.size(), y.size()));
+
+        // pass 1: count valid pairs and compute means
+        long n = 0;
+        double sumX = 0, sumY = 0;
+        for (long i = 0; i < nrItems; i++)
+        {
+            if (isEqual(x[i], NODATA) || isEqual(y[i], NODATA)) continue;
+            n++;
+            sumX += x[i];
+            sumY += y[i];
+        }
+
+        if (n < (zeroIntercept ? 1 : 2))
+            return;
+
+        const double avgX = sumX / n;
+        const double avgY = sumY / n;
+
+        // pass 2: centered sums (about the origin if zeroIntercept)
+        const double refX = zeroIntercept ? 0.0 : avgX;
+        const double refY = zeroIntercept ? 0.0 : avgY;
+
+        // centered sums of squares and cross-products
+        double sxx = 0, sxy = 0, syy = 0;
+        for (long i = 0; i < nrItems; i++)
+        {
+            if (isEqual(x[i], NODATA) || isEqual(y[i], NODATA)) continue;
+            const double dx = (double)x[i] - refX;
+            const double dy = (double)y[i] - refY;
+            sxx += dx * dx;
+            sxy += dx * dy;
+            syy += dy * dy;
+        }
+
+        if (sxx <= 0)                       // all x equal (or all zero): slope undefined
+            return;
+
+        const double slope = sxy / sxx;
+        *mySlope = static_cast<float>(slope);
+        *y_intercept = zeroIntercept ? 0.f : static_cast<float>(avgY - slope * avgX);
+
+        if (syy > 0)                        // all y equal: R2 undefined
+        {
+            const double sse = syy - slope * sxy;   // residual sum of squares of the LS fit
+            *r2 = static_cast<float>(1.0 - sse / syy);
+        }
+    }
+
+
+    void linearRegression_old( std::vector<float> x,  std::vector<float> y, long nrItems, bool zeroIntercept, float* y_intercept, float* mySlope, float* r2)
     {
        double SUMx = 0;         /*!< sum of x values */
        double SUMy = 0;         /*!< sum of y values */
@@ -1601,7 +1627,7 @@ namespace statistics
     }
 
 
-    float maxList(std::vector<float> values, int nValue)
+    float maxList(const std::vector<float> &values, int nValue)
     {
         if (nValue == 0)
             return NODATA;
@@ -1619,7 +1645,7 @@ namespace statistics
     }
 
 
-    float minList(std::vector<float> values, int nValue)
+    float minList(const std::vector<float> &values, int nValue)
     {
         if (nValue == 0)
             return NODATA;
@@ -1637,48 +1663,51 @@ namespace statistics
     }
 
 
-    float sumList(std::vector<float> values, int nValue)
+    float sumList(const std::vector<float> &values, int nValue)
     {
-        float sum = 0;
-
         if (nValue == 0)
             return NODATA;
 
+        nValue = std::min(nValue, static_cast<int>(values.size()));
+        float sum = 0;
+
         for (int i = 0; i < nValue; i++)
         {
-            if (values[i] != NODATA)
-                sum += values[i] ;
+            if (! isEqual(values[i], NODATA))
+                sum += values[i];
         }
 
         return sum;
     }
 
-    float sumListThreshold(std::vector<float> values, int nValue, float threshold)
+
+    float sumListThreshold(const std::vector<float> &values, int nValue, float threshold)
     {
-
-        float sum = 0;
-
         if (nValue == 0 || threshold == NODATA)
             return NODATA;
 
+        nValue = std::min(nValue, static_cast<int>(values.size()));
+        float sum = 0;
+
         for (int i = 0; i < nValue; i++)
         {
-            if ((values[i] > threshold) && (values[i] != NODATA))
+            if (values[i] > threshold && ! isEqual(values[i], NODATA))
             {
-                sum += ( values[i] - threshold);
+                sum += (values[i] - threshold);
             }
         }
 
         return sum;
     }
 
-    float diffListThreshold(std::vector<float> values, int nValue, float threshold)
+
+    float diffListThreshold(const std::vector<float> &values, int nValue, float threshold)
     {
-
-        float diff = 0;
-
         if (nValue == 0 || threshold == NODATA)
             return NODATA;
+
+        float diff = 0;
+        nValue = std::min(nValue, static_cast<int>(values.size()));
 
         for (int i = 0; i < nValue; i++)
         {
@@ -1692,110 +1721,108 @@ namespace statistics
     }
 
 
-    float countAbove(std::vector<float> values, int nValue, float threshold)
+    float countAbove(const std::vector<float>& values, int nValue, float threshold)
     {
+        int countAbove = 0;
 
-        float countAbove = 0;
-
-        if (nValue == 0 || threshold == NODATA)
+        if (nValue == 0 || isEqual(threshold, NODATA))
             return NODATA;
+
+        nValue = std::min(nValue, static_cast<int>(values.size()));
 
         for (int i = 0; i < nValue; i++)
         {
-            if ((values[i] > threshold)&& (values[i] != NODATA))
+            if (values[i] > threshold && !isEqual(values[i], NODATA))
             {
                 countAbove++;
             }
         }
 
-        return countAbove;
+        return static_cast<float>(countAbove);
     }
 
-    float countBelow(std::vector<float> values, int nValue, float threshold)
+
+    float countBelow(const std::vector<float> &values, int nValue, float threshold)
     {
+        int countBelow = 0;
 
-        float countBelow = 0;
-
-        if (nValue == 0 || threshold == NODATA)
+        if (nValue == 0 || isEqual(threshold, NODATA))
             return NODATA;
+
+        nValue = std::min(nValue, static_cast<int>(values.size()));
 
         for (int i = 0; i < nValue; i++)
         {
-            if ((values[i] < threshold) && (values[i] != NODATA))
+            if ((values[i] < threshold) && !isEqual(values[i], NODATA))
             {
                 countBelow++;
             }
         }
 
-        return countBelow;
+        return static_cast<float>(countBelow);
     }
 
-    float countConsecutive(std::vector<float> values, int nValue, float threshold, bool isPositive)
+
+    float countConsecutive(const std::vector<float>& values, int nValue,
+                           float threshold, bool isPositive)
     {
-
-        float countConsecutive = 0;
-
-        if (nValue == 0 || threshold == NODATA)
+        if (nValue <= 0 || isEqual(threshold, NODATA))
             return NODATA;
 
-        bool inPeriod = false;
-        int nPeriod = 0;
+        nValue = std::min(nValue, static_cast<int>(values.size()));
 
-        std::vector<float> myListNumDays;
-        myListNumDays.push_back(0);
+        int current = 0;
+        int best = 0;
 
         for (int i = 0; i < nValue; i++)
         {
-            if (values[i] != NODATA)
+            if (!isEqual(values[i], NODATA) && compareValue(values[i], threshold, isPositive))
             {
-                if (inPeriod == false)
-                {
-                    if (compareValue( values[i], threshold, isPositive))
-                    {
-                        inPeriod = true;
-                        myListNumDays[nPeriod]++;
-                    }
-                }
-                else
-                {
-                    if (compareValue( values[i], threshold, isPositive))
-                    {
-                        myListNumDays[nPeriod]++;
-                        if (i == (nValue - 1))
-                        {
-                            nPeriod++;
-                            myListNumDays.push_back(0);
-                        }
-                    }
-                    else
-                    {
-                        nPeriod++;
-                        myListNumDays.push_back(0);
-                        inPeriod = false;
-                    }
-                }
+                current++;
+                best = std::max(best, current);
             }
-            else if (inPeriod == true)
+            else
             {
-                nPeriod++;
-                myListNumDays.push_back(0);
-                inPeriod = false;
+                current = 0;   // threshold not met or missing data breaks the run
             }
         }
-        if (nPeriod == 0)
-        {
-            countConsecutive = 0;
-        }
-        else
-        {
-            countConsecutive = statistics::maxList(myListNumDays, nPeriod);
-        }
 
-        return countConsecutive;
-
+        return static_cast<float>(best);
     }
 
-    float frequencyPositive(std::vector<float> values, int nValue)
+
+    float countNotConsecutive(const std::vector<float>& values, int nValue,
+                                float threshold, int minimumGap, bool isPositive)
+    {
+        if (nValue <= 0 || isEqual(threshold, NODATA))
+            return NODATA;
+
+        nValue = std::min(nValue, static_cast<int>(values.size()));
+        minimumGap = std::max(minimumGap, 1);
+
+        int nrEvents = 0;
+        int currentGap = minimumGap;   // the first event needs no preceding gap
+
+        for (int i = 0; i < nValue; i++)
+        {
+            if (!isEqual(values[i], NODATA) && compareValue(values[i], threshold, isPositive))
+            {
+                if (currentGap >= minimumGap)
+                    nrEvents++;
+
+                currentGap = 0;
+            }
+            else
+            {
+                currentGap++;
+            }
+        }
+
+        return static_cast<float>(nrEvents);
+    }
+
+
+    float frequencyPositive(const std::vector<float> &values, int nValue)
     {
 
         if (nValue <= 0)
@@ -1815,7 +1842,7 @@ namespace statistics
 
     }
 
-    float trend(std::vector<float> values, int nValues, float myFirstYear)
+    float trend(const std::vector<float> &values, int nValues, float myFirstYear)
     {
 
         float trend;
@@ -1837,7 +1864,7 @@ namespace statistics
 
     }
 
-    float mannKendall(std::vector<float> values, int nValues)
+    float mannKendall(const std::vector<float> &values, int nValues)
     {
 
         double variable;
