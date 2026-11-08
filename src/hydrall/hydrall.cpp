@@ -1702,9 +1702,9 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     //outputC calculation for RothC model. necessario [t C/ha] ora in kgDM m-2
     //natural death
     outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
-              statePlant.treeBiomassRoot/plant.fineRootLongevity * CARBONFACTOR * 10;
+              statePlant.treeBiomassRoot/plant.fineRootLongevity ;
 
-    statePlant.treeBiomassFoliage -= (statePlant.treeBiomassFoliage/plant.foliageLongevity);
+    statePlant.treeBiomassFoliage -= (statePlant.treeBiomassFoliage/plant.foliageLongevity); //todo: spostare sotto, alrtimenti questo azzera tutti i calcoli successivi
     statePlant.treeBiomassSapwood -= (statePlant.treeBiomassSapwood/plant.sapwoodLongevity);
     statePlant.treeBiomassRoot -= (statePlant.treeBiomassRoot/plant.fineRootLongevity);
 
@@ -1713,7 +1713,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     statePlant.treeBiomassFoliage -= statePlant.treeBiomassFoliage * distributedWildfireLoss * 1; //foliage is completely lost in the event of a wildfire
     outputC += statePlant.treeBiomassRoot * distributedWildfireLoss * 1; //roots are preserved but dead and become input for carbon model
     statePlant.treeBiomassRoot -= statePlant.treeBiomassRoot * distributedWildfireLoss * 1;
-    outputC += statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage; //40% or 80% of sapwood is lost based on species
+    outputC += statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage; //40% or 80% of sapwood is lost based on species ; controlla TODO perché risulta 0
     statePlant.treeBiomassSapwood -= statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage;
 
     //woodland management
@@ -1760,7 +1760,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     //annual stand growth
     if (isFirstYearSimulation)
     {
-        annualGrossStandGrowth = statePlant.treeNetPrimaryProduction / CARBONFACTOR; //conversion to kg DM m-2
+        annualGrossStandGrowth = statePlant.treeNetPrimaryProduction / CARBONFACTOR; //conversion? to kg DM m-2
         internalCarbonStorage = 0;
     }
     else
@@ -1788,7 +1788,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
         myFile.close();
     }*/
 
-    if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
+    if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1)) //todo: diviso infinito
     {
         statePlant.treeBiomassFoliage = MAXVALUE(statePlant.treeBiomassFoliage + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
         statePlant.treeBiomassRoot = MAXVALUE(statePlant.treeBiomassRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
@@ -1796,8 +1796,8 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     }
     // TODO manca il computo del volume sia generale che incrementale vedi funzione grstand.for
 
-
-    isFirstYearSimulation = false;
+    outputC *= CARBONFACTOR * 10;
+    //isFirstYearSimulation = false; //dovrebbe essere fuori
     return true;
 }
 

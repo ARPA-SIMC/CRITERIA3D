@@ -6226,8 +6226,8 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtm
         const QDate firstDate = std::max(firstMeteoDate, this->meteoGridDbHandler->getFirstDailyDate());
 
         std::string assignNearestId;
-        unsigned int assignNearestRow;
-        unsigned int assignNearestCol;
+        int nearestRow = NODATA;
+        int nearestCol = NODATA;
         for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
         {
             for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
@@ -6252,25 +6252,25 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtm
                 {
                     minimumDistance = myDistance;
                     assignNearestId = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id;
-                    assignNearestRow = row;
-                    assignNearestCol = col;
+                    nearestRow = row;
+                    nearestRow = col;
                     isMeteoPointFound = true;
                 }
             }
         }
 
-        if (isMeteoPointFound)
+        if (isMeteoPointFound && nearestRow != NODATA && nearestCol != NODATA)
         {
             meteoGridDbHandler->loadGridDailyMeteoPrec(errorString, QString::fromStdString(assignNearestId), firstDate, lastDate);
-            if (! waterTableAssignMeteoData(meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol), firstDate))
+            if (! waterTableAssignMeteoData(meteoGridDbHandler->meteoGrid()->meteoPointPointer(nearestRow, nearestCol), firstDate))
             {
                 return false;
             }
 
-            linkedMeteoPoint->id = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->id;
-            linkedMeteoPoint->name = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->name;
-            linkedMeteoPoint->latitude = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->latitude;
-            linkedMeteoPoint->obsDataD = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol)->obsDataD;
+            linkedMeteoPoint->id = meteoGridDbHandler->meteoGrid()->meteoPointPointer(nearestRow, nearestCol)->id;
+            linkedMeteoPoint->name = meteoGridDbHandler->meteoGrid()->meteoPointPointer(nearestRow, nearestCol)->name;
+            linkedMeteoPoint->latitude = meteoGridDbHandler->meteoGrid()->meteoPointPointer(nearestRow, nearestCol)->latitude;
+            linkedMeteoPoint->obsDataD = meteoGridDbHandler->meteoGrid()->meteoPointPointer(nearestRow, nearestCol)->obsDataD;
         }
     }
     else
