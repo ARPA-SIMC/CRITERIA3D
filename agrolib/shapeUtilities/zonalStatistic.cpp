@@ -14,25 +14,28 @@
 std::vector <std::vector<int>> computeMatrixAnalysis(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
                           gis::Crit3DRasterGrid &rasterRef, gis::Crit3DRasterGrid &rasterVal, std::vector<int> &vectorNull)
 {
-    unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
-    unsigned int nrValShapes = unsigned(shapeVal.getShapeCount());
+    const unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
+    const unsigned int nrValShapes = unsigned(shapeVal.getShapeCount());
 
     // analysis matrix
     vectorNull.clear();
     vectorNull.resize(nrRefShapes, 0);
     std::vector <std::vector<int>> matrix(nrRefShapes, std::vector<int>(nrValShapes, 0));
 
-    double x, y;
-    int rowVal, colVal;
-    int flagRef = int(rasterRef.header->flag);
-    int flagVal = int(rasterVal.header->flag);
+    if (rasterRef.header == nullptr || rasterVal.header == nullptr)
+        return matrix;
+
+    const int flagRef = int(rasterRef.header->flag);
+    const int flagVal = int(rasterVal.header->flag);
+
     for (int row = 0; row < rasterRef.header->nrRows; row++)
     {
         for (int col = 0; col < rasterRef.header->nrCols; col++)
         {
-            int refIndex = int(rasterRef.value[row][col]);
-            if (refIndex != flagRef && refIndex >= 0 && refIndex < signed(nrRefShapes))
+            const int refIndex = int(rasterRef.value[row][col]);
+            if (refIndex != flagRef && refIndex >= 0 && refIndex < static_cast<int>(nrRefShapes))
             {
+                double x, y;
                 rasterRef.getXY(row, col, x, y);
                 if (gis::isOutOfGridXY(x, y, rasterVal.header))
                 {
@@ -40,15 +43,18 @@ std::vector <std::vector<int>> computeMatrixAnalysis(Crit3DShapeHandler &shapeRe
                     continue;
                 }
 
+                int rowVal, colVal;
                 gis::getRowColFromXY(*(rasterVal.header), x, y, rowVal, colVal);
 
-                int valIndex = int(rasterVal.value[rowVal][colVal]);
+                const int valIndex = int(rasterVal.value[rowVal][colVal]);
                 if (valIndex != flagVal && valIndex >= 0 && valIndex < signed(nrValShapes))
                 {
                     matrix[unsigned(refIndex)][unsigned(valIndex)]++;
                 }
                 else
+                {
                     vectorNull[unsigned(refIndex)]++;
+                }
             }
         }
     }
@@ -60,7 +66,7 @@ std::vector <std::vector<int>> computeMatrixAnalysis(Crit3DShapeHandler &shapeRe
 std::vector <std::vector<int>> computeMatrixAnalysisRaster(const Crit3DShapeHandler &shapeRef, const gis::Crit3DRasterGrid &rasterVal,
                                                            std::vector<int> &categories, std::vector<int> &vectorNull)
 {
-    unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
+    const unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
 
     // extract categories from rasterVal
     categories.clear();
@@ -73,25 +79,30 @@ std::vector <std::vector<int>> computeMatrixAnalysisRaster(const Crit3DShapeHand
         categoryIndex[categories[i]] = i;
     }
 
-    // create reference raster from shapefile (same header of rasterVal)
-    gis::Crit3DRasterGrid rasterRef;
-    rasterRef.initializeGrid(*(rasterVal.header));
-    fillRasterWithShapeIndex(rasterRef, shapeRef);
-
     // analysis matrix
     vectorNull.clear();
     vectorNull.resize(nrRefShapes, 0);
     std::vector <std::vector<int>> matrix(nrRefShapes, std::vector<int>(nrCategories, 0));
 
-    int flagInt = int(rasterRef.header->flag);
+    // check
+    if (rasterVal.header == nullptr)
+        return matrix;
+
+    // create reference raster from shapefile (same header of rasterVal)
+    gis::Crit3DRasterGrid rasterRef;
+    rasterRef.initializeGrid(*(rasterVal.header));
+    fillRasterWithShapeIndex(rasterRef, shapeRef);
+
+    const int flagInt = int(rasterVal.header->flag);
+
     for (int row = 0; row < rasterRef.header->nrRows; row++)
     {
         for (int col = 0; col < rasterRef.header->nrCols; col++)
         {
-            int refIndex = int(rasterRef.value[row][col]);
+            const int refIndex = int(rasterRef.value[row][col]);
             if (refIndex != flagInt && refIndex >= 0 && refIndex < static_cast<int>(nrRefShapes))
             {
-                int valueInt = int(rasterVal.value[row][col]);
+                const int valueInt = int(rasterVal.value[row][col]);
                 if (valueInt == flagInt)
                 {
                     vectorNull[refIndex]++;
@@ -102,7 +113,7 @@ std::vector <std::vector<int>> computeMatrixAnalysisRaster(const Crit3DShapeHand
 
                 if (it != categoryIndex.end())
                 {
-                    int valIndex = it->second;
+                    const int valIndex = it->second;
                     matrix[refIndex][valIndex]++;
                 }
                 else
@@ -118,7 +129,7 @@ std::vector <std::vector<int>> computeMatrixAnalysisRaster(const Crit3DShapeHand
 
 
 bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, const Crit3DShapeHandler& shapeVal,
-                          const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+                          const std::vector <std::vector<int>> &matrix, const std::vector<int> &vectorNull,
                           const std::string &valField, const std::string &valFieldOutput,
                           const std::string &aggregationType, double threshold, std::string& errorStr)
 {
@@ -160,7 +171,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, const Crit3DShapeHandler
     }
 
     // check DBF field type
-    const DBFFieldType fieldType = shapeVal.getFieldType(fieldIndex);
+    DBFFieldType fieldType = shapeVal.getFieldType(fieldIndex);
     if (! (fieldType == FTInteger || fieldType == FTDouble))
     {
         errorStr = "Unsupported DBF field type.";
@@ -176,11 +187,13 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, const Crit3DShapeHandler
     std::vector<int> validPoints(nrRefShapes, 0);
     std::vector<double> aggregationValues(nrRefShapes, NODATA);
 
+    #pragma omp parallel for if (nrRefShapes > 30)
     for (size_t row = 0; row < nrRefShapes; ++row)
     {
         double currentValue = NODATA;
         double sumValues = 0.0;
         bool isFirstValue = true;
+        int nullPoints = vectorNull[row];
 
         for (size_t col = 0; col < nrValShapes; ++col)
         {
@@ -192,7 +205,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, const Crit3DShapeHandler
 
             if (isEqual(value, NODATA))
             {
-                vectorNull[row] += nrPoints;
+                nullPoints += nrPoints;
             }
             else
             {
@@ -223,8 +236,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, const Crit3DShapeHandler
         bool isValid = false;
         if (validPoints[row] > 0)
         {
-            double validPercentage = double(validPoints[row])
-                                     / double(validPoints[row] + vectorNull[row]);
+            double validPercentage = double(validPoints[row]) / double(validPoints[row] + nullPoints);
 
             if (validPercentage >= threshold)
                 isValid = true;
@@ -248,12 +260,27 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, const Crit3DShapeHandler
         }
     }
 
-    // add output field to shapeRef
-    if (! shapeRef.addField(valFieldOutput.c_str(), fieldType, shapeVal.nWidthField(fieldIndex),
-                           shapeVal.nDecimalsField(fieldIndex)))
+    int nrWidth = shapeVal.nWidthField(fieldIndex);
+    int nrDecimals = shapeVal.nDecimalsField(fieldIndex);
+
+    // forcing double for average values
+    if (isAvg && fieldType != FTDouble)
     {
-        errorStr = "Error writing field: " + valFieldOutput;
-        return false;
+        fieldType = FTDouble;
+        nrDecimals = 3;
+        nrWidth += nrDecimals + 1;
+    }
+
+    // ----------------------------
+    // CREATE OUTPUT FIELD
+    // ----------------------------
+    if (!shapeRef.existField(valFieldOutput))
+    {
+        if (! shapeRef.addField(valFieldOutput.c_str(), fieldType, nrWidth, nrDecimals))
+        {
+            errorStr = "Error writing field: " + valFieldOutput;
+            return false;
+        }
     }
 
     const int outputFieldIndex = shapeRef.getDBFFieldIndex(valFieldOutput.c_str());
@@ -320,6 +347,7 @@ bool zonalStatisticsVector( const std::vector<std::vector<int>>& matrix, const s
     outputValues.assign(nrRefShapes, NODATA);
 
     // aggregation cycle
+    #pragma omp parallel for if (nrRefShapes > 30)
     for (size_t row = 0; row < nrRefShapes; ++row)
     {
         double currentValue = NODATA;
@@ -368,9 +396,7 @@ bool zonalStatisticsVector( const std::vector<std::vector<int>>& matrix, const s
         if (validPoints == 0)
             continue;
 
-        const double validFraction =
-            double(validPoints) /
-            double(validPoints + nullPoints);
+        const double validFraction = double(validPoints) / double(validPoints + nullPoints);
 
         if (validFraction >= threshold)
         {
@@ -389,8 +415,9 @@ bool zonalStatisticsVector( const std::vector<std::vector<int>>& matrix, const s
 }
 
 
+/*
 bool zonalStatisticsShapeMajority_old(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
-                          const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+                          const std::vector <std::vector<int>> &matrix, const std::vector<int> &vectorNull,
                           const std::string &valField, const std::string &fieldOutput,
                           double threshold, std::string &errorStr)
 {
@@ -430,6 +457,7 @@ bool zonalStatisticsShapeMajority_old(Crit3DShapeHandler &shapeRef, Crit3DShapeH
         vectorValuesDouble.clear();
         vectorValuesInt.clear();
         vectorNrElements.clear();
+        int nullPoints = vectorNull[row];
         int validPoints = 0;
 
         for (unsigned int col = 0; col < nrValShapes; col++)
@@ -442,7 +470,7 @@ bool zonalStatisticsShapeMajority_old(Crit3DShapeHandler &shapeRef, Crit3DShapeH
                     double value = shapeVal.getNumericValue(int(col), fieldIndex);
                     if (isEqual(value, NODATA))
                     {
-                        vectorNull[row] += nrPoints;
+                        nullPoints += nrPoints;
                     }
                     else
                     {
@@ -487,7 +515,7 @@ bool zonalStatisticsShapeMajority_old(Crit3DShapeHandler &shapeRef, Crit3DShapeH
                     std::string strValue = shapeVal.readStringAttribute(signed(col),fieldIndex);
                     if (strValue == "" || strValue == "-9999" || strValue == "******")
                     {
-                        vectorNull[row] += nrPoints;
+                        nullPoints += nrPoints;
                     }
                     else
                     {
@@ -512,9 +540,9 @@ bool zonalStatisticsShapeMajority_old(Crit3DShapeHandler &shapeRef, Crit3DShapeH
 
         // check validity
         bool isValid = false;
-        if ((validPoints + vectorNull[row]) > 0)
+        if ((validPoints + nullPoints) > 0)
         {
-            double validPercentage = double(validPoints) / double(validPoints + vectorNull[row]);
+            double validPercentage = double(validPoints) / double(validPoints + nullPoints);
             isValid = (validPercentage >= threshold);
         }
 
@@ -574,10 +602,11 @@ bool zonalStatisticsShapeMajority_old(Crit3DShapeHandler &shapeRef, Crit3DShapeH
 
     return true;
 }
+*/
 
 
 bool zonalStatisticsShapeMajority( Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
-        const std::vector<std::vector<int>> &matrix, std::vector<int> &vectorNull,
+        const std::vector<std::vector<int>> &matrix, const std::vector<int> &vectorNull,
         const std::string &valField, const std::string &fieldOutput,
         double threshold, std::string &errorStr)
 {
@@ -609,30 +638,48 @@ bool zonalStatisticsShapeMajority( Crit3DShapeHandler &shapeRef, Crit3DShapeHand
         }
     }
 
-    int fieldOutputIndex = shapeRef.getDBFFieldIndex(fieldOutput.c_str());
+    const int fieldOutputIndex = shapeRef.getDBFFieldIndex(fieldOutput.c_str());
 
     const unsigned int nrRefShapes = shapeRef.getShapeCount();
     const unsigned int nrValShapes = shapeVal.getShapeCount();
 
+    // preload values
+    std::vector<double> values(nrValShapes);
+    std::vector<std::string> valuesStr(nrValShapes);
+    for (size_t col = 0; col < nrValShapes; ++col)
+    {
+        if (isNumeric)
+            values[col] = shapeVal.getNumericValue(static_cast<int>(col), fieldIndex);
+        else
+            valuesStr[col] = shapeVal.readStringAttribute(static_cast<int>(col), fieldIndex);
+    }
+
+    // output values
+    std::vector<double> outputValues(nrRefShapes, NODATA);
+    std::vector<std::string> outputValuesStr(nrRefShapes, "");
+
+    #pragma omp parallel for if (nrRefShapes > 30)
     for (unsigned int row = 0; row < nrRefShapes; ++row)
     {
         long validPoints = 0;
         std::unordered_map<std::string, long> freqStr;
         std::unordered_map<int, long> freqInt;
         std::unordered_map<double, long> freqDouble;
+        int nullPoints = vectorNull[row];
 
         for (unsigned int col = 0; col < nrValShapes; ++col)
         {
-            int nrPoints = matrix[row][col];
-            if (nrPoints <= 0) continue;
+            const int nrPoints = matrix[row][col];
+            if (nrPoints <= 0)
+                continue;
 
             if (isNumeric)
             {
-                double value = shapeVal.getNumericValue(col, fieldIndex);
+                const double value = values[col];
 
                 if (isEqual(value, NODATA))
                 {
-                    vectorNull[row] += nrPoints;
+                    nullPoints += nrPoints;
                     continue;
                 }
 
@@ -649,11 +696,11 @@ bool zonalStatisticsShapeMajority( Crit3DShapeHandler &shapeRef, Crit3DShapeHand
             }
             else // STRING
             {
-                std::string value = shapeVal.readStringAttribute(col, fieldIndex);
+                const std::string& value = valuesStr[col];
 
                 if (value.empty() || value == "-9999" || value == "******")
                 {
-                    vectorNull[row] += nrPoints;
+                    nullPoints += nrPoints;
                     continue;
                 }
 
@@ -667,25 +714,14 @@ bool zonalStatisticsShapeMajority( Crit3DShapeHandler &shapeRef, Crit3DShapeHand
         // ----------------------------
         bool isValid = false;
 
-        if ((validPoints + vectorNull[row]) > 0)
+        if ((validPoints + nullPoints) > 0)
         {
-            double perc = double(validPoints) /
-                          double(validPoints + vectorNull[row]);
-
-            isValid = (perc >= threshold);
+            const double percentage = double(validPoints) / double(validPoints + nullPoints);
+            isValid = (percentage >= threshold);
         }
 
         if (! isValid)
-        {
-            if (fieldType == FTInteger)
-                shapeRef.writeIntAttribute(row, fieldOutputIndex, NODATA);
-            else if (fieldType == FTDouble)
-                shapeRef.writeDoubleAttribute(row, fieldOutputIndex, NODATA);
-            else
-                shapeRef.writeStringAttribute(row, fieldOutputIndex, "");
-
             continue;
-        }
 
         // ----------------------------
         // FIND MAJORITY
@@ -705,7 +741,7 @@ bool zonalStatisticsShapeMajority( Crit3DShapeHandler &shapeRef, Crit3DShapeHand
                 }
             }
 
-            shapeRef.writeIntAttribute(row, fieldOutputIndex, majority);
+            outputValues[row] = majority;
         }
         else if (fieldType == FTDouble)
         {
@@ -720,7 +756,7 @@ bool zonalStatisticsShapeMajority( Crit3DShapeHandler &shapeRef, Crit3DShapeHand
                 }
             }
 
-            shapeRef.writeDoubleAttribute(row, fieldOutputIndex, majority);
+            outputValues[row] = majority;
         }
         else // STRING
         {
@@ -735,8 +771,19 @@ bool zonalStatisticsShapeMajority( Crit3DShapeHandler &shapeRef, Crit3DShapeHand
                 }
             }
 
-            shapeRef.writeStringAttribute(row, fieldOutputIndex, majority.c_str());
+            outputValuesStr[row] = majority;
         }
+    }
+
+    // write output
+    for (unsigned int row = 0; row < nrRefShapes; ++row)
+    {
+        if (fieldType == FTInteger)
+            shapeRef.writeIntAttribute(row, fieldOutputIndex, static_cast<int>(outputValues[row]));
+        else if (fieldType == FTDouble)
+            shapeRef.writeDoubleAttribute(row, fieldOutputIndex, outputValues[row]);
+        else if (fieldType == FTString)
+            shapeRef.writeStringAttribute(row, fieldOutputIndex, outputValuesStr[row].c_str());
     }
 
     // close and re-open to write also the last shape
@@ -759,9 +806,10 @@ bool zonalStatisticsShapeCategories_proportional(Crit3DShapeHandler &shapeRef, c
     std::vector<bool> isShapeValid(nrRefShapes, false);
     std::vector<long> nrOfVotes(nrCategories, 0);
 
+    const double pixelArea = cellSize * cellSize;
+
     long nrValidVotes = 0;
     int nrValidSeats = 0;
-    double pixelArea = cellSize * cellSize;
 
     for (unsigned int row = 0; row < nrRefShapes; row++)
     {
@@ -770,26 +818,23 @@ bool zonalStatisticsShapeCategories_proportional(Crit3DShapeHandler &shapeRef, c
 
         for (unsigned int col = 0; col < nrCategories; ++col)
         {
-            int count = rowMatrix[col];
+            const int currentCount = rowMatrix[col];
 
-            if (count > 0)
-                nrCurrentValues += count;
+            if (currentCount > 0)
+                nrCurrentValues += currentCount;
         }
 
         if (nrCurrentValues > 0)
         {
             ShapeObject currentShape;
             if (! shapeRef.getShape(row, currentShape))
-            {
-                errorStr = "wrong shape.";
-                return false;
-            }
-
-            double totalArea = currentShape.getTotalArea();
-            if (isEqual(totalArea, 0.0))
                 continue;
 
-            double validAreaPercentage = (nrCurrentValues * pixelArea) / totalArea;
+            const double totalArea = currentShape.getTotalArea();
+            if (totalArea <= 0.0)
+                continue;
+
+            const double validAreaPercentage = (nrCurrentValues * pixelArea) / totalArea;
 
             if (validAreaPercentage >= threshold)
             {
@@ -799,7 +844,9 @@ bool zonalStatisticsShapeCategories_proportional(Crit3DShapeHandler &shapeRef, c
                 nrValidVotes += nrCurrentValues;
 
                 for (unsigned int col = 0; col < nrCategories; ++col)
+                {
                     nrOfVotes[col] += rowMatrix[col];
+                }
             }
         }
     }
@@ -1015,30 +1062,31 @@ bool zonalStatisticsShapeCategories_majority(Crit3DShapeHandler &shapeRef, const
         }
     }
 
-    int fieldIndex = shapeRef.getDBFFieldIndex(fieldName.c_str());
+    const int fieldIndex = shapeRef.getDBFFieldIndex(fieldName.c_str());
 
     const unsigned int nrRefShapes = shapeRef.getShapeCount();
     const size_t nrCategories = categories.size();
-    double pixelArea = cellSize * cellSize;
+    const double pixelArea = cellSize * cellSize;
 
     for (unsigned int row = 0; row < nrRefShapes; row++)
     {
         long nrCurrentValues = 0;
         int maxCount = 0;
         int majorityValue = NODATA;
+
         const auto& rowMatrix = matrix[row];
 
         for (unsigned int col = 0; col < nrCategories; ++col)
         {
-            int count = rowMatrix[col];
+            const int currentCount = rowMatrix[col];
 
-            if (count > 0)
+            if (currentCount > 0)
             {
-                nrCurrentValues += count;
+                nrCurrentValues += currentCount;
 
-                if (count > maxCount)
+                if (currentCount > maxCount)
                 {
-                    maxCount = count;
+                    maxCount = currentCount;
                     majorityValue = categories[col];
                 }
             }
@@ -1050,20 +1098,15 @@ bool zonalStatisticsShapeCategories_majority(Crit3DShapeHandler &shapeRef, const
         if (nrCurrentValues > 0)
         {
             ShapeObject currentShape;
-
-            if (! shapeRef.getShape(row, currentShape))
+            if (shapeRef.getShape(row, currentShape))
             {
-                errorStr = "Wrong shape.";
-                return false;
+                const double totalArea = currentShape.getTotalArea();
+                if (totalArea > 0)
+                {
+                    const double validAreaPercentage = (nrCurrentValues * pixelArea) / totalArea;
+                    isValid = (validAreaPercentage >= threshold);
+                }
             }
-
-            double totalArea = currentShape.getTotalArea();
-            if (isEqual(totalArea, 0.0))
-                continue;
-
-            double validAreaPercentage = (nrCurrentValues * pixelArea) / totalArea;
-
-            isValid = (validAreaPercentage >= threshold);
         }
 
         if (isValid)

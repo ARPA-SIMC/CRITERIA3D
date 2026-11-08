@@ -115,7 +115,7 @@
         int getNrParts() const { return m_parts; }
         int getNrHoles() const { return m_holes; }
 
-        bool getBounds(double &xmin, double &xmax, double &ymin, double &ymax) const;
+        bool getBounds(double &xMin, double &xMax, double &yMin, double &yMax) const;
     };
 
 

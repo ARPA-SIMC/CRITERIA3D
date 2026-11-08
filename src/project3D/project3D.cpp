@@ -2212,7 +2212,7 @@ bool Project3D::computeMinimumFoS(gis::Crit3DRasterGrid &outputRaster)
     const double MINIMUM_DEPTH = 0.15;                          // [m]
 
     int firstLayer = 1;
-    while(firstLayer < layerDepth.size() && layerDepth[firstLayer] < MINIMUM_DEPTH )
+    while(firstLayer < (int)layerDepth.size() && layerDepth[firstLayer] < MINIMUM_DEPTH )
         firstLayer++;
 
     for (int row = 0; row < indexMap.at(0).header->nrRows; row++)

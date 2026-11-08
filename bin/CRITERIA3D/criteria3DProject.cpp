@@ -712,7 +712,7 @@ bool Crit3DProject::updateHydrall(const QDate &myDate)
             if(surfaceIndex == indexMap.at(0).header->flag)
                 continue;
 
-            //se firstDayOfYear, scrivi le mappe (mensili?) di LAI, biomassa, etc
+            //se firstDayOfYear, scrivi le mappe (mensili?) di LAI, biomassa, etc TODO
             //TODO, togliere?
             std::string myError;
             if (! gis::writeEsriGrid(getCompleteFileName("treeNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.treeNetPrimaryProduction, myError))
@@ -731,10 +731,13 @@ bool Crit3DProject::updateHydrall(const QDate &myDate)
             hydrallModel.weatherVariable.setYearlyET0(hydrallMaps.yearlyET0->getValueFromRowCol(row, col));
             hydrallModel.weatherVariable.setYearlyPrec(hydrallMaps.yearlyPrec->getValueFromRowCol(row, col));
 
+            hydrallModel.setStateVariables(hydrallMaps, row, col);
             hydrallModel.simplifiedGrowthStand(); // TODO quit this line - temporary position to prompt check
+            hydrallMaps.outputC->value[row][col] = hydrallModel.getOutputC(); //o qualcosa del genere
 
             hydrallModel.resetStandVariables();
-
+            hydrallMaps.treeNetPrimaryProduction->value[row][col] = 0;
+            hydrallMaps.understoreyNetPrimaryProduction->value[row][col] = 0;
             hydrallMaps.yearlyPrec->value[row][col] = 0;
             hydrallMaps.yearlyET0->value[row][col] = 0;
 
@@ -750,6 +753,7 @@ bool Crit3DProject::updateHydrall(const QDate &myDate)
             }
         }
     }
+    hydrallModel.isFirstYearSimulation = false;
 
     return true;
 }
@@ -836,7 +840,7 @@ bool Crit3DProject::setRothCVariables(int row, int col, const QDate &myDate)
 
     // CARBON INPUT
     double inputCTable = NODATA;
-    const double hydrallOutputC = hydrallModel.getOutputC();
+    const double hydrallOutputC = hydrallMaps.outputC->value[row][col]; //o qualcosa del genere; controlla perché sembra leggere sempre lo stesso valore. è giusto?
 
     // yield table must be used when initialising rothC or for first year of simulation of hydrall+rothC
     // hydrall still hasn't produced its first carbon output
@@ -845,7 +849,7 @@ bool Crit3DProject::setRothCVariables(int row, int col, const QDate &myDate)
 
     if (processes.computeHydrall && !isEqual(hydrallOutputC, NODATA) && hydrallOutputC > EPSILON)
     {
-        rothCModel.setInputC(hydrallOutputC / 12.0);
+        rothCModel.setInputC(hydrallOutputC / 12.0); //TODO: ipotetica distribuzione diversa da questa
     }
     else if (!isEqual(inputCTable, NODATA))
     {

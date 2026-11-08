@@ -980,7 +980,7 @@ int CriteriaOutputProject::createNetcdf()
         return ERROR_SETTINGS_MISSINGDATA;
     }
     bool isOk;
-    int cellSize = mapCellSize.toInt(&isOk);
+    const int cellSize = mapCellSize.toInt(&isOk);
     if (! isOk)
     {
         projectError = "Invalid cellsize (it must be an integer): " + mapCellSize;
@@ -992,11 +992,10 @@ int CriteriaOutputProject::createNetcdf()
     {
         // create shapefile
         logger.writeInfo("Missing shapefile -> createShapeFile");
-        int myResult = createShapeFile();
-        if (myResult != CRIT1D_OK)
-        {
-            return myResult;
-        }
+        const int result = createShapeFile();
+
+        if (result != CRIT1D_OK)
+            return result;
     }
 
     logger.writeInfo("EXPORT TO NETCDF");
@@ -1018,12 +1017,12 @@ int CriteriaOutputProject::createNetcdf()
     // cycle on field list
     foreach (QList<QString> valuesList, fieldList)
     {
-        QString field = valuesList[0];
-        QString fileName = outputShapeFilePath + "/" + mapAreaName + "_" + field + ".nc";
-        std::string variableName = field.left(4).toStdString();         // TODO inserire var name nel file
-        std::string variableUnit = "mm";                                // TODO inserire var unit nel file
-        Crit3DDate computationDate = getCrit3DDate(dateComputation);
-        int nrDays = 28;                                                // TODO inserire var nr days nel file
+        const QString field = valuesList[0];
+        const QString fileName = outputShapeFilePath + "/" + mapAreaName + "_" + field + ".nc";
+        const std::string variableName = field.left(4).toStdString();         // TODO inserire var name nel file
+        const std::string variableUnit = "mm";                                // TODO inserire var unit nel file
+        const Crit3DDate computationDate = getCrit3DDate(dateComputation);
+        const int nrDays = 28;                                                // TODO inserire var nr days nel file
 
         logger.writeInfo("Export file: " + fileName);
         if (! convertShapeToNetcdf(shapeHandler, fileName.toStdString(), field.toStdString(), variableName,
@@ -1056,7 +1055,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
     constexpr double threshold = 0.5;
 
     if (! rasterizeShape(nullptr, tmpRaster, shapeHandler, fieldName, cellSize,
-                        sampleGrid, threshold, useReferenceRaster, false))
+                        sampleGrid, threshold, useReferenceRaster))
     {
         projectError = "Error in rasterize shape.";
         return false;
@@ -1080,6 +1079,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
     dataRaster.header->flag = latLonHeader.flag;
     dataRaster.header->llCorner.y = latLonHeader.llCorner.latitude;
     dataRaster.header->llCorner.x = latLonHeader.llCorner.longitude;
+
     // average geographic resolution
     dataRaster.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
     dataRaster.header->invCellSize = 1.0 / dataRaster.header->cellSize;
@@ -1099,6 +1099,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
 
             int utmRow, utmCol;
             gis::getRowColFromXY(*(tmpRaster.header), x, y, &utmRow, &utmCol);
+
             const float value = tmpRaster.getValueFromRowCol(utmRow, utmCol);
             if (! isEqual(value, tmpRaster.header->flag))
                 dataRaster.value[row][col] = value;
@@ -1120,6 +1121,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
     {
         projectError = "Error in write metadata to netcdf.";
         netCDF.close();
+        std::remove(outputFileName.c_str());
         return false;
     }
 
@@ -1127,6 +1129,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
     {
         projectError = "Error in write data to netcdf.";
         netCDF.close();
+        std::remove(outputFileName.c_str());
         return false;
     }
 

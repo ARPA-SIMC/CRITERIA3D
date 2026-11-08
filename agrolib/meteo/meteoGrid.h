@@ -80,7 +80,7 @@
             Crit3DMeteoGrid();
             ~Crit3DMeteoGrid();
 
-            Crit3DMeteoGridStructure gridStructure() const;
+            const Crit3DMeteoGridStructure &gridStructure() const;
             void setGridStructure(const Crit3DMeteoGridStructure &gridStructure);
 
             std::vector<std::vector<Crit3DMeteoPoint *>> meteoPoints() const;

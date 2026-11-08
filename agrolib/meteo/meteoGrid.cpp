@@ -164,7 +164,7 @@ void Crit3DMeteoGridStructure::setNrMembers(int nrMembers)
     _nrMembers = nrMembers;
 }
 
-Crit3DMeteoGridStructure Crit3DMeteoGrid::gridStructure() const
+const Crit3DMeteoGridStructure& Crit3DMeteoGrid::gridStructure() const
 {
     return _gridStructure;
 }
@@ -694,7 +694,7 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
 
             for (double x = utmLL.x; x < utmUR.x; x += myDEM->header->cellSize)
             {
-                for (double y = utmLL.y; x < utmUR.y; y += myDEM->header->cellSize)
+                for (double y = utmLL.y; y < utmUR.y; y += myDEM->header->cellSize)
                 {
                     _meteoPoints[row][col]->aggregationPointsMaxNr = _meteoPoints[row][col]->aggregationPointsMaxNr + 1;
                     if (!excludeNoData || gis::getValueFromXY(*myDEM, x, y) != myDEM->header->flag )
@@ -710,7 +710,6 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
         }
         else
         {
-
             gis::Crit3DGeoPoint pointLatLon0;
             gis::Crit3DGeoPoint pointLatLon;
             gis::Crit3DLatLonHeader latLonHeader;
@@ -819,9 +818,9 @@ void Crit3DMeteoGrid::assignCellProxyValues(unsigned row, unsigned col, gis::Cri
             utmLL.y = _meteoPoints[row][col]->point.utm.y - (_gridStructure.header().dy / 2) + (myRaster->header->cellSize / 2);
             utmUR.y = _meteoPoints[row][col]->point.utm.y + (_gridStructure.header().dy / 2);
 
-            for (double x = utmLL.x; x < utmUR.x; x=x+myRaster->header->cellSize)
+            for (double x = utmLL.x; x < utmUR.x; x += myRaster->header->cellSize)
             {
-                for (double y = utmLL.y; x < utmUR.y; y=y+myRaster->header->cellSize)
+                for (double y = utmLL.y; y < utmUR.y; y += myRaster->header->cellSize)
                 {
                     if (!excludeNoData || gis::getValueFromXY(*myRaster, x, y) != myRaster->header->flag )
                     {
@@ -954,7 +953,7 @@ double Crit3DMeteoGrid::computeAggrCellGlocalWeightValue(unsigned row, unsigned 
         utmUR.y = _meteoPoints[row][col]->point.utm.y + (_gridStructure.header().dy / 2);
 
         for (double x = utmLL.x; x < utmUR.x; x += myRaster->header->cellSize)
-            for (double y = utmLL.y; x < utmUR.y; y += myRaster->header->cellSize)
+            for (double y = utmLL.y; y < utmUR.y; y += myRaster->header->cellSize)
                 if (! excludeNoData || gis::getValueFromXY(*myRaster, x, y) != myRaster->header->flag )
                     aggrWeightValues.push_back(gis::getValueFromXY(*myRaster, x, y));
     }
