@@ -516,7 +516,7 @@ bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
     if (! this->isGrid)
         return false;
 
-    gis::getRowColFromLonLat(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
+    gis::getRowColFromLonLat_zeroSouth(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
 
     // check boundary
     if (gis::isOutOfGridRowCol(*row, *col, this->latLonHeader))

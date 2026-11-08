@@ -2890,14 +2890,14 @@ void Project::passGridTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteo
         {
             if (meteoGridDbHandler->meteoGrid()->gridStructure().isUTM())
             {
-                gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
-                                     meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, &row, &col);
+                gis::getRowColFromLonLat_zeroSouth(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
+                                                    meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, &row, &col);
             }
             else
             {
                 gis::getLatLonFromUtm(gisSettings, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, &lat, &lon);
-                gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
-                                         lon, lat, &row, &col);
+                gis::getRowColFromLonLat_zeroSouth(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
+                                                    lon, lat, &row, &col);
             }
 
             if (! gis::isOutOfGridRowCol(row, col, meteoGridDbHandler->meteoGrid()->gridStructure().header()))

@@ -2441,7 +2441,8 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(const QString &met
         return dailyVarList;
     }
 
-    QString statement = QString("SELECT `%3`,`Value` FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3`").arg(tableD).arg(varCode).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
+    QString statement = QString("SELECT `%3`,`Value` FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3`")
+                            .arg(tableD).arg(varCode).arg(_tableDaily.fieldTime, first.toString("yyyy-MM-dd"), last.toString("yyyy-MM-dd"));
 
     if(! qry.exec(statement) )
     {
@@ -4554,7 +4555,7 @@ bool Crit3DMeteoGridDbHandler::MeteoGridToRasterFlt(double cellSize, const gis::
             {
                 myGrid.getXY(row, col, utmx, utmy);
                 gis::getLatLonFromUtm(gisSettings, utmx, utmy, &lat, &lon);
-                gis::getRowColFromLonLat (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
+                gis::getRowColFromLonLat_zeroSouth(latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
                 if (dataGridRow < 0 || dataGridRow >= latlonHeader.nrRows || dataGridCol < 0 || dataGridCol >= latlonHeader.nrCols)
                 {
                     myValue = NODATA;
