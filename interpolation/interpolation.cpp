@@ -193,14 +193,14 @@ std::vector<float> computeDistances(meteoVariable myVar, const std::vector <Crit
                         if (! gis::isOutOfGridXY(x, y, myPoints[i].topographicDistanceMap->header))
                         {
                             int row, col;
-                            gis::getRowColFromXY(*(myPoints[i].topographicDistanceMap->header), x, y, &row, &col);
+                            gis::getRowColFromXY(myPoints[i].topographicDistanceMap->header, x, y, &row, &col);
                             topoDistance = myPoints[i].topographicDistanceMap->value[row][col];
                         }
                     }
 
                     if (isEqual(topoDistance, NODATA))
-                        topoDistance = topographicDistance(x, y, z, float(myPoints[i].point->utm.x),
-                                                           float(myPoints[i].point->utm.y),
+                        topoDistance = gis::topographicDistance(x, y, float(z), myPoints[i].point->utm.x,
+                                                           myPoints[i].point->utm.y,
                                                            float(myPoints[i].point->z), distance[i],
                                                            *(interpolationSettings.getCurrentDEM()));
                 }
@@ -2596,7 +2596,7 @@ bool getProxyValuesXY(float x, float y, Crit3DInterpolationSettings &interpolati
             if (proxyGrid != nullptr && proxyGrid->isLoaded)
             {
                 myValue = gis::getValueFromXY(*proxyGrid, x, y);
-                if (myValue != proxyGrid->header->flag)
+                if (myValue != proxyGrid->header.flag)
                     myValues[i] = myValue;
                 else
                     proxyComplete = false;
@@ -2626,7 +2626,7 @@ bool getSignificantProxyValuesXY(float x, float y, Crit3DInterpolationSettings& 
             if (proxyGrid != nullptr && proxyGrid->isLoaded)
             {
                 myValue = gis::getValueFromXY(*proxyGrid, x, y);
-                if (myValue != proxyGrid->header->flag)
+                if (myValue != proxyGrid->header.flag)
                     myValues[i] = myValue;
                 else
                     proxyComplete = false;

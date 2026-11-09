@@ -495,7 +495,7 @@ namespace radiation
         const double y0 = radPoint.y;
         const double z0 = radPoint.height;
 
-        const double cellSize = myDem.header->cellSize;
+        const double cellSize = myDem.header.cellSize;
 
         const double sinAz = std::sin(sunPosition.azimuth * DEG_TO_RAD);
         const double cosAz = std::cos(sunPosition.azimuth * DEG_TO_RAD);
@@ -537,7 +537,7 @@ namespace radiation
 
             double zDEM = myDem.value[row][col];
 
-            if (zDEM != myDem.header->flag)
+            if (zDEM != myDem.header.flag)
             {
                 if ((zDEM - z) > 0.5)
                 {
@@ -898,15 +898,15 @@ namespace radiation
         if (gis::isOutOfGridRowCol(row, col, dem.header))
             return false;
 
-        if (dem.value[row][col] == dem.header->flag)
+        if (dem.value[row][col] == dem.header.flag)
             return false;
 
-        const float latLonFlag = radiationMaps->latMap->header->flag;
+        const float latLonFlag = radiationMaps->latMap->header.flag;
         if ( isEqual(radiationMaps->latMap->value[row][col], latLonFlag)
              || isEqual(radiationMaps->lonMap->value[row][col], latLonFlag) )
             return false;
 
-        const float slopeAspectFlag = radiationMaps->slopeMap->header->flag;
+        const float slopeAspectFlag = radiationMaps->slopeMap->header.flag;
         float slope = readSlope(radSettings, radiationMaps->slopeMap, row, col);
         float aspect = readAspect(radSettings, radiationMaps->aspectMap, row, col);
 
@@ -923,7 +923,7 @@ namespace radiation
                                   int row, int col, double height)
     {
         // initialize
-        const float flag = radiationMaps->globalRadiationMap->header->flag;
+        const float flag = radiationMaps->globalRadiationMap->header.flag;
         radiationMaps->sunElevationMap->value[row][col] = flag;
         radiationMaps->globalRadiationMap->value[row][col] = flag;
         radiationMaps->beamRadiationMap->value[row][col] = flag;
@@ -1040,9 +1040,9 @@ namespace radiation
             return false;
 
         #pragma omp parallel for if (isParallelComputing)
-        for (int row = 0; row < dem.header->nrRows; ++row)
+        for (int row = 0; row < dem.header.nrRows; ++row)
         {
-            for (int col = 0; col < dem.header->nrCols; ++col)
+            for (int col = 0; col < dem.header.nrCols; ++col)
             {
                 if (isGridPointComputable(radSettings, row, col, dem, radiationMaps))
                 {

@@ -393,7 +393,7 @@
 
     float computeThomIndex(float temp, float relHum);
 
-    bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale);
+    bool setColorScale(meteoVariable variable, Crit3DColorScale &colorScale);
 
     frequencyType getVarFrequency(meteoVariable myVar);
 

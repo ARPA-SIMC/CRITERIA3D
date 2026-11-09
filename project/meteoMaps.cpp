@@ -80,16 +80,16 @@ bool Crit3DDailyMeteoMaps::computeHSET0Map(gis::Crit3DGisSettings* gisSettings, 
 
     mapDailyET0HS->emptyGrid();
 
-    for (long row = 0; row < mapDailyET0HS->header->nrRows ; row++)
+    for (long row = 0; row < mapDailyET0HS->header.nrRows ; row++)
     {
-        for (long col = 0; col < mapDailyET0HS->header->nrCols; col++)
+        for (long col = 0; col < mapDailyET0HS->header.nrCols; col++)
         {
             airTmin = mapDailyTMin->value[row][col];
             airTmax = mapDailyTMax->value[row][col];
-            if (! isEqual(airTmin, mapDailyTMin->header->flag)
-                 && ! isEqual(airTmax, mapDailyTMax->header->flag))
+            if (! isEqual(airTmin, mapDailyTMin->header.flag)
+                 && ! isEqual(airTmax, mapDailyTMax->header.flag))
             {
-                gis::getUtmXYFromRowCol(*mapDailyET0HS->header, row, col, &X, &Y);
+                gis::getUtmXYFromRowCol(mapDailyET0HS->header, row, col, &X, &Y);
                 gis::getLatLonFromUtm(*gisSettings, X, Y, &latitude, &longitude);
                 mapDailyET0HS->value[row][col] = float(ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, latitude, getDoyFromDate(myDate), double(airTmax), double(airTmin)));
             }
@@ -107,12 +107,12 @@ bool Crit3DDailyMeteoMaps::fixDailyThermalConsistency()
     if (! mapDailyTMax->isLoaded || ! mapDailyTMin->isLoaded) return true;
     if ( mapDailyTMax->getMapTime() != mapDailyTMin->getMapTime()) return true;
 
-    for (unsigned row = 0; row < unsigned(mapDailyTMax->header->nrRows); row++)
+    for (unsigned row = 0; row < unsigned(mapDailyTMax->header.nrRows); row++)
     {
-        for (unsigned col = 0; col < unsigned(mapDailyTMax->header->nrCols); col++)
+        for (unsigned col = 0; col < unsigned(mapDailyTMax->header.nrCols); col++)
         {
-            if (! isEqual(mapDailyTMax->value[row][col], mapDailyTMax->header->flag) &&
-                ! isEqual(mapDailyTMin->value[row][col], mapDailyTMin->header->flag))
+            if (! isEqual(mapDailyTMax->value[row][col], mapDailyTMax->header.flag) &&
+                ! isEqual(mapDailyTMin->value[row][col], mapDailyTMin->header.flag))
             {
                 if (mapDailyTMin->value[row][col] > mapDailyTMax->value[row][col])
                 {
@@ -237,23 +237,23 @@ gis::Crit3DRasterGrid* Crit3DHourlyMeteoMaps::getMapFromVar(meteoVariable myVar)
 
 bool Crit3DHourlyMeteoMaps::computeET0PMMap(const gis::Crit3DRasterGrid& DEM, Crit3DRadiationMaps *radMaps)
 {
-    const double flag = DEM.header->flag;
+    const float flag = DEM.header.flag;
     const double clearSkyTransmissivity = CLEAR_SKY_TRANSMISSIVITY_DEFAULT;
 
-    for (long row = 0; row < mapHourlyET0->header->nrRows; ++row)
-        for (long col = 0; col < mapHourlyET0->header->nrCols; ++col)
+    for (long row = 0; row < mapHourlyET0->header.nrRows; ++row)
+        for (long col = 0; col < mapHourlyET0->header.nrCols; ++col)
         {
             mapHourlyET0->value[row][col] = flag;
 
-            const double height = DEM.value[row][col];
+            const float height = DEM.value[row][col];
             if (isEqual(height, flag))
                 continue;
 
-            const double globalRadiation = radMaps->globalRadiationMap->value[row][col];
-            const double transmissivity = radMaps->transmissivityMap->value[row][col];
-            const double temperature = mapHourlyTair->value[row][col];
-            const double relHumidity = mapHourlyRelHum->value[row][col];
-            const double windSpeed = mapHourlyWindScalarInt->value[row][col];
+            const float globalRadiation = radMaps->globalRadiationMap->value[row][col];
+            const float transmissivity = radMaps->transmissivityMap->value[row][col];
+            const float temperature = mapHourlyTair->value[row][col];
+            const float relHumidity = mapHourlyRelHum->value[row][col];
+            const float windSpeed = mapHourlyWindScalarInt->value[row][col];
 
             if (! isEqual(globalRadiation, flag)
                     && ! isEqual(transmissivity, flag)
@@ -275,17 +275,17 @@ bool Crit3DHourlyMeteoMaps::computeLeafWetnessMap()
     float relHumidity, precipitation;
     short leafWetness;
 
-    for (long row = 0; row < mapHourlyLeafW->header->nrRows; row++)
-        for (long col = 0; col < mapHourlyLeafW->header->nrCols; col++)
+    for (long row = 0; row < mapHourlyLeafW->header.nrRows; row++)
+        for (long col = 0; col < mapHourlyLeafW->header.nrCols; col++)
         {
             //initialize
-            mapHourlyLeafW->value[row][col] = mapHourlyLeafW->header->flag;
+            mapHourlyLeafW->value[row][col] = mapHourlyLeafW->header.flag;
 
             relHumidity = mapHourlyRelHum->value[row][col];
             precipitation = mapHourlyPrec->value[row][col];
 
-            if (! isEqual(relHumidity, mapHourlyRelHum->header->flag)
-                    && ! isEqual(precipitation, mapHourlyPrec->header->flag))
+            if (! isEqual(relHumidity, mapHourlyRelHum->header.flag)
+                    && ! isEqual(precipitation, mapHourlyPrec->header.flag))
             {
                 if (computeLeafWetness(precipitation, relHumidity, leafWetness))
                     mapHourlyLeafW->value[row][col] = float(leafWetness);
@@ -302,14 +302,14 @@ bool Crit3DHourlyMeteoMaps::computeRelativeHumidityMap(gis::Crit3DRasterGrid* my
     float airT, dewT;
     myRaster->emptyGrid();
 
-    for (long row = 0; row < mapHourlyRelHum->header->nrRows ; row++)
+    for (long row = 0; row < mapHourlyRelHum->header.nrRows ; row++)
     {
-        for (long col = 0; col < mapHourlyRelHum->header->nrCols; col++)
+        for (long col = 0; col < mapHourlyRelHum->header.nrCols; col++)
         {
             airT = mapHourlyTair->value[row][col];
             dewT = mapHourlyTdew->value[row][col];
-            if (! isEqual(airT, mapHourlyTair->header->flag)
-                 && ! isEqual(dewT, mapHourlyTdew->header->flag))
+            if (! isEqual(airT, mapHourlyTair->header.flag)
+                 && ! isEqual(dewT, mapHourlyTdew->header.flag))
             {
                     myRaster->value[row][col] = relHumFromTdew(dewT, airT);
             }

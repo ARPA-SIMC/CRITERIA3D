@@ -79,11 +79,10 @@
 
         ~MapGraphicsShapeObject()
         {
-            delete colorScale;
             delete geoMap;
         }
 
-        Crit3DColorScale* colorScale;
+        Crit3DColorScale colorScale;
 
         void updateCenter();
         void clear();

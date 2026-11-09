@@ -14,8 +14,6 @@ MapGraphicsShapeObject::MapGraphicsShapeObject(MapGraphicsView* _view, MapGraphi
     setFlag(MapGraphicsObject::ObjectIsFocusable);
     view = _view;
 
-    colorScale = new Crit3DColorScale();
-
     geoMap = new gis::Crit3DGeoMap();
     shapePointer = nullptr;
 
@@ -153,7 +151,7 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
 
         if (_isFill && values[i] != NODATA)
         {
-            Crit3DColor* myColor = colorScale->getColor(values[i]);
+            Crit3DColor* myColor = colorScale.getColor(values[i]);
             QColor color(myColor->red, myColor->green, myColor->blue);
             myPainter->setBrush(color);
 
@@ -286,14 +284,14 @@ void MapGraphicsShapeObject::setNumericValues(std::string fieldName)
     }
 
     // set min/max
-    colorScale->setRange(firstValue, firstValue);
+    colorScale.setRange(firstValue, firstValue);
     if (! isEqual(firstValue, NODATA))
     {
         for (unsigned int i = 0; i < _nrShapes; i++)
             if (! isEqual(values[i], NODATA))
             {
-                colorScale->setMinimum(MINVALUE(colorScale->minimum(), values[i]));
-                colorScale->setMaximum(MAXVALUE(colorScale->maximum(), values[i]));
+                colorScale.setMinimum(MINVALUE(colorScale.minimum(), values[i]));
+                colorScale.setMaximum(MAXVALUE(colorScale.maximum(), values[i]));
             }
     }
 }
@@ -338,11 +336,11 @@ void MapGraphicsShapeObject::setCategories(std::string fieldName)
     // define min/max
     if (! categories.empty())
     {
-        colorScale->setRange(1, float(categories.size()));
+        colorScale.setRange(1, float(categories.size()));
     }
     else
     {
-        colorScale->setRange(NODATA, NODATA);
+        colorScale.setRange(NODATA, NODATA);
     }
 }
 
@@ -376,5 +374,5 @@ void MapGraphicsShapeObject::clear()
 
     shapePointer = nullptr;
 
-    colorScale->setRange(NODATA, NODATA);
+    colorScale.setRange(NODATA, NODATA);
 }

@@ -345,28 +345,25 @@ bool readRasterRow(FILE* file,
 }
 
 
-bool readRasterBinaryData(const string& fileName,
-                          gis::Crit3DRasterGrid* rasterGrid,
-                          const RasterFileInfo& fileInfo,
-                          string& errorStr)
+bool readRasterBinaryData(const string& fileName, gis::Crit3DRasterGrid* rasterGrid,
+                          const RasterFileInfo& fileInfo, string& errorStr)
 {
     errorStr.clear();
 
-    if (rasterGrid == nullptr ||
-        rasterGrid->header == nullptr)
+    if (rasterGrid == nullptr)
     {
         errorStr = "Invalid raster grid.";
         return false;
     }
 
-    if (rasterGrid->header->nrRows <= 0 ||
-        rasterGrid->header->nrCols <= 0)
+    if (rasterGrid->header.nrRows <= 0 ||
+        rasterGrid->header.nrCols <= 0)
     {
         errorStr = "Invalid raster dimensions.";
         return false;
     }
 
-    if (!rasterGrid->initializeGrid())
+    if (! rasterGrid->initializeGrid(rasterGrid->header.flag))
     {
         errorStr = "Memory error: file too big.";
         return false;
@@ -376,10 +373,8 @@ bool readRasterBinaryData(const string& fileName,
 
     if (file == nullptr)
     {
-        errorStr =
-            "Error opening raster file: " +
-            fileName + "\n" +
-            strerror(errno);
+        errorStr = "Error opening raster file: " +
+                   fileName + "\n" + strerror(errno);
 
         rasterGrid->clear();
         return false;
@@ -391,9 +386,7 @@ bool readRasterBinaryData(const string& fileName,
                   static_cast<long>(fileInfo.headerOffset),
                   SEEK_SET) != 0)
         {
-            errorStr =
-                "Error seeking raster data: " +
-                fileName;
+            errorStr = "Error seeking raster data: " + fileName;
 
             fclose(file);
             rasterGrid->clear();
@@ -403,8 +396,8 @@ bool readRasterBinaryData(const string& fileName,
 
     vector<uint8_t> rowBuffer;
 
-    const int nRows = rasterGrid->header->nrRows;
-    const int nCols = rasterGrid->header->nrCols;
+    const int nRows = rasterGrid->header.nrRows;
+    const int nCols = rasterGrid->header.nrCols;
 
     for (int row = 0; row < nRows; ++row)
     {
@@ -414,9 +407,8 @@ bool readRasterBinaryData(const string& fileName,
                            fileInfo,
                            rowBuffer))
         {
-            errorStr =
-                "Error reading raster data at row " +
-                to_string(row) + ".";
+            errorStr = "Error reading raster data at row "
+                       + to_string(row) + ".";
 
             fclose(file);
             rasterGrid->clear();
@@ -430,9 +422,7 @@ bool readRasterBinaryData(const string& fileName,
 }
 
 
-bool parseKeyValue(const string& line,
-                   string& key,
-                   string& value)
+bool parseKeyValue(const string& line, string& key, string& value)
 {
     key.clear();
     value.clear();
@@ -546,15 +536,9 @@ namespace gis
 {
 
 
-bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, string& errorStr)
+bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader& header, string& errorStr)
 {
     errorStr.clear();
-
-    if (header == nullptr)
-    {
-        errorStr = "Invalid raster header.";
-        return false;
-    }
 
     string fn = fileName;
 
@@ -602,7 +586,7 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
                 return false;
             }
 
-            header->nrCols = valueInt;
+            header.nrCols = valueInt;
             hasCols = true;
         }
         else if (upKey == "NROWS")
@@ -615,7 +599,7 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
                 return false;
             }
 
-            header->nrRows = valueInt;
+            header.nrRows = valueInt;
             hasRows = true;
         }
         else if (upKey == "XLLCORNER")
@@ -628,7 +612,7 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
                 return false;
             }
 
-            header->llCorner.x = valueDouble;
+            header.llCorner.x = valueDouble;
             hasLLX = true;
         }
         else if (upKey == "YLLCORNER")
@@ -641,7 +625,7 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
                 return false;
             }
 
-            header->llCorner.y = valueDouble;
+            header.llCorner.y = valueDouble;
             hasLLY = true;
         }
         else if (upKey == "CELLSIZE")
@@ -656,8 +640,8 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
                 return false;
             }
 
-            header->cellSize = valueDouble;
-            header->invCellSize = 1.0 / valueDouble;
+            header.cellSize = valueDouble;
+            header.invCellSize = 1.0 / valueDouble;
             hasCellSize = true;
         }
         else if (upKey == "NODATA_VALUE" || upKey == "NODATA")
@@ -670,7 +654,7 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
                 return false;
             }
 
-            header->flag = valueFloat;
+            header.flag = valueFloat;
             hasNoData = true;
         }
         else if (upKey == "DATATYPE")
@@ -683,7 +667,7 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
                 return false;
             }
 
-            header->nrBytes = nrBytes;
+            header.nrBytes = nrBytes;
         }
     }
 
@@ -701,27 +685,21 @@ bool readEsriFloatHeader(const string& fileName, Crit3DRasterHeader* header, str
      * nrBytes is retained for compatibility with
      * Crit3DRasterHeader.
      */
-    if (header->nrBytes == 0)
-        header->nrBytes = 4;
+    if (header.nrBytes == 0)
+        header.nrBytes = 4;
 
     return true;
 }
 
 
-bool readEsriBilHeader(const std::string& fileName, gis::Crit3DRasterHeader* header,
+bool readEsriBilHeader(const std::string& fileName, gis::Crit3DRasterHeader& header,
                        EsriBilInfo& bilInfo, std::string& errorStr)
 {
     errorStr.clear();
 
-    if (header == nullptr)
-    {
-        errorStr = "Invalid raster header.";
-        return false;
-    }
-
     std::ifstream file(fileName + ".hdr");
 
-    if (!file.is_open())
+    if (! file.is_open())
     {
         errorStr = "Missing file: " + fileName + ".hdr";
         return false;
@@ -822,23 +800,23 @@ bool readEsriBilHeader(const std::string& fileName, gis::Crit3DRasterHeader* hea
         return false;
     }
 
-    header->nrRows = bilInfo.nRows;
-    header->nrCols = bilInfo.nCols;
-    header->nrBytes = bilInfo.nBits / 8;
+    header.nrRows = bilInfo.nRows;
+    header.nrCols = bilInfo.nCols;
+    header.nrBytes = bilInfo.nBits / 8;
 
-    header->cellSize = bilInfo.xDim;
-    header->invCellSize = 1.0 / header->cellSize;
+    header.cellSize = bilInfo.xDim;
+    header.invCellSize = 1.0 / header.cellSize;
 
     /*
      * ESRI BIL ULXMAP/ULYMAP normally refer to the center of the upper-left pixel.
      * Crit3DRasterHeader uses the lower-left corner.
      */
-    header->llCorner.x = bilInfo.ulx - 0.5 * bilInfo.xDim;
+    header.llCorner.x = bilInfo.ulx - 0.5 * bilInfo.xDim;
 
-    header->llCorner.y =  bilInfo.uly - bilInfo.nRows * bilInfo.yDim
+    header.llCorner.y =  bilInfo.uly - bilInfo.nRows * bilInfo.yDim
                          + 0.5 * bilInfo.yDim;
 
-    header->flag = bilInfo.noData;
+    header.flag = bilInfo.noData;
 
     return true;
 }
@@ -1084,7 +1062,7 @@ bool readEsriGridBil(const std::string& fileName, Crit3DRasterGrid* rasterGrid,
     rasterGrid->clear();
 
     EsriBilInfo bilInfo;
-    if (!readEsriBilHeader(fileName, rasterGrid->header, bilInfo, errorStr))
+    if (! readEsriBilHeader(fileName, rasterGrid->header, bilInfo, errorStr))
         return false;
 
     int utmZone;
@@ -1098,13 +1076,13 @@ bool readEsriGridBil(const std::string& fileName, Crit3DRasterGrid* rasterGrid,
         return false;
     }
 
-    if (!rasterGrid->initializeGrid())
+    if (! rasterGrid->initializeGrid(rasterGrid->header.flag))
     {
         errorStr = "Memory error: file too big.";
         return false;
     }
 
-    if (!readRasterBilData(fileName + ".bil", rasterGrid, bilInfo, errorStr))
+    if (! readRasterBilData(fileName + ".bil", rasterGrid, bilInfo, errorStr))
     {
         rasterGrid->clear();
         return false;
@@ -1117,16 +1095,10 @@ bool readEsriGridBil(const std::string& fileName, Crit3DRasterGrid* rasterGrid,
 }
 
 
-bool readEnviHeader(const string& fileName, Crit3DRasterHeader* header,
+bool readEnviHeader(const string& fileName, Crit3DRasterHeader& header,
                     int currentUtmZone, RasterFileInfo& fileInfo, string& errorStr)
 {
     errorStr.clear();
-
-    if (header == nullptr)
-    {
-        errorStr = "Invalid raster header.";
-        return false;
-    }
 
     string headerFileName = fileName + ".hdr";
     ifstream file(headerFileName);
@@ -1171,7 +1143,7 @@ bool readEnviHeader(const string& fileName, Crit3DRasterHeader* header,
                 return false;
             }
 
-            header->nrCols = valueInt;
+            header.nrCols = valueInt;
             hasSamples = true;
         }
         else if (upKey == "LINES")
@@ -1184,7 +1156,7 @@ bool readEnviHeader(const string& fileName, Crit3DRasterHeader* header,
                 return false;
             }
 
-            header->nrRows = valueInt;
+            header.nrRows = valueInt;
             hasLines = true;
         }
         else if (upKey == "DATATYPE")
@@ -1197,7 +1169,7 @@ bool readEnviHeader(const string& fileName, Crit3DRasterHeader* header,
                 return false;
             }
 
-            if (! getEnviDataType(enviType, fileInfo.dataType, header->nrBytes))
+            if (! getEnviDataType(enviType, fileInfo.dataType, header.nrBytes))
             {
                 errorStr = "Unsupported ENVI data type: " + value;
                 return false;
@@ -1237,7 +1209,7 @@ bool readEnviHeader(const string& fileName, Crit3DRasterHeader* header,
                 return false;
             }
 
-            header->flag = valueFloat;
+            header.flag = valueFloat;
             hasNoData = true;
         }
         else if (upKey == "MAPINFO")
@@ -1311,11 +1283,11 @@ bool readEnviHeader(const string& fileName, Crit3DRasterHeader* header,
                 return false;
             }
 
-            header->cellSize = cellSizeX;
-            header->invCellSize = 1.0 / cellSizeX;
+            header.cellSize = cellSizeX;
+            header.invCellSize = 1.0 / cellSizeX;
 
-            header->llCorner.x = xTopLeft;
-            header->llCorner.y = yTopLeft - static_cast<double>(header->nrRows) * header->cellSize;
+            header.llCorner.x = xTopLeft;
+            header.llCorner.y = yTopLeft - static_cast<double>(header.nrRows) * header.cellSize;
 
             hasMapInfo = true;
         }
@@ -1393,17 +1365,9 @@ bool readRasterFloatData(const string& fileName,
 }
 
 
-bool writeEsriGridHeader(const string& fileName,
-                         Crit3DRasterHeader* header,
-                         string& errorStr)
+bool writeEsriGridHeader(const string& fileName, const Crit3DRasterHeader& header, string& errorStr)
 {
     errorStr.clear();
-
-    if (header == nullptr)
-    {
-        errorStr = "Invalid raster header.";
-        return false;
-    }
 
     const string outputFileName =
         fileName + ".hdr";
@@ -1425,22 +1389,22 @@ bool writeEsriGridHeader(const string& fileName,
     file << std::fixed;
 
     file << "ncols         "
-         << header->nrCols << '\n';
+         << header.nrCols << '\n';
 
     file << "nrows         "
-         << header->nrRows << '\n';
+         << header.nrRows << '\n';
 
     file << "xllcorner     "
-         << header->llCorner.x << '\n';
+         << header.llCorner.x << '\n';
 
     file << "yllcorner     "
-         << header->llCorner.y << '\n';
+         << header.llCorner.y << '\n';
 
     file << "cellsize      "
-         << header->cellSize << '\n';
+         << header.cellSize << '\n';
 
     file << "NODATA_value  "
-         << header->flag << '\n';
+         << header.flag << '\n';
 
     /*
      * ESRI .flt is a 32-bit floating-point
@@ -1461,13 +1425,11 @@ bool writeEsriGridHeader(const string& fileName,
 }
 
 
-bool writeEsriGridFlt(const string& fileName,
-                      Crit3DRasterGrid* rasterGrid,
-                      string& errorStr)
+bool writeEsriGridFlt(const string& fileName, Crit3DRasterGrid* rasterGrid, string& errorStr)
 {
     errorStr.clear();
 
-    if (rasterGrid == nullptr || rasterGrid->header == nullptr)
+    if (rasterGrid == nullptr)
     {
         errorStr = "Invalid raster grid.";
         return false;
@@ -1488,8 +1450,8 @@ bool writeEsriGridFlt(const string& fileName,
         return false;
     }
 
-    const int nRows = rasterGrid->header->nrRows;
-    const int nCols = rasterGrid->header->nrCols;
+    const int nRows = rasterGrid->header.nrRows;
+    const int nCols = rasterGrid->header.nrCols;
 
     for (int row = 0; row < nRows; ++row)
     {
@@ -1632,7 +1594,7 @@ bool readEnviGrid(const string fileName, Crit3DRasterGrid* rasterGrid,
         return false;
     }
 
-    updateMinMaxRasterGrid(rasterGrid);
+    gis::updateMinMaxRasterGrid(rasterGrid);
     rasterGrid->isLoaded = true;
 
     return true;
@@ -1643,7 +1605,7 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
 {
     errorStr.clear();
 
-    if (rasterGrid == nullptr || rasterGrid->header == nullptr)
+    if (rasterGrid == nullptr)
     {
         errorStr = "Invalid raster grid.";
         return false;
@@ -1651,7 +1613,7 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
 
     ifstream file(fileName);
 
-    if (!file.is_open())
+    if (! file.is_open())
     {
         errorStr = "Wrong or missing file: " + fileName;
         return false;
@@ -1679,7 +1641,7 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
         if (trim(line).empty())
             continue;
 
-        if (!parseKeyValue(line, key, value))
+        if (! parseKeyValue(line, key, value))
         {
             firstDataLine = line;
             break;
@@ -1691,13 +1653,13 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
         if (upKey == "NCOLS")
         {
             int valueInt;
-            if (!parseInt(value, valueInt) || valueInt <= 0)
+            if (! parseInt(value, valueInt) || valueInt <= 0)
             {
                 errorStr = "Invalid NCOLS value.";
                 return false;
             }
 
-            rasterGrid->header->nrCols = valueInt;
+            rasterGrid->header.nrCols = valueInt;
 
             hasCols = true;
         }
@@ -1705,69 +1667,66 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
         {
             int valueInt;
 
-            if (!parseInt(value, valueInt) || valueInt <= 0)
+            if (! parseInt(value, valueInt) || valueInt <= 0)
             {
                 errorStr = "Invalid NROWS value.";
                 return false;
             }
 
-            rasterGrid->header->nrRows = valueInt;
+            rasterGrid->header.nrRows = valueInt;
 
             hasRows = true;
         }
         else if (upKey == "XLLCORNER")
         {
             double valueDouble;
-            if (!parseDouble(value, valueDouble))
+            if (! parseDouble(value, valueDouble))
             {
                 errorStr = "Invalid XLLCORNER value.";
                 return false;
             }
 
-            rasterGrid->header->llCorner.x = valueDouble;
+            rasterGrid->header.llCorner.x = valueDouble;
 
             hasLLX = true;
         }
         else if (upKey == "YLLCORNER")
         {
             double valueDouble;
-            if (!parseDouble(value, valueDouble))
+            if (! parseDouble(value, valueDouble))
             {
                 errorStr = "Invalid YLLCORNER value.";
                 return false;
             }
 
-            rasterGrid->header->llCorner.y = valueDouble;
+            rasterGrid->header.llCorner.y = valueDouble;
 
             hasLLY = true;
         }
         else if (upKey == "CELLSIZE")
         {
             double valueDouble;
-
-            if (!parseDouble(value, valueDouble) || valueDouble <= 0.)
+            if (! parseDouble(value, valueDouble) || valueDouble <= 0.)
             {
                 errorStr = "Invalid CELLSIZE value.";
                 return false;
             }
 
-            rasterGrid->header->cellSize = valueDouble;
-
-            rasterGrid->header->invCellSize = 1.0 / valueDouble;
+            rasterGrid->header.cellSize = valueDouble;
+            rasterGrid->header.invCellSize = 1.0 / valueDouble;
 
             hasCellSize = true;
         }
         else if (upKey == "NODATA_VALUE" || upKey == "NODATA")
         {
             float valueFloat;
-
-            if (!parseFloat(value, valueFloat))
+            if (! parseFloat(value, valueFloat))
             {
                 errorStr = "Invalid NODATA value.";
                 return false;
             }
 
-            rasterGrid->header->flag = valueFloat;
+            rasterGrid->header.flag = valueFloat;
 
             hasNoData = true;
         }
@@ -1788,7 +1747,7 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
                 return false;
             }
 
-            rasterGrid->header->nrBytes = nrBytes;
+            rasterGrid->header.nrBytes = nrBytes;
         }
         else
         {
@@ -1822,29 +1781,25 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
         !hasLLX || !hasLLY ||
         !hasNoData)
     {
-        errorStr =
-            "Missing keys in ASCII grid header.";
+        errorStr = "Missing keys in ASCII grid header.";
 
         return false;
     }
 
-    if (rasterGrid->header->nrBytes == 0)
-        rasterGrid->header->nrBytes = 4;
+    if (rasterGrid->header.nrBytes == 0)
+        rasterGrid->header.nrBytes = 4;
 
-    if (!rasterGrid->initializeGrid())
+    if (! rasterGrid->initializeGrid(rasterGrid->header.flag))
     {
-        errorStr =
-            "Memory error: file too big.";
-
+        errorStr = "Memory error: file too big.";
         return false;
     }
 
     int row = 0;
 
-    auto readDataLine =
-        [&](const string& dataLine) -> bool
+    auto readDataLine = [&](const string& dataLine) -> bool
     {
-        if (row >= rasterGrid->header->nrRows)
+        if (row >= rasterGrid->header.nrRows)
             return true;
 
         istringstream stream(dataLine);
@@ -1854,27 +1809,22 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
 
         while (stream >> value)
         {
-            if (col >= rasterGrid->header->nrCols)
+            if (col >= rasterGrid->header.nrCols)
             {
-                errorStr =
-                    "Too many values in ASCII raster row " +
-                    to_string(row) + ".";
-
+                errorStr = "Too many values in ASCII raster row "
+                           + to_string(row) + ".";
                 return false;
             }
 
-            rasterGrid->value[row][col] =
-                value;
+            rasterGrid->value[row][col] = value;
 
             ++col;
         }
 
-        if (col != rasterGrid->header->nrCols)
+        if (col != rasterGrid->header.nrCols)
         {
-            errorStr =
-                "Wrong number of values in ASCII raster row " +
-                to_string(row) + ".";
-
+            errorStr = "Wrong number of values in ASCII raster row "
+                       + to_string(row) + ".";
             return false;
         }
 
@@ -1883,35 +1833,32 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
         return true;
     };
 
-    if (!firstDataLine.empty())
+    if (! firstDataLine.empty())
     {
-        if (!readDataLine(firstDataLine))
+        if (! readDataLine(firstDataLine))
         {
             rasterGrid->clear();
             return false;
         }
     }
 
-    while (row < rasterGrid->header->nrRows &&
-           getline(file, line))
+    while (row < rasterGrid->header.nrRows && getline(file, line))
     {
         if (trim(line).empty())
             continue;
 
-        if (!readDataLine(line))
+        if (! readDataLine(line))
         {
             rasterGrid->clear();
             return false;
         }
     }
 
-    if (row != rasterGrid->header->nrRows)
+    if (row != rasterGrid->header.nrRows)
     {
-        errorStr =
-            "Unexpected end of ASCII raster file. " +
-            to_string(
-                rasterGrid->header->nrRows - row) +
-            " rows are missing.";
+        errorStr = "Unexpected end of ASCII raster file. "
+                   + to_string(rasterGrid->header.nrRows - row)
+                   + " rows are missing.";
 
         rasterGrid->clear();
         return false;
@@ -1967,25 +1914,19 @@ bool openRaster(const string fileName, Crit3DRasterGrid* rasterGrid, int current
 }
 
 
-bool writeEnviGrid(string fileName,
-                   int utmZone,
-                   Crit3DRasterGrid* rasterGrid,
-                   string& error)
+bool writeEnviGrid(string fileName, int utmZone, Crit3DRasterGrid* rasterGrid, string& error)
 {
     error.clear();
 
-    if (rasterGrid == nullptr ||
-        rasterGrid->header == nullptr)
+    if (rasterGrid == nullptr)
     {
         error = "Invalid raster grid.";
         return false;
     }
 
-    const string imgFileName =
-        fileName + ".img";
+    const string imgFileName = fileName + ".img";
 
-    FILE* file =
-        fopen(imgFileName.c_str(), "wb");
+    FILE* file = fopen(imgFileName.c_str(), "wb");
 
     if (file == nullptr)
     {
@@ -1998,11 +1939,8 @@ bool writeEnviGrid(string fileName,
         return false;
     }
 
-    const int nRows =
-        rasterGrid->header->nrRows;
-
-    const int nCols =
-        rasterGrid->header->nrCols;
+    const int nRows = rasterGrid->header.nrRows;
+    const int nCols = rasterGrid->header.nrCols;
 
     for (int row = 0; row < nRows; ++row)
     {
@@ -2028,26 +1966,17 @@ bool writeEnviGrid(string fileName,
 
     if (fclose(file) != 0)
     {
-        error =
-            "Error closing file: " +
-            imgFileName;
-
+        error = "Error closing file: " + imgFileName;
         return false;
     }
 
-    const string headerFileName =
-        fileName + ".hdr";
+    const string headerFileName = fileName + ".hdr";
 
     ofstream headerFile(headerFileName);
 
-    if (!headerFile.is_open())
+    if (! headerFile.is_open())
     {
-        error =
-            "Error writing file: " +
-            headerFileName +
-            "\n" +
-            strerror(errno);
-
+        error = "Error writing file: " + headerFileName + "\n" + strerror(errno);
         return false;
     }
 
@@ -2073,33 +2002,30 @@ bool writeEnviGrid(string fileName,
 
     headerFile
         << "data ignore value = "
-        << rasterGrid->header->flag
+        << rasterGrid->header.flag
         << "\n";
 
     const double yTopLeftCorner =
-        rasterGrid->header->llCorner.y +
+        rasterGrid->header.llCorner.y +
         static_cast<double>(nRows) *
-            rasterGrid->header->cellSize;
+            rasterGrid->header.cellSize;
 
     headerFile
         << "map info = {UTM, 1, 1, "
-        << rasterGrid->header->llCorner.x
+        << rasterGrid->header.llCorner.x
         << ", "
         << yTopLeftCorner
         << ", "
-        << rasterGrid->header->cellSize
+        << rasterGrid->header.cellSize
         << ", "
-        << rasterGrid->header->cellSize
+        << rasterGrid->header.cellSize
         << ", "
         << utmZone
         << ", North, WGS-84, units=Meters}\n";
 
-    if (!headerFile.good())
+    if (! headerFile.good())
     {
-        error =
-            "Error writing file: " +
-            headerFileName;
-
+        error = "Error writing file: " + headerFileName;
         return false;
     }
 
@@ -2107,69 +2033,40 @@ bool writeEnviGrid(string fileName,
 }
 
 
-bool getGeoExtentsFromUTMHeader(
-    const Crit3DGisSettings& mySettings,
-    Crit3DRasterHeader* utmHeader,
-    Crit3DLatLonHeader* latLonHeader)
+bool getGeoExtentsFromUTMHeader(const Crit3DGisSettings& mySettings,
+                                const Crit3DRasterHeader& utmHeader, Crit3DLatLonHeader &latLonHeader)
 {
-    if (utmHeader == nullptr ||
-        latLonHeader == nullptr)
-    {
-        return false;
-    }
-
     Crit3DGeoPoint vertices[4];
-
-    Crit3DUtmPoint vertex =
-        utmHeader->llCorner;
 
     /*
      * Lower-left
      */
-    getLatLonFromUtm(
-        mySettings,
-        vertex,
-        vertices[0]);
+    Crit3DUtmPoint vertex = utmHeader.llCorner;
+
+    getLatLonFromUtm(mySettings, vertex, vertices[0]);
 
     /*
      * Lower-right
      */
-    vertex.x +=
-        static_cast<double>(
-            utmHeader->nrCols) *
-        utmHeader->cellSize;
+    vertex.x += static_cast<double>(utmHeader.nrCols) * utmHeader.cellSize;
 
-    getLatLonFromUtm(
-        mySettings,
-        vertex,
-        vertices[1]);
+    getLatLonFromUtm(mySettings, vertex, vertices[1]);
 
     /*
      * Upper-right
      */
-    vertex.y +=
-        static_cast<double>(
-            utmHeader->nrRows) *
-        utmHeader->cellSize;
+    vertex.y += static_cast<double>(utmHeader.nrRows) * utmHeader.cellSize;
 
-    getLatLonFromUtm(
-        mySettings,
-        vertex,
-        vertices[2]);
+    getLatLonFromUtm(mySettings, vertex, vertices[2]);
 
     /*
      * Upper-left
      */
-    vertex.x =
-        utmHeader->llCorner.x;
+    vertex.x = utmHeader.llCorner.x;
 
-    getLatLonFromUtm(
-        mySettings,
-        vertex,
-        vertices[3]);
+    getLatLonFromUtm(mySettings, vertex, vertices[3]);
 
-    Crit3DGeoPoint LLcorner;
-    Crit3DGeoPoint URcorner;
+    Crit3DGeoPoint LLcorner, URcorner;
 
     LLcorner.longitude =
         min(vertices[0].longitude,
@@ -2200,104 +2097,67 @@ bool getGeoExtentsFromUTMHeader(
                 vertices[3].latitude);
     }
 
-    latLonHeader->nrRows =
-        utmHeader->nrRows;
+    latLonHeader.nrRows = utmHeader.nrRows;
 
-    latLonHeader->nrCols =
-        utmHeader->nrCols;
+    latLonHeader.nrCols = utmHeader.nrCols;
 
-    latLonHeader->dx =
-        (URcorner.longitude -
-         LLcorner.longitude) /
-        latLonHeader->nrCols;
+    latLonHeader.dx =
+        (URcorner.longitude - LLcorner.longitude) /
+        latLonHeader.nrCols;
 
-    latLonHeader->dy =
-        (URcorner.latitude -
-         LLcorner.latitude) /
-        latLonHeader->nrRows;
+    latLonHeader.dy =
+        (URcorner.latitude - LLcorner.latitude) /
+        latLonHeader.nrRows;
 
-    latLonHeader->llCorner.latitude =
-        LLcorner.latitude;
+    latLonHeader.llCorner.latitude = LLcorner.latitude;
 
-    latLonHeader->llCorner.longitude =
-        LLcorner.longitude;
+    latLonHeader.llCorner.longitude = LLcorner.longitude;
 
-    latLonHeader->flag =
-        utmHeader->flag;
+    latLonHeader.flag = utmHeader.flag;
 
     return true;
 }
 
 
-bool getGeoExtentsFromLatLonHeader(
-    const Crit3DGisSettings& mySettings,
-    double cellSize,
-    Crit3DRasterHeader* utmHeader,
-    Crit3DLatLonHeader* latLonHeader)
+bool getUtmExtentsFromLatLonHeader(const Crit3DGisSettings& mySettings, double cellSize,
+                                   Crit3DRasterHeader& utmHeader, const Crit3DLatLonHeader &latLonHeader)
 {
-    if (utmHeader == nullptr ||
-        latLonHeader == nullptr ||
-        cellSize <= 0.)
-    {
+    if (cellSize <= 0.)
         return false;
-    }
 
     Crit3DUtmPoint vertices[4];
-
     Crit3DGeoPoint geoPoint;
 
     /*
      * Lower-left
      */
-    geoPoint.latitude =
-        latLonHeader->llCorner.latitude;
+    geoPoint.latitude = latLonHeader.llCorner.latitude;
+    geoPoint.longitude = latLonHeader.llCorner.longitude;
 
-    geoPoint.longitude =
-        latLonHeader->llCorner.longitude;
-
-    getUtmFromLatLon(
-        mySettings.utmZone,
-        geoPoint,
-        &vertices[0]);
+    getUtmFromLatLon(mySettings.utmZone, geoPoint, &vertices[0]);
 
     /*
      * Lower-right
      */
-    geoPoint.longitude =
-        latLonHeader->llCorner.longitude +
-        static_cast<double>(
-            latLonHeader->nrCols) *
-            latLonHeader->dx;
+    geoPoint.longitude = latLonHeader.llCorner.longitude
+                         + static_cast<double>( latLonHeader.nrCols) * latLonHeader.dx;
 
-    getUtmFromLatLon(
-        mySettings.utmZone,
-        geoPoint,
-        &vertices[1]);
+    getUtmFromLatLon(mySettings.utmZone, geoPoint, &vertices[1]);
 
     /*
      * Upper-right
      */
-    geoPoint.latitude =
-        latLonHeader->llCorner.latitude +
-        static_cast<double>(
-            latLonHeader->nrRows) *
-            latLonHeader->dy;
+    geoPoint.latitude = latLonHeader.llCorner.latitude +
+                        static_cast<double>(latLonHeader.nrRows) * latLonHeader.dy;
 
-    getUtmFromLatLon(
-        mySettings.utmZone,
-        geoPoint,
-        &vertices[2]);
+    getUtmFromLatLon(mySettings.utmZone, geoPoint, &vertices[2]);
 
     /*
      * Upper-left
      */
-    geoPoint.longitude =
-        latLonHeader->llCorner.longitude;
+    geoPoint.longitude = latLonHeader.llCorner.longitude;
 
-    getUtmFromLatLon(
-        mySettings.utmZone,
-        geoPoint,
-        &vertices[3]);
+    getUtmFromLatLon(mySettings.utmZone, geoPoint, &vertices[3]);
 
     const double xmin =
         floor(min(vertices[0].x,
@@ -2315,118 +2175,71 @@ bool getGeoExtentsFromLatLonHeader(
         floor(max(vertices[2].y,
                   vertices[3].y)) + 1.;
 
-    utmHeader->cellSize =
-        cellSize;
+    utmHeader.cellSize = cellSize;
+    utmHeader.invCellSize = 1.0 / cellSize;
 
-    utmHeader->invCellSize =
-        1.0 / cellSize;
+    utmHeader.nrCols = static_cast<int>(floor((xmax - xmin) / cellSize) + 1);
 
-    utmHeader->nrCols =
-        static_cast<int>(
-            floor(
-                (xmax - xmin) /
-                cellSize) + 1);
-
-    utmHeader->nrRows =
+    utmHeader.nrRows =
         static_cast<int>(
             floor(
                 (ymax - ymin) /
                 cellSize) + 1);
 
-    utmHeader->llCorner.x =
-        xmin;
+    utmHeader.llCorner.x = xmin;
 
-    utmHeader->llCorner.y =
-        ymin;
+    utmHeader.llCorner.y = ymin;
 
-    utmHeader->flag =
-        latLonHeader->flag;
+    utmHeader.flag = latLonHeader.flag;
 
     return true;
 }
 
 
-double getGeoCellSizeFromLatLonHeader(
-    const Crit3DGisSettings& mySettings,
-    Crit3DLatLonHeader* latLonHeader)
+double getUtmCellSizeFromLatLonHeader(const Crit3DGisSettings& mySettings, const Crit3DLatLonHeader &latLonHeader)
 {
-    if (latLonHeader == nullptr ||
-        latLonHeader->nrRows <= 0 ||
-        latLonHeader->nrCols <= 0)
-    {
+    if (latLonHeader.nrRows <= 0 || latLonHeader.nrCols <= 0)
         return NODATA;
-    }
 
     Crit3DUtmPoint vertices[4];
-
     Crit3DGeoPoint geoPoint;
 
     /*
      * Lower-left
      */
-    geoPoint.latitude =
-        latLonHeader->llCorner.latitude;
+    geoPoint.latitude = latLonHeader.llCorner.latitude;
 
-    geoPoint.longitude =
-        latLonHeader->llCorner.longitude;
+    geoPoint.longitude = latLonHeader.llCorner.longitude;
 
-    getUtmFromLatLon(
-        mySettings.utmZone,
-        geoPoint,
-        &vertices[0]);
+    getUtmFromLatLon(mySettings.utmZone, geoPoint, &vertices[0]);
 
     /*
      * Lower-right
      */
-    geoPoint.longitude =
-        latLonHeader->llCorner.longitude +
-        static_cast<double>(
-            latLonHeader->nrCols) *
-            latLonHeader->dx;
+    geoPoint.longitude = latLonHeader.llCorner.longitude +
+                         static_cast<double>(latLonHeader.nrCols) * latLonHeader.dx;
 
-    getUtmFromLatLon(
-        mySettings.utmZone,
-        geoPoint,
-        &vertices[1]);
+    getUtmFromLatLon( mySettings.utmZone, geoPoint, &vertices[1]);
 
     /*
      * Upper-right
      */
-    geoPoint.latitude =
-        latLonHeader->llCorner.latitude +
-        static_cast<double>(
-            latLonHeader->nrRows) *
-            latLonHeader->dy;
+    geoPoint.latitude = latLonHeader.llCorner.latitude +
+                        static_cast<double>(latLonHeader.nrRows) * latLonHeader.dy;
 
-    getUtmFromLatLon(
-        mySettings.utmZone,
-        geoPoint,
-        &vertices[2]);
+    getUtmFromLatLon(mySettings.utmZone, geoPoint, &vertices[2]);
 
     /*
      * Upper-left
      */
-    geoPoint.longitude =
-        latLonHeader->llCorner.longitude;
+    geoPoint.longitude = latLonHeader.llCorner.longitude;
 
-    getUtmFromLatLon(
-        mySettings.utmZone,
-        geoPoint,
-        &vertices[3]);
+    getUtmFromLatLon(mySettings.utmZone, geoPoint, &vertices[3]);
 
-    const double xCellSize =
-        (vertices[1].x -
-         vertices[0].x) /
-        latLonHeader->nrCols;
+    const double xCellSize = (vertices[1].x - vertices[0].x) / latLonHeader.nrCols;
+    const double yCellSize = (vertices[3].y - vertices[0].y) / latLonHeader.nrRows;
 
-    const double yCellSize =
-        (vertices[3].y -
-         vertices[0].y) /
-        latLonHeader->nrRows;
-
-    return min(
-        fabs(xCellSize),
-        fabs(yCellSize));
+    return min(fabs(xCellSize), fabs(yCellSize));
 }
 
 

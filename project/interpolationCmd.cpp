@@ -372,15 +372,15 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &dataPoints,
     std::vector<double> proxyValues(interpolationSettings.getProxyNr());
 
     #pragma omp parallel for if (isParallelComputing) firstprivate(proxyValues)
-    for (long row = 0; row < outputGrid->header->nrRows ; row++)
+    for (long row = 0; row < outputGrid->header.nrRows ; row++)
     {
-        for (long col = 0; col < outputGrid->header->nrCols; col++)
+        for (long col = 0; col < outputGrid->header.nrCols; col++)
         {
             float z = raster.value[row][col];
-            if (! isEqual(z, outputGrid->header->flag))
+            if (! isEqual(z, outputGrid->header.flag))
             {
                 float x, y;
-                gis::getUtmXYFromRowColSinglePrecision(*(outputGrid->header), row, col, &x, &y);
+                gis::getUtmXYFromRowColSinglePrecision(outputGrid->header, row, col, &x, &y);
 
                 if (getUseDetrendingVar(variable))
                 {
@@ -414,15 +414,15 @@ bool topographicIndex(const gis::Crit3DRasterGrid& DEM, std::vector <float> wind
 
     for (auto width : windowWidths)
     {
-        cellNr = round(width / DEM.header->cellSize);
+        cellNr = round(width / DEM.header.cellSize);
 
-        for (int row = 0; row < outGrid.header->nrRows ; row++)
+        for (int row = 0; row < outGrid.header.nrRows ; row++)
         {
-            for (int col = 0; col < outGrid.header->nrCols; col++)
+            for (int col = 0; col < outGrid.header.nrCols; col++)
             {
 
                 z = DEM.value[row][col];
-                if (! isEqual(z, DEM.header->flag))
+                if (! isEqual(z, DEM.header.flag))
                 {
                     r1 = row - cellNr;
                     r2 = row + cellNr;
@@ -442,7 +442,7 @@ bool topographicIndex(const gis::Crit3DRasterGrid& DEM, std::vector <float> wind
                             {
                                 value = DEM.value[windowRow][windowCol];
 
-                                if (! isEqual(value, DEM.header->flag))
+                                if (! isEqual(value, DEM.header.flag))
                                 {
                                     if (windowRow != row && windowCol != col)
                                     {
@@ -469,7 +469,7 @@ bool topographicIndex(const gis::Crit3DRasterGrid& DEM, std::vector <float> wind
 
                     if (weightSum > 0)
                     {
-                        if (isEqual(outGrid.value[row][col], outGrid.header->flag))
+                        if (isEqual(outGrid.value[row][col], outGrid.header.flag))
                             outGrid.value[row][col] = (lowerSum - higherSum - equalSum * 0.5) / weightSum;
                         else
                             outGrid.value[row][col] += (lowerSum - higherSum - equalSum * 0.5) / weightSum;

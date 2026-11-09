@@ -655,10 +655,8 @@ bool computeWindPolar(float u, float v, float* intensity, float* direction)
     return true;
 }
 
-bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
+bool setColorScale(meteoVariable variable, Crit3DColorScale &colorScale)
 {
-    if (colorScale == nullptr) return false;
-
     switch(variable)
     {
         case airTemperature: case dailyAirTemperatureAvg:
@@ -681,7 +679,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt: case snowFall:
         case precipitation: case dailyPrecipitation: case monthlyPrecipitation:
             setPrecipitationScale(colorScale);
-            colorScale->setHideZero(true);
+            colorScale.setHideZero(true);
             break;
         case referenceEvapotranspiration: case dailyReferenceEvapotranspirationHS:
         case dailyReferenceEvapotranspirationPM: case actualEvaporation:
@@ -713,7 +711,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case snowVariation:
             setAnomalyScale(colorScale);
             reverseColorScale(colorScale);
-            colorScale->setHideZero(true);
+            colorScale.setHideZero(true);
             break;
         case anomalyVar:
             setAnomalyScale(colorScale);

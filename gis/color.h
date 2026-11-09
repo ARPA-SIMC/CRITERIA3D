@@ -38,13 +38,13 @@
         void initialize(unsigned int nrKeyColors, unsigned int nrColors);
         bool classify();
 
-        unsigned int nrColors() { return _nrColors; }
-        unsigned int nrKeyColors() { return _nrKeyColors; }
+        unsigned int nrColors() const { return _nrColors; }
+        unsigned int nrKeyColors() const { return _nrKeyColors; }
 
-        double minimum() { return _minimum; }
+        double minimum() const { return _minimum; }
         void setMinimum(double min) { _minimum = min; }
 
-        double maximum() { return _maximum; }
+        double maximum() const { return _maximum; }
         void setMaximum(double max) { _maximum = max; }
 
         Crit3DColor* getColor(double myValue);
@@ -53,36 +53,36 @@
         bool setRange(float minimum, float maximum);
 
         void setFixedRange(bool fixedRange) { _isFixedRange = fixedRange; }
-        bool isFixedRange() { return _isFixedRange; }
+        bool isFixedRange() const { return _isFixedRange; }
 
         void setHideMinimum(bool isHideMinimum) { _isHideMinimum = isHideMinimum; }
-        bool isHideMinimum() { return _isHideMinimum; }
+        bool isHideMinimum() const { return _isHideMinimum; }
 
         void setTransparent(bool transparent) { _isTransparent = transparent; }
-        bool isTransparent() { return _isTransparent; }
+        bool isTransparent() const { return _isTransparent; }
 
         void setHideZero(bool isHideZero) { _isHideZero = isHideZero; }
-        bool isHideZero() { return _isHideZero; }
+        bool isHideZero() const { return _isHideZero; }
     };
 
-    bool setDefaultScale(Crit3DColorScale* myScale);
-    bool setRandomColors(Crit3DColorScale* myScale);
-    bool setDTMScale(Crit3DColorScale* myScale);
-    bool setTemperatureScale(Crit3DColorScale* myScale);
-    bool setSlopeStabilityScale(Crit3DColorScale* myScale);
-    bool setAnomalyScale(Crit3DColorScale* myScale);
-    bool setPrecipitationScale(Crit3DColorScale* myScale);
-    bool setRelativeHumidityScale(Crit3DColorScale* myScale);
-    bool setRadiationScale(Crit3DColorScale* myScale);
-    bool setWindIntensityScale(Crit3DColorScale* myScale);
-    bool setCenteredScale(Crit3DColorScale* myScale);
-    bool setCircolarScale(Crit3DColorScale* myScale);
-    bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounded);
-    bool reverseColorScale(Crit3DColorScale* myScale);
-    bool setGrayScale(Crit3DColorScale* myScale);
-    bool setBlackScale(Crit3DColorScale* myScale);
-    bool setSurfaceWaterScale(Crit3DColorScale* myScale);
-    bool setLAIScale(Crit3DColorScale* myScale);
+    bool setDefaultScale(Crit3DColorScale& myScale);
+    bool setRandomColors(Crit3DColorScale& myScale);
+    bool setDTMScale(Crit3DColorScale& myScale);
+    bool setTemperatureScale(Crit3DColorScale& myScale);
+    bool setSlopeStabilityScale(Crit3DColorScale& myScale);
+    bool setAnomalyScale(Crit3DColorScale& myScale);
+    bool setPrecipitationScale(Crit3DColorScale& myScale);
+    bool setRelativeHumidityScale(Crit3DColorScale& myScale);
+    bool setRadiationScale(Crit3DColorScale& myScale);
+    bool setWindIntensityScale(Crit3DColorScale& myScale);
+    bool setCenteredScale(Crit3DColorScale& myScale);
+    bool setCircolarScale(Crit3DColorScale& myScale);
+    bool roundColorScale(Crit3DColorScale& myScale, int nrIntervals, bool lessRounded);
+    bool reverseColorScale(Crit3DColorScale& myScale);
+    bool setGrayScale(Crit3DColorScale& myScale);
+    bool setBlackScale(Crit3DColorScale& myScale);
+    bool setSurfaceWaterScale(Crit3DColorScale& myScale);
+    bool setLAIScale(Crit3DColorScale& myScale);
 
     void mixColors(const Crit3DColor &backColor, const Crit3DColor &foreColor, Crit3DColor &outColor, float alpha);
 

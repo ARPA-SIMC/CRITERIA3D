@@ -90,8 +90,8 @@ bool RasterUtmObject::initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Cr
     _utmZone = gisSettings.utmZone;
     _rasterPointer = rasterPtr;
 
-    gis::getGeoExtentsFromUTMHeader(gisSettings, _rasterPointer->header, &_latLonHeader);
-    gis::Crit3DRasterHeader utmHeader = *_rasterPointer->header;
+    gis::getGeoExtentsFromUTMHeader(gisSettings, _rasterPointer->header, _latLonHeader);
+    gis::Crit3DRasterHeader utmHeader = _rasterPointer->header;
 
     // latlon raster have one extra cell
     gis::Crit3DRasterHeader extHeader = utmHeader;
@@ -178,7 +178,7 @@ float RasterUtmObject::getValue(Position& pos) const
 
     const float value = _rasterPointer->getValueFromXY(utmPoint.x, utmPoint.y);
 
-    if (isEqual(value, _rasterPointer->header->flag))
+    if (isEqual(value, _rasterPointer->header.flag))
         return NODATA;
     else
         return value;
@@ -205,8 +205,8 @@ Position RasterUtmObject::getCurrentCenter() const
  */
 Position RasterUtmObject::getRasterCenter() const
 {
-    const int rowCenter = _latRaster.header->nrRows * 0.5;
-    const int colCenter = _latRaster.header->nrCols * 0.5;
+    const int rowCenter = _latRaster.header.nrRows * 0.5;
+    const int colCenter = _latRaster.header.nrCols * 0.5;
 
     Position center;
     center.setLatitude(_latRaster.value[rowCenter][colCenter]);
@@ -243,7 +243,7 @@ bool RasterUtmObject::getCurrentWindow(gis::Crit3DRasterWindow* rasterWindow)
     gis::getUtmFromLatLon(_utmZone, _geoMap->topRight, &topRight);
 
     int row0, row1, col0, col1;
-    gis::Crit3DRasterHeader utmHeader = *_rasterPointer->header;
+    gis::Crit3DRasterHeader utmHeader = _rasterPointer->header;
     gis::getRowColFromXY(utmHeader, bottomleft, &row0, &col0);
     gis::getRowColFromXY(utmHeader, topRight, &row1, &col1);
 
@@ -345,9 +345,9 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
     }
 
     auto* raster = _rasterPointer;
-    auto* colorScale = raster->colorScale;
+    auto& colorScale = raster->colorScale;
 
-    if (! colorScale->isFixedRange())
+    if (! colorScale.isFixedRange())
     {
         gis::updateColorScale(raster, rasterWindow);
         roundColorScale(colorScale, 4, true);
@@ -355,13 +355,13 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
 
     const int step = getCurrentStep(rasterWindow);
 
-    const float flag = raster->header->flag;
-    const double minimum = colorScale->minimum();
-    const bool hideMinimum = colorScale->isHideMinimum();
-    const bool hideZero = colorScale->isHideZero();
+    const float flag = raster->header.flag;
+    const double minimum = colorScale.minimum();
+    const bool hideMinimum = colorScale.isHideMinimum();
+    const bool hideZero = colorScale.isHideZero();
 
-    const int lastRow = raster->header->nrRows - 1;
-    const int lastCol = raster->header->nrCols - 1;
+    const int lastRow = raster->header.nrRows - 1;
+    const int lastCol = raster->header.nrCols - 1;
 
     const auto& values = raster->value;
     const auto& lat = _latRaster.value;
@@ -399,7 +399,7 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
                 continue;
             }
 
-            Crit3DColor* color = colorScale->getColor(value);
+            Crit3DColor* color = colorScale.getColor(value);
 
             if (color != lastColor)
             {
