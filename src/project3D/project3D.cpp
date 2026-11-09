@@ -622,7 +622,7 @@ bool Project3D::setAccuracy()
     double vMax = 5 + 5 * waterFluxesParameters.modelAccuracy;                      // [m s-1] default: 20
 
     // minimum dT
-    double minimumDeltaT = std::min(6.0, DEM.header->cellSize / vMax);              // [s]
+    double minimumDeltaT = std::min(6.0, DEM.header.cellSize / vMax);              // [s]
 
     // Mass Balance Ratio precision (digit at which error is accepted)
     short massBalanceRatioDigit = waterFluxesParameters.modelAccuracy;              // [-] default: 3
@@ -724,14 +724,14 @@ bool Project3D::setSoilIndexMap()
     logInfo("Set soil index...");
 
     double x, y;
-    soilIndexMap.initializeGrid(*(DEM.header));
+    soilIndexMap.initializeGrid(DEM.header);
     soilIndexList.clear();
 
-    for (int row = 0; row < DEM.header->nrRows; row++)
+    for (int row = 0; row < DEM.header.nrRows; row++)
     {
-        for (int col = 0; col < DEM.header->nrCols; col++)
+        for (int col = 0; col < DEM.header.nrCols; col++)
         {
-            if (isEqual(DEM.value[row][col], DEM.header->flag))
+            if (isEqual(DEM.value[row][col], DEM.header.flag))
                 continue;
 
             DEM.getXY(row, col, x, y);
@@ -762,15 +762,15 @@ void Project3D::setIndexMaps()      //Improvable
     unsigned long currentIndex = 0;
     for (unsigned int layer = 0; layer < nrLayers; layer++)
     {
-        long noIndex = static_cast<long>(indexMap.at(layer).header->flag);
+        long noIndex = static_cast<long>(indexMap.at(layer).header.flag);
 
-        indexMap.at(layer).initializeGrid(*(DEM.header));
+        indexMap.at(layer).initializeGrid(DEM.header);
 
-        for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
+        for (int row = 0; row < indexMap.at(layer).header.nrRows; row++)
         {
-            for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
+            for (int col = 0; col < indexMap.at(layer).header.nrCols; col++)
             {
-                if (isEqual(DEM.value[row][col], DEM.header->flag))
+                if (isEqual(DEM.value[row][col], DEM.header.flag))
                     continue;
 
                 bool checkIndex = false;
@@ -856,9 +856,9 @@ bool Project3D::setLateralBoundary()
 
     boundaryMap.initializeGrid(DEM);
 
-    for (int row = 0; row < boundaryMap.header->nrRows; row++)
+    for (int row = 0; row < boundaryMap.header.nrRows; row++)
     {
-        for (int col = 0; col < boundaryMap.header->nrCols; col++)
+        for (int col = 0; col < boundaryMap.header.nrCols; col++)
         {
             if (gis::isBoundaryRunoff(indexMap[0], DEM, *(radiationMaps->aspectMap), row, col))
             {
@@ -938,20 +938,20 @@ bool Project3D::setCrit3DSoils()
 
 bool Project3D::setCrit3DTopography()
 {
-    double area = DEM.header->cellSize * DEM.header->cellSize;
+    double area = DEM.header.cellSize * DEM.header.cellSize;
     std::string errorName = "";
 
     for (size_t layer = 0; layer < nrLayers; layer++)
     {
         double volume = area * layerThickness[layer];
         float lateralArea;
-        long noIndex = static_cast<long>(indexMap.at(layer).header->flag);
+        long noIndex = static_cast<long>(indexMap.at(layer).header.flag);
 
-        lateralArea = (layer == 0) ? DEM.header->cellSize : DEM.header->cellSize * layerThickness[layer];
+        lateralArea = (layer == 0) ? DEM.header.cellSize : DEM.header.cellSize * layerThickness[layer];
 
-        for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
+        for (int row = 0; row < indexMap.at(layer).header.nrRows; row++)
         {
-            for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
+            for (int col = 0; col < indexMap.at(layer).header.nrCols; col++)
             {
                 long index = static_cast<long>(indexMap.at(layer).value[row][col]);
                 if (index == noIndex)
@@ -971,7 +971,7 @@ bool Project3D::setCrit3DTopography()
                     // SURFACE
                     if (int(boundaryMap.value[row][col]) == BOUNDARY_RUNOFF && waterFluxesParameters.freeCatchmentRunoff)
                     {
-                        float boundaryArea = DEM.header->cellSize;
+                        float boundaryArea = DEM.header.cellSize;
                         myResult = soilFluxes3D::setNode(index, x, y, z, area, true, soilFluxes3D::boundaryType_t::Runoff,
                                                          boundarySlope, boundaryArea);
                     }
@@ -1108,11 +1108,11 @@ bool Project3D::initializeWaterContent()
 
     for (unsigned int layer = 0; layer < nrLayers; layer ++)
     {
-        long noIndex = static_cast<long>(indexMap.at(layer).header->flag);
+        long noIndex = static_cast<long>(indexMap.at(layer).header.flag);
 
-        for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
+        for (int row = 0; row < indexMap.at(layer).header.nrRows; row++)
         {
-            for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
+            for (int col = 0; col < indexMap.at(layer).header.nrCols; col++)
             {
                 long index = indexMap.at(layer).value[row][col];
                 if (index == noIndex)
@@ -1167,11 +1167,11 @@ bool Project3D::setCrit3DNodeSoil()
 
     for (unsigned int layer = 0; layer < nrLayers; layer ++)
     {
-        long noIndex = static_cast<long>(indexMap.at(layer).header->flag);
+        long noIndex = static_cast<long>(indexMap.at(layer).header.flag);
 
-        for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
+        for (int row = 0; row < indexMap.at(layer).header.nrRows; row++)
         {
-            for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
+            for (int col = 0; col < indexMap.at(layer).header.nrCols; col++)
             {
                 long index = indexMap.at(layer).value[row][col];
                 if (index == noIndex)
@@ -1254,11 +1254,11 @@ bool Project3D::initializeSoilMoisture(int month)
 
     for (unsigned int layer = 0; layer < nrLayers; layer++)
     {
-        long noIndex = static_cast<long>(indexMap.at(layer).header->flag);
+        long noIndex = static_cast<long>(indexMap.at(layer).header.flag);
 
-        for (int row = 0; row < indexMap.at(size_t(layer)).header->nrRows; row++)
+        for (int row = 0; row < indexMap.at(size_t(layer)).header.nrRows; row++)
         {
-            for (int col = 0; col < indexMap.at(size_t(layer)).header->nrCols; col++)
+            for (int col = 0; col < indexMap.at(size_t(layer)).header.nrCols; col++)
             {
                 index = indexMap.at(layer).value[row][col];
                 if (index == noIndex)
@@ -1375,7 +1375,7 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     double massBalanceError = currentWaterContent - forecastWaterContent;
 
     logInfo("Mass balance error [m3]: " + QString::number(massBalanceError));
-	double surfaceArea = DEM.header->cellSize * DEM.header->cellSize * nrSurfaceNodes;      // [m2]
+    double surfaceArea = DEM.header.cellSize * DEM.header.cellSize * nrSurfaceNodes;      // [m2]
     double error_mm = massBalanceError / surfaceArea * 1000;                                // [mm]
     logInfo("Mass balance error [mm]: " + QString::number(error_mm));
 
@@ -1451,7 +1451,7 @@ int Project3D::getLandUnitFromUtm(double x, double y)
 
     int id = int(gis::getValueFromXY(landUseMap, x, y));
 
-    if (id == int(landUseMap.header->flag))
+    if (id == int(landUseMap.header.flag))
     {
         return NODATA;
     }
@@ -1481,7 +1481,7 @@ int Project3D::getLandUnitIndexRowCol(int row, int col)
 
     // landuse map has same header of DEM
     int id = landUseMap.value[row][col];
-    if (id == landUseMap.header->flag)
+    if (id == landUseMap.header.flag)
     {
         return NODATA;
     }
@@ -1500,7 +1500,7 @@ int Project3D::getTreeCoverIndexRowCol(int row, int col)
 
     // treeCover map has same header of DEM
     int id = treeCoverMap.value[row][col];
-    if (id == treeCoverMap.header->flag)
+    if (id == treeCoverMap.header.flag)
     {
         return NODATA;
     }
@@ -1667,7 +1667,7 @@ int Project3D::getSoilMapId(double x, double y)
 
     float soilMapValue = gis::getValueFromXY(soilMap, x, y);
 
-    if (isEqual(soilMapValue, soilMap.header->flag))
+    if (isEqual(soilMapValue, soilMap.header.flag))
     {
         return NODATA;
     }
@@ -1722,7 +1722,7 @@ int Project3D::getSoilIndex(long row, long col)
 
     float soilIndex = soilIndexMap.getValueFromRowCol(row, col);
 
-    if (isEqual(soilIndex,soilIndexMap.header->flag))
+    if (isEqual(soilIndex,soilIndexMap.header.flag))
     {
         return NODATA;
     }
@@ -1785,7 +1785,7 @@ float Project3D::computeCurrentPond(int row, int col)
 
     float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
 
-    if (isEqual(slopeDegree, radiationMaps->slopeMap->header->flag))
+    if (isEqual(slopeDegree, radiationMaps->slopeMap->header.flag))
         return NODATA;
 
     double slope = tan(slopeDegree * DEG_TO_RAD);
@@ -1807,7 +1807,7 @@ float Project3D::computeCurrentPond(int row, int col)
 
             // landUnit list and crop list have the same index
             float currentLai = laiMap.value[row][col];
-            if (! isEqual(currentLai, laiMap.header->flag))
+            if (! isEqual(currentLai, laiMap.header.flag))
             {
                 currentInterception = maximumPond * 0.5 * (currentLai / cropList[unitIndex].LAImax);
             }
@@ -1825,12 +1825,12 @@ bool Project3D::dailyUpdatePond()
         return false;
     }
 
-    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    for (int row = 0; row < indexMap.at(0).header.nrRows; row++)
     {
-        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        for (int col = 0; col < indexMap.at(0).header.nrCols; col++)
         {
             long nodeIndex = indexMap.at(0).value[row][col];
-            if (nodeIndex == static_cast<long>(indexMap.at(0).header->flag))
+            if (nodeIndex == static_cast<long>(indexMap.at(0).header.flag))
                 continue;
 
             float pond = computeCurrentPond(row, col);
@@ -1913,17 +1913,17 @@ bool Project3D::computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criter
         return false;
     }
 
-    outputRaster.initializeGrid(*(indexMap.at(layerIndex).header));
+    outputRaster.initializeGrid(indexMap.at(layerIndex).header);
 
     // compute map
-    for (int row = 0; row < indexMap.at(layerIndex).header->nrRows; row++)
+    for (int row = 0; row < indexMap.at(layerIndex).header.nrRows; row++)
     {
-        for (int col = 0; col < indexMap.at(layerIndex).header->nrCols; col++)
+        for (int col = 0; col < indexMap.at(layerIndex).header.nrCols; col++)
         {
             long nodeIndex = indexMap.at(layerIndex).value[row][col];
-            if (nodeIndex == static_cast<long>(indexMap.at(layerIndex).header->flag))
+            if (nodeIndex == static_cast<long>(indexMap.at(layerIndex).header.flag))
             {
-                outputRaster.value[row][col] = outputRaster.header->flag;
+                outputRaster.value[row][col] = outputRaster.header.flag;
                 continue;
             }
 
@@ -1931,7 +1931,7 @@ bool Project3D::computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criter
 
             if (value == NODATA)
             {
-                outputRaster.value[row][col] = outputRaster.header->flag;
+                outputRaster.value[row][col] = outputRaster.header.flag;
                 continue;
             }
 
@@ -1965,15 +1965,15 @@ bool Project3D::getTotalSurfaceWaterContent(double &wcSum, long &nrVoxels, int r
         return false;
     }
 
-    gis::Crit3DRasterHeader* header = indexMap.at(0).header;
-    long flag = static_cast<long>(header->flag);
-    double voxelArea = header->cellSize * header->cellSize;                 // [m2]
+    const gis::Crit3DRasterHeader& header = indexMap.at(0).header;
+    long flag = static_cast<long>(header.flag);
+    double voxelArea = header.cellSize * header.cellSize;                 // [m2]
 
     // default: all map
     if (row1 == NODATA || col1 == NODATA)
     {
-        row1 = header->nrRows - 1;
-        col1 = header->nrCols - 1;
+        row1 = header.nrRows - 1;
+        col1 = header.nrCols - 1;
     }
 
     nrVoxels = 0;
@@ -2018,15 +2018,15 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrCells, bool isMa
         return false;
     }
 
-    gis::Crit3DRasterHeader* header = indexMap.at(0).header;
-    const long indexFlag = static_cast<long>(header->flag);
-    const double voxelArea = header->cellSize * header->cellSize;           // [m2]
+    const gis::Crit3DRasterHeader& header = indexMap.at(0).header;
+    const long indexFlag = static_cast<long>(header.flag);
+    const double voxelArea = header.cellSize * header.cellSize;           // [m2]
 
     // default: all map
     if (row1 == NODATA || col1 == NODATA)
     {
-        row1 = header->nrRows - 1;
-        col1 = header->nrCols - 1;
+        row1 = header.nrRows - 1;
+        col1 = header.nrCols - 1;
     }
 
     const criteria3DVariable required3DVar =
@@ -2083,11 +2083,11 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrCells, bool isMa
 double Project3D::getFractionAvailableWater(int row, int col)
 {
     if (row < 0 || col < 0
-        || row >= indexMap.at(0).header->nrRows
-        || col >= indexMap.at(0).header->nrCols)
+        || row >= indexMap.at(0).header.nrRows
+        || col >= indexMap.at(0).header.nrCols)
         return NODATA;
 
-    const long indexflag = indexMap.at(0).header->flag;
+    const long indexflag = indexMap.at(0).header.flag;
 
     // check surface node
     if (indexMap.at(0).value[row][col] == indexflag)
@@ -2143,14 +2143,14 @@ bool Project3D::computeAvgDegreeOfSaturation(gis::Crit3DRasterGrid &outputRaster
 {
     const auto &header = indexMap.at(0).header;
 
-    outputRaster.initializeGrid(*header);
+    outputRaster.initializeGrid(header);
 
-    const long indexflag = header->flag;
+    const long indexflag = header.flag;
 
     #pragma omp parallel for if (isParallelComputing())
-    for (int row = 0; row < header->nrRows; ++row)
+    for (int row = 0; row < header.nrRows; ++row)
     {
-        for (int col = 0; col < header->nrCols; ++col)
+        for (int col = 0; col < header.nrCols; ++col)
         {
             // check surface node
             if (indexMap.at(0).value[row][col] == indexflag)
@@ -2208,16 +2208,16 @@ bool Project3D::computeAvgDegreeOfSaturation(gis::Crit3DRasterGrid &outputRaster
 
 bool Project3D::computeMinimumFoS(gis::Crit3DRasterGrid &outputRaster)
 {
-    outputRaster.initializeGrid(*(indexMap.at(0).header));
+    outputRaster.initializeGrid(indexMap.at(0).header);
     const double MINIMUM_DEPTH = 0.15;                          // [m]
 
     int firstLayer = 1;
     while(firstLayer < (int)layerDepth.size() && layerDepth[firstLayer] < MINIMUM_DEPTH )
         firstLayer++;
 
-    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    for (int row = 0; row < indexMap.at(0).header.nrRows; row++)
     {
-        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        for (int col = 0; col < indexMap.at(0).header.nrCols; col++)
         {
             double minimumValue = NODATA;
             for (unsigned int layer = firstLayer; layer < nrLayers; layer++)
@@ -2285,8 +2285,8 @@ bool Project3D::aggregateAndSaveDailyMap(meteoVariable myVar, aggregationMethod 
         {
             if (myTime == myTimeIni)
             {
-                for (myRow = 0; myRow < myAggrMap->header->nrRows; myRow++)
-                    for (myCol = 0; myCol < myAggrMap->header->nrCols; myCol++)
+                for (myRow = 0; myRow < myAggrMap->header.nrRows; myRow++)
+                    for (myCol = 0; myCol < myAggrMap->header.nrCols; myCol++)
                         myAggrMap->value[myRow][myCol] = myMap->value[myRow][myCol];
 
                 nrAggrMap++;
@@ -2476,7 +2476,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
     double surfaceEvaporation = std::min(maxEvaporation, surfaceWater);         // [mm]
 
     // TODO surface evaporation out of numerical solution
-    double area = DEM.header->cellSize * DEM.header->cellSize;                  // [m2]
+    double area = DEM.header.cellSize * DEM.header.cellSize;                  // [m2]
     double surfaceFlow = area * (surfaceEvaporation / 1000.) / 3600.;           // [m3 s-1]
 
     if (surfaceFlow <= DBL_EPSILON) {
@@ -2612,7 +2612,7 @@ double Project3D::assignTranspiration(int row, int col, Crit3DCrop &currentCrop,
     for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
     {
         long nodeIndex = long(indexMap.at(layer).value[row][col]);
-        if (isEqual(nodeIndex, indexMap.at(layer).header->flag))
+        if (isEqual(nodeIndex, indexMap.at(layer).header.flag))
             continue;
 
         int horizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[layer]);
@@ -2677,7 +2677,7 @@ double Project3D::assignTranspiration(int row, int col, Crit3DCrop &currentCrop,
     }
 
     // assigns transpiration to water sink source
-    double area = DEM.header->cellSize * DEM.header->cellSize;              // [m2]
+    double area = DEM.header.cellSize * DEM.header.cellSize;              // [m2]
     actualTranspiration = 0;
     for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
     {
@@ -2685,7 +2685,7 @@ double Project3D::assignTranspiration(int row, int col, Crit3DCrop &currentCrop,
         if (flow > DBL_EPSILON)
         {
             long nodeIndex = long(indexMap.at(layer).value[row][col]);
-            if (! isEqual(nodeIndex, indexMap.at(layer).header->flag))
+            if (! isEqual(nodeIndex, indexMap.at(layer).header.flag))
             {
                 waterSinkSource.at(nodeIndex) -= flow;                      // [m3 s-1]
                 actualTranspiration += layerTranspiration[layer];           // [mm]
@@ -2713,7 +2713,7 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
 
     // check node
     long nodeIndex = indexMap.at(layerIndex).value[row][col];
-    if (nodeIndex == indexMap.at(layerIndex).header->flag)
+    if (nodeIndex == indexMap.at(layerIndex).header.flag)
         return NODATA;
 
     // check horizon
@@ -2764,7 +2764,7 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
 
     // surface
     long currentNode = indexMap.at(0).value[row][col];
-    if (currentNode != indexMap.at(0).header->flag)
+    if (currentNode != indexMap.at(0).header.flag)
     {
         // [m]
         double surfaceWater = soilFluxes3D::getNodeWaterContent(currentNode);
@@ -2778,7 +2778,7 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
     for (unsigned int layer = 1; layer <= layerIndex; layer++)
     {
         long currentNode = indexMap.at(layer).value[row][col];
-        if (currentNode != indexMap.at(layer).header->flag)
+        if (currentNode != indexMap.at(layer).header.flag)
         {
             int currentHorizon = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[layer]);
             if (currentHorizon == NODATA)
@@ -2954,7 +2954,7 @@ float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, 
     std::string error;
 
     if (gis::readEsriGridFlt(fileName.toStdString(), myGrid, error))
-        if (myGrid->value[row][col] != myGrid->header->flag)
+        if (myGrid->value[row][col] != myGrid->header.flag)
             return myGrid->value[row][col];
 
     return NODATA;

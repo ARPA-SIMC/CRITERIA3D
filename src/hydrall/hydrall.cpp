@@ -349,11 +349,11 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     yearlyPrec->initializeGrid(DEM);
     yearlyET0->initializeGrid(DEM);
 
-    for (int i = 0; i < DEM.header->nrRows; i++)
+    for (int i = 0; i < DEM.header.nrRows; i++)
     {
-        for (int j = 0; j < DEM.header->nrCols; j++)
+        for (int j = 0; j < DEM.header.nrCols; j++)
         {
-            if (! isEqual(DEM.value[i][j], DEM.header->flag))
+            if (! isEqual(DEM.value[i][j], DEM.header.flag))
             {
                 //TODO: change when initial biomass maps will be available
                 treeNetPrimaryProduction->value[i][j] = 0;

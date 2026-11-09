@@ -2442,15 +2442,10 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(const QString &met
         return dailyVarList;
     }
 
-<<<<<<< HEAD
-    QString statement = QString("SELECT `%3`,`Value` FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3`")
-                            .arg(tableD).arg(varCode).arg(_tableDaily.fieldTime, first.toString("yyyy-MM-dd"), last.toString("yyyy-MM-dd"));
-=======
     QString statement = QString("SELECT `%3`,`Value` FROM `%1` "
                                 "WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' "
                                 "ORDER BY `%3`").arg(tableD).arg(varCode)
                                 .arg(_tableDaily.fieldTime, first.toString("yyyy-MM-dd"), last.toString("yyyy-MM-dd"));
->>>>>>> 60f284df39760b6f37c5e1ca936734f48bed5c33
 
     if(! qry.exec(statement) )
     {
@@ -4544,25 +4539,23 @@ bool Crit3DMeteoGridDbHandler::exportHourlyDataCsv(const QList<meteoVariable> &v
 }
 
 
-
-
 bool Crit3DMeteoGridDbHandler::MeteoGridToRasterFlt(double cellSize, const gis::Crit3DGisSettings& gisSettings, gis::Crit3DRasterGrid& myGrid)
 {
     if (! gridStructure().isUTM())
     {
         // lat/lon grid
         gis::Crit3DLatLonHeader latlonHeader = gridStructure().header();
-        gis::getGeoExtentsFromLatLonHeader(gisSettings, cellSize, myGrid.header, &latlonHeader);
-        if (! myGrid.initializeGrid(NODATA))
+        gis::getUtmExtentsFromLatLonHeader(gisSettings, cellSize, myGrid.header, latlonHeader);
+        if (! myGrid.initializeGrid(myGrid.header.flag))
             return false;
 
         double utmx, utmy, lat, lon;
         int dataGridRow, dataGridCol;
         float myValue;
 
-        for (int row = 0; row < myGrid.header->nrRows; row++)
+        for (int row = 0; row < myGrid.header.nrRows; row++)
         {
-            for (int col = 0; col < myGrid.header->nrCols; col++)
+            for (int col = 0; col < myGrid.header.nrCols; col++)
             {
                 myGrid.getXY(row, col, utmx, utmy);
                 gis::getLatLonFromUtm(gisSettings, utmx, utmy, &lat, &lon);

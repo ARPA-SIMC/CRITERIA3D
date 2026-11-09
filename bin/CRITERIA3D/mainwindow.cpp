@@ -1163,7 +1163,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                 meteoPointList[i]->setVisible(isVisible);
             }
 
-            myProject.meteoPointsColorScale->setRange(NODATA, NODATA);
+            myProject.meteoPointsColorScale.setRange(NODATA, NODATA);
             meteoPointsLegend->update();
             break;
         }
@@ -1184,7 +1184,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                 float minimum, maximum;
                 myProject.getMeteoPointsRange(minimum, maximum, _viewNotActivePoints);
 
-                myProject.meteoPointsColorScale->setRange(minimum, maximum);
+                myProject.meteoPointsColorScale.setRange(minimum, maximum);
             }
 
             roundColorScale(myProject.meteoPointsColorScale, 4, true);
@@ -1202,7 +1202,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                         else
                             meteoPointList[i]->setRadius(5);
 
-                        Crit3DColor *myColor = myProject.meteoPointsColorScale->getColor(myProject.meteoPoints[i].currentValue);
+                        Crit3DColor *myColor = myProject.meteoPointsColorScale.getColor(myProject.meteoPoints[i].currentValue);
                         meteoPointList[i]->setFillColor(QColor(myColor->red, myColor->green, myColor->blue));
                         meteoPointList[i]->setOpacity(1.0);
 
@@ -1380,9 +1380,9 @@ void MainWindow::on_actionView_Aspect_triggered()
 {
     if (myProject.DEM.isLoaded)
     {
-        myProject.radiationMaps->aspectMap->colorScale->setMinimum(0);
-        myProject.radiationMaps->aspectMap->colorScale->setMaximum(360);
-        myProject.radiationMaps->aspectMap->colorScale->setFixedRange(true);
+        myProject.radiationMaps->aspectMap->colorScale.setMinimum(0);
+        myProject.radiationMaps->aspectMap->colorScale.setMaximum(360);
+        myProject.radiationMaps->aspectMap->colorScale.setFixedRange(true);
         setCircolarScale(myProject.radiationMaps->aspectMap->colorScale);
         setCurrentRasterOutput(myProject.radiationMaps->aspectMap);
         ui->labelOutputRaster->setText("Aspect °");
@@ -1614,8 +1614,8 @@ void MainWindow::showSnowVariable(meteoVariable var)
 
     case snowVariation:
         setOutputMeteoVariable(snowVariation, myProject.snowMaps.getDeltaSWEMap());
-        rasterOutput->getRasterPointer()->colorScale->setRange(-5., 5.);
-        rasterOutput->getRasterPointer()->colorScale->setFixedRange(true);
+        rasterOutput->getRasterPointer()->colorScale.setRange(-5., 5.);
+        rasterOutput->getRasterPointer()->colorScale.setFixedRange(true);
         break;
 
     case snowSurfaceTemperature:
@@ -1816,7 +1816,7 @@ bool MainWindow::isInsideDEM(Position geoPos)
     gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
 
     float value = myProject.DEM.getValueFromXY(x, y);
-    return (value != myProject.DEM.header->flag);
+    return (value != myProject.DEM.header.flag);
 }
 
 
@@ -2643,14 +2643,14 @@ void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
         return;
     }
 
-    gis::Crit3DRasterHeader* header = myProject.indexMap.at(0).header;
-    double voxelArea = header->cellSize * header->cellSize;                     // [m2]
+    const gis::Crit3DRasterHeader& header = myProject.indexMap.at(0).header;
+    double voxelArea = header.cellSize * header.cellSize;                     // [m2]
 
     // default: all map
     int row0 = 0;
     int col0 = 0;
-    int row1 = header->nrRows - 1;
-    int col1 = header->nrCols - 1;
+    int row1 = header.nrRows - 1;
+    int col1 = header.nrCols - 1;
 
     // selection
     bool isSelection = false;
@@ -2665,7 +2665,7 @@ void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
             myProject.logWarning("selection is out of map");
             return;
         }
-        gis::getRowColFromXY(*header, utmX, utmY, &row0, &col0);
+        gis::getRowColFromXY(header, utmX, utmY, &row0, &col0);
 
         QPointF bottomRight = mapView->mapToScene(rubberBandRect.bottomRight());
         gis::getUtmFromLatLon(myProject.gisSettings, bottomRight.y(), bottomRight.x(), &utmX, &utmY);
@@ -2674,7 +2674,7 @@ void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
             myProject.logWarning("selection is out of map");
             return;
         }
-        gis::getRowColFromXY(*header, utmX, utmY, &row1, &col1);
+        gis::getRowColFromXY(header, utmX, utmY, &row1, &col1);
         isSelection = true;
     }
 
@@ -2753,12 +2753,12 @@ void MainWindow::on_actionDEM_summary_triggered()
     float maxElevation = NODATA;
     float minElevation = NODATA;
     bool isFirst = true;
-    for (int row = 0; row < myProject.DEM.header->nrRows; row++)
+    for (int row = 0; row < myProject.DEM.header.nrRows; row++)
     {
-        for (int col = 0; col < myProject.DEM.header->nrCols; col++)
+        for (int col = 0; col < myProject.DEM.header.nrCols; col++)
         {
             float elevation = myProject.DEM.value[row][col];
-            if (! isEqual(elevation, myProject.DEM.header->flag))
+            if (! isEqual(elevation, myProject.DEM.header.flag))
             {
                 if (isFirst)
                 {
@@ -2778,13 +2778,13 @@ void MainWindow::on_actionDEM_summary_triggered()
         }
     }
 
-    double voxelArea = myProject.DEM.header->cellSize * myProject.DEM.header->cellSize;     // [m2]
+    double voxelArea = myProject.DEM.header.cellSize * myProject.DEM.header.cellSize;     // [m2]
     double area = voxelArea * nrVoxels;                                                     // [m2]
 
     QString summaryStr = "DIGITAL ELEVATION MODEL SUMMARY\n\n";
 
     summaryStr += "Number of pixels:  " + QString::number(nrVoxels) + "\n";
-    summaryStr += "Pixel size:  " + QString::number(myProject.DEM.header->cellSize) + " [m]\n";
+    summaryStr += "Pixel size:  " + QString::number(myProject.DEM.header.cellSize) + " [m]\n";
     summaryStr += "Area:  " + QString::number(area, 'f', 0) + " [m2]\n";
     summaryStr += "Hectares:  " + QString::number(area / 10000., 'f', 2) + " [ha]\n";
     summaryStr += "Area (km2):  " + QString::number(area / 1000000, 'f', 3) + " [km2]\n";
@@ -2815,10 +2815,10 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
     _current3DVariable = var;
     _current3DlayerIndex = layerIndex;
 
-    myProject.criteria3DMap.colorScale->setFixedRange(false);
-    myProject.criteria3DMap.colorScale->setHideMinimum(false);
-    myProject.criteria3DMap.colorScale->setHideZero(false);
-    myProject.criteria3DMap.colorScale->setTransparent(false);
+    myProject.criteria3DMap.colorScale.setFixedRange(false);
+    myProject.criteria3DMap.colorScale.setHideMinimum(false);
+    myProject.criteria3DMap.colorScale.setHideZero(false);
+    myProject.criteria3DMap.colorScale.setTransparent(false);
 
     if (_current3DVariable == volumetricWaterContent)
     {
@@ -2826,9 +2826,9 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         {
             // SURFACE
             setSurfaceWaterScale(myProject.criteria3DMap.colorScale);
-            myProject.criteria3DMap.colorScale->setHideMinimum(true);
-            myProject.criteria3DMap.colorScale->setHideZero(true);
-            myProject.criteria3DMap.colorScale->setTransparent(true);
+            myProject.criteria3DMap.colorScale.setHideMinimum(true);
+            myProject.criteria3DMap.colorScale.setHideZero(true);
+            myProject.criteria3DMap.colorScale.setTransparent(true);
             ui->labelOutputRaster->setText("Surface water content [mm]");
         }
         else
@@ -2865,14 +2865,14 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
     // range fixed
     if (isFixedRange)
     {
-        myProject.criteria3DMap.colorScale->setRange(minimum, maximum);
-        myProject.criteria3DMap.colorScale->setFixedRange(true);
+        myProject.criteria3DMap.colorScale.setRange(minimum, maximum);
+        myProject.criteria3DMap.colorScale.setFixedRange(true);
     }
 
     if (isHideMinimum)
     {
-        myProject.criteria3DMap.colorScale->setRange(minimum, maximum);
-        myProject.criteria3DMap.colorScale->setHideMinimum(true);
+        myProject.criteria3DMap.colorScale.setRange(minimum, maximum);
+        myProject.criteria3DMap.colorScale.setHideMinimum(true);
     }
 
     setCurrentRasterOutput(&(myProject.criteria3DMap));
@@ -3718,12 +3718,12 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
     QString depthStr = QString::number(myProject.layerDepth[layerIndex],'f',2);
     ui->layerDepthEdit->setText(depthStr + " m");
 
-    bool isRangeFixed = myProject.criteria3DMap.colorScale->isFixedRange();
-    bool isHideMinimum = myProject.criteria3DMap.colorScale->isHideMinimum();
+    bool isRangeFixed = myProject.criteria3DMap.colorScale.isFixedRange();
+    bool isHideMinimum = myProject.criteria3DMap.colorScale.isHideMinimum();
 
     showCriteria3DVariable(_current3DVariable, layerIndex, isRangeFixed, isHideMinimum,
-                           myProject.criteria3DMap.colorScale->minimum(),
-                           myProject.criteria3DMap.colorScale->maximum());
+                           myProject.criteria3DMap.colorScale.minimum(),
+                           myProject.criteria3DMap.colorScale.maximum());
 }
 
 
@@ -3839,11 +3839,11 @@ void MainWindow::on_actionCreate_new_land_use_map_triggered()
     gis::Crit3DRasterGrid landUseMap;
     landUseMap.initializeGrid(myProject.DEM);
 
-    for (int row = 0; row < myProject.DEM.header->nrRows; row++)
+    for (int row = 0; row < myProject.DEM.header.nrRows; row++)
     {
-        for (int col = 0; col < myProject.DEM.header->nrCols; col++)
+        for (int col = 0; col < myProject.DEM.header.nrCols; col++)
         {
-            if (! isEqual(myProject.DEM.value[row][col], myProject.DEM.header->flag))
+            if (! isEqual(myProject.DEM.value[row][col], myProject.DEM.header.flag))
             {
                 landUseMap.value[row][col] = defaultValue;
             }
@@ -4281,9 +4281,9 @@ void MainWindow::on_actionMonthly_fraction_of_available_water_triggered()
             const int nrdays = myProject.getCurrentDate().day();
 
             // monthly average
-            const float flag = myProject.criteria3DMap.header->flag;
-            for (int row = 0; row < myProject.criteria3DMap.header->nrRows; ++row)
-                for (int col = 0; col < myProject.criteria3DMap.header->nrCols; ++col)
+            const float flag = myProject.criteria3DMap.header.flag;
+            for (int row = 0; row < myProject.criteria3DMap.header.nrRows; ++row)
+                for (int col = 0; col < myProject.criteria3DMap.header.nrCols; ++col)
                     if (! isEqual(myProject.criteria3DMap.value[row][col], flag))
                         myProject.criteria3DMap.value[row][col] /= nrdays;
 

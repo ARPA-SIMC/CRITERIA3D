@@ -7,15 +7,7 @@
 
 ColorLegend::ColorLegend(QWidget *parent) :
     QWidget(parent)
-{
-    this->colorScale = nullptr;
-}
-
-
-ColorLegend::~ColorLegend()
-{
-    this->colorScale = nullptr;
-}
+{}
 
 
 void ColorLegend::paintEvent(QPaintEvent *event)
@@ -23,10 +15,8 @@ void ColorLegend::paintEvent(QPaintEvent *event)
     Q_UNUSED(event)
 
     // check
-    if (this->colorScale == nullptr)
-        return;
-    if (isEqual(this->colorScale->minimum(), NODATA)
-        || isEqual(this->colorScale->maximum(), NODATA))
+    if (isEqual(this->colorScale.minimum(), NODATA)
+        || isEqual(this->colorScale.maximum(), NODATA))
         return;
 
     QPainter painter(this);
@@ -39,20 +29,20 @@ void ColorLegend::paintEvent(QPaintEvent *event)
     const int BLANK_DX = 16;
     int legendWidth = painter.window().width() - BLANK_DX*2;
 
-    unsigned int nrStep = this->colorScale->nrColors();
+    unsigned int nrStep = this->colorScale.nrColors();
     unsigned int nrStepText = MAXVALUE(round(float(nrStep) / 4.f), 1);
 
     double dx = double(legendWidth) / double(nrStep+1);
 
-    double value = this->colorScale->minimum();
-    double step = (colorScale->maximum() - colorScale->minimum()) / double(nrStep);
-    double range = (colorScale->maximum() - colorScale->minimum());
+    double value = this->colorScale.minimum();
+    double step = (colorScale.maximum() - colorScale.minimum()) / double(nrStep);
+    double range = (colorScale.maximum() - colorScale.minimum());
 
     QString valueStr;
     int nrDigits;
     for (unsigned int i = 0; i <= nrStep; i++)
     {
-        myColor = this->colorScale->getColor(value);
+        myColor = this->colorScale.getColor(value);
         painter.setBrush(QColor(myColor->red, myColor->green, myColor->blue));
         painter.fillRect(int(BLANK_DX + dx*i +1), 0, int(ceil(dx)), 20, painter.brush());
 

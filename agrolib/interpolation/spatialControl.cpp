@@ -309,8 +309,8 @@ bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea
                 //valido solo per DEM
                 areaCells = myArea.getAreaCellsDEM();
 
-                gis::getRowColFromXY(*(interpolationSettings.getCurrentDEM()->header), myMeteoPoint.point.utm, &row, &col);
-                long temp = interpolationSettings.getCurrentDEM()->header->nrCols*row + col;
+                gis::getRowColFromXY(interpolationSettings.getCurrentDEM()->header, myMeteoPoint.point.utm, &row, &col);
+                long temp = interpolationSettings.getCurrentDEM()->header.nrCols*row + col;
 
                 for (int k = 0; k < (int)areaCells.size(); k = k + 2)
                 {

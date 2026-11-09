@@ -48,12 +48,12 @@ namespace gis
     {
         // check closure point
         const float refValue = dem.getValueFromXY(xClosure, yClosure);
-        if (isEqual(refValue, dem.header->flag))
+        if (isEqual(refValue, dem.header.flag))
             return false;
 
         // initialize new raster (basin)
         Crit3DRasterGrid basinRaster;
-        basinRaster.initializeGrid(*dem.header);
+        basinRaster.initializeGrid(dem.header);
 
         // set first value
         int rowClosure, colClosure;
@@ -69,7 +69,7 @@ namespace gis
 
         float rasterValue, basinValue;
         const int side = 3;
-        const float flag = basinRaster.header->flag;
+        const float flag = basinRaster.header.flag;
 
         while (! rowList.empty())
         {
@@ -87,7 +87,7 @@ namespace gis
                             if (r != 0 || c != 0)
                             {
                                 rasterValue = dem.getValueFromRowCol(row+r, col+c);
-                                if (! isEqual(rasterValue, dem.header->flag) && (rasterValue >= currentElevation))
+                                if (! isEqual(rasterValue, dem.header.flag) && (rasterValue >= currentElevation))
                                 {
                                     basinValue = basinRaster.getValueFromRowCol(row+r, col+c);
                                     if (isEqual(basinValue, flag))
@@ -139,19 +139,19 @@ namespace gis
     */
     bool addTerrainDepressions(const Crit3DRasterGrid& dem, Crit3DRasterGrid& basinRaster)
     {
-        if (basinRaster.header->nrRows != dem.header->nrRows ||
-            basinRaster.header->nrCols != dem.header->nrCols)
+        if (basinRaster.header.nrRows != dem.header.nrRows ||
+            basinRaster.header.nrCols != dem.header.nrCols)
         {
             return false;
         }
 
-        const float flag = basinRaster.header->flag;
+        const float flag = basinRaster.header.flag;
 
         // initialize queue
         std::vector<int> rowList, colList, newRowList, newColList;
 
         // mark all empty cells on the border
-        for (int row = 0; row < basinRaster.header->nrRows; row++)
+        for (int row = 0; row < basinRaster.header.nrRows; row++)
         {
             // left and right edge
             if (isEqual(basinRaster.value[row][0], flag))
@@ -159,14 +159,14 @@ namespace gis
                 rowList.push_back(row);
                 colList.push_back(0);
             }
-            if (isEqual(basinRaster.value[row][basinRaster.header->nrCols-1], flag))
+            if (isEqual(basinRaster.value[row][basinRaster.header.nrCols-1], flag))
             {
                 rowList.push_back(row);
-                colList.push_back(basinRaster.header->nrCols-1);
+                colList.push_back(basinRaster.header.nrCols-1);
             }
         }
 
-        for (int col = 0; col < basinRaster.header->nrCols; col++)
+        for (int col = 0; col < basinRaster.header.nrCols; col++)
         {
             // top and bottom edge
             if (isEqual(basinRaster.value[0][col], flag))
@@ -174,16 +174,16 @@ namespace gis
                 rowList.push_back(0);
                 colList.push_back(col);
             }
-            if (isEqual(basinRaster.value[basinRaster.header->nrRows-1][col], flag))
+            if (isEqual(basinRaster.value[basinRaster.header.nrRows-1][col], flag))
             {
-                rowList.push_back(basinRaster.header->nrRows-1);
+                rowList.push_back(basinRaster.header.nrRows-1);
                 colList.push_back(col);
             }
         }
 
         // flood-fill all empty cells connected to borders
         gis::Crit3DRasterGrid boundariesRaster;
-        boundariesRaster.initializeGrid(*basinRaster.header);
+        boundariesRaster.initializeGrid(basinRaster.header);
 
         for (size_t i=0; i < rowList.size(); ++i)
         {
@@ -207,7 +207,7 @@ namespace gis
                                 if (isEqual(basinRaster.value[row+r][col+c], flag))
                                 {
                                     const float boundaryValue = boundariesRaster.value[row+r][col+c];
-                                    if (isEqual(boundaryValue, boundariesRaster.header->flag))
+                                    if (isEqual(boundaryValue, boundariesRaster.header.flag))
                                     {
                                         newRowList.push_back(row+r);
                                         newColList.push_back(col+c);
@@ -227,13 +227,13 @@ namespace gis
         }
 
         // adds terrain depressions
-        for (int row = 0; row < basinRaster.header->nrRows; row++)
+        for (int row = 0; row < basinRaster.header.nrRows; row++)
         {
-            for (int col = 0; col < basinRaster.header->nrCols; col++)
+            for (int col = 0; col < basinRaster.header.nrCols; col++)
             {
                 const float basinValue = basinRaster.value[row][col];
                 const float boundaryValue = boundariesRaster.value[row][col];
-                if (isEqual(basinValue, flag) && isEqual(boundaryValue, boundariesRaster.header->flag))
+                if (isEqual(basinValue, flag) && isEqual(boundaryValue, boundariesRaster.header.flag))
                 {
                     basinRaster.value[row][col] = dem.value[row][col];
                 }
@@ -250,7 +250,7 @@ namespace gis
     */
     void removeDisconnectedAreas(Crit3DRasterGrid& basinRaster, int rowClosure, int colClosure)
     {
-        const float flag = basinRaster.header->flag;
+        const float flag = basinRaster.header.flag;
 
         // safety check
         if (basinRaster.isOutOfGrid(rowClosure, colClosure))
@@ -261,7 +261,7 @@ namespace gis
 
         // raster of connected cells
         Crit3DRasterGrid connectedRaster;
-        connectedRaster.initializeGrid(*basinRaster.header);
+        connectedRaster.initializeGrid(basinRaster.header);
 
         // flood-fill queue
         std::vector<int> rowList, colList;
@@ -316,9 +316,9 @@ namespace gis
         }
 
         // remove disconnected islands
-        for (int row = 0; row < basinRaster.header->nrRows; ++row)
+        for (int row = 0; row < basinRaster.header.nrRows; ++row)
         {
-            for (int col = 0; col < basinRaster.header->nrCols; ++col)
+            for (int col = 0; col < basinRaster.header.nrCols; ++col)
             {
                 if (! isEqual(basinRaster.value[row][col], flag))
                 {
@@ -339,12 +339,12 @@ namespace gis
     void cleanBasin_simple(const Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
                            double xClosure, double yClosure)
     {
-        const double threshold = outputRaster.header->cellSize * 3.0;
-        const float flag = outputRaster.header->flag;
+        const double threshold = outputRaster.header.cellSize * 3.0;
+        const float flag = outputRaster.header.flag;
 
-        for (int row = 0; row < outputRaster.header->nrRows; row++)
+        for (int row = 0; row < outputRaster.header.nrRows; row++)
         {
-            for (int col = 0; col < outputRaster.header->nrCols; col++)
+            for (int col = 0; col < outputRaster.header.nrCols; col++)
             {
                 float refValue = outputRaster.value[row][col];
 
@@ -372,7 +372,7 @@ namespace gis
                                     if (r != 0 || c != 0)
                                     {
                                         const float currentElevation = dem.getValueFromRowCol(currentRow + r, currentCol + c);
-                                        if (! isEqual(currentElevation, dem.header->flag) && (currentElevation < refValue))
+                                        if (! isEqual(currentElevation, dem.header.flag) && (currentElevation < refValue))
                                         {
                                             refValue = currentElevation;
                                             lastRow = currentRow+r;
@@ -427,7 +427,7 @@ namespace gis
     {
         float center = dem.getValueFromRowCol(row, col);
 
-        if (isEqual(center, dem.header->flag))
+        if (isEqual(center, dem.header.flag))
             return {};
 
         static const int dr[8] = {-1,-1,-1, 0,0, 1,1,1};
@@ -442,21 +442,21 @@ namespace gis
             int nc = col + dc[i];
 
             if (nr < 0 || nc < 0 ||
-                nr >= dem.header->nrRows ||
-                nc >= dem.header->nrCols)
+                nr >= dem.header.nrRows ||
+                nc >= dem.header.nrCols)
             {
                 continue;
             }
 
             float neigh = dem.getValueFromRowCol(nr, nc);
 
-            if (isEqual(neigh, dem.header->flag))
+            if (isEqual(neigh, dem.header.flag))
                 continue;
 
             double dist =
                 (dr[i] != 0 && dc[i] != 0)
-                    ? dem.header->cellSize * std::sqrt(2.0)
-                    : dem.header->cellSize;
+                    ? dem.header.cellSize * std::sqrt(2.0)
+                    : dem.header.cellSize;
 
             float slope = (center - neigh) / float(dist);
 
@@ -479,8 +479,8 @@ namespace gis
     bool cleanBasin(const Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
                     double xClosure, double yClosure)
     {
-        const int nrRows = dem.header->nrRows;
-        const int nrCols = dem.header->nrCols;
+        const int nrRows = dem.header.nrRows;
+        const int nrCols = dem.header.nrCols;
 
         // ---------------------------------------------------------
         // 1. check closure cell
@@ -513,7 +513,7 @@ namespace gis
             for (int c = 0; c < nrCols; ++c)
             {
                 if (! isEqual(basinRaster.value[r][c],
-                             basinRaster.header->flag))
+                             basinRaster.header.flag))
                 {
                     flow[r][c] =
                         computeFlowDirectionD8(dem, r, c);
@@ -584,7 +584,7 @@ namespace gis
                 if (! keep[r][c])
                 {
                     basinRaster.value[r][c] =
-                        basinRaster.header->flag;
+                        basinRaster.header.flag;
                 }
             }
         }

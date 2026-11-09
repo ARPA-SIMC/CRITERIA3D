@@ -143,19 +143,19 @@ void Crit3DSnowMaps::updateMapRowCol(Crit3DSnow &snowPoint, int row, int col)
 
 void Crit3DSnowMaps::flagMapRowCol(int row, int col)
 {
-    _snowWaterEquivalentMap->value[row][col] = _snowWaterEquivalentMap->header->flag;
-    _iceContentMap->value[row][col] = _iceContentMap->header->flag;
-    _liquidWaterContentMap->value[row][col] = _liquidWaterContentMap->header->flag;
-    _internalEnergyMap->value[row][col] = _internalEnergyMap->header->flag;
-    _surfaceEnergyMap->value[row][col] = _surfaceEnergyMap->header->flag;
-    _snowSurfaceTempMap->value[row][col] = _snowSurfaceTempMap->header->flag;
-    _ageOfSnowMap->value[row][col] = _ageOfSnowMap->header->flag;
+    _snowWaterEquivalentMap->value[row][col] = _snowWaterEquivalentMap->header.flag;
+    _iceContentMap->value[row][col] = _iceContentMap->header.flag;
+    _liquidWaterContentMap->value[row][col] = _liquidWaterContentMap->header.flag;
+    _internalEnergyMap->value[row][col] = _internalEnergyMap->header.flag;
+    _surfaceEnergyMap->value[row][col] = _surfaceEnergyMap->header.flag;
+    _snowSurfaceTempMap->value[row][col] = _snowSurfaceTempMap->header.flag;
+    _ageOfSnowMap->value[row][col] = _ageOfSnowMap->header.flag;
 
-    _snowFallMap->value[row][col] = _snowFallMap->header->flag;
-    _snowMeltMap->value[row][col] = _snowMeltMap->header->flag;
-    _deltaSWEMap->value[row][col] = _deltaSWEMap->header->flag;
-    _sensibleHeatMap->value[row][col] = _sensibleHeatMap->header->flag;
-    _latentHeatMap->value[row][col] = _latentHeatMap->header->flag;
+    _snowFallMap->value[row][col] = _snowFallMap->header.flag;
+    _snowMeltMap->value[row][col] = _snowMeltMap->header.flag;
+    _deltaSWEMap->value[row][col] = _deltaSWEMap->header.flag;
+    _sensibleHeatMap->value[row][col] = _sensibleHeatMap->header.flag;
+    _latentHeatMap->value[row][col] = _latentHeatMap->header.flag;
 }
 
 
@@ -197,12 +197,12 @@ void Crit3DSnowMaps::resetSnowModel(double skinThickness)
     // TODO pass real bulk density
     surfaceBulkDensity = DEFAULT_BULK_DENSITY;
 
-    for (long row = 0; row < _snowWaterEquivalentMap->header->nrRows; row++)
+    for (long row = 0; row < _snowWaterEquivalentMap->header.nrRows; row++)
     {
-        for (long col = 0; col < _snowWaterEquivalentMap->header->nrCols; col++)
+        for (long col = 0; col < _snowWaterEquivalentMap->header.nrCols; col++)
         {
             initSWE = _snowWaterEquivalentMap->value[row][col];
-            if (! isEqual(initSWE, _snowWaterEquivalentMap->header->flag))
+            if (! isEqual(initSWE, _snowWaterEquivalentMap->header.flag))
             {
                 _iceContentMap->value[row][col] = initSWE;
                 _liquidWaterContentMap->value[row][col] = 0;
