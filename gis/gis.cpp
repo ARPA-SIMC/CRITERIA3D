@@ -241,11 +241,11 @@ namespace gis
         value = nullptr;
 
         initialize();
+        mapTime.setNullTime();
     }
 
     void Crit3DRasterGrid::initialize()
     {
-        mapTime.setNullTime();
         minimum = NODATA;
         maximum = NODATA;
 
@@ -303,6 +303,16 @@ namespace gis
 
         if (nrRows <= 0 || nrCols <= 0)
             return false;
+
+        // release a previous allocation (restore header after clear)
+        if (value != nullptr)
+        {
+            const Crit3DRasterHeader oldHeader = header;
+
+            clear();
+
+            header = oldHeader;
+        }
 
         try
         {
@@ -1165,6 +1175,14 @@ namespace gis
         dx = std::max(dx, EPSILON);
         double dz_dx = dz / dx;
 
+        // flat cell: same convention as the interior cells (slope = 0, aspect = 0)
+        if (std::abs(dz_dx) < EPSILON && std::abs(dz_dy) < EPSILON)
+        {
+            slopeMap->value[row][col] = 0.f;
+            aspectMap->value[row][col] = 0.f;
+            return true;
+        }
+
         // slope in degrees
         double slope = atan(sqrt(dz_dx * dz_dx + dz_dy * dz_dy)) * RAD_TO_DEG;
         slopeMap->value[row][col] = float(slope);
@@ -1270,7 +1288,20 @@ namespace gis
         if (! map1 || ! map2 || ! outputMap)
             return false;
 
-        bool isSameHeader = compareGrids(*map1, *map2);
+        if (! map1->isLoaded || ! map2->isLoaded)
+            return false;
+
+        // output aliasing an input: initializeGrid would destroy it, so use a temporary raster
+        if (outputMap == map1 || outputMap == map2)
+        {
+            Crit3DRasterGrid tmpGrid;
+            if (! mapAlgebra(map1, map2, &tmpGrid, myOperation))
+                    return false;
+
+            return outputMap->copyGrid(tmpGrid);
+        }
+
+        const bool isSameHeader = compareGrids(*map1, *map2);
 
         if (! outputMap->initializeGrid(map1->header))
             return false;
@@ -1317,6 +1348,7 @@ namespace gis
                 }
             }
 
+        gis::updateMinMaxRasterGrid(outputMap);
         return true;
     }
 
@@ -1328,7 +1360,14 @@ namespace gis
         if (outputMap == nullptr || map1 == nullptr)
             return false;
 
+        if (! map1->isLoaded || ! outputMap->isLoaded)
+            return false;
+
         if (! compareGrids(*map1, *outputMap))
+            return false;
+
+        // check before modifying the output (a failure in the middle would leave it half-written)
+        if (myOperation == operationDivide && isEqual(myValue, 0.f))
             return false;
 
         const float flag = map1->header.flag;
@@ -1352,16 +1391,12 @@ namespace gis
                     else if (myOperation == operationProduct)
                         outputMap->value[row][col] = (map1->value[row][col] * myValue);
                     else if (myOperation == operationDivide)
-                    {
-                        if (myValue != 0.f)
-                            outputMap->value[row][col] = (map1->value[row][col] / myValue);
-                        else
-                            return false;
-                    }
+                        outputMap->value[row][col] = (map1->value[row][col] / myValue);
                 }
             }
         }
 
+        gis::updateMinMaxRasterGrid(outputMap);
         return true;
     }
 
@@ -1566,14 +1601,16 @@ namespace gis
 
     bool prevailingMap(const Crit3DRasterGrid& inputMap,  Crit3DRasterGrid *outputMap)
     {
-        int i, j;
-        float value;
+        if (outputMap == nullptr || outputMap == &inputMap
+            || ! outputMap->isLoaded || ! inputMap.isLoaded)
+            return false;
+
         double x, y;
         int inputRow, inputCol;
-        int dim = 3;
 
+        const int dim = 3;
+        const double step = outputMap->header.cellSize / (2*dim+1);
         std::vector <float> valuesList;
-        double step = outputMap->header.cellSize / (2*dim+1);
 
         for (int row = 0; row < outputMap->header.nrRows ; row++)
             for (int col = 0; col < outputMap->header.nrCols; col++)
@@ -1582,22 +1619,23 @@ namespace gis
                 outputMap->getXY(row, col, x, y);
                 valuesList.resize(0);
 
-                for (i = -dim; i <= dim; i++)
-                    for (j = -dim; j <= dim; j++)
+                for (int i = -dim; i <= dim; i++)
+                    for (int j = -dim; j <= dim; j++)
                         if (! gis::isOutOfGridXY(x+(i*step), y+(j*step), inputMap.header))
                         {
                             inputMap.getRowCol(x+(i*step), y+(j*step), inputRow, inputCol);
-                            value = inputMap.value[inputRow][inputCol];
+                            const float value = inputMap.value[inputRow][inputCol];
                             if (! isEqual(value, inputMap.header.flag))
                                 valuesList.push_back(value);
                         }
 
-                if (valuesList.size() == 0)
+                if (valuesList.empty())
                     outputMap->value[row][col] = outputMap->header.flag;
                 else
                     outputMap->value[row][col] = prevailingValue(valuesList);
             }
 
+        gis::updateMinMaxRasterGrid(outputMap);
         return true;
     }
 
@@ -1649,22 +1687,26 @@ namespace gis
     }
 
 
-    bool topographicDistanceMap(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap)
+    bool topographicDistanceMap(const Crit3DPoint& myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap)
     {
-        int row, col;
+        if (myMap == nullptr || myMap == &dem || ! dem.isLoaded)
+            return false;
+
+        if (! myMap->initializeGrid(dem))
+            return false;
+
         double gridX, gridY;
-        float demValue;
 
-        myMap->initializeGrid(dem);
-
-        for (row = 0; row < dem.header.nrRows; row++)
-            for (col = 0; col < dem.header.nrCols; col++)
+        for (int row = 0; row < dem.header.nrRows; ++row)
+            for (int col = 0; col < dem.header.nrCols; ++col)
             {
-                demValue = dem.value[row][col];
+                const float demValue = dem.value[row][col];
                 if (! isEqual(demValue, dem.header.flag))
                 {
                     dem.getXY(row, col, gridX, gridY);
-                    double distance = computeDistance(gridX, gridY, myPoint.utm.x, myPoint.utm.y);
+
+                    const double distance = computeDistance(gridX, gridY, myPoint.utm.x, myPoint.utm.y);
+
                     myMap->value[row][col] = topographicDistance(gridX, gridY, demValue,
                                             myPoint.utm.x, myPoint.utm.y, (float)myPoint.z, distance, dem);
                 }
@@ -1672,11 +1714,12 @@ namespace gis
                     myMap->value[row][col] = myMap->header.flag;
             }
 
+        gis::updateMinMaxRasterGrid(myMap);
         return true;
     }
 
 
-    double closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem)
+    double closestDistanceFromGrid(const Crit3DPoint &myPoint, const gis::Crit3DRasterGrid& dem)
     {
         float demValue = gis::getValueFromXY(dem, myPoint.utm.x, myPoint.utm.y);
         if (! isEqual(demValue, dem.header.flag))
@@ -1717,15 +1760,27 @@ namespace gis
     }
 
 
-    void resampleGrid(const gis::Crit3DRasterGrid& oldGrid, gis::Crit3DRasterGrid* newGrid,
+    // threshold: minimum ratio of valid values (in the aggregation window)
+    // required to compute the new value
+    bool resampleGrid(const gis::Crit3DRasterGrid& oldGrid, gis::Crit3DRasterGrid* newGrid,
                       const gis::Crit3DRasterHeader& newHeader, aggregationMethod elab,
-                      float nodataRatioThreshold)
+                      float threshold)
     {
-        newGrid->clear();
-        newGrid->header = newHeader;
-        newGrid->initializeGrid(newHeader.flag);
+        if (newGrid == nullptr || newGrid == &oldGrid || ! oldGrid.isLoaded)
+            return false;
 
-        const double resampleFactor = newGrid->header.cellSize / oldGrid.header.cellSize;
+        if (newHeader.cellSize <= 0. || oldGrid.header.cellSize <= 0.)
+            return false;
+
+        const double resampleFactor = newHeader.cellSize / oldGrid.header.cellSize;
+
+        // aggregation methods are used only when the new cell is bigger than the old one
+        if (resampleFactor > 1. && elab != aggrCenter && elab != aggrAverage
+             && elab != aggrMedian && elab != aggrPrevailing)
+            return false;
+
+        if (! newGrid->initializeGrid(newHeader))
+            return false;
 
         const int nrRows = newGrid->header.nrRows;
         const int nrCols = newGrid->header.nrCols;
@@ -1787,7 +1842,7 @@ namespace gis
 
                     if (maxNrValues > 0)
                     {
-                        if ((float(nrValues) / float(maxNrValues)) > nodataRatioThreshold)
+                        if ((float(nrValues) / float(maxNrValues)) > threshold)
                         {
                             if (elab == aggrAverage)
                                 value = statistics::mean(values);
@@ -1813,6 +1868,8 @@ namespace gis
 
         gis::updateMinMaxRasterGrid(newGrid);
         newGrid->isLoaded = true;
+
+        return true;
     }
 
 

@@ -341,7 +341,7 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings &interpolationSettings, co
                         return false;
                     }
 
-                    interpolationSettings.getProxy(i)->setGrid(gridOut);
+                    interpolationSettings.getProxy(i)->setGrid(gridOut, false);
                     return true;
                 }
 

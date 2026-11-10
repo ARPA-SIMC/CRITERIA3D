@@ -169,13 +169,13 @@ void Project::clearProxyDEM()
     if (index != NODATA)
     {
         proxyHeight = interpolationSettings.getProxy(unsigned(index));
-        proxyHeight->setGrid(nullptr);
+        proxyHeight->setGrid(nullptr, false);
     }
 
     if (indexQuality != NODATA)
     {
         proxyHeight = qualityInterpolationSettings.getProxy(unsigned(indexQuality));
-        proxyHeight->setGrid(nullptr);
+        proxyHeight->setGrid(nullptr, false);
     }
 }
 
@@ -198,7 +198,7 @@ bool Project::setProxyDEM()
 
         // if no alternative grid is defined, use DEM as elevation proxy
         if (currentProxyHeight->getGridName().empty())
-            currentProxyHeight->setGrid(&DEM);
+            currentProxyHeight->setGrid(&DEM, true);
     }
 
     if (indexQuality != NODATA)
@@ -207,7 +207,7 @@ bool Project::setProxyDEM()
 
         // if no alternative grid is defined, use DEM as elevation proxy
         if (currentProxyHeight->getGridName().empty())
-            currentProxyHeight->setGrid(&DEM);
+            currentProxyHeight->setGrid(&DEM, true);
     }
 
     return true;
@@ -2207,7 +2207,7 @@ bool Project::loadProxyGrids()
             if (gis::readEsriGridFlt(fileName.toStdString(), proxyGrid, myError))
             {
                 //cambiare
-                myProxy->setGrid(proxyGrid);
+                myProxy->setGrid(proxyGrid, false);
             }
             else
             {

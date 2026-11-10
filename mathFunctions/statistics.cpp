@@ -1067,14 +1067,16 @@ namespace statistics
         *y_intercept = NODATA;          // y intercept of regression line
         *r2 = 0;                        // coefficient of determination
 
-        nrItems = std::min<long>(nrItems, std::min(x.size(), y.size()));
+        const long minSize = (long)std::min(x.size(), y.size());
+        nrItems = std::min(nrItems, minSize);
 
         // pass 1: count valid pairs and compute means
         long n = 0;
         double sumX = 0, sumY = 0;
         for (long i = 0; i < nrItems; i++)
         {
-            if (isEqual(x[i], NODATA) || isEqual(y[i], NODATA)) continue;
+            if (isEqual(x[i], NODATA) || isEqual(y[i], NODATA))
+                continue;
             n++;
             sumX += x[i];
             sumY += y[i];
