@@ -49,11 +49,11 @@ bool Vine3DProject::assignIrrigation(Crit3DTime myTime)
     QDate myDate = getQDate(myTime.date);
     int row, col;
 
-    for (row = 0; row < DEM.header->nrRows ; row++)
+    for (row = 0; row < DEM.header.nrRows ; row++)
     {
-        for (col = 0; col < DEM.header->nrCols; col++)
+        for (col = 0; col < DEM.header.nrCols; col++)
         {
-            if (int(DEM.value[row][col]) != int(DEM.header->flag))
+            if (int(DEM.value[row][col]) != int(DEM.header.flag))
             {
                 //initialize
                 vine3DMapsH->mapHourlyIrrigation->value[row][col] = 0.0;
@@ -139,15 +139,15 @@ bool Vine3DProject::modelDailyCycle(bool isInitialState, Crit3DDate myDate, int 
         //Grapevine
         double vineTranspiration, grassTranspiration;
         logInfo("Compute grapevine");
-        for (long row = 0; row < DEM.header->nrRows ; row++)
+        for (long row = 0; row < DEM.header.nrRows ; row++)
         {
-            for (long col = 0; col < DEM.header->nrCols; col++)
+            for (long col = 0; col < DEM.header.nrCols; col++)
             {
                 modelCaseIndex = getModelCaseIndex(row, col);
                 if (modelCaseIndex != NODATA)
                 {
                     isNewModelCase = (int(statePlantMaps->fruitBiomassMap->value[row][col])
-                                        == int(statePlantMaps->fruitBiomassMap->header->flag));
+                                        == int(statePlantMaps->fruitBiomassMap->header.flag));
 
                     if (! grapevine.setWeather(
                                 double(vine3DMapsD->mapDailyTAvg->value[row][col]),

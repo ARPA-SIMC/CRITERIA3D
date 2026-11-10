@@ -81,9 +81,9 @@ void RasterObject::setDrawBorders(bool value)
     isDrawBorder = value;
 }
 
-void RasterObject::setColorLegend(ColorLegend* colorLegendPtr)
+void RasterObject::setColorLegend(ColorLegend* legendPtr)
 {
-    colorLegendPointer = colorLegendPtr;
+    colorLegendPointer = legendPtr;
 }
 
 

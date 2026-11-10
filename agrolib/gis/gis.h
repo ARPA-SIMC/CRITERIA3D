@@ -320,14 +320,14 @@
         float topographicDistance(double x1, double y1, float z1, double x2, double y2, float z2, double distance,
                                    const gis::Crit3DRasterGrid& dem);
 
-        bool topographicDistanceMap(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap);
+        bool topographicDistanceMap(const Crit3DPoint &myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap);
 
-        double closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem);
+        double closestDistanceFromGrid(const Crit3DPoint& myPoint, const gis::Crit3DRasterGrid& dem);
 
         bool compareGrids(const gis::Crit3DRasterGrid& first, const gis::Crit3DRasterGrid& second);
 
-        void resampleGrid(const gis::Crit3DRasterGrid& oldGrid, gis::Crit3DRasterGrid* newGrid,
-                          const Crit3DRasterHeader& newHeader, aggregationMethod elab, float nodataRatioThreshold);
+        bool resampleGrid(const gis::Crit3DRasterGrid& oldGrid, gis::Crit3DRasterGrid* newGrid,
+                          const gis::Crit3DRasterHeader& newHeader, aggregationMethod elab, float threshold);
 
         bool temporalYearlyInterpolation(const gis::Crit3DRasterGrid& firstGrid, const gis::Crit3DRasterGrid& secondGrid,
                                          int myYear, float minValue, float maxValue, gis::Crit3DRasterGrid* outGrid);

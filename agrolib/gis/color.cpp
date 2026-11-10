@@ -66,6 +66,18 @@ Crit3DColorScale::Crit3DColorScale()
 }
 
 
+void Crit3DColorScale::clear()
+{
+    keyColor.clear();
+    color.clear();
+    _nrKeyColors = 0;
+    _nrColors = 0;
+
+    _minimum = NODATA;
+    _maximum = NODATA;
+}
+
+
 void Crit3DColorScale::initialize(unsigned int nrKeyColors, unsigned int nrColors)
 {
     _nrKeyColors = nrKeyColors;

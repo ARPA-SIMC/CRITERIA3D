@@ -5,9 +5,9 @@
 #include <cmath>
 
 
-ColorLegend::ColorLegend(QWidget *parent) :
-    QWidget(parent)
-{}
+ColorLegend::ColorLegend(Crit3DColorScale& scale, QWidget *parent) :
+    QWidget(parent), colorScale(scale)
+{ }
 
 
 void ColorLegend::paintEvent(QPaintEvent *event)

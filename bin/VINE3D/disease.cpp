@@ -23,13 +23,13 @@ bool computePowderyMildew(Vine3DProject* myProject)
     bool isBudBurst;
     myProject->logInfo("Compute powdery mildew...");
 
-    for (long row = 0; row < myProject->DEM.header->nrRows ; row++)
-        for (long col = 0; col < myProject->DEM.header->nrCols; col++)
+    for (long row = 0; row < myProject->DEM.header.nrRows ; row++)
+        for (long col = 0; col < myProject->DEM.header.nrCols; col++)
         {
-            if (myProject->DEM.value[row][col] != myProject->DEM.header->flag)
+            if (myProject->DEM.value[row][col] != myProject->DEM.header.flag)
             {
                 phenoPhase = myProject->statePlantMaps->stageMap->value[row][col];
-                if (phenoPhase != myProject->statePlantMaps->stageMap->header->flag)
+                if (phenoPhase != myProject->statePlantMaps->stageMap->header.flag)
                 {
                     // initialize output
                     myProject->outputPlantMaps->powderyCOLMap->value[row][col] = 0.0;
@@ -41,7 +41,7 @@ bool computePowderyMildew(Vine3DProject* myProject)
                     {
                         // read state
                         powdery.state.degreeDays = myProject->statePlantMaps->degreeDay10FromBudBurstMap->value[row][col];
-                        if (powdery.state.degreeDays == myProject->statePlantMaps->degreeDay10FromBudBurstMap->header->flag)
+                        if (powdery.state.degreeDays == myProject->statePlantMaps->degreeDay10FromBudBurstMap->header.flag)
                             isBudBurst = true;
                         else
                             isBudBurst = false;
@@ -72,7 +72,7 @@ bool computePowderyMildew(Vine3DProject* myProject)
                     }
                     else
                     {
-                        myProject->statePlantMaps->degreeDay10FromBudBurstMap->value[row][col] = myProject->statePlantMaps->degreeDay10FromBudBurstMap->header->flag;
+                        myProject->statePlantMaps->degreeDay10FromBudBurstMap->value[row][col] = myProject->statePlantMaps->degreeDay10FromBudBurstMap->header.flag;
                         myProject->statePlantMaps->powderyAICMap->value[row][col] = 0.0;
                         myProject->statePlantMaps->powderyCurrentColoniesMap->value[row][col]  = 0.0;
                         myProject->statePlantMaps->powderySporulatingColoniesMap->value[row][col] = 0.0;
@@ -170,10 +170,10 @@ bool computeDownyMildew(Vine3DProject* myProject, QDate firstDate, QDate lastDat
         }
 
         col++;
-        if (col == unsigned(myProject->DEM.header->nrCols))
+        if (col == unsigned(myProject->DEM.header.nrCols))
         {
             row++;
-            if (row == unsigned(myProject->DEM.header->nrRows)) isLastCell = true;
+            if (row == unsigned(myProject->DEM.header.nrRows)) isLastCell = true;
             col = 0;
         }
 
