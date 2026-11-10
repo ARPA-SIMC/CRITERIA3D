@@ -1070,19 +1070,19 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
 
     // convert to lat lon raster
     gis::Crit3DLatLonHeader latLonHeader;
-    gis::getGeoExtentsFromUTMHeader(gisSettings, tmpRaster.header, &latLonHeader);
+    gis::getGeoExtentsFromUTMHeader(gisSettings, tmpRaster.header, latLonHeader);
 
     // Initialize output raster
     gis::Crit3DRasterGrid dataRaster;
-    dataRaster.header->nrRows = latLonHeader.nrRows;
-    dataRaster.header->nrCols = latLonHeader.nrCols;
-    dataRaster.header->flag = latLonHeader.flag;
-    dataRaster.header->llCorner.y = latLonHeader.llCorner.latitude;
-    dataRaster.header->llCorner.x = latLonHeader.llCorner.longitude;
+    dataRaster.header.nrRows = latLonHeader.nrRows;
+    dataRaster.header.nrCols = latLonHeader.nrCols;
+    dataRaster.header.flag = latLonHeader.flag;
+    dataRaster.header.llCorner.y = latLonHeader.llCorner.latitude;
+    dataRaster.header.llCorner.x = latLonHeader.llCorner.longitude;
 
     // average geographic resolution
-    dataRaster.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
-    dataRaster.header->invCellSize = 1.0 / dataRaster.header->cellSize;
+    dataRaster.header.cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
+    dataRaster.header.invCellSize = 1.0 / dataRaster.header.cellSize;
     dataRaster.initializeGrid(latLonHeader.flag);
 
     // resample raster onto geographic grid
@@ -1098,10 +1098,10 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
                 continue;
 
             int utmRow, utmCol;
-            gis::getRowColFromXY(*(tmpRaster.header), x, y, &utmRow, &utmCol);
+            gis::getRowColFromXY(tmpRaster.header, x, y, &utmRow, &utmCol);
 
             const float value = tmpRaster.getValueFromRowCol(utmRow, utmCol);
-            if (! isEqual(value, tmpRaster.header->flag))
+            if (! isEqual(value, tmpRaster.header.flag))
                 dataRaster.value[row][col] = value;
         }
     }

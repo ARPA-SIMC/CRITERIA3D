@@ -60,7 +60,7 @@ bool fillRasterWithShapeIndex(gis::Crit3DRasterGrid &raster, const Crit3DShapeHa
     if (nrShapes <= 0)
         return false;
 
-    const auto& header = *(raster.header);
+    const auto& header = raster.header;
 
     raster.emptyGrid();
 
@@ -116,9 +116,9 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
 {    
     if (useReferenceRaster)
     {
-        if (refRaster == nullptr || refRaster->header == nullptr)
+        if (refRaster == nullptr)
             return false;
-        if (! newRaster.initializeGrid(*(refRaster->header)))
+        if (! newRaster.initializeGrid(refRaster->header))
             return false;
     }
     else
@@ -127,7 +127,7 @@ bool rasterizeShape(const gis::Crit3DRasterGrid *refRaster, gis::Crit3DRasterGri
             return false;
     }
 
-    const auto& header = *newRaster.header;
+    const auto& header = newRaster.header;
     const float flag = header.flag;
 
     const int nrShape = shapeHandler.getShapeCount();
