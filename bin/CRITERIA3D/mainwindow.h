@@ -314,6 +314,7 @@
         QList<SquareMarker*> outputPointList;
         QList<ArrowObject*> windVectorList;
 
+        Crit3DColorScale tmpRasterScale;
         ColorLegend *inputRasterColorLegend;
         ColorLegend *outputRasterColorLegend;
         ColorLegend *meteoPointsLegend;

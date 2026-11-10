@@ -68,15 +68,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     rubberBand = new RubberBand(QRubberBand::Rectangle, mapView);
 
-    inputRasterColorLegend = new ColorLegend(ui->colorScaleInputRaster);
+    inputRasterColorLegend = new ColorLegend(myProject.DEM.colorScale, ui->colorScaleInputRaster);
     inputRasterColorLegend->resize(ui->colorScaleInputRaster->size());
 
-    outputRasterColorLegend = new ColorLegend(ui->colorScaleOutputRaster);
+    outputRasterColorLegend = new ColorLegend(tmpRasterScale, ui->colorScaleOutputRaster);
     outputRasterColorLegend->resize(ui->colorScaleOutputRaster->size());
 
-    meteoPointsLegend = new ColorLegend(ui->colorScaleMeteoPoints);
+    meteoPointsLegend = new ColorLegend(myProject.meteoPointsColorScale, ui->colorScaleMeteoPoints);
     meteoPointsLegend->resize(ui->colorScaleMeteoPoints->size());
-    meteoPointsLegend->colorScale = myProject.meteoPointsColorScale;
 
     // initialize
     ui->labelInputRaster->setText("");
