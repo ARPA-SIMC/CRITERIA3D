@@ -304,16 +304,6 @@ namespace gis
         if (nrRows <= 0 || nrCols <= 0)
             return false;
 
-        // release a previous allocation (restore header after clear)
-        if (value != nullptr)
-        {
-            const Crit3DRasterHeader oldHeader = header;
-
-            clear();
-
-            header = oldHeader;
-        }
-
         try
         {
             value = new float*[nrRows]();       // () zero-initializes
@@ -1367,7 +1357,7 @@ namespace gis
             return false;
 
         // check before modifying the output (a failure in the middle would leave it half-written)
-        if (myOperation == operationDivide && isEqual(myValue, 0.f))
+        if (myOperation == operationDivide && myValue == 0.f)
             return false;
 
         const float flag = map1->header.flag;
@@ -1781,6 +1771,9 @@ namespace gis
 
         if (! newGrid->initializeGrid(newHeader))
             return false;
+
+        // for safety
+        newGrid->header.invCellSize = 1.0 / newGrid->header.cellSize;
 
         const int nrRows = newGrid->header.nrRows;
         const int nrCols = newGrid->header.nrCols;
