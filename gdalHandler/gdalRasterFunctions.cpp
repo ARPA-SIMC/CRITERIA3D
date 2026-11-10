@@ -143,15 +143,15 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     // initialize raster
     int xSize = dataset->GetRasterXSize();
     int ySize = dataset->GetRasterYSize();
-    myRaster->header->nrCols = xSize;
-    myRaster->header->nrRows = ySize;
-    myRaster->header->cellSize = adfGeoTransform[1];
-    myRaster->header->invCellSize = 1.0 / myRaster->header->cellSize;
-    myRaster->header->llCorner.x = adfGeoTransform[0];
-    myRaster->header->llCorner.y = adfGeoTransform[3] - myRaster->header->cellSize * myRaster->header->nrRows;
-    myRaster->header->flag = float(NODATA);
+    myRaster->header.nrCols = xSize;
+    myRaster->header.nrRows = ySize;
+    myRaster->header.cellSize = adfGeoTransform[1];
+    myRaster->header.invCellSize = 1.0 / myRaster->header.cellSize;
+    myRaster->header.llCorner.x = adfGeoTransform[0];
+    myRaster->header.llCorner.y = adfGeoTransform[3] - myRaster->header.cellSize * myRaster->header.nrRows;
+    myRaster->header.flag = float(NODATA);
 
-    if (! myRaster->initializeGrid(myRaster->header->flag))
+    if (! myRaster->initializeGrid(myRaster->header.flag))
     {
         errorStr = "Memory error: file too big.";
         return false;
@@ -171,12 +171,12 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         }
 
         // set data
-        for (int row = 0; row < myRaster->header->nrRows; row++)
-            for (int col = 0; col < myRaster->header->nrCols; col++)
+        for (int row = 0; row < myRaster->header.nrRows; row++)
+            for (int col = 0; col < myRaster->header.nrCols; col++)
             {
                 if (isEqual(data_double[row*xSize+col], nodataValue))
                 {
-                    myRaster->value[row][col] = myRaster->header->flag;
+                    myRaster->value[row][col] = myRaster->header.flag;
                 }
                 else
                 {
@@ -201,12 +201,12 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         }
 
         // set data
-        for (int row = 0; row < myRaster->header->nrRows; row++)
-            for (int col = 0; col < myRaster->header->nrCols; col++)
+        for (int row = 0; row < myRaster->header.nrRows; row++)
+            for (int col = 0; col < myRaster->header.nrCols; col++)
             {
                 if (isEqual(data_float[row*xSize+col], (float)nodataValue))
                 {
-                    myRaster->value[row][col] = myRaster->header->flag;
+                    myRaster->value[row][col] = myRaster->header.flag;
                 }
                 else
                 {
