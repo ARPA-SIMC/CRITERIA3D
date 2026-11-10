@@ -1664,7 +1664,7 @@ namespace gis
         for (int i=1; i <= nrStep; ++i)
         {
             double x = Xi + dx*i;
-            double y = Yi + dy+i;
+            double y = Yi + dy*i;
 
             const float demValue = dem.getValueFromXY(x, y);
 
@@ -1750,8 +1750,11 @@ namespace gis
     }
 
 
-    // threshold: minimum ratio of valid values (in the aggregation window)
-    // required to compute the new value
+    /*!
+     * \brief resampleGrid
+     * \param threshold: minimum ratio of valid values (in the aggregation window)
+     * required to compute the new value
+     */
     bool resampleGrid(const gis::Crit3DRasterGrid& oldGrid, gis::Crit3DRasterGrid* newGrid,
                       const gis::Crit3DRasterHeader& newHeader, aggregationMethod elab,
                       float threshold)
@@ -1916,6 +1919,10 @@ namespace gis
         if (refRaster == nullptr || maskRaster == nullptr || outputRaster == nullptr)
             return false;
 
+        // initializeGrid / clear would destroy an input
+        if (outputRaster == refRaster || outputRaster == maskRaster)
+            return false;
+
         bool hasValidCell = false;
         const float maskFlag = maskRaster->header.flag;
         const auto& refHeader = refRaster->header;
@@ -2011,6 +2018,12 @@ namespace gis
         if (refRaster == nullptr || maskRaster == nullptr || outputRaster == nullptr)
             return false;
 
+        if (outputRaster == refRaster || outputRaster == maskRaster)
+            return false;
+
+        if (! outputRaster->initializeGrid(refRaster->header))
+            return false;
+
         outputRaster->initializeGrid(refRaster->header);
         const float maskFlag = maskRaster->header.flag;
 
@@ -2039,10 +2052,12 @@ namespace gis
     bool deleteRangeOfValuesRaster(const gis::Crit3DRasterGrid* refRaster, float minValue, float maxValue,
                                    gis::Crit3DRasterGrid* outputRaster)
     {
-        if (refRaster == nullptr || outputRaster == nullptr)
+        if (refRaster == nullptr || outputRaster == nullptr || outputRaster == refRaster)
             return false;
 
-        outputRaster->initializeGrid(refRaster->header);
+        if (! outputRaster->initializeGrid(refRaster->header))
+            return false;
+
         const float flag = refRaster->header.flag;
 
         for (long row = 0; row < refRaster->header.nrRows; ++row)
@@ -2058,6 +2073,7 @@ namespace gis
             }
         }
 
+        gis::updateMinMaxRasterGrid(outputRaster);
         return true;
     }
 
@@ -2210,11 +2226,9 @@ namespace gis
         outHeader.nrCols = newCols;
 
         // Update lower-left corner
-        outHeader.llCorner.x = inHeader.llCorner.x
-                               + firstCol * inHeader.cellSize;
+        outHeader.llCorner.x = inHeader.llCorner.x + firstCol * inHeader.cellSize;
 
-        outHeader.llCorner.y = inHeader.llCorner.y
-                               + (inHeader.nrRows - lastRow - 1) * inHeader.cellSize;
+        outHeader.llCorner.y = inHeader.llCorner.y + (inHeader.nrRows - lastRow - 1) * inHeader.cellSize;
 
         // Initialize output raster
         if (! outputRaster->initializeGrid(outHeader))

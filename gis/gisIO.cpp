@@ -943,6 +943,11 @@ bool readRasterBilData(const std::string& fileName, Crit3DRasterGrid* rasterGrid
     const int nRows = bilInfo.nRows;
     const int nCols = bilInfo.nCols;
 
+    // pixel type: when missing, keep the previous behavior (8 bit unsigned, 16/32 bit signed)
+    const std::string& pixelType = bilInfo.pixelType;
+    const bool isUnsignedInt = (pixelType == "UNSIGNEDINT" || pixelType == "UNSIGNED");
+    const bool isSignedInt = (pixelType == "SIGNEDINT" || pixelType == "SIGNED");
+
     if (bilInfo.nBits == 8)
     {
         std::vector<uint8_t> buffer(nCols);
@@ -959,7 +964,10 @@ bool readRasterBilData(const std::string& fileName, Crit3DRasterGrid* rasterGrid
 
             for (int col = 0; col < nCols; ++col)
             {
-                rasterGrid->value[row][col] = static_cast<float>(buffer[col]);
+                if (isSignedInt)
+                    rasterGrid->value[row][col] = static_cast<float>(static_cast<int8_t>(buffer[col]));
+                else
+                    rasterGrid->value[row][col] = static_cast<float>(buffer[col]);
             }
         }
     }
@@ -982,9 +990,14 @@ bool readRasterBilData(const std::string& fileName, Crit3DRasterGrid* rasterGrid
                 int16_t value = buffer[col];
 
                 if (swap)
+                {
                     value = swapBytes(value);
+                }
 
-                rasterGrid->value[row][col] = static_cast<float>(value);
+                if (isUnsignedInt)
+                    rasterGrid->value[row][col] = static_cast<float>(static_cast<uint16_t>(value));
+                else
+                    rasterGrid->value[row][col] = static_cast<float>(value);
             }
         }
     }
@@ -1009,9 +1022,14 @@ bool readRasterBilData(const std::string& fileName, Crit3DRasterGrid* rasterGrid
                     float value = buffer[col];
 
                     if (swap)
+                    {
                         value = swapBytes(value);
+                    }
 
-                    rasterGrid->value[row][col] = value;
+                    if (isUnsignedInt)
+                        rasterGrid->value[row][col] = static_cast<float>(static_cast<uint32_t>(value));
+                    else
+                        rasterGrid->value[row][col] = static_cast<float>(value);
                 }
             }
         }
