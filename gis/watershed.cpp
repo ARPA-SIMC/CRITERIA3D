@@ -46,10 +46,15 @@ namespace gis
     bool extractBasin_singleStep(Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
                              double xClosure, double yClosure, std::string& errorStr)
     {
+        if (! dem.isLoaded)
+            return false;
+
         // check closure point
         const float refValue = dem.getValueFromXY(xClosure, yClosure);
         if (isEqual(refValue, dem.header.flag))
             return false;
+
+        const float threshold = dem.header.cellSize * 0.002;
 
         // initialize new raster (basin)
         Crit3DRasterGrid basinRaster;
@@ -67,8 +72,7 @@ namespace gis
 
         // *** step 1: adds points with higher topographic elevation
 
-        float rasterValue, basinValue;
-        const int side = 3;
+        const int side = 5;
         const float flag = basinRaster.header.flag;
 
         while (! rowList.empty())
@@ -86,10 +90,13 @@ namespace gis
                         {
                             if (r != 0 || c != 0)
                             {
-                                rasterValue = dem.getValueFromRowCol(row+r, col+c);
-                                if (! isEqual(rasterValue, dem.header.flag) && (rasterValue >= currentElevation))
+                                const float rasterValue = dem.getValueFromRowCol(row+r, col+c);
+                                if (isEqual(rasterValue, dem.header.flag) || rasterValue < refValue)
+                                    continue;
+
+                                if (rasterValue > (currentElevation - threshold))
                                 {
-                                    basinValue = basinRaster.getValueFromRowCol(row+r, col+c);
+                                    const float basinValue = basinRaster.getValueFromRowCol(row+r, col+c);
                                     if (isEqual(basinValue, flag))
                                     {
                                         newRowList.push_back(row+r);
@@ -333,10 +340,175 @@ namespace gis
 
 
     /*!
+    * \brief cleanBasin_simple
+    * removes the cells whose descent path leaves the basin.
+    *
+    * Each cell descends towards its lowest neighbour (strictly lower). The descent stops:
+    * - near the closure point (distance <= 2 cells): the cell is kept;
+    * - in a depression (no lower neighbour, e.g. a lake or a pit), wherever it is: the cell is kept;
+    * - when it enters a cell outside the basin: the cell is removed.
+    *
+    * The path from a cell depends only on the DEM, so the result of each cell is computed once
+    * and reused by all the paths that cross it: O(N) instead of O(N * path length).
+    * The result does not depend on the scan order.
+    * warning: DEM and outputRaster must have the same header
+    */
+    void cleanBasin_simple(const Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
+                           double xClosure, double yClosure)
+    {
+        const int nrRows = outputRaster.header.nrRows;
+        const int nrCols = outputRaster.header.nrCols;
+
+        if (outputRaster.value == nullptr || dem.value == nullptr || nrRows <= 0 || nrCols <= 0)
+            return;
+
+        if (dem.header.nrRows != nrRows || dem.header.nrCols != nrCols)
+            return;
+
+        const float flag = outputRaster.header.flag;
+        const float demFlag = dem.header.flag;
+        const double threshold = outputRaster.header.cellSize * 2.0;
+        const double threshold2 = threshold * threshold;
+
+        enum : uint8_t { UNKNOWN = 0, KEEP = 1, REMOVE = 2 };
+
+        const size_t nrCells = size_t(nrRows) * size_t(nrCols);
+
+        // basin mask at the start (it is not modified during the computation)
+        std::vector<uint8_t> isInBasin(nrCells, 0);
+        for (int row = 0; row < nrRows; ++row)
+            for (int col = 0; col < nrCols; ++col)
+                if (! isEqual(outputRaster.value[row][col], flag))
+                    isInBasin[size_t(row) * nrCols + col] = 1;
+
+        std::vector<uint8_t> state(nrCells, UNKNOWN);
+
+        auto isNearClosure = [&](int row, int col) -> bool
+        {
+            double x, y;
+            dem.getXY(row, col, x, y);
+            const double dx = x - xClosure;
+            const double dy = y - yClosure;
+            return (dx * dx + dy * dy) <= threshold2;
+        };
+
+        // lowest neighbour strictly lower than refValue (first one in scan order, as before)
+        auto lowestNeighbour = [&](int row, int col, float refValue, int& nextRow, int& nextCol) -> bool
+        {
+            bool isFound = false;
+            for (int r = -1; r <= 1; r++)
+            {
+                for (int c = -1; c <= 1; c++)
+                {
+                    if (r == 0 && c == 0)
+                        continue;
+
+                    const float z = dem.getValueFromRowCol(row + r, col + c);
+                    if (! isEqual(z, demFlag) && z < refValue)
+                    {
+                        refValue = z;
+                        nextRow = row + r;
+                        nextCol = col + c;
+                        isFound = true;
+                    }
+                }
+            }
+            return isFound;
+        };
+
+        // one step of the descent from a cell of the basin:
+        // returns KEEP / REMOVE if the descent ends here, UNKNOWN if it continues in (nextRow, nextCol)
+        auto step = [&](int row, int col, float refValue, int& nextRow, int& nextCol) -> uint8_t
+        {
+            if (isNearClosure(row, col))
+                return KEEP;
+
+            if (! lowestNeighbour(row, col, refValue, nextRow, nextCol))
+                return KEEP;                                        // depression
+
+            if (! isInBasin[size_t(nextRow) * nrCols + nextCol])
+                return REMOVE;                                      // the path leaves the basin
+
+            return UNKNOWN;
+        };
+
+        // resolves the state of a basin cell, descending with the DEM elevation
+        std::vector<size_t> path;
+        auto resolve = [&](int row, int col) -> uint8_t
+        {
+            path.clear();
+            uint8_t result = UNKNOWN;
+
+            while (true)
+            {
+                const size_t index = size_t(row) * nrCols + col;
+                if (state[index] != UNKNOWN)
+                {
+                    result = state[index];
+                    break;
+                }
+
+                path.push_back(index);
+
+                int nextRow, nextCol;
+                result = step(row, col, dem.value[row][col], nextRow, nextCol);
+                if (result != UNKNOWN)
+                    break;
+
+                row = nextRow;
+                col = nextCol;
+            }
+
+            // the descent is deterministic: all the cells of the path share the result
+            for (const size_t index : path)
+                state[index] = result;
+
+            return result;
+        };
+
+        // the first step starts from the value of outputRaster (as before);
+        // the following steps use the DEM elevation
+        std::vector<uint8_t> isRemoved(nrCells, 0);
+        for (int row = 0; row < nrRows; ++row)
+        {
+            for (int col = 0; col < nrCols; ++col)
+            {
+                const size_t index = size_t(row) * nrCols + col;
+                if (! isInBasin[index])
+                    continue;
+
+                const float originValue = outputRaster.value[row][col];
+                uint8_t result;
+
+                if (originValue == dem.value[row][col])
+                {
+                    result = resolve(row, col);
+                }
+                else
+                {
+                    int nextRow, nextCol;
+                    result = step(row, col, originValue, nextRow, nextCol);
+                    if (result == UNKNOWN)
+                        result = resolve(nextRow, nextCol);
+                }
+
+                if (result == REMOVE)
+                    isRemoved[index] = 1;
+            }
+        }
+
+        for (int row = 0; row < nrRows; ++row)
+            for (int col = 0; col < nrCols; ++col)
+                if (isRemoved[size_t(row) * nrCols + col])
+                    outputRaster.value[row][col] = flag;
+    }
+
+
+    /*!
     * \brief cleanBasin
     * removes points relating to other basins, starting from closure point
     */
-    void cleanBasin_simple(const Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
+    void cleanBasin_simple_old(const Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
                            double xClosure, double yClosure)
     {
         const double threshold = outputRaster.header.cellSize * 3.0;
