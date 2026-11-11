@@ -111,10 +111,10 @@ namespace gis
     }
 
 
-    Crit3DUtmPoint::Crit3DUtmPoint(double myX, double myY)
+    Crit3DUtmPoint::Crit3DUtmPoint(double _x, double _y)
     {
-        this->x = myX;
-        this->y = myY;
+        this->x = _x;
+        this->y = _y;
     }
 
     Crit3DGeoPoint::Crit3DGeoPoint()
@@ -304,16 +304,6 @@ namespace gis
         if (nrRows <= 0 || nrCols <= 0)
             return false;
 
-        // release a previous allocation (restore header after clear)
-        if (value != nullptr)
-        {
-            const Crit3DRasterHeader oldHeader = header;
-
-            clear();
-
-            header = oldHeader;
-        }
-
         try
         {
             value = new float*[nrRows]();       // () zero-initializes
@@ -322,6 +312,7 @@ namespace gis
             {
                 value[row] = new float[nrCols];
 
+                // set init value
                 for (int col = 0; col < nrCols; ++col)
                     value[row][col] = initValue;
             }
@@ -337,6 +328,22 @@ namespace gis
         isLoaded = true;
 
         return true;
+    }
+
+
+    void Crit3DRasterGrid::setConstantValue(float myValue)
+    {
+        const int nrRows = header.nrRows;
+        const int nrCols = header.nrCols;
+
+        for (int row = 0; row < nrRows; ++row)
+        {
+            for (int col = 0; col < nrCols; ++col)
+                value[row][col] = myValue;
+        }
+
+        minimum = myValue;
+        maximum = myValue;
     }
 
 

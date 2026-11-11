@@ -35,7 +35,7 @@
             double y;
 
             Crit3DUtmPoint();
-            Crit3DUtmPoint(double x, double y);
+            Crit3DUtmPoint(double _x, double _y);
 
             void initialize();
             bool isInsideGrid(const Crit3DRasterHeader& myGridHeader) const;
@@ -185,6 +185,8 @@
             bool initializeGrid(const Crit3DRasterHeader& initHeader);
             bool initializeGrid(const Crit3DLatLonHeader& latLonHeader);
             bool initializeGrid(const Crit3DRasterGrid& initGrid, float initValue);
+
+            void setConstantValue(float myValue);
 
             Crit3DUtmPoint utmPoint(int myRow, int myCol) const;
             void getXY(int myRow, int myCol, double &x, double &y) const;
