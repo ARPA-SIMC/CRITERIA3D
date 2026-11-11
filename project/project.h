@@ -134,7 +134,6 @@
         QDateTime meteoPointsDbLastTime;
 
         Crit3DColorScale meteoPointsColorScale;
-        Crit3DColorScale genericColorScale;
 
         bool meteoGridLoaded;
         Crit3DMeteoGridDbHandler* meteoGridDbHandler;

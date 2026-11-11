@@ -325,6 +325,9 @@ namespace gis
 
     void Crit3DRasterGrid::setConstantValue(float myValue)
     {
+        if (! value)
+            return;
+
         const int nrRows = header.nrRows;
         const int nrCols = header.nrCols;
 
@@ -1095,8 +1098,8 @@ namespace gis
         double latDegrees, lonDegrees;
         double utmX, utmY;
 
-        latMap->initializeGrid(myGrid);
-        lonMap->initializeGrid(myGrid);
+        if (! latMap->initializeGrid(myGrid) || ! lonMap->initializeGrid(myGrid))
+            return false;
 
         const int nrRows = myGrid.header.nrRows;
         const int nrCols = myGrid.header.nrCols;
@@ -1213,8 +1216,8 @@ namespace gis
 
         const double cellSize = dem.header.cellSize;
 
-        slopeMap->initializeGrid(dem);
-        aspectMap->initializeGrid(dem);
+        if (! slopeMap->initializeGrid(dem) || ! aspectMap->initializeGrid(dem))
+            return false;
 
         const float flag = dem.header.flag;
         const int nrRows = dem.header.nrRows;
@@ -1688,7 +1691,8 @@ namespace gis
     }
 
 
-    bool topographicDistanceMap(const Crit3DPoint& myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap)
+    bool computeTopographicDistanceMap(const Crit3DPoint& myPoint, const gis::Crit3DRasterGrid& dem,
+                                       Crit3DRasterGrid* myMap)
     {
         if (myMap == nullptr || myMap == &dem || ! dem.isLoaded)
             return false;
@@ -2035,7 +2039,6 @@ namespace gis
         if (! outputRaster->initializeGrid(refRaster->header))
             return false;
 
-        outputRaster->initializeGrid(refRaster->header);
         const float maskFlag = maskRaster->header.flag;
 
         for (long row = 0; row < refRaster->header.nrRows; row++)
@@ -2338,7 +2341,7 @@ namespace gis
         outHeader.llCorner.x = inHeader.llCorner.x + col0 * inHeader.cellSize;
         outHeader.llCorner.y = inHeader.llCorner.y + (inHeader.nrRows - row1 - 1) * inHeader.cellSize;
 
-        outputRaster->initializeGrid(outHeader.flag);
+        outputRaster->initializeGrid(outHeader);
 
         // copy values
         for (int r = 0; r < newRows; ++r)

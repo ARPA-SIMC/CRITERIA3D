@@ -322,7 +322,7 @@
         float topographicDistance(double x1, double y1, float z1, double x2, double y2, float z2, double distance,
                                    const gis::Crit3DRasterGrid& dem);
 
-        bool topographicDistanceMap(const Crit3DPoint &myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap);
+        bool computeTopographicDistanceMap(const Crit3DPoint &myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap);
 
         double closestDistanceFromGrid(const Crit3DPoint& myPoint, const gis::Crit3DRasterGrid& dem);
 

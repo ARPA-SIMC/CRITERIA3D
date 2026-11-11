@@ -1026,10 +1026,7 @@ bool readRasterBilData(const std::string& fileName, Crit3DRasterGrid* rasterGrid
                         value = swapBytes(value);
                     }
 
-                    if (isUnsignedInt)
-                        rasterGrid->value[row][col] = static_cast<float>(static_cast<uint32_t>(value));
-                    else
-                        rasterGrid->value[row][col] = static_cast<float>(value);
+                    rasterGrid->value[row][col] = static_cast<float>(value);
                 }
             }
         }
@@ -1054,7 +1051,10 @@ bool readRasterBilData(const std::string& fileName, Crit3DRasterGrid* rasterGrid
                     if (swap)
                         value = swapBytes(value);
 
-                    rasterGrid->value[row][col] = static_cast<float>(value);
+                    if (isUnsignedInt)
+                        rasterGrid->value[row][col] = static_cast<float>(static_cast<uint32_t>(value));
+                    else
+                        rasterGrid->value[row][col] = static_cast<float>(value);
                 }
             }
         }
@@ -1615,8 +1615,9 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
         return false;
     }
 
-    ifstream file(fileName);
+    rasterGrid->clear();
 
+    ifstream file(fileName);
     if (! file.is_open())
     {
         errorStr = "Wrong or missing file: " + fileName;
