@@ -1140,6 +1140,8 @@ bool readEnviHeader(const string& fileName, Crit3DRasterHeader& header,
     bool hasNoData = false;
     bool hasByteOrder = false;
 
+    double yTopLeftMap = 0.;
+
     string line, key, value;
 
     while (getline(file, line))
@@ -1230,6 +1232,15 @@ bool readEnviHeader(const string& fileName, Crit3DRasterHeader& header,
             header.flag = valueFloat;
             hasNoData = true;
         }
+        else if (upKey == "BANDS")
+        {
+            int nrBands;
+            if (! parseInt(value, nrBands) || nrBands != 1)
+            {
+                errorStr = "Only single-band ENVI rasters are supported.";
+                return false;
+            }
+        }
         else if (upKey == "MAPINFO")
         {
             string mapInfo = value;
@@ -1305,30 +1316,33 @@ bool readEnviHeader(const string& fileName, Crit3DRasterHeader& header,
             header.invCellSize = 1.0 / cellSizeX;
 
             header.llCorner.x = xTopLeft;
-            header.llCorner.y = yTopLeft - static_cast<double>(header.nrRows) * header.cellSize;
+
+            // llCorner.y needs nrRows, which may be defined after map info
+            yTopLeftMap = yTopLeft;
 
             hasMapInfo = true;
         }
     }
 
-    if (! hasSamples
+    if (! hasDataType
+        || ! hasSamples
         || ! hasLines
         || ! hasMapInfo)
     {
-        errorStr = "Wrong ENVI header file: missing samples, lines or map info.";
+        errorStr = "Wrong ENVI header file: missing data type, samples, lines or map info.";
         return false;
     }
 
-    if (! hasDataType)
-    {
-        errorStr = "Wrong ENVI header file: missing data type.";
-        return false;
-    }
+    // upper-left to lower-left corner (independent from the keys order)
+    header.llCorner.y = yTopLeftMap - static_cast<double>(header.nrRows) * header.cellSize;
 
+    /*
+     * data ignore value is optional in ENVI:
+     * use the default NODATA
+    */
     if (! hasNoData)
     {
-        errorStr = "Wrong ENVI header file: missing data ignore value.";
-        return false;
+        header.flag = NODATA;
     }
 
     /*
@@ -1336,7 +1350,9 @@ bool readEnviHeader(const string& fileName, Crit3DRasterHeader& header,
      * is not explicitly specified.
      */
     if (! hasByteOrder)
+    {
         fileInfo.byteOrder = ByteOrder::LittleEndian;
+    }
 
     return true;
 }
@@ -1354,32 +1370,11 @@ bool readRasterFloatData(const string& fileName,
 
     RasterFileInfo fileInfo;
 
-    fileInfo.dataType =
-        RasterDataType::Float32;
-
-    fileInfo.byteOrder =
-        ByteOrder::LittleEndian;
-
+    fileInfo.dataType = RasterDataType::Float32;
+    fileInfo.byteOrder = ByteOrder::LittleEndian;
     fileInfo.headerOffset = 0;
 
-    return readRasterBinaryData(
-        fileName,
-        rasterGrid,
-        fileInfo,
-        errorStr);
-}
-
-
-bool readRasterFloatData(const string& fileName,
-                         Crit3DRasterGrid* rasterGrid,
-                         const RasterFileInfo& fileInfo,
-                         string& errorStr)
-{
-    return readRasterBinaryData(
-        fileName,
-        rasterGrid,
-        fileInfo,
-        errorStr);
+    return readRasterBinaryData(fileName, rasterGrid, fileInfo, errorStr);
 }
 
 
@@ -1387,19 +1382,13 @@ bool writeEsriGridHeader(const string& fileName, const Crit3DRasterHeader& heade
 {
     errorStr.clear();
 
-    const string outputFileName =
-        fileName + ".hdr";
-
+    const string outputFileName = fileName + ".hdr";
     ofstream file(outputFileName);
 
-    if (!file.is_open())
+    if (! file.is_open())
     {
-        errorStr =
-            "Error writing file: " +
-            outputFileName +
-            "\n" +
-            strerror(errno);
-
+        errorStr = "Error writing file: "
+                   + outputFileName + "\n" + strerror(errno);
         return false;
     }
 
@@ -1430,12 +1419,9 @@ bool writeEsriGridHeader(const string& fileName, const Crit3DRasterHeader& heade
      */
     file << "byteorder     LSBFIRST\n";
 
-    if (!file.good())
+    if (! file.good())
     {
-        errorStr =
-            "Error writing file: " +
-            outputFileName;
-
+        errorStr = "Error writing file: " + outputFileName;
         return false;
     }
 
@@ -1566,7 +1552,7 @@ bool readEsriGridFlt(const string& fileName, Crit3DRasterGrid* rasterGrid, strin
     if (extension.empty())
         dataFileName += ".flt";
 
-    if (! readRasterFloatData(dataFileName, rasterGrid, fileInfo, errorStr))
+    if (! readRasterBinaryData(dataFileName, rasterGrid, fileInfo, errorStr))
     {
         rasterGrid->clear();
         return false;
@@ -1606,7 +1592,7 @@ bool readEnviGrid(const string fileName, Crit3DRasterGrid* rasterGrid,
      */
     const string dataFileName = fileName + ".img";
 
-    if (! readRasterFloatData(dataFileName, rasterGrid, fileInfo, errorStr))
+    if (! readRasterBinaryData(dataFileName, rasterGrid, fileInfo, errorStr))
     {
         rasterGrid->clear();
         return false;
@@ -1659,11 +1645,16 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
         if (trim(line).empty())
             continue;
 
-        if (! parseKeyValue(line, key, value))
+        // a header line starts with a letter: anything else is raster data
+        // (parseKeyValue alone is not enough: "1.5 2.3" is a valid key/value pair)
+        if (! isalpha(static_cast<unsigned char>(trim(line)[0])))
         {
             firstDataLine = line;
             break;
         }
+
+        if (! parseKeyValue(line, key, value))
+            continue;
 
         const string upKey =
             upperCase(key);
@@ -1882,6 +1873,9 @@ bool readEsriGridAscii(const string& fileName, Crit3DRasterGrid* rasterGrid, str
         return false;
     }
 
+    gis::updateMinMaxRasterGrid(rasterGrid);
+    rasterGrid->isLoaded = true;
+
     return true;
 }
 
@@ -1927,7 +1921,6 @@ bool openRaster(const string fileName, Crit3DRasterGrid* rasterGrid, int current
     }
 
     errorStr = "Format allowed: .flt, .asc, .bil, .img";
-
     return false;
 }
 
@@ -2018,15 +2011,14 @@ bool writeEnviGrid(string fileName, int utmZone, Crit3DRasterGrid* rasterGrid, s
     headerFile << "interleave = bsq\n";
     headerFile << "byte order = 0\n";
 
-    headerFile
-        << "data ignore value = "
-        << rasterGrid->header.flag
-        << "\n";
+    headerFile << "data ignore value = "
+               << rasterGrid->header.flag << "\n";
 
-    const double yTopLeftCorner =
-        rasterGrid->header.llCorner.y +
-        static_cast<double>(nRows) *
-            rasterGrid->header.cellSize;
+    const double yTopLeftCorner = rasterGrid->header.llCorner.y
+                                  + static_cast<double>(nRows) * rasterGrid->header.cellSize;
+
+    // fixed notation: default precision (6 significant digits) would truncate UTM coordinates
+    headerFile << std::fixed << std::setprecision(6);
 
     headerFile
         << "map info = {UTM, 1, 1, "
@@ -2086,49 +2078,22 @@ bool getGeoExtentsFromUTMHeader(const Crit3DGisSettings& mySettings,
 
     Crit3DGeoPoint LLcorner, URcorner;
 
-    LLcorner.longitude =
-        min(vertices[0].longitude,
-            vertices[3].longitude);
+    LLcorner.longitude = min(vertices[0].longitude, vertices[3].longitude);
+    URcorner.longitude = max(vertices[1].longitude, vertices[2].longitude);
 
-    URcorner.longitude =
-        max(vertices[1].longitude,
-            vertices[2].longitude);
-
-    if (mySettings.startLocation.latitude >= 0)
-    {
-        LLcorner.latitude =
-            min(vertices[0].latitude,
-                vertices[1].latitude);
-
-        URcorner.latitude =
-            max(vertices[2].latitude,
-                vertices[3].latitude);
-    }
-    else
-    {
-        LLcorner.latitude =
-            max(vertices[0].latitude,
-                vertices[1].latitude);
-
-        URcorner.latitude =
-            min(vertices[2].latitude,
-                vertices[3].latitude);
-    }
+    LLcorner.latitude = min(vertices[0].latitude, vertices[1].latitude);
+    URcorner.latitude = max(vertices[2].latitude, vertices[3].latitude);
 
     latLonHeader.nrRows = utmHeader.nrRows;
-
     latLonHeader.nrCols = utmHeader.nrCols;
 
-    latLonHeader.dx =
-        (URcorner.longitude - LLcorner.longitude) /
-        latLonHeader.nrCols;
+    latLonHeader.dx = (URcorner.longitude - LLcorner.longitude)
+                      / latLonHeader.nrCols;
 
-    latLonHeader.dy =
-        (URcorner.latitude - LLcorner.latitude) /
-        latLonHeader.nrRows;
+    latLonHeader.dy = (URcorner.latitude - LLcorner.latitude)
+                      / latLonHeader.nrRows;
 
     latLonHeader.llCorner.latitude = LLcorner.latitude;
-
     latLonHeader.llCorner.longitude = LLcorner.longitude;
 
     latLonHeader.flag = utmHeader.flag;

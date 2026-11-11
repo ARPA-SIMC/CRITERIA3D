@@ -35,8 +35,6 @@
 
         Crit3DColorScale();
 
-        void clear();
-
         void initialize(unsigned int nrKeyColors, unsigned int nrColors);
         bool classify();
 

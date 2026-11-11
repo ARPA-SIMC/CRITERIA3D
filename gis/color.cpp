@@ -66,22 +66,11 @@ Crit3DColorScale::Crit3DColorScale()
 }
 
 
-void Crit3DColorScale::clear()
-{
-    keyColor.clear();
-    color.clear();
-    _nrKeyColors = 0;
-    _nrColors = 0;
-
-    _minimum = NODATA;
-    _maximum = NODATA;
-}
-
-
 void Crit3DColorScale::initialize(unsigned int nrKeyColors, unsigned int nrColors)
 {
-    _nrKeyColors = nrKeyColors;
-    _nrColors = nrColors;
+    // at least one color: getColor() always has something to return
+    _nrKeyColors = std::max(nrKeyColors, 1u);
+    _nrColors = std::max(nrColors, 1u);
 
     keyColor.clear();
     keyColor.resize(_nrKeyColors);
@@ -104,10 +93,24 @@ bool Crit3DColorScale::setRange(float minimum, float maximum)
 
 bool Crit3DColorScale::classify()
 {
+    // check
+    if (_nrKeyColors == 0 || _nrColors == 0
+        || keyColor.size() < _nrKeyColors || color.size() < _nrColors)
+        return false;
+
+    // single key color: uniform scale
+    if (_nrKeyColors == 1)
+    {
+        for (unsigned i = 0; i < _nrColors; i++)
+            color[i] = keyColor[0];
+
+        return true;
+    }
+
     if (_classification == classificationMethod::EqualInterval)
     {
-        const unsigned nrIntervals = MAXVALUE(_nrKeyColors -1, 1);
-        const unsigned nrStep = _nrColors / nrIntervals;
+        const unsigned nrIntervals = _nrKeyColors - 1;
+        const unsigned nrStep = std::max(_nrColors / nrIntervals, 1u);
 
         for (unsigned i = 0; i < nrIntervals; i++)
         {
@@ -118,6 +121,9 @@ bool Crit3DColorScale::classify()
             for (unsigned j = 0; j < nrStep; j++)
             {
                 const unsigned n = nrStep * i + j;
+                if (n >= _nrColors)
+                    break;
+
                 color[n].red = keyColor[i].red + short(dRed * float(j));
                 color[n].green = keyColor[i].green + short(dGreen * float(j));
                 color[n].blue = keyColor[i].blue + short(dBlue * float(j));
@@ -521,13 +527,14 @@ bool roundColorScale(Crit3DColorScale& myScale, int nrIntervals, bool lessRounde
 
     if (myScale.minimum() == 0.f)
     {
-        // mantain zero
+        // zero is a good minimum
         myScale.setMaximum(float(roundStep * nrIntervals));
     }
     else
     {
-        myScale.setMinimum(float(roundAvg - roundStep*(nrIntervals/2)));
-        myScale.setMaximum(float(roundAvg + roundStep*(nrIntervals/2)));
+        const double halfRange = roundStep * double(nrIntervals) * 0.5;
+        myScale.setMinimum(float(roundAvg - halfRange));
+        myScale.setMaximum(float(roundAvg + halfRange));
     }
 
     return true;
