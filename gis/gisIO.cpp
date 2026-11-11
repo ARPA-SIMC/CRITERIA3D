@@ -345,6 +345,7 @@ bool readRasterRow(FILE* file,
 }
 
 
+// warning: define rasterGrid->header before this function
 bool readRasterBinaryData(const string& fileName, gis::Crit3DRasterGrid* rasterGrid,
                           const RasterFileInfo& fileInfo, string& errorStr)
 {
@@ -352,7 +353,7 @@ bool readRasterBinaryData(const string& fileName, gis::Crit3DRasterGrid* rasterG
 
     if (rasterGrid == nullptr)
     {
-        errorStr = "Invalid raster grid.";
+        errorStr = "Invalid raster pointer.";
         return false;
     }
 
@@ -1364,7 +1365,7 @@ bool readRasterFloatData(const string& fileName,
 {
     if (rasterGrid == nullptr)
     {
-        errorStr = "Invalid raster grid.";
+        errorStr = "Invalid raster pointer.";
         return false;
     }
 
@@ -1494,6 +1495,9 @@ bool writeEsriGridFlt(const string& fileName, Crit3DRasterGrid* rasterGrid, stri
 
 bool writeEsriGrid(const string& fileName, Crit3DRasterGrid* rasterGrid, string& errorStr)
 {
+    if (! rasterGrid)
+        return false;
+
     if (! writeEsriGridHeader(fileName, rasterGrid->header, errorStr))
         return false;
 

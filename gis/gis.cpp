@@ -288,6 +288,8 @@ namespace gis
     }
 
 
+    // warning: requires a clean grid
+    // execute clear() and set the new header before to call this function
     bool Crit3DRasterGrid::initializeGrid(float initValue)
     {
         const int nrRows = header.nrRows;
@@ -400,7 +402,8 @@ namespace gis
         colorScale = initGrid.colorScale;
         mapTime = initGrid.mapTime;
 
-        initializeGrid(header.flag);
+        if (! initializeGrid(header.flag))
+            return false;
 
         for (int row = 0; row < header.nrRows; row++)
             for (int col = 0; col < header.nrCols; col++)
@@ -1496,9 +1499,10 @@ namespace gis
     }
 
 
-    bool isBoundaryRunoff(const Crit3DIndexGrid& indexMap, const Crit3DRasterGrid& dtm, const Crit3DRasterGrid& aspectMap, int row, int col)
+    bool isBoundaryRunoff(const Crit3DIndexGrid& indexMap, const Crit3DRasterGrid& dtm,
+                          const Crit3DRasterGrid& aspectMap, int row, int col)
     {
-        // is boundary?
+        // not is boundary -> skip
         if (! isBoundary(dtm, row, col))
             return false;
 
@@ -1508,26 +1512,32 @@ namespace gis
         if (index == nullIndex)
             return false;
 
-        // is strict minimum: is boundary runoff
+        // is strict minimum: boundary runoff
         if (isMinimum(dtm, true, row, col))
             return true;
 
         // check aspect
         float aspect = aspectMap.getValueFromRowCol(row, col);
-        if (isEqual(aspect, aspectMap.header.flag))
+        if (isEqual(aspect, aspectMap.header.flag) || isEqual(aspect, NODATA))
             return false;
 
-        int r = 0;
-        int c = 0;
-        if (aspect >= 135 && aspect <= 225)
-            r = 1;
-        else if ((aspect <= 45) || (aspect >= 315))
-            r = -1;
+        // Normalizzazione dell'angolo nell'intervallo [0, 360)
+        while (aspect < 0.0f)
+            aspect += 360.0f;
+        while (aspect >= 360.0f)
+            aspect -= 360.0f;
 
-        if (aspect >= 45 && aspect <= 135)
-            c = 1;
-        else if (aspect >= 225 && aspect <= 315)
-            c = -1;
+        // Partizione D8: ciascuno degli 8 ottanti copre un arco di 45°
+        // Offset di 22.5° per centrare l'ottante 0 sul Nord (337.5° - 22.5°)
+        const int octant = static_cast<int>(std::floor((aspect + 22.5f) / 45.0f)) % 8;
+
+        // Tabella delle direzioni D8:
+        // 0: N, 1: NE, 2: E, 3: SE, 4: S, 5: SW, 6: W, 7: NW
+        static const int dr[8] = {-1, -1,  0,  1,  1,  1,  0, -1};
+        static const int dc[8] = { 0,  1,  1,  1,  0, -1, -1, -1};
+
+        const int r = dr[octant];
+        const int c = dc[octant];
 
         long indexBoundary = indexMap.getValueFromRowCol(row + r, col + c);
 
@@ -1540,16 +1550,18 @@ namespace gis
      */
     bool isBoundary(const Crit3DRasterGrid& myGrid, int row, int col)
     {
-        float z = myGrid.getValueFromRowCol(row, col);
-        if (isEqual(z, myGrid.header.flag))
+        const float z = myGrid.getValueFromRowCol(row, col);
+        const float flag = myGrid.header.flag;
+
+        if (isEqual(z, flag))
             return false;
 
-        for (int r = -1; r <= 1; r++)
-            for (int c = -1; c <= 1; c++)
+        for (int r = -1; r <= 1; ++r)
+            for (int c = -1; c <= 1; ++c)
                 if (r != 0 || c != 0)
                 {
-                    float zBoundary = myGrid.getValueFromRowCol(row + r, col + c);
-                    if (isEqual(zBoundary, myGrid.header.flag))
+                    const float zBoundary = myGrid.getValueFromRowCol(row + r, col + c);
+                    if (isEqual(zBoundary, flag))
                         return true;
                 }
 
@@ -1887,6 +1899,8 @@ namespace gis
     bool temporalYearlyInterpolation(const gis::Crit3DRasterGrid& firstGrid, const gis::Crit3DRasterGrid& secondGrid,
                                      int myYear, float minValue, float maxValue, gis::Crit3DRasterGrid* outGrid)
     {
+        if (outGrid == nullptr)
+            return false;
         if (! firstGrid.isLoaded || ! secondGrid.isLoaded)
             return false;
         if (firstGrid.getMapTime().isNullTime() || secondGrid.getMapTime().isNullTime())
@@ -1894,14 +1908,32 @@ namespace gis
         if (! compareGrids(firstGrid, secondGrid))
             return false;
 
-        outGrid->initializeGrid(firstGrid);
         const int firstYear = firstGrid.getMapTime().date.year;
         const int secondYear = secondGrid.getMapTime().date.year;
+
+        if (firstYear == secondYear)
+            return false;
+
+        // Protezione da aliasing: se outGrid coincide con un input, usa un buffer temporaneo
+        if (outGrid == &firstGrid || outGrid == &secondGrid)
+        {
+            Crit3DRasterGrid tmpGrid;
+            if (! temporalYearlyInterpolation(firstGrid, secondGrid, myYear, minValue, maxValue, &tmpGrid))
+                return false;
+
+            return outGrid->copyGrid(tmpGrid);
+        }
+
+        if (! outGrid->initializeGrid(firstGrid))
+            return false;
+
+        outGrid->colorScale = firstGrid.colorScale;
 
         const float flag1 = firstGrid.header.flag;
         const float flag2 = secondGrid.header.flag;
 
         for (int row = 0; row < firstGrid.header.nrRows; row++)
+        {
             for (int col = 0; col < firstGrid.header.nrCols; col++)
             {
                 const float firstVal = firstGrid.value[row][col];
@@ -1919,6 +1951,7 @@ namespace gis
                         outGrid->value[row][col] = std::min(maxValue, outGrid->value[row][col]);
                 }
             }
+        }
 
         updateMinMaxRasterGrid(outGrid);
         outGrid->setMapTime(Crit3DTime(Crit3DDate(1,1,myYear), 0));

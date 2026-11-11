@@ -165,8 +165,11 @@ unsigned int Crit3DColorScale::getColorIndex(double value) const
 
     if (_classification == classificationMethod::EqualInterval)
     {
-        return static_cast<unsigned int>((_nrColors - 1) *
-                                         (value - _minimum) / (_maximum - _minimum));
+        unsigned int idx = static_cast<unsigned int>(_nrColors *
+                            (value - _minimum) / (_maximum - _minimum));
+        if (idx >= _nrColors)
+            idx = _nrColors - 1;
+        return idx;
     }
     else
     {
@@ -471,7 +474,8 @@ void mixColors(const Crit3DColor &backColor, const Crit3DColor &foreColor, Crit3
 bool roundColorScale(Crit3DColorScale& myScale, int nrIntervals, bool lessRounded)
 {
     if (isEqual(myScale.minimum(), NODATA)
-        || isEqual(myScale.maximum(), NODATA))
+        || isEqual(myScale.maximum(), NODATA)
+        || myScale.maximum() < myScale.minimum())
         return false;
 
     if (nrIntervals < 1)
