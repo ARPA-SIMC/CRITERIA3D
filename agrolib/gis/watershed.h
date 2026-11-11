@@ -23,7 +23,7 @@
 
     namespace gis
     {
-        static D8Cell computeFlowDirectionD8(const Crit3DRasterGrid& dem, int row, int col);
+        D8Cell computeFlowDirectionD8(const Crit3DRasterGrid& dem, int row, int col);
 
         bool cleanBasin(const Crit3DRasterGrid& dem, Crit3DRasterGrid& basinMask,
                         double xClosure, double yClosure);

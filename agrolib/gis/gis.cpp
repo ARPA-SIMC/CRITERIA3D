@@ -111,10 +111,10 @@ namespace gis
     }
 
 
-    Crit3DUtmPoint::Crit3DUtmPoint(double myX, double myY)
+    Crit3DUtmPoint::Crit3DUtmPoint(double _x, double _y)
     {
-        this->x = myX;
-        this->y = myY;
+        this->x = _x;
+        this->y = _y;
     }
 
     Crit3DGeoPoint::Crit3DGeoPoint()
@@ -282,20 +282,14 @@ namespace gis
     }
 
 
-    // clean the data (set all NO DATA)
     void Crit3DRasterGrid::emptyGrid()
     {
-        const float flag = header.flag;
-
-        for (int row = 0; row < header.nrRows; ++row)
-            for (int col = 0; col < header.nrCols; ++col)
-                value[row][col] = flag;
-
-        minimum = NODATA;
-        maximum = NODATA;
+        setConstantValue(header.flag);
     }
 
 
+    // warning: requires a clean grid
+    // execute clear() and set the new header before to call this function
     bool Crit3DRasterGrid::initializeGrid(float initValue)
     {
         const int nrRows = header.nrRows;
@@ -303,16 +297,6 @@ namespace gis
 
         if (nrRows <= 0 || nrCols <= 0)
             return false;
-
-        // release a previous allocation (restore header after clear)
-        if (value != nullptr)
-        {
-            const Crit3DRasterHeader oldHeader = header;
-
-            clear();
-
-            header = oldHeader;
-        }
 
         try
         {
@@ -322,6 +306,7 @@ namespace gis
             {
                 value[row] = new float[nrCols];
 
+                // set init value
                 for (int col = 0; col < nrCols; ++col)
                     value[row][col] = initValue;
             }
@@ -337,6 +322,25 @@ namespace gis
         isLoaded = true;
 
         return true;
+    }
+
+
+    void Crit3DRasterGrid::setConstantValue(float myValue)
+    {
+        if (! value)
+            return;
+
+        const int nrRows = header.nrRows;
+        const int nrCols = header.nrCols;
+
+        for (int row = 0; row < nrRows; ++row)
+        {
+            for (int col = 0; col < nrCols; ++col)
+                value[row][col] = myValue;
+        }
+
+        minimum = myValue;
+        maximum = myValue;
     }
 
 
@@ -398,7 +402,8 @@ namespace gis
         colorScale = initGrid.colorScale;
         mapTime = initGrid.mapTime;
 
-        initializeGrid(header.flag);
+        if (! initializeGrid(header.flag))
+            return false;
 
         for (int row = 0; row < header.nrRows; row++)
             for (int col = 0; col < header.nrCols; col++)
@@ -872,6 +877,8 @@ namespace gis
      */
     void latLonToUtm(double lat, double lon, double *utmEasting, double *utmNorthing, int *zoneNumber)
     {
+        constexpr double ellipsoidK0 = 0.9996;
+
         Crit3DEllipsoid referenceEllipsoid;
         const double ae = referenceEllipsoid.equatorialRadius;
         const double eccSquared = referenceEllipsoid.eccentricitySquared;
@@ -919,8 +926,6 @@ namespace gis
           + 45. * eccSquared * eccSquared * eccSquared / 1024.) * sin(4. * latRad)
           - (35. * eccSquared * eccSquared * eccSquared / 3072.) * sin(6. * latRad));
 
-        constexpr double ellipsoidK0 = 0.9996;
-
         *utmEasting = (ellipsoidK0 * n * (a + (1 - t + c) * a * a * a / 6.
                    + (5. - 18. * t + t * t + 72. * c
                    - 58. * eccPrimeSquared) * a * a * a * a * a / 120.)
@@ -953,31 +958,30 @@ namespace gis
     */
     void latLonToUtmForceZone(int zoneNumber, double lat, double lon, double *utmEasting, double *utmNorthing)
     {
-        double eccSquared, lonOrigin, eccPrimeSquared, ae, a, n , t, c,m,lonTemp, latRad,lonRad,lonOriginRad;
-        static double ellipsoidK0 = 0.9996;
+        constexpr double ellipsoidK0 = 0.9996;
 
         Crit3DEllipsoid referenceEllipsoid;
-        ae = referenceEllipsoid.equatorialRadius;
-        eccSquared = referenceEllipsoid.eccentricitySquared;
+        const double ae = referenceEllipsoid.equatorialRadius;
+        const double eccSquared = referenceEllipsoid.eccentricitySquared;
 
         //!<  make sure the longitude is between -180.00 .. 179.9: */
-        lonTemp = (lon + 180.) - floor((lon + 180.) / 360.) * 360. - 180.;
+        const double lonTemp = (lon + 180.) - floor((lon + 180.) / 360.) * 360. - 180.;
 
-        latRad = lat * DEG_TO_RAD;
-        lonRad = lonTemp * DEG_TO_RAD;
+        const double latRad = lat * DEG_TO_RAD;
+        const double lonRad = lonTemp * DEG_TO_RAD;
 
         //!<  puts origin in middle of zone */
-        lonOrigin = (zoneNumber - 1.) * 6. - 180. + 3.;
-        lonOriginRad = lonOrigin * DEG_TO_RAD;
+        const double lonOrigin = (zoneNumber - 1.) * 6. - 180. + 3.;
+        const double lonOriginRad = lonOrigin * DEG_TO_RAD;
 
-        eccPrimeSquared = eccSquared / (1. - eccSquared);
+        const double eccPrimeSquared = eccSquared / (1. - eccSquared);
 
-        n = ae / sqrt(1. - eccSquared * sin(latRad) * sin(latRad));
-        t = tan(latRad) * tan(latRad);
-        c = eccPrimeSquared * cos(latRad) * cos(latRad);
-        a = cos(latRad) * (lonRad - lonOriginRad);
+        const double n = ae / sqrt(1. - eccSquared * sin(latRad) * sin(latRad));
+        const double t = tan(latRad) * tan(latRad);
+        const double c = eccPrimeSquared * cos(latRad) * cos(latRad);
+        const double a = cos(latRad) * (lonRad - lonOriginRad);
 
-        m = ae * ((1 - eccSquared / 4 - 3 * eccSquared * eccSquared / 64
+        const double m = ae * ((1 - eccSquared / 4 - 3 * eccSquared * eccSquared / 64
           - 5 * eccSquared * eccSquared * eccSquared / 256) * latRad
           - (3 * eccSquared / 8 + 3 * eccSquared * eccSquared / 32
           + 45 * eccSquared * eccSquared * eccSquared / 1024) * sin(2 * latRad)
@@ -996,7 +1000,8 @@ namespace gis
                     - 330 * eccPrimeSquared) * a * a * a * a * a * a / 720)));
 
         //!<  offset for southern hemisphere: */
-        if (lat < 0) (*utmNorthing) += 10000000.;
+        if (lat < 0)
+            (*utmNorthing) += 10000000.;
 
     }
 
@@ -1011,43 +1016,41 @@ namespace gis
      */
     void utmToLatLon(int zoneNumber, double referenceLat, double utmEasting, double utmNorthing, double *lat, double *lon)
     {
-        if (!lat || !lon)
-            return;
+        constexpr double ellipsoidK0 = 0.9996;
 
-        double ae, e1, eccSquared, eccPrimeSquared, n1, t1, c1, r1, d, m, x, y;
-        double longOrigin , mu , phi1Rad;
-        static double ellipsoidK0 = 0.9996;
+        //double ae, e1, eccSquared, eccPrimeSquared, n1, t1, c1, r1, d, m, x, y;
+        //double longOrigin , mu , phi1Rad;
 
         Crit3DEllipsoid referenceEllipsoid;
-        ae = referenceEllipsoid.equatorialRadius;
-        eccSquared = referenceEllipsoid.eccentricitySquared;
+        const double ae = referenceEllipsoid.equatorialRadius;
+        const double eccSquared = referenceEllipsoid.eccentricitySquared;
 
-        e1 = (1. - sqrt(1. - eccSquared)) / (1. + sqrt(1. - eccSquared));
+        const double e1 = (1. - sqrt(1. - eccSquared)) / (1. + sqrt(1. - eccSquared));
 
         /*! offset for longitude */
-        x = utmEasting - 500000.0;
-        y = utmNorthing;
+        const double x = utmEasting - 500000.0;
+        double y = utmNorthing;
 
         /*! offset used for southern hemisphere */
         if (referenceLat < 0)
             y -= 10000000.;
 
-        eccPrimeSquared = (eccSquared) / (1. - eccSquared);
+        const double eccPrimeSquared = (eccSquared) / (1. - eccSquared);
 
-        m = y / ellipsoidK0;
-        mu = m / (ae * (1. - eccSquared / 4. - 3. * eccSquared * eccSquared / 64.
+        const double m = y / ellipsoidK0;
+        const double mu = m / (ae * (1. - eccSquared / 4. - 3. * eccSquared * eccSquared / 64.
            - 5. * eccSquared * eccSquared * eccSquared / 256.));
 
-        phi1Rad = mu + (3.0 * e1 / 2.0 - 27.0 * e1 * e1 * e1 / 32.0) * sin(2.0 * mu)
+        const double phi1Rad = mu + (3.0 * e1 / 2.0 - 27.0 * e1 * e1 * e1 / 32.0) * sin(2.0 * mu)
                 + (21.0 * e1 * e1 / 16.0 - 55.0 * e1 * e1 * e1 * e1 / 32.0) * sin(4.0 * mu)
                 + (151.0 * e1 * e1 * e1 / 96.0) * sin(6.0 * mu);
 
-        n1 = ae / sqrt(1.0 - eccSquared * sin(phi1Rad) * sin(phi1Rad));
-        t1 = tan(phi1Rad) * tan(phi1Rad);
-        c1 = eccPrimeSquared * cos(phi1Rad) * cos(phi1Rad);
-        r1 = ae * (1.0 - eccSquared) / pow(1.0 - eccSquared
-           * (sin(phi1Rad) * sin(phi1Rad)),1.5);
-        d = x / (n1 * ellipsoidK0);
+        const double n1 = ae / sqrt(1.0 - eccSquared * sin(phi1Rad) * sin(phi1Rad));
+        const double t1 = tan(phi1Rad) * tan(phi1Rad);
+        const double c1 = eccPrimeSquared * cos(phi1Rad) * cos(phi1Rad);
+        const double r1 = ae * (1.0 - eccSquared) / pow(1.0 - eccSquared
+                            * (sin(phi1Rad) * sin(phi1Rad)),1.5);
+        const double d = x / (n1 * ellipsoidK0);
 
         *lat = phi1Rad - (n1 * tan(phi1Rad) / r1) * (d * d / 2.0
             - (5.0 + 3.0 * t1 + 10 * c1 - 4.0 * c1 * c1
@@ -1055,7 +1058,7 @@ namespace gis
             + (61.0 + 90.0 * t1 + 298 * c1 + 45.0 * t1 * t1
             - 252.0 * eccPrimeSquared - 3.0 * c1 * c1) * d * d * d * d * d * d / 720.0);
 
-        *lat *= RAD_TO_DEG ;
+        *lat *= RAD_TO_DEG;
 
         *lon = (d - (1.0 + 2.0 * t1 + c1) * d * d * d / 6.0
             + (5.0 - 2.0 * c1 + 28 * t1 - 3.0 * c1 * c1
@@ -1063,7 +1066,7 @@ namespace gis
             * d * d * d * d * d / 120.0) / cos(phi1Rad);
 
         /*! puts origin in middle of zone */
-        longOrigin = double(zoneNumber - 1.) * 6. - 180. + 3.;
+        const double longOrigin = double(zoneNumber - 1.) * 6. - 180. + 3.;
 
         *lon *= RAD_TO_DEG ;
         *lon += longOrigin ;
@@ -1073,15 +1076,18 @@ namespace gis
     /*!
     * UTM zone:   [1,60]
     * Time zone:  [-12,12]
-    * lon:       [-180,180]
+    * lon:        [-180,180]
     */
     bool isValidUtmTimeZone(int utmZone, int timeZone)
     {
-        float lonUtmZone , lonTimeZone;
-        lonUtmZone = float((utmZone - 1) * 6 - 180 + 3);
-        lonTimeZone = float(timeZone * 15);
-        if (fabs(lonTimeZone - lonUtmZone) <= 7.5f) return true;
-        else return false;
+        double lonUtmZone, lonTimeZone;
+        lonUtmZone = (double(utmZone) - 1.) * 6. - 180. + 3.;
+        lonTimeZone = double(timeZone) * 15.;
+
+        if (fabs(lonTimeZone - lonUtmZone) <= 7.5f)
+            return true;
+        else
+            return false;
     }
 
 
@@ -1089,17 +1095,22 @@ namespace gis
                            gis::Crit3DRasterGrid* latMap, gis::Crit3DRasterGrid* lonMap,
                            const gis::Crit3DGisSettings& gisSettings)
     {
-        if (! myGrid.isLoaded) return false;
+        if (! myGrid.isLoaded)
+            return false;
 
         double latDegrees, lonDegrees;
         double utmX, utmY;
 
-        latMap->initializeGrid(myGrid);
-        lonMap->initializeGrid(myGrid);
+        if (! latMap->initializeGrid(myGrid) || ! lonMap->initializeGrid(myGrid))
+            return false;
 
-        for (int row = 0; row < myGrid.header.nrRows; row++)
-            for (int col = 0; col < myGrid.header.nrCols; col++)
-                if (! isEqual(myGrid.value[row][col], myGrid.header.flag))
+        const int nrRows = myGrid.header.nrRows;
+        const int nrCols = myGrid.header.nrCols;
+        const float flag = myGrid.header.flag;
+
+        for (int row = 0; row < nrRows; ++row)
+            for (int col = 0; col < nrCols; ++col)
+                if (! isEqual(myGrid.value[row][col], flag))
                 {
                     myGrid.getXY(row, col, utmX, utmY);
                     getLatLonFromUtm(gisSettings, utmX, utmY, &latDegrees, &lonDegrees);
@@ -1111,9 +1122,6 @@ namespace gis
         gis::updateMinMaxRasterGrid(latMap);
         gis::updateMinMaxRasterGrid(lonMap);
 
-        latMap->isLoaded = true;
-        lonMap->isLoaded = true;
-
         return true;
     }
 
@@ -1124,7 +1132,7 @@ namespace gis
         if (!dem.isLoaded || !slopeMap || !aspectMap)
             return false;
 
-        float flag = dem.header.flag;
+        const float flag = dem.header.flag;
         if (isEqual(z, flag))
             return false;
 
@@ -1138,9 +1146,9 @@ namespace gis
         {
             if (i != 0)
             {
-                for(int j= -1; j <= 1; ++j)
+                for(int j = -1; j <= 1; ++j)
                 {
-                    float z1 = dem.getValueFromRowCol(row+i, col+j);
+                    const float z1 = dem.getValueFromRowCol(row+i, col+j);
                     if (! isEqual(z1, flag))
                     {
                         dz += i * (z - z1);
@@ -1156,13 +1164,13 @@ namespace gis
         // compute dz/dx
         dz = 0.0;
         dx = 0.0;
-        for (int j=-1; j <=1; j++)
+        for (int j = -1; j <=1; ++j)
         {
             if (j != 0)
             {
-                for(int i=-1; i <=1; i++)
+                for(int i  =-1; i <=1; ++i)
                 {
-                    float z1 = dem.getValueFromRowCol(row+i, col+j);
+                    const float z1 = dem.getValueFromRowCol(row+i, col+j);
                     if (! isEqual(z1, flag))
                     {
                         dz += j * (z - z1);
@@ -1173,7 +1181,7 @@ namespace gis
         }
 
         dx = std::max(dx, EPSILON);
-        double dz_dx = dz / dx;
+        const double dz_dx = dz / dx;
 
         // flat cell: same convention as the interior cells (slope = 0, aspect = 0)
         if (std::abs(dz_dx) < EPSILON && std::abs(dz_dy) < EPSILON)
@@ -1184,7 +1192,7 @@ namespace gis
         }
 
         // slope in degrees
-        double slope = atan(sqrt(dz_dx * dz_dx + dz_dy * dz_dy)) * RAD_TO_DEG;
+        const double slope = atan(sqrt(dz_dx * dz_dx + dz_dy * dz_dy)) * RAD_TO_DEG;
         slopeMap->value[row][col] = float(slope);
 
         // compute with zero to east
@@ -1193,7 +1201,7 @@ namespace gis
         // aspect in degrees: 0° = north, clockwise
         aspect = 90.0 - aspect * RAD_TO_DEG;
         if (aspect < 0)
-            aspect += 360;
+            aspect += 360.0;
 
         aspectMap->value[row][col] = float(aspect);
 
@@ -1211,14 +1219,16 @@ namespace gis
 
         const double cellSize = dem.header.cellSize;
 
-        slopeMap->initializeGrid(dem);
-        aspectMap->initializeGrid(dem);
+        if (! slopeMap->initializeGrid(dem) || ! aspectMap->initializeGrid(dem))
+            return false;
 
         const float flag = dem.header.flag;
+        const int nrRows = dem.header.nrRows;
+        const int nrCols = dem.header.nrCols;
 
-        for (int row = 0; row < dem.header.nrRows; ++row)
+        for (int row = 0; row < nrRows; ++row)
         {
-            for (int col = 0; col < dem.header.nrCols; ++col)
+            for (int col = 0; col < nrCols; ++col)
             {
                 const float z = dem.value[row][col];
 
@@ -1274,9 +1284,6 @@ namespace gis
 
         gis::updateMinMaxRasterGrid(slopeMap);
         gis::updateMinMaxRasterGrid(aspectMap);
-
-        slopeMap->isLoaded = true;
-        aspectMap->isLoaded = true;
 
         return true;
     }
@@ -1492,9 +1499,10 @@ namespace gis
     }
 
 
-    bool isBoundaryRunoff(const Crit3DIndexGrid& indexMap, const Crit3DRasterGrid& dtm, const Crit3DRasterGrid& aspectMap, int row, int col)
+    bool isBoundaryRunoff(const Crit3DIndexGrid& indexMap, const Crit3DRasterGrid& dtm,
+                          const Crit3DRasterGrid& aspectMap, int row, int col)
     {
-        // is boundary?
+        // not is boundary -> skip
         if (! isBoundary(dtm, row, col))
             return false;
 
@@ -1504,26 +1512,32 @@ namespace gis
         if (index == nullIndex)
             return false;
 
-        // is strict minimum: is boundary runoff
+        // is strict minimum: boundary runoff
         if (isMinimum(dtm, true, row, col))
             return true;
 
         // check aspect
         float aspect = aspectMap.getValueFromRowCol(row, col);
-        if (isEqual(aspect, aspectMap.header.flag))
+        if (isEqual(aspect, aspectMap.header.flag) || isEqual(aspect, NODATA))
             return false;
 
-        int r = 0;
-        int c = 0;
-        if (aspect >= 135 && aspect <= 225)
-            r = 1;
-        else if ((aspect <= 45) || (aspect >= 315))
-            r = -1;
+        // Normalizzazione dell'angolo nell'intervallo [0, 360)
+        while (aspect < 0.0f)
+            aspect += 360.0f;
+        while (aspect >= 360.0f)
+            aspect -= 360.0f;
 
-        if (aspect >= 45 && aspect <= 135)
-            c = 1;
-        else if (aspect >= 225 && aspect <= 315)
-            c = -1;
+        // Partizione D8: ciascuno degli 8 ottanti copre un arco di 45°
+        // Offset di 22.5° per centrare l'ottante 0 sul Nord (337.5° - 22.5°)
+        const int octant = static_cast<int>(std::floor((aspect + 22.5f) / 45.0f)) % 8;
+
+        // Tabella delle direzioni D8:
+        // 0: N, 1: NE, 2: E, 3: SE, 4: S, 5: SW, 6: W, 7: NW
+        static const int dr[8] = {-1, -1,  0,  1,  1,  1,  0, -1};
+        static const int dc[8] = { 0,  1,  1,  1,  0, -1, -1, -1};
+
+        const int r = dr[octant];
+        const int c = dc[octant];
 
         long indexBoundary = indexMap.getValueFromRowCol(row + r, col + c);
 
@@ -1536,16 +1550,18 @@ namespace gis
      */
     bool isBoundary(const Crit3DRasterGrid& myGrid, int row, int col)
     {
-        float z = myGrid.getValueFromRowCol(row, col);
-        if (isEqual(z, myGrid.header.flag))
+        const float z = myGrid.getValueFromRowCol(row, col);
+        const float flag = myGrid.header.flag;
+
+        if (isEqual(z, flag))
             return false;
 
-        for (int r = -1; r <= 1; r++)
-            for (int c = -1; c <= 1; c++)
+        for (int r = -1; r <= 1; ++r)
+            for (int c = -1; c <= 1; ++c)
                 if (r != 0 || c != 0)
                 {
-                    float zBoundary = myGrid.getValueFromRowCol(row + r, col + c);
-                    if (isEqual(zBoundary, myGrid.header.flag))
+                    const float zBoundary = myGrid.getValueFromRowCol(row + r, col + c);
+                    if (isEqual(zBoundary, flag))
                         return true;
                 }
 
@@ -1687,7 +1703,8 @@ namespace gis
     }
 
 
-    bool topographicDistanceMap(const Crit3DPoint& myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap)
+    bool computeTopographicDistanceMap(const Crit3DPoint& myPoint, const gis::Crit3DRasterGrid& dem,
+                                       Crit3DRasterGrid* myMap)
     {
         if (myMap == nullptr || myMap == &dem || ! dem.isLoaded)
             return false;
@@ -1882,6 +1899,8 @@ namespace gis
     bool temporalYearlyInterpolation(const gis::Crit3DRasterGrid& firstGrid, const gis::Crit3DRasterGrid& secondGrid,
                                      int myYear, float minValue, float maxValue, gis::Crit3DRasterGrid* outGrid)
     {
+        if (outGrid == nullptr)
+            return false;
         if (! firstGrid.isLoaded || ! secondGrid.isLoaded)
             return false;
         if (firstGrid.getMapTime().isNullTime() || secondGrid.getMapTime().isNullTime())
@@ -1889,14 +1908,32 @@ namespace gis
         if (! compareGrids(firstGrid, secondGrid))
             return false;
 
-        outGrid->initializeGrid(firstGrid);
         const int firstYear = firstGrid.getMapTime().date.year;
         const int secondYear = secondGrid.getMapTime().date.year;
+
+        if (firstYear == secondYear)
+            return false;
+
+        // Protezione da aliasing: se outGrid coincide con un input, usa un buffer temporaneo
+        if (outGrid == &firstGrid || outGrid == &secondGrid)
+        {
+            Crit3DRasterGrid tmpGrid;
+            if (! temporalYearlyInterpolation(firstGrid, secondGrid, myYear, minValue, maxValue, &tmpGrid))
+                return false;
+
+            return outGrid->copyGrid(tmpGrid);
+        }
+
+        if (! outGrid->initializeGrid(firstGrid))
+            return false;
+
+        outGrid->colorScale = firstGrid.colorScale;
 
         const float flag1 = firstGrid.header.flag;
         const float flag2 = secondGrid.header.flag;
 
         for (int row = 0; row < firstGrid.header.nrRows; row++)
+        {
             for (int col = 0; col < firstGrid.header.nrCols; col++)
             {
                 const float firstVal = firstGrid.value[row][col];
@@ -1914,6 +1951,7 @@ namespace gis
                         outGrid->value[row][col] = std::min(maxValue, outGrid->value[row][col]);
                 }
             }
+        }
 
         updateMinMaxRasterGrid(outGrid);
         outGrid->setMapTime(Crit3DTime(Crit3DDate(1,1,myYear), 0));
@@ -2034,7 +2072,6 @@ namespace gis
         if (! outputRaster->initializeGrid(refRaster->header))
             return false;
 
-        outputRaster->initializeGrid(refRaster->header);
         const float maskFlag = maskRaster->header.flag;
 
         for (long row = 0; row < refRaster->header.nrRows; row++)
@@ -2337,7 +2374,7 @@ namespace gis
         outHeader.llCorner.x = inHeader.llCorner.x + col0 * inHeader.cellSize;
         outHeader.llCorner.y = inHeader.llCorner.y + (inHeader.nrRows - row1 - 1) * inHeader.cellSize;
 
-        outputRaster->initializeGrid(outHeader.flag);
+        outputRaster->initializeGrid(outHeader);
 
         // copy values
         for (int r = 0; r < newRows; ++r)
@@ -2352,6 +2389,5 @@ namespace gis
 
         return true;
     }
-
 
 }

@@ -494,13 +494,13 @@ void Crit3DProxy::setName(const std::string &value)
 
 gis::Crit3DRasterGrid *Crit3DProxy::getGrid() const
 {
-    return proxyGridPtr;
+    return _proxyGridPtr;
 }
 
 void Crit3DProxy::setGrid(gis::Crit3DRasterGrid *gridPointer, bool sharedGrid)
 {
-    proxyGridPtr = gridPointer;
-    isSharedGrid = sharedGrid;
+    _proxyGridPtr = gridPointer;
+    _isSharedGrid = sharedGrid;
 }
 
 std::string Crit3DProxy::getGridName() const
@@ -682,8 +682,8 @@ Crit3DProxy::Crit3DProxy()
     name = "";
     gridName = "";
 
-    proxyGridPtr = nullptr;
-    isSharedGrid = false;
+    _proxyGridPtr = nullptr;
+    _isSharedGrid = false;
 
     forQualityControl = false;
 
@@ -711,8 +711,8 @@ Crit3DProxy::Crit3DProxy()
 
 void Crit3DProxy::clear()
 {
-    if (proxyGridPtr != nullptr && ! isSharedGrid)
-        delete proxyGridPtr;
+    if (_proxyGridPtr != nullptr && ! _isSharedGrid)
+        delete _proxyGridPtr;
 
     fittingParametersRange.clear();
     fittingFirstGuess.clear();

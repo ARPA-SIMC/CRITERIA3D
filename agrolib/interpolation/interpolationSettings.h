@@ -35,8 +35,8 @@
         std::vector <int> fittingFirstGuess;
         std::vector <std::vector <double>> firstGuessCombinations;
 
-        gis::Crit3DRasterGrid* proxyGridPtr;
-        bool isSharedGrid;
+        gis::Crit3DRasterGrid* _proxyGridPtr;
+        bool _isSharedGrid;
 
         float avg;
         float stdDev;
@@ -59,10 +59,15 @@
 
         std::string getName() const;
         void setName(const std::string &value);
+
         gis::Crit3DRasterGrid *getGrid() const;
         void setGrid(gis::Crit3DRasterGrid *gridPointer, bool sharedGrid);
+
+        bool isSharedGrid() const { return _isSharedGrid; }
+
         std::string getGridName() const;
         void setGridName(const std::string &value);
+
         void setRegressionR2(float myValue);
         float getRegressionR2();
         void setRegressionSlope(float myValue);

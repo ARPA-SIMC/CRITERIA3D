@@ -1758,7 +1758,7 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
 
     if (count == 0)
     {
-        errorString = "No Data Available";
+        errorString = "No daily data.";
         return false;
     }
     else
@@ -1836,7 +1836,7 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
 
     if (count == 0)
     {
-        errorString = "No Data Available";
+        errorString = "No hourly data.";
         return false;
     }
 
@@ -1846,6 +1846,8 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
 
 bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &lastDate, bool showInfo)
 {
+    errorString = "";
+
     if (! meteoGridDbHandler->tableMonthly().exists)
         return false;
 
@@ -2186,10 +2188,11 @@ bool Project::loadProxyGrids()
         QString fileName = QString::fromStdString(myProxy->getGridName());
         fileName = getCompleteFileName(fileName, PATH_GEO);
 
-        if (! myGrid->isLoaded && fileName != "")
+        if ((!myGrid || !myGrid->isLoaded) && ! fileName.isEmpty())
         {
             gis::Crit3DRasterGrid* proxyGrid = new gis::Crit3DRasterGrid;
             std::string myError;
+
             //resampling on DEM must be done only when interpolating on DEM or on grid with upscale from DEM option activated
             /*if (DEM.isLoaded && gis::readEsriGridFlt(fileName.toStdString(), &proxyGrid, myError))
             {
@@ -2206,7 +2209,6 @@ bool Project::loadProxyGrids()
 
             if (gis::readEsriGridFlt(fileName.toStdString(), proxyGrid, myError))
             {
-                //cambiare
                 myProxy->setGrid(proxyGrid, false);
             }
             else
@@ -2314,15 +2316,17 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         if (showInfo && (i % infoStep == 0))
             updateProgressBar(int(i));
 
-        if (!meteoPoints[i].active)
+        if (! meteoPoints[i].active)
             continue;
 
-        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
-                                            || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
-                                       : true;
+        bool hasData = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
+                                    || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
+                                    : true;
+        if (! hasData)
+            continue;
 
-        if (isSelected && ! writeTopographicDistanceMap(int(i), DEM, mapsFolder))
-                return false;
+        if (! writeTopographicDistanceMap(int(i), DEM, mapsFolder))
+            return false;
     }
 
     if(showInfo)
@@ -2353,7 +2357,7 @@ bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRaste
     std::string fileName;
     gis::Crit3DRasterGrid myMap;
 
-    if (gis::topographicDistanceMap(meteoPoints[pointIndex].point, demMap, &myMap))
+    if (gis::computeTopographicDistanceMap(meteoPoints[pointIndex].point, demMap, &myMap))
     {
         fileName = pathTd.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[pointIndex].id;
         if (! gis::writeEsriGrid(fileName, &myMap, myError))
@@ -2362,6 +2366,7 @@ bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRaste
             return false;
         }
     }
+
     return true;
 }
 
@@ -2392,21 +2397,20 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 
     for (size_t i = 0; i < meteoPoints.size(); i++)
     {
-        if (showInfo && (i % infoStep == 0))
-                updateProgressBar(int(i));
+        if (showInfo && (i % infoStep) == 0)
+            updateProgressBar(int(i));
 
-        if (!meteoPoints[i].active)
+        if (! meteoPoints[i].active)
             continue;
 
-        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
-                                          || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
-                                       : true;
-
-        if(!isSelected)
+        bool hasData = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
+                                        || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
+                                        : true;
+        if(! hasData)
             continue;
 
         fileName = mapsFolder.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[i].id;
-        if (!QFile::exists(QString::fromStdString(fileName + ".flt")))
+        if (! QFile::exists(QString::fromStdString(fileName + ".flt")))
         {
             if (! writeTopographicDistanceMap(int(i), DEM, mapsFolder))
                 return false;

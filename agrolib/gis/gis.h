@@ -35,7 +35,7 @@
             double y;
 
             Crit3DUtmPoint();
-            Crit3DUtmPoint(double x, double y);
+            Crit3DUtmPoint(double _x, double _y);
 
             void initialize();
             bool isInsideGrid(const Crit3DRasterHeader& myGridHeader) const;
@@ -186,6 +186,8 @@
             bool initializeGrid(const Crit3DLatLonHeader& latLonHeader);
             bool initializeGrid(const Crit3DRasterGrid& initGrid, float initValue);
 
+            void setConstantValue(float myValue);
+
             Crit3DUtmPoint utmPoint(int myRow, int myCol) const;
             void getXY(int myRow, int myCol, double &x, double &y) const;
             void getRowCol(double x, double y, int& row, int& col) const;
@@ -320,7 +322,7 @@
         float topographicDistance(double x1, double y1, float z1, double x2, double y2, float z2, double distance,
                                    const gis::Crit3DRasterGrid& dem);
 
-        bool topographicDistanceMap(const Crit3DPoint &myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap);
+        bool computeTopographicDistanceMap(const Crit3DPoint &myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap);
 
         double closestDistanceFromGrid(const Crit3DPoint& myPoint, const gis::Crit3DRasterGrid& dem);
 
