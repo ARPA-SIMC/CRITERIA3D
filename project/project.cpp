@@ -2186,10 +2186,11 @@ bool Project::loadProxyGrids()
         QString fileName = QString::fromStdString(myProxy->getGridName());
         fileName = getCompleteFileName(fileName, PATH_GEO);
 
-        if (! myGrid->isLoaded && fileName != "")
+        if ((!myGrid || !myGrid->isLoaded) && ! fileName.isEmpty())
         {
             gis::Crit3DRasterGrid* proxyGrid = new gis::Crit3DRasterGrid;
             std::string myError;
+
             //resampling on DEM must be done only when interpolating on DEM or on grid with upscale from DEM option activated
             /*if (DEM.isLoaded && gis::readEsriGridFlt(fileName.toStdString(), &proxyGrid, myError))
             {
@@ -2206,7 +2207,6 @@ bool Project::loadProxyGrids()
 
             if (gis::readEsriGridFlt(fileName.toStdString(), proxyGrid, myError))
             {
-                //cambiare
                 myProxy->setGrid(proxyGrid, false);
             }
             else
