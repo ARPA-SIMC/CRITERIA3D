@@ -68,14 +68,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     rubberBand = new RubberBand(QRubberBand::Rectangle, mapView);
 
-    inputRasterColorLegend = new ColorLegend(myProject.DEM.colorScale, ui->colorScaleInputRaster);
+    inputRasterColorLegend = new ColorLegend(ui->colorScaleInputRaster);
     inputRasterColorLegend->resize(ui->colorScaleInputRaster->size());
 
-    outputRasterColorLegend = new ColorLegend(tmpRasterScale, ui->colorScaleOutputRaster);
+    outputRasterColorLegend = new ColorLegend(ui->colorScaleOutputRaster);
     outputRasterColorLegend->resize(ui->colorScaleOutputRaster->size());
 
-    meteoPointsLegend = new ColorLegend(myProject.meteoPointsColorScale, ui->colorScaleMeteoPoints);
+    meteoPointsLegend = new ColorLegend(ui->colorScaleMeteoPoints);
     meteoPointsLegend->resize(ui->colorScaleMeteoPoints->size());
+    meteoPointsLegend->colorScale = &(myProject.meteoPointsColorScale);
 
     // initialize
     ui->labelInputRaster->setText("");
@@ -1275,7 +1276,7 @@ void MainWindow::setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster)
     setInputRasterVisible(true);
 
     rasterDEM->initialize(myRaster, myProject.gisSettings);
-    inputRasterColorLegend->colorScale = myRaster->colorScale;
+    inputRasterColorLegend->colorScale = &(myRaster->colorScale);
 
     inputRasterColorLegend->repaint();
     emit rasterDEM->redrawRequested();
@@ -1305,7 +1306,7 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *rasterPointer)
     setOutputRasterVisible(true);
 
     rasterOutput->initialize(rasterPointer, myProject.gisSettings);
-    outputRasterColorLegend->colorScale = rasterPointer->colorScale;
+    outputRasterColorLegend->colorScale = &(rasterPointer->colorScale);
 
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
