@@ -12,9 +12,9 @@
         Q_OBJECT
 
     public:
-        explicit ColorLegend(Crit3DColorScale& scale, QWidget *parent = nullptr);
+        explicit ColorLegend(QWidget *parent = nullptr);
 
-        Crit3DColorScale& colorScale;
+        Crit3DColorScale* colorScale = nullptr;
 
     private:
         void paintEvent(QPaintEvent *event) override;
