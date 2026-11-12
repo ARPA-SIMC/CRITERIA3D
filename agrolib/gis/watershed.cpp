@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <queue>
 #include <vector>
+#include <cstdint>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -54,7 +55,7 @@ namespace gis
         if (isEqual(refValue, dem.header.flag))
             return false;
 
-        const float threshold = dem.header.cellSize * 0.001;
+        const float threshold = float(dem.header.cellSize * 0.001);
 
         // initialize new raster (basin)
         Crit3DRasterGrid basinRaster;
