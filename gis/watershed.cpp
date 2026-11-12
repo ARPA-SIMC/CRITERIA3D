@@ -54,7 +54,7 @@ namespace gis
         if (isEqual(refValue, dem.header.flag))
             return false;
 
-        const float threshold = dem.header.cellSize * 0.002;
+        const float threshold = dem.header.cellSize * 0.001;
 
         // initialize new raster (basin)
         Crit3DRasterGrid basinRaster;
