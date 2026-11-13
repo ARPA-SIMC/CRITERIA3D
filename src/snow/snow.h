@@ -22,7 +22,14 @@
     #define SOIL_SPECIFIC_HEAT 1.4              /*!<  [KJ kg-1 °C-1] wet soil */
     #define DEFAULT_BULK_DENSITY 1350           /*!<  [kg m-3] */
     #define SOIL_DAMPING_DEPTH 0.3              /*!<  [m] */
-    #define SNOW_MINIMUM_HEIGHT 1.              /*!<  [mm] */
+
+    #define SNOW_DENSITY_FRESH 100.             /*!<  [kg m-3] new snow */
+    #define SNOW_DENSITY_MAX_DRY 300.           /*!<  [kg m-3] settled dry snow */
+    #define SNOW_DENSITY_MAX_WET 450.           /*!<  [kg m-3] ripe (wet) snow */
+    #define SNOW_DENSITY_DEFAULT 250.           /*!<  [kg m-3] used when previous depth is unknown */
+    #define SNOW_DENSITY_TIMESCALE 4.2          /*!<  [days] */
+
+    #define SNOW_MIN_ALBEDO 0.4                 /*!<  [-] */
 
     #include "commonConstants.h"
 
@@ -57,6 +64,7 @@
 
         bool isSnowPointValid();
         void computeSnowFall();
+        void computeSnowDensity();
         void computeSnowBrooksModel();
 
         double getSnowFall() { return _precSnow; }
@@ -89,10 +97,13 @@
         void setSurfaceEnergy(double value) { _surfaceEnergy = value; }
 
         double getSnowSurfaceTemp() { return _surfaceTemp; }
-        void setSnowSurfaceTemp(float value) { _surfaceTemp = double(value); }
+        void setSnowSurfaceTemp(double value) { _surfaceTemp = value; }
 
         double getAgeOfSnow() { return _ageOfSnow; }
-        void setAgeOfSnow(float value) { _ageOfSnow = double(value); }
+        void setAgeOfSnow(double value) { _ageOfSnow = value; }
+
+        double getSnowDensity() { return _snowDensity; }
+        void setSnowDensity(double value) { _snowDensity = value; }
 
     private:
         // input
@@ -124,6 +135,7 @@
         double _surfaceEnergy;              /*!<   [kJ m-2] */
         double _surfaceTemp;                /*!<   [°C] */
         double _ageOfSnow;                  /*!<   [days] */
+        double _snowDensity;                /*!<   [kg m-3] */
     };
 
 

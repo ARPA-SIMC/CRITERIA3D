@@ -34,6 +34,7 @@
         gis::Crit3DRasterGrid* getSurfaceEnergyMap() { return _surfaceEnergyMap; }
         gis::Crit3DRasterGrid* getSnowSurfaceTempMap() { return _snowSurfaceTempMap; }
         gis::Crit3DRasterGrid* getAgeOfSnowMap() { return _ageOfSnowMap; }
+        gis::Crit3DRasterGrid* getSnowDensityMap() { return _snowDensityMap; }
 
         gis::Crit3DRasterGrid* getSnowFallMap() {return _snowFallMap;}
         gis::Crit3DRasterGrid* getSnowMeltMap() {return _snowMeltMap;}
@@ -49,6 +50,7 @@
         gis::Crit3DRasterGrid* _surfaceEnergyMap;
         gis::Crit3DRasterGrid* _snowSurfaceTempMap;
         gis::Crit3DRasterGrid* _ageOfSnowMap;
+        gis::Crit3DRasterGrid* _snowDensityMap;
 
         gis::Crit3DRasterGrid* _snowFallMap;
         gis::Crit3DRasterGrid* _snowMeltMap;

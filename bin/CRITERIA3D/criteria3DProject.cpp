@@ -1855,15 +1855,15 @@ void Crit3DProject::computeSnowPoint(Crit3DSnow &snowPoint, int row, int col)
 {
     snowMaps.setPoint(snowPoint, row, col);
 
-    double airT = hourlyMeteoMaps->mapHourlyTair->value[row][col];
-    double prec = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
-    double relHum = hourlyMeteoMaps->mapHourlyRelHum->value[row][col];
-    double windInt = hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col];
-    double globalRad = radiationMaps->globalRadiationMap->value[row][col];
-    double beamRad = radiationMaps->beamRadiationMap->value[row][col];
-    double transmissivity = radiationMaps->transmissivityMap->value[row][col];
-    double clearSkyTrans = radSettings.getClearSky();
-    double surfaceWaterContent = 0;                                            // TODO [mm]
+    const double airT = hourlyMeteoMaps->mapHourlyTair->value[row][col];
+    const double prec = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+    const double relHum = hourlyMeteoMaps->mapHourlyRelHum->value[row][col];
+    const double windInt = hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col];
+    const double globalRad = radiationMaps->globalRadiationMap->value[row][col];
+    const double beamRad = radiationMaps->beamRadiationMap->value[row][col];
+    const double transmissivity = radiationMaps->transmissivityMap->value[row][col];
+    const double clearSkyTrans = radSettings.getClearSky();
+    const double surfaceWaterContent = 0;                                            // TODO [mm]
 
     snowPoint.setSnowInputData(airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, surfaceWaterContent);
 

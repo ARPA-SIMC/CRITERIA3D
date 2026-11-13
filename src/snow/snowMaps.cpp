@@ -37,6 +37,7 @@ Crit3DSnowMaps::Crit3DSnowMaps()
     _surfaceEnergyMap = new gis::Crit3DRasterGrid;
     _snowSurfaceTempMap = new gis::Crit3DRasterGrid;
     _ageOfSnowMap = new gis::Crit3DRasterGrid;
+    _snowDensityMap = new gis::Crit3DRasterGrid;
 
     _snowFallMap = new gis::Crit3DRasterGrid;
     _snowMeltMap = new gis::Crit3DRasterGrid;
@@ -62,6 +63,7 @@ Crit3DSnowMaps::~Crit3DSnowMaps()
     delete _surfaceEnergyMap;
     delete _snowSurfaceTempMap;
     delete _ageOfSnowMap;
+    delete _snowDensityMap;
 
     delete _snowFallMap;
     delete _snowMeltMap;
@@ -80,6 +82,7 @@ void Crit3DSnowMaps::clear()
     _surfaceEnergyMap->clear();
     _snowSurfaceTempMap->clear();
     _ageOfSnowMap->clear();
+    _snowDensityMap->clear();
 
     _snowFallMap->clear();
     _snowMeltMap->clear();
@@ -108,10 +111,11 @@ void Crit3DSnowMaps::initializeSnowMaps(const gis::Crit3DRasterGrid &dtm, double
     _surfaceEnergyMap->initializeGrid(dtm);
     _snowSurfaceTempMap->initializeGrid(dtm);
     _ageOfSnowMap->initializeGrid(dtm);
+    _snowDensityMap->initializeGrid(dtm);
 
     // TODO: pass initial temperature
     _initSoilPackTemp = 3.4;
-    _initSnowSurfaceTemp = 5.0;
+    _initSnowSurfaceTemp = 3.4;
 
     _snowWaterEquivalentMap->initializeGrid(dtm);
     // initialize with zero values
@@ -132,6 +136,7 @@ void Crit3DSnowMaps::updateMapRowCol(Crit3DSnow &snowPoint, int row, int col)
     _surfaceEnergyMap->value[row][col] = float(snowPoint.getSurfaceEnergy());
     _snowSurfaceTempMap->value[row][col] = float(snowPoint.getSnowSurfaceTemp());
     _ageOfSnowMap->value[row][col] = float(snowPoint.getAgeOfSnow());
+    _snowDensityMap->value[row][col] = float(snowPoint.getSnowDensity());
 
     _snowFallMap->value[row][col] = float(snowPoint.getSnowFall());
     _snowMeltMap->value[row][col] = float(snowPoint.getSnowMelt());
@@ -150,6 +155,7 @@ void Crit3DSnowMaps::flagMapRowCol(int row, int col)
     _surfaceEnergyMap->value[row][col] = _surfaceEnergyMap->header.flag;
     _snowSurfaceTempMap->value[row][col] = _snowSurfaceTempMap->header.flag;
     _ageOfSnowMap->value[row][col] = _ageOfSnowMap->header.flag;
+    _snowDensityMap->value[row][col] = _snowDensityMap->header.flag;
 
     _snowFallMap->value[row][col] = _snowFallMap->header.flag;
     _snowMeltMap->value[row][col] = _snowMeltMap->header.flag;
@@ -168,6 +174,7 @@ void Crit3DSnowMaps::updateRangeMaps()
     gis::updateMinMaxRasterGrid(_surfaceEnergyMap);
     gis::updateMinMaxRasterGrid(_snowSurfaceTempMap);
     gis::updateMinMaxRasterGrid(_ageOfSnowMap);
+    gis::updateMinMaxRasterGrid(_snowDensityMap);
 
     gis::updateMinMaxRasterGrid(_snowFallMap);
     gis::updateMinMaxRasterGrid(_snowMeltMap);
@@ -186,6 +193,7 @@ void Crit3DSnowMaps::setPoint(Crit3DSnow &snowPoint, int row, int col)
     snowPoint.setSurfaceEnergy(_surfaceEnergyMap->value[row][col]);
     snowPoint.setSnowSurfaceTemp(_snowSurfaceTempMap->value[row][col]);
     snowPoint.setAgeOfSnow(_ageOfSnowMap->value[row][col]);
+    snowPoint.setSnowDensity(_snowDensityMap->value[row][col]);
 }
 
 
@@ -207,6 +215,7 @@ void Crit3DSnowMaps::resetSnowModel(double skinThickness)
                 _iceContentMap->value[row][col] = initSWE;
                 _liquidWaterContentMap->value[row][col] = 0;
                 _ageOfSnowMap->value[row][col] = NODATA;
+                _snowDensityMap->value[row][col] = NODATA;
 
                 if (initSWE > 0)
                 {
