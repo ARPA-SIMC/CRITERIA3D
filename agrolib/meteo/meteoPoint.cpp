@@ -921,7 +921,7 @@ Crit3DDate Crit3DMeteoPoint::getMeteoPointHourlyValuesDate(int index) const
 }
 
 
-bool Crit3DMeteoPoint::getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH* &hourlyValues)
+bool Crit3DMeteoPoint::getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH *hourlyValues)
 {
     if (obsDataH.empty())
         return false;
