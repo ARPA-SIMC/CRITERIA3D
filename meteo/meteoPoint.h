@@ -165,7 +165,7 @@
             float getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings) const;
             float getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar) const;
             bool setMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar, float myValue);
-            bool getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH *&hourlyValues);
+            bool getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH *hourlyValues);
             float getMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar) const;
             bool setMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar, float myValue);
 
