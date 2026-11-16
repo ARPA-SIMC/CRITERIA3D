@@ -23,13 +23,16 @@
     #define DEFAULT_BULK_DENSITY 1350           /*!<  [kg m-3] */
     #define SOIL_DAMPING_DEPTH 0.3              /*!<  [m] */
 
+    // Essery R. (2007)
     #define SNOW_DENSITY_FRESH 100.             /*!<  [kg m-3] new snow */
     #define SNOW_DENSITY_MAX_DRY 300.           /*!<  [kg m-3] settled dry snow */
     #define SNOW_DENSITY_MAX_WET 450.           /*!<  [kg m-3] ripe (wet) snow */
     #define SNOW_DENSITY_DEFAULT 250.           /*!<  [kg m-3] used when previous depth is unknown */
-    #define SNOW_DENSITY_TIMESCALE 4.2          /*!<  [days] */
+    #define SNOW_DENSITY_TIMESCALE 4.2          /*!<  [days] equal to 100 hours */
 
-    #define SNOW_MIN_ALBEDO 0.4                 /*!<  [-] */
+    // Douville et al. (1995)
+    #define SNOW_MAX_ALBEDO 0.85                /*!<  [-] */
+    #define SNOW_MIN_ALBEDO 0.5                 /*!<  [-] */
 
     #include "commonConstants.h"
 
@@ -65,6 +68,8 @@
         bool isSnowPointValid();
         void computeSnowFall();
         void computeSnowDensity();
+        void computeSnowAlbedo(double previousSWE);
+
         void computeSnowBrooksModel();
 
         double getSnowFall() { return _precSnow; }
@@ -77,6 +82,8 @@
         double getWaterOutflow() { return _waterOutflow; }
 
         double getSnowMelt() { return _snowMelt; }
+
+        double getSnowDepth() { return _snowDepth * 100.; }     // [cm]
 
         double getSensibleHeat() { return _sensibleHeat; }
         double getLatentHeat() { return _latentHeat; }
@@ -99,8 +106,8 @@
         double getSnowSurfaceTemp() { return _surfaceTemp; }
         void setSnowSurfaceTemp(double value) { _surfaceTemp = value; }
 
-        double getAgeOfSnow() { return _ageOfSnow; }
-        void setAgeOfSnow(double value) { _ageOfSnow = value; }
+        double getSnowAlbedo() { return _snowAlbedo; }
+        void setSnowAlbedo(double value) { _snowAlbedo = value; }
 
         double getSnowDensity() { return _snowDensity; }
         void setSnowDensity(double value) { _snowDensity = value; }
@@ -124,6 +131,7 @@
         double _deltaSWE;                   /*!<   [mm] */
         double _waterOutflow;               /*!<   [mm] */
         double _snowMelt;                   /*!<   [mm] */
+        double _snowDepth;                  /*!<   [m]  */
         double _sensibleHeat;               /*!<   [kJ m-2] */
         double _latentHeat;                 /*!<   [kJ m-2] */
 
@@ -134,15 +142,15 @@
         double _internalEnergy;             /*!<   [kJ m-2] */
         double _surfaceEnergy;              /*!<   [kJ m-2] */
         double _surfaceTemp;                /*!<   [°C] */
-        double _ageOfSnow;                  /*!<   [days] */
+        double _snowAlbedo;                 /*!<   [-] */
         double _snowDensity;                /*!<   [kg m-3] */
     };
 
 
     double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double windSpeed, double vegetativeHeight);
 
-    double computeInternalEnergy(double soilTemperature,int bulkDensity, double swe);
-    double computeInternalEnergySoil(double soilTemperature, int bulkDensity);
+    double computeInternalEnergy(double soilTemperature, double bulkDensity, double swe);
+    double computeInternalEnergySoil(double soilTemperature, double bulkDensity);
 
     double computeSurfaceEnergySnow(double surfaceTemperature, double skinThickness);
     double computeSurfaceEnergySoil(double surfaceTemperature, double skinThickness);

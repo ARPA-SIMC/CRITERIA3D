@@ -104,7 +104,6 @@
         void on_actionView_Snow_fall_triggered();
         void on_actionView_Snow_surface_internal_energy_triggered();
         void on_actionView_Snow_liquid_water_content_triggered();
-        void on_actionView_Snow_age_triggered();
         void on_actionView_Snowmelt_triggered();
 
         void on_actionView_Snow_sensible_heat_triggered();
@@ -280,6 +279,8 @@
         void on_action30_days_average_temperature_triggered();
 
         void on_actionMonthly_fraction_of_available_water_triggered();
+
+        void on_actionView_Snow_depth_triggered();
 
     protected:
         /*!

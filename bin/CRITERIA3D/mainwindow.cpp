@@ -1634,8 +1634,8 @@ void MainWindow::showSnowVariable(meteoVariable var)
         setOutputMeteoVariable(snowLiquidWaterContent, myProject.snowMaps.getLWContentMap());
         break;
 
-    case snowAge:
-        setOutputMeteoVariable(snowAge, myProject.snowMaps.getAgeOfSnowMap());
+    case snowDepth:
+        setOutputMeteoVariable(snowDepth, myProject.snowMaps.getSnowDepthMap());
         break;
 
     case snowFall:
@@ -1689,9 +1689,9 @@ void MainWindow::on_actionView_Snow_liquid_water_content_triggered()
     showSnowVariable(snowLiquidWaterContent);
 }
 
-void MainWindow::on_actionView_Snow_age_triggered()
+void MainWindow::on_actionView_Snow_depth_triggered()
 {
-    showSnowVariable(snowAge);
+    showSnowVariable(snowDepth);
 }
 
 void MainWindow::on_actionView_Snow_fall_triggered()

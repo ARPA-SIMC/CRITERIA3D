@@ -676,7 +676,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale &colorScale)
         case thom: case dailyThomMax: case dailyThomAvg: case dailyThomHoursAbove: case dailyThomDaytime: case dailyThomNighttime:
             setRelativeHumidityScale(colorScale);
             break;
-        case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt: case snowFall:
+        case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt: case snowFall: case snowDepth:
         case precipitation: case dailyPrecipitation: case monthlyPrecipitation:
             setPrecipitationScale(colorScale);
             colorScale.setHideZero(true);
@@ -685,10 +685,6 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale &colorScale)
         case dailyReferenceEvapotranspirationPM: case actualEvaporation:
         case dailyWaterTableDepth:
             setPrecipitationScale(colorScale);
-            break;
-        case snowAge:
-            setGrayScale(colorScale);
-            reverseColorScale(colorScale);
             break;
         case dailyBIC: case monthlyBIC:
             setPrecipitationScale(colorScale);
@@ -805,7 +801,7 @@ static const std::unordered_map<meteoVariable, std::string> variableStringMap =
         {snowMelt, "Snowmelt (mm)"},
         {snowVariation, "Variation in SWE (mm)"},
         {snowLiquidWaterContent, "Snow liquid water content (mm)"},
-        {snowAge, "Snow age (days)"},
+        {snowDepth, "Snow depth (cm)"},
 
         {snowSurfaceTemperature, "Surface temperature (°C)"},
         {snowInternalEnergy, "Energy content (kJ m-2)"},

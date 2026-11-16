@@ -36,11 +36,12 @@ Crit3DSnowMaps::Crit3DSnowMaps()
     _internalEnergyMap = new gis::Crit3DRasterGrid;
     _surfaceEnergyMap = new gis::Crit3DRasterGrid;
     _snowSurfaceTempMap = new gis::Crit3DRasterGrid;
-    _ageOfSnowMap = new gis::Crit3DRasterGrid;
+    _snowAlbedoMap = new gis::Crit3DRasterGrid;
     _snowDensityMap = new gis::Crit3DRasterGrid;
 
     _snowFallMap = new gis::Crit3DRasterGrid;
     _snowMeltMap = new gis::Crit3DRasterGrid;
+    _snowDepthMap = new gis::Crit3DRasterGrid;
     _deltaSWEMap = new gis::Crit3DRasterGrid;
     _sensibleHeatMap = new gis::Crit3DRasterGrid;
     _latentHeatMap = new gis::Crit3DRasterGrid;
@@ -62,11 +63,12 @@ Crit3DSnowMaps::~Crit3DSnowMaps()
     delete _internalEnergyMap;
     delete _surfaceEnergyMap;
     delete _snowSurfaceTempMap;
-    delete _ageOfSnowMap;
+    delete _snowAlbedoMap;
     delete _snowDensityMap;
 
     delete _snowFallMap;
     delete _snowMeltMap;
+    delete _snowDepthMap;
     delete _deltaSWEMap;
     delete _sensibleHeatMap;
     delete _latentHeatMap;
@@ -81,11 +83,12 @@ void Crit3DSnowMaps::clear()
     _internalEnergyMap->clear();
     _surfaceEnergyMap->clear();
     _snowSurfaceTempMap->clear();
-    _ageOfSnowMap->clear();
+    _snowAlbedoMap->clear();
     _snowDensityMap->clear();
 
     _snowFallMap->clear();
     _snowMeltMap->clear();
+    _snowDepthMap->clear();
     _deltaSWEMap->clear();
     _sensibleHeatMap->clear();
     _latentHeatMap->clear();
@@ -101,6 +104,7 @@ void Crit3DSnowMaps::initializeSnowMaps(const gis::Crit3DRasterGrid &dtm, double
 {
     _snowFallMap->initializeGrid(dtm);
     _snowMeltMap->initializeGrid(dtm);
+    _snowDepthMap->initializeGrid(dtm);
     _deltaSWEMap->initializeGrid(dtm);
     _sensibleHeatMap->initializeGrid(dtm);
     _latentHeatMap->initializeGrid(dtm);
@@ -110,7 +114,7 @@ void Crit3DSnowMaps::initializeSnowMaps(const gis::Crit3DRasterGrid &dtm, double
     _internalEnergyMap->initializeGrid(dtm);
     _surfaceEnergyMap->initializeGrid(dtm);
     _snowSurfaceTempMap->initializeGrid(dtm);
-    _ageOfSnowMap->initializeGrid(dtm);
+    _snowAlbedoMap->initializeGrid(dtm);
     _snowDensityMap->initializeGrid(dtm);
 
     // TODO: pass initial temperature
@@ -118,7 +122,7 @@ void Crit3DSnowMaps::initializeSnowMaps(const gis::Crit3DRasterGrid &dtm, double
     _initSnowSurfaceTemp = 3.4;
 
     _snowWaterEquivalentMap->initializeGrid(dtm);
-    // initialize with zero values
+    // initialize with zero
     _snowWaterEquivalentMap->setConstantValueWithBase(0, dtm);
 
     resetSnowModel(skinThickness);
@@ -135,11 +139,12 @@ void Crit3DSnowMaps::updateMapRowCol(Crit3DSnow &snowPoint, int row, int col)
     _internalEnergyMap->value[row][col] = float(snowPoint.getInternalEnergy());
     _surfaceEnergyMap->value[row][col] = float(snowPoint.getSurfaceEnergy());
     _snowSurfaceTempMap->value[row][col] = float(snowPoint.getSnowSurfaceTemp());
-    _ageOfSnowMap->value[row][col] = float(snowPoint.getAgeOfSnow());
+    _snowAlbedoMap->value[row][col] = float(snowPoint.getSnowAlbedo());
     _snowDensityMap->value[row][col] = float(snowPoint.getSnowDensity());
 
     _snowFallMap->value[row][col] = float(snowPoint.getSnowFall());
     _snowMeltMap->value[row][col] = float(snowPoint.getSnowMelt());
+    _snowDepthMap->value[row][col] = float(snowPoint.getSnowDepth());
     _deltaSWEMap->value[row][col] = float(snowPoint.getDeltaSWE());
     _sensibleHeatMap->value[row][col] = float(snowPoint.getSensibleHeat());
     _latentHeatMap->value[row][col] = float(snowPoint.getLatentHeat());
@@ -154,11 +159,12 @@ void Crit3DSnowMaps::flagMapRowCol(int row, int col)
     _internalEnergyMap->value[row][col] = _internalEnergyMap->header.flag;
     _surfaceEnergyMap->value[row][col] = _surfaceEnergyMap->header.flag;
     _snowSurfaceTempMap->value[row][col] = _snowSurfaceTempMap->header.flag;
-    _ageOfSnowMap->value[row][col] = _ageOfSnowMap->header.flag;
+    _snowAlbedoMap->value[row][col] = _snowAlbedoMap->header.flag;
     _snowDensityMap->value[row][col] = _snowDensityMap->header.flag;
 
     _snowFallMap->value[row][col] = _snowFallMap->header.flag;
     _snowMeltMap->value[row][col] = _snowMeltMap->header.flag;
+    _snowDepthMap->value[row][col] = _snowDepthMap->header.flag;
     _deltaSWEMap->value[row][col] = _deltaSWEMap->header.flag;
     _sensibleHeatMap->value[row][col] = _sensibleHeatMap->header.flag;
     _latentHeatMap->value[row][col] = _latentHeatMap->header.flag;
@@ -173,11 +179,12 @@ void Crit3DSnowMaps::updateRangeMaps()
     gis::updateMinMaxRasterGrid(_internalEnergyMap);
     gis::updateMinMaxRasterGrid(_surfaceEnergyMap);
     gis::updateMinMaxRasterGrid(_snowSurfaceTempMap);
-    gis::updateMinMaxRasterGrid(_ageOfSnowMap);
+    gis::updateMinMaxRasterGrid(_snowAlbedoMap);
     gis::updateMinMaxRasterGrid(_snowDensityMap);
 
     gis::updateMinMaxRasterGrid(_snowFallMap);
     gis::updateMinMaxRasterGrid(_snowMeltMap);
+    gis::updateMinMaxRasterGrid(_snowDepthMap);
     gis::updateMinMaxRasterGrid(_deltaSWEMap);
     gis::updateMinMaxRasterGrid(_sensibleHeatMap);
     gis::updateMinMaxRasterGrid(_latentHeatMap);
@@ -192,30 +199,56 @@ void Crit3DSnowMaps::setPoint(Crit3DSnow &snowPoint, int row, int col)
     snowPoint.setInternalEnergy(_internalEnergyMap->value[row][col]);
     snowPoint.setSurfaceEnergy(_surfaceEnergyMap->value[row][col]);
     snowPoint.setSnowSurfaceTemp(_snowSurfaceTempMap->value[row][col]);
-    snowPoint.setAgeOfSnow(_ageOfSnowMap->value[row][col]);
+    snowPoint.setSnowAlbedo(_snowAlbedoMap->value[row][col]);
     snowPoint.setSnowDensity(_snowDensityMap->value[row][col]);
 }
 
 
-void Crit3DSnowMaps::resetSnowModel(double skinThickness)
+void Crit3DSnowMaps::updateSnowModel()
 {
-    float initSWE;                  //  [mm]
-    int surfaceBulkDensity;         //  [kg m-3]
-
-    // TODO pass real bulk density
-    surfaceBulkDensity = DEFAULT_BULK_DENSITY;
+    const float flag = _snowWaterEquivalentMap->header.flag;
 
     for (long row = 0; row < _snowWaterEquivalentMap->header.nrRows; row++)
     {
         for (long col = 0; col < _snowWaterEquivalentMap->header.nrCols; col++)
         {
-            initSWE = _snowWaterEquivalentMap->value[row][col];
+            const float currentSWE = _snowWaterEquivalentMap->value[row][col];              // [mm]
+            if (! isEqual(currentSWE, flag))
+            {
+                _snowDepthMap->value[row][col] = 0;
+
+                if (currentSWE > 0.)
+                {
+                    float snowDensity = _snowDensityMap->value[row][col];                   // [kg m-3]
+                    if (isEqual(snowDensity, flag) || isEqual(snowDensity, NODATA)
+                        || snowDensity <= 0)
+                    {
+                        snowDensity = float(SNOW_DENSITY_DEFAULT);
+                        _snowDensityMap->value[row][col] = snowDensity;
+                    }
+
+                    _snowDepthMap->value[row][col] = (currentSWE / snowDensity) * 100.f;    // [cm]
+                }
+            }
+        }
+    }
+}
+
+
+void Crit3DSnowMaps::resetSnowModel(double skinThickness)
+{               
+    // TODO pass real bulk density
+    const double surfaceBulkDensity = DEFAULT_BULK_DENSITY;                             //  [kg m-3]
+
+    for (long row = 0; row < _snowWaterEquivalentMap->header.nrRows; row++)
+    {
+        for (long col = 0; col < _snowWaterEquivalentMap->header.nrCols; col++)
+        {
+            const float initSWE = _snowWaterEquivalentMap->value[row][col];             //  [mm]
             if (! isEqual(initSWE, _snowWaterEquivalentMap->header.flag))
             {
                 _iceContentMap->value[row][col] = initSWE;
                 _liquidWaterContentMap->value[row][col] = 0;
-                _ageOfSnowMap->value[row][col] = NODATA;
-                _snowDensityMap->value[row][col] = NODATA;
 
                 if (initSWE > 0)
                 {
@@ -226,12 +259,20 @@ void Crit3DSnowMaps::resetSnowModel(double skinThickness)
                     _snowSurfaceTempMap->value[row][col] = float(snowSurfaceTemp);
                     _surfaceEnergyMap->value[row][col] = float(computeSurfaceEnergySnow(snowSurfaceTemp, skinThickness));
                     _internalEnergyMap->value[row][col] = float(computeInternalEnergy(packTemp, surfaceBulkDensity, initSWE));
+
+                    _snowAlbedoMap->value[row][col] = float((SNOW_MAX_ALBEDO + SNOW_MIN_ALBEDO) * 0.5);
+                    _snowDensityMap->value[row][col] = float(SNOW_DENSITY_DEFAULT);
+                    _snowDepthMap->value[row][col] = float(initSWE / SNOW_DENSITY_DEFAULT);
                 }
                 else
                 {
                     _snowSurfaceTempMap->value[row][col] = float(_initSnowSurfaceTemp);
                     _surfaceEnergyMap->value[row][col] = float(computeSurfaceEnergySoil(_initSnowSurfaceTemp, skinThickness));
                     _internalEnergyMap->value[row][col] = float(computeInternalEnergySoil(_initSoilPackTemp, surfaceBulkDensity));
+
+                    _snowAlbedoMap->value[row][col] = 0.2f;                 // [-] bare soil;
+                    _snowDensityMap->value[row][col] = NODATA;
+                    _snowDepthMap->value[row][col] = 0.;
                 }
 
                 // output map

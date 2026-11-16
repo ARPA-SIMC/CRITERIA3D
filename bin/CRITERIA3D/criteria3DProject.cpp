@@ -2403,44 +2403,49 @@ bool Crit3DProject::saveSnowModelState(const QString &currentStatePath)
 
     logInfo("Saving snow state: " + currentStatePath);
     std::string errorStr;
-    if (!gis::writeEsriGrid((snowPath+"/SWE").toStdString(), snowMaps.getSnowWaterEquivalentMap(), errorStr))
+    if (! gis::writeEsriGrid((snowPath+"/SWE").toStdString(), snowMaps.getSnowWaterEquivalentMap(), errorStr))
     {
         logError("Error saving water equivalent map: " + QString::fromStdString(errorStr));
         return false;
     }
     // ENVI file
-    if (!gis::writeEnviGrid((imgPath+"/SWE").toStdString(), gisSettings.utmZone, snowMaps.getSnowWaterEquivalentMap(), errorStr))
+    if (! gis::writeEnviGrid((imgPath+"/SWE").toStdString(), gisSettings.utmZone, snowMaps.getSnowWaterEquivalentMap(), errorStr))
     {
         logError("Error saving water equivalent map (ENVI file): " + QString::fromStdString(errorStr));
         return false;
     }
 
-    if (!gis::writeEsriGrid((snowPath+"/AgeOfSnow").toStdString(), snowMaps.getAgeOfSnowMap(), errorStr))
+    if (! gis::writeEsriGrid((snowPath+"/SnowDensity").toStdString(), snowMaps.getSnowDensityMap(), errorStr))
     {
         logError("Error saving age of snow map: " + QString::fromStdString(errorStr));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/SnowSurfaceTemp").toStdString(), snowMaps.getSnowSurfaceTempMap(), errorStr))
+    if (! gis::writeEsriGrid((snowPath+"/SnowAlbedo").toStdString(), snowMaps.getSnowAlbedoMap(), errorStr))
+    {
+        logError("Error saving age of snow map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+    if (! gis::writeEsriGrid((snowPath+"/SnowSurfaceTemp").toStdString(), snowMaps.getSnowSurfaceTempMap(), errorStr))
     {
         logError("Error saving snow surface temp map: " + QString::fromStdString(errorStr));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/IceContent").toStdString(), snowMaps.getIceContentMap(), errorStr))
+    if (! gis::writeEsriGrid((snowPath+"/IceContent").toStdString(), snowMaps.getIceContentMap(), errorStr))
     {
         logError("Error saving ice content map: " + QString::fromStdString(errorStr));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/LWContent").toStdString(), snowMaps.getLWContentMap(), errorStr))
+    if (! gis::writeEsriGrid((snowPath+"/LWContent").toStdString(), snowMaps.getLWContentMap(), errorStr))
     {
         logError("Error saving LW content map: " + QString::fromStdString(errorStr));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/InternalEnergy").toStdString(), snowMaps.getInternalEnergyMap(), errorStr))
+    if (! gis::writeEsriGrid((snowPath+"/InternalEnergy").toStdString(), snowMaps.getInternalEnergyMap(), errorStr))
     {
         logError("Error saving internal energy map: " + QString::fromStdString(errorStr));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/SurfaceInternalEnergy").toStdString(), snowMaps.getSurfaceEnergyMap(), errorStr))
+    if (! gis::writeEsriGrid((snowPath+"/SurfaceInternalEnergy").toStdString(), snowMaps.getSurfaceEnergyMap(), errorStr))
     {
         logError("Error saving surface energy map: " + QString::fromStdString(errorStr));
         return false;
@@ -2684,15 +2689,6 @@ bool Crit3DProject::loadModelState(const QString& statePath)
         }
         gis::resampleGrid(tmpRaster, snowMaps.getSnowWaterEquivalentMap(), DEM.header, aggrAverage, 0.1f);
 
-        fileName = snowPath.toStdString() + "/AgeOfSnow";
-        if (! gis::readEsriGridFlt(fileName, &tmpRaster, errorStr))
-        {
-            errorString = "Wrong Snow AgeOfSnow map:\n" + QString::fromStdString(errorStr);
-            snowMaps.isInitialized = false;
-            return false;
-        }
-        gis::resampleGrid(tmpRaster, snowMaps.getAgeOfSnowMap(), DEM.header, aggrAverage, 0.1f);
-
         fileName = snowPath.toStdString() + "/IceContent";
         if (! gis::readEsriGridFlt(fileName, &tmpRaster, errorStr))
         {
@@ -2737,6 +2733,22 @@ bool Crit3DProject::loadModelState(const QString& statePath)
             return false;
         }
         gis::resampleGrid(tmpRaster, snowMaps.getSurfaceEnergyMap(), DEM.header, aggrAverage, 0.1f);
+
+        // snow density and albedo (not mandatory)
+        fileName = snowPath.toStdString() + "/SnowDensity";
+        if (gis::readEsriGridFlt(fileName, &tmpRaster, errorStr))
+        {
+            gis::resampleGrid(tmpRaster, snowMaps.getSnowDensityMap(), DEM.header, aggrAverage, 0.1f);
+        }
+
+        fileName = snowPath.toStdString() + "/SnowAlbedo";
+        if (gis::readEsriGridFlt(fileName, &tmpRaster, errorStr))
+        {
+            gis::resampleGrid(tmpRaster, snowMaps.getSnowAlbedoMap(), DEM.header, aggrAverage, 0.1f);
+        }
+
+        snowMaps.updateSnowModel();
+        snowMaps.updateRangeMaps();
 
         processes.setComputeSnow(true);
     }
