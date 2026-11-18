@@ -427,24 +427,6 @@ bool setBlackScale(Crit3DColorScale& myScale)
 }
 
 
-bool reverseColorScale(Crit3DColorScale& myScale)
-{
-    // copy key colors
-    std::vector<Crit3DColor> oldKeyColor = myScale.keyColor;
-
-    // reverse key colors
-    unsigned int lastIndex = myScale.nrKeyColors() - 1;
-    for (unsigned int i = 0; i < myScale.nrKeyColors(); i++)
-    {
-        myScale.keyColor[i] = oldKeyColor[lastIndex - i];
-    }
-    oldKeyColor.clear();
-
-    // reclassify
-    return myScale.classify();
-}
-
-
 void mixColors(const Crit3DColor &backColor, const Crit3DColor &foreColor, Crit3DColor &outColor, float alpha)
 {
     if (alpha == 0)

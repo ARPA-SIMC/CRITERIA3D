@@ -290,8 +290,8 @@ void MapGraphicsShapeObject::setNumericValues(std::string fieldName)
         for (unsigned int i = 0; i < _nrShapes; i++)
             if (! isEqual(values[i], NODATA))
             {
-                colorScale.setMinimum(MINVALUE(colorScale.minimum(), values[i]));
-                colorScale.setMaximum(MAXVALUE(colorScale.maximum(), values[i]));
+                colorScale.setMinimum(std::min(colorScale.minimum(), values[i]));
+                colorScale.setMaximum(std::max(colorScale.maximum(), values[i]));
             }
     }
 }
@@ -352,10 +352,10 @@ void MapGraphicsShapeObject::setMapExtents()
     QPointF botLeft = view->mapToScene(QPoint(0, heightPixels));
     QPointF topRight = view->mapToScene(QPoint(widthPixels, 0));
 
-    geoMap->bottomLeft.longitude = MAXVALUE(-180, botLeft.x());
-    geoMap->bottomLeft.latitude = MAXVALUE(-84, botLeft.y());
-    geoMap->topRight.longitude = MINVALUE(180, topRight.x());
-    geoMap->topRight.latitude = MINVALUE(84, topRight.y());
+    geoMap->bottomLeft.longitude = std::max(-180., botLeft.x());
+    geoMap->bottomLeft.latitude = std::max(-84., botLeft.y());
+    geoMap->topRight.longitude = std::min(180., topRight.x());
+    geoMap->topRight.latitude = std::min(84., topRight.y());
 }
 
 

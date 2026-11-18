@@ -513,7 +513,7 @@ namespace radiation
         const double maxDeltaH = cellSize * SHADOW_FACTOR * 2.0;
 
         double maxDistCount;
-        if (std::abs(stepZ) < 1e-6)
+        if (std::fabs(stepZ) < 1e-6)
             maxDistCount = (myDem.maximum - z0) / EPSILON;
         else
             maxDistCount = (myDem.maximum - z0) / stepZ;

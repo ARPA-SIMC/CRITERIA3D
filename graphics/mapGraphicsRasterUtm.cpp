@@ -222,7 +222,7 @@ Position RasterUtmObject::getRasterCenter() const
  */
 double RasterUtmObject::getRasterMaxSize() const
 {
-    return MAXVALUE(_latLonHeader.nrRows * _latLonHeader.dy, _latLonHeader.nrCols * _latLonHeader.dx);
+    return std::max(_latLonHeader.nrRows * _latLonHeader.dy, _latLonHeader.nrCols * _latLonHeader.dx);
 }
 
 
@@ -304,10 +304,10 @@ void RasterUtmObject::setMapExtents()
     QPointF bottomLeft = _view->mapToScene(QPoint(0, _view->height()));
     QPointF topRight = _view->mapToScene(QPoint(_view->width(), 0));
 
-    _geoMap->bottomLeft.longitude = MAXVALUE(-180, bottomLeft.x());
-    _geoMap->bottomLeft.latitude = MAXVALUE(-84, bottomLeft.y());
-    _geoMap->topRight.longitude = MINVALUE(180, topRight.x());
-    _geoMap->topRight.latitude = MINVALUE(84, topRight.y());
+    _geoMap->bottomLeft.longitude = std::max(-180., bottomLeft.x());
+    _geoMap->bottomLeft.latitude = std::max(-84., bottomLeft.y());
+    _geoMap->topRight.longitude = std::min(180., topRight.x());
+    _geoMap->topRight.latitude = std::min(84., topRight.y());
 }
 
 

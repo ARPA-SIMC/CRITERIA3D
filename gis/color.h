@@ -38,6 +38,12 @@
         void initialize(unsigned int nrKeyColors, unsigned int nrColors);
         bool classify();
 
+        bool reverse()
+        {
+            std::reverse(keyColor.begin(), keyColor.end());
+            return classify();
+        }
+
         unsigned int nrColors() const { return _nrColors; }
         unsigned int nrKeyColors() const { return _nrKeyColors; }
 
@@ -78,7 +84,6 @@
     bool setCenteredScale(Crit3DColorScale& myScale);
     bool setCircolarScale(Crit3DColorScale& myScale);
     bool roundColorScale(Crit3DColorScale& myScale, int nrIntervals, bool lessRounded);
-    bool reverseColorScale(Crit3DColorScale& myScale);
     bool setGrayScale(Crit3DColorScale& myScale);
     bool setBlackScale(Crit3DColorScale& myScale);
     bool setSurfaceWaterScale(Crit3DColorScale& myScale);

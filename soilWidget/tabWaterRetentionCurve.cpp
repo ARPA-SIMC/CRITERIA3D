@@ -112,7 +112,7 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
             if (y != NODATA)
             {
                 curve->append(x,y);
-                maxThetaSat = MAXVALUE(maxThetaSat, y);
+                maxThetaSat = std::max(maxThetaSat, y);
             }
             x *= factor;
         }
