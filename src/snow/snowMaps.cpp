@@ -143,7 +143,7 @@ void Crit3DSnowMaps::updateMapRowCol(Crit3DSnow &snowPoint, int row, int col)
     _snowDensityMap->value[row][col] = float(snowPoint.getSnowDensity());
 
     _snowFallMap->value[row][col] = float(snowPoint.getSnowFall());
-    _snowMeltMap->value[row][col] = float(snowPoint.getSnowMelt());
+    _snowMeltMap->value[row][col] = float(snowPoint.getSnowMelt_Freeze());
     _snowDepthMap->value[row][col] = float(snowPoint.getSnowDepth());
     _deltaSWEMap->value[row][col] = float(snowPoint.getDeltaSWE());
     _sensibleHeatMap->value[row][col] = float(snowPoint.getSensibleHeat());

@@ -1863,9 +1863,9 @@ void Crit3DProject::computeSnowPoint(Crit3DSnow &snowPoint, int row, int col)
     const double beamRad = radiationMaps->beamRadiationMap->value[row][col];
     const double transmissivity = radiationMaps->transmissivityMap->value[row][col];
     const double clearSkyTrans = radSettings.getClearSky();
-    const double surfaceWaterContent = 0;                                            // TODO [mm]
+    const double waterInFlow = 0;                               // TODO [mm]
 
-    snowPoint.setSnowInputData(airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, surfaceWaterContent);
+    snowPoint.setSnowInputData(airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, waterInFlow);
 
     snowPoint.computeSnowBrooksModel();
 

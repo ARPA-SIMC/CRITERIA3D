@@ -33,6 +33,7 @@
     // Douville et al. (1995)
     #define SNOW_MAX_ALBEDO 0.85                /*!<  [-] */
     #define SNOW_MIN_ALBEDO 0.5                 /*!<  [-] */
+    #define SNOW_SOIL_ALBEDO_DEFAULT 0.2        /*!<  [-] bare soil */
 
     #include "commonConstants.h"
 
@@ -63,7 +64,7 @@
         void initializeSnow();
 
         void setSnowInputData(double temp, double prec, double relHum, double windInt, double globalRad,
-                          double beamRad, double transmissivity, double clearSkyTransmissivity, double waterContent);
+                              double beamRad, double transmissivity, double clearSkyTransmissivity, double waterInflow);
 
         bool isSnowPointValid();
         void computeSnowFall();
@@ -78,10 +79,10 @@
         double getEvaporation() const { return _evaporation; }
 
         /*! water that is not retained by the pack [mm]: liquid excess over holding capacity,
-         *  or water lost when the pack disappears. On snow-free cells it equals rain + surface water. */
+         *  or water lost when the pack disappears. On snow-free cells it equals rain. */
         double getWaterOutflow() const { return _waterOutflow; }
 
-        double getSnowMelt() const { return _snowMelt; }
+        double getSnowMelt_Freeze() const;
         double getSnowDepth() const;
 
         double getSensibleHeat() const { return _sensibleHeat; }
@@ -121,7 +122,7 @@
         double _airT;                       /*!<   [°C] */
         double _airRH;                      /*!<   [%] */
         double _windInt;                    /*!<   [m/s] */
-        double _surfaceWaterContent;        /*!<   [mm] */
+        double _waterInflow;                /*!<   [mm] surface water entered laterally in the last hour */
 
         // output
         double _evaporation;                /*!<   [mm] */
@@ -129,7 +130,6 @@
         double _precSnow;                   /*!<   [mm] */
         double _deltaSWE;                   /*!<   [mm] */
         double _waterOutflow;               /*!<   [mm] */
-        double _snowMelt;                   /*!<   [mm] */
         double _snowDepth;                  /*!<   [m]  */
         double _sensibleHeat;               /*!<   [kJ m-2] */
         double _latentHeat;                 /*!<   [kJ m-2] */
