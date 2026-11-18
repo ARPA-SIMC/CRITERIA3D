@@ -268,7 +268,6 @@ void Crit3DSnow::computeSnowBrooksModel()
     double QTotal;                               /*!<   [kJ m-2]   */
     double QWaterHeat;                           /*!<   [kJ m-2]   */
 
-    double sublimation;                          /*!<   [mm]       */
     double aerodynamicResistance;                /*!<   [s m-1]    */
 
     bool isFreeWater = false;
@@ -499,8 +498,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     }
 
     /*! Condensation (positive) or evaporation (negative) */
-    sublimation = 0;                        // [mm]
-    _evaporation = 0;                       // [mm]
+    double sublimation = 0;                     // [mm]
+    _evaporation = 0;                           // [mm]
     if (previousSWE > EPSILON)
     {
         // pag. 51 (3.21) [mm]
@@ -508,16 +507,15 @@ void Crit3DSnow::computeSnowBrooksModel()
 
         if (sublimation < 0)
         {
-            /*! Evaporation [mm]
-             *  controllo aggiunto (può evaporare solo la neve presente)
-             */
-            double maxEvaporation = previousSWE + _precSnow;
+            /*! Evaporation [mm] */
+            const double maxEvaporation = previousSWE + _precSnow;
             if (std::fabs(sublimation) > maxEvaporation)
             {
                 sublimation = -maxEvaporation;
                 // the energy flux is consistent with the mass
                 QVaporGradient = sublimation * latentHeatVapor;
             }
+
             _evaporation = -sublimation;
         }
     }
@@ -537,8 +535,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     double w = (prevInternalEnergy + QTotal) / (LATENT_HEAT_FUSION_KJ * WATER_DENSITY);    // [m]
     if (w < 0)
     {
-        /*! freeze */
-        if (prevSurfaceTemp <= 0)
+        /*! freeze: only liquid water in the snowpack (rain on bare frozen soil does not form snow) */
+        if (previousSWE > EPSILON && prevSurfaceTemp <= 0)
         {
             freeze_melt = std::min(prevLWaterContent + _precRain, -w * 1000.);          // [mm]
         }
@@ -546,8 +544,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     else if (w > 0)
     {
         /*! melt */
-        const double ice = std::max(0., prevIceContent + _precSnow + sublimation);       // [mm]
-        freeze_melt = -std::min(ice, w * 1000.);
+        const double currentIceContent = std::max(0., prevIceContent + _precSnow + sublimation);       // [mm]
+        freeze_melt = -std::min(currentIceContent, w * 1000.);
     }
 
     /*! latent heat exchange in the snow pack [kJ m-2]
