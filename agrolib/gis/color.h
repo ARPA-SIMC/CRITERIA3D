@@ -2,6 +2,7 @@
 #define CRIT3DCOLOR_H
 
     #include <vector>
+    #include <algorithm>
 
     namespace classificationMethod
     {
