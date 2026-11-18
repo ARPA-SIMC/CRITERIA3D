@@ -262,7 +262,7 @@ void Crit3DSnowMaps::resetSnowModel(double skinThickness)
 
                     _snowAlbedoMap->value[row][col] = float((SNOW_MAX_ALBEDO + SNOW_MIN_ALBEDO) * 0.5);
                     _snowDensityMap->value[row][col] = float(SNOW_DENSITY_DEFAULT);
-                    _snowDepthMap->value[row][col] = float(initSWE / SNOW_DENSITY_DEFAULT);
+                    _snowDepthMap->value[row][col] = float(initSWE / SNOW_DENSITY_DEFAULT) * 100.f;     // [cm]
                 }
                 else
                 {

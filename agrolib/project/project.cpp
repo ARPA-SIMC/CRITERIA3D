@@ -3892,7 +3892,7 @@ float Project::meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeI
     float dataConsistency = 0.0;
     for (size_t i = 0; i < meteoPoints.size(); i++)
     {
-        dataConsistency = MAXVALUE(dataConsistency, meteoPoints[i].obsDataConsistencyH(myVar, timeIni, timeFin));
+        dataConsistency = std::max(dataConsistency, meteoPoints[i].obsDataConsistencyH(myVar, timeIni, timeFin));
     }
 
     return dataConsistency;

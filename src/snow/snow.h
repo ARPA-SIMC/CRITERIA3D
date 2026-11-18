@@ -72,44 +72,43 @@
 
         void computeSnowBrooksModel();
 
-        double getSnowFall() { return _precSnow; }
-        double getDeltaSWE() { return _deltaSWE; }
-        double getRainFall() { return _precRain; }
-        double getEvaporation() { return _evaporation; }
+        double getSnowFall() const { return _precSnow; }
+        double getDeltaSWE() const { return _deltaSWE; }
+        double getRainFall() const { return _precRain; }
+        double getEvaporation() const { return _evaporation; }
 
         /*! water that is not retained by the pack [mm]: liquid excess over holding capacity,
          *  or water lost when the pack disappears. On snow-free cells it equals rain + surface water. */
-        double getWaterOutflow() { return _waterOutflow; }
+        double getWaterOutflow() const { return _waterOutflow; }
 
-        double getSnowMelt() { return _snowMelt; }
+        double getSnowMelt() const { return _snowMelt; }
+        double getSnowDepth() const;
 
-        double getSnowDepth() { return _snowDepth * 100.; }     // [cm]
+        double getSensibleHeat() const { return _sensibleHeat; }
+        double getLatentHeat() const { return _latentHeat; }
 
-        double getSensibleHeat() { return _sensibleHeat; }
-        double getLatentHeat() { return _latentHeat; }
-
-        double getSnowWaterEquivalent() { return _snowWaterEquivalent; }
+        double getSnowWaterEquivalent() const { return _snowWaterEquivalent; }
         void setSnowWaterEquivalent(double value) { _snowWaterEquivalent = value; }
 
-        double getIceContent() { return _iceContent; }
+        double getIceContent() const{ return _iceContent; }
         void setIceContent(double value) { _iceContent = value; }
 
-        double getLiquidWaterContent() { return _liquidWaterContent; }
+        double getLiquidWaterContent() const { return _liquidWaterContent; }
         void setLiquidWaterContent(double value) { _liquidWaterContent = value; }
 
-        double getInternalEnergy() { return _internalEnergy; }
+        double getInternalEnergy() const { return _internalEnergy; }
         void setInternalEnergy(double value) { _internalEnergy = value; }
 
-        double getSurfaceEnergy() { return _surfaceEnergy; }
+        double getSurfaceEnergy() const { return _surfaceEnergy; }
         void setSurfaceEnergy(double value) { _surfaceEnergy = value; }
 
-        double getSnowSurfaceTemp() { return _surfaceTemp; }
+        double getSnowSurfaceTemp() const { return _surfaceTemp; }
         void setSnowSurfaceTemp(double value) { _surfaceTemp = value; }
 
-        double getSnowAlbedo() { return _snowAlbedo; }
+        double getSnowAlbedo() const { return _snowAlbedo; }
         void setSnowAlbedo(double value) { _snowAlbedo = value; }
 
-        double getSnowDensity() { return _snowDensity; }
+        double getSnowDensity() const { return _snowDensity; }
         void setSnowDensity(double value) { _snowDensity = value; }
 
     private:

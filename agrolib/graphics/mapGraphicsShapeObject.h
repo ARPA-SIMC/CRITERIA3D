@@ -40,7 +40,7 @@
         std::vector< std::vector<GeoBounds>> geoBounds;
         std::vector< std::vector<LatLonPoint>> geoPoints;
 
-        std::vector<float> values;
+        std::vector<double> values;
         std::vector<std::string> categories;
 
         bool _isDrawing;

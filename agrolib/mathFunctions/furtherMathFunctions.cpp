@@ -135,7 +135,7 @@ double lapseRatePiecewise_three(double x, std::vector <double>& par)
 {
     //xa (par[0],par[1]), xb-xa = par[2], par[3] is the slope of the middle piece,
     //par[4] the slope of the first and last piece
-    par[2] = MAXVALUE(10, par[2]);
+    par[2] = std::max(10., par[2]);
     double xb = par[2]+par[0];
 
     if (x < par[0])
@@ -155,7 +155,7 @@ double lapseRatePiecewise_three_free(double x, std::vector <double>& par)
     // "y = mx + q" piecewise function;
 
     double xb;
-    par[2] = MAXVALUE(10, par[2]);
+    par[2] = std::max(10., par[2]);
     // par[2] means the delta between the two quotes. It must be positive.
     xb = par[0]+par[2];
     if (x < par[0])
@@ -222,7 +222,7 @@ float gaussianFunction(TfunctionInput fInput)
 
 float gaussianFunction(float x, float mean, float devStd)
 {
-    double devStd_d = MAXVALUE(double(devStd), 0.00001);
+    double devStd_d = std::max(double(devStd), 0.00001);
     double ratio = double(x - mean) / devStd_d;
     double y = 1 / (devStd_d * sqrt(2*PI)) * exp(-0.5*(ratio * ratio));
     return float(y);
@@ -1560,7 +1560,7 @@ namespace interpolation
                 correspondenceTag[0][counterTag] = i;
                 correspondenceTag[1][counterTag] = j;
                 counterTag++;
-                parametersDelta[i][j] = MAXVALUE(parametersDelta[i][j], EPSILON);
+                parametersDelta[i][j] = std::max(parametersDelta[i][j], EPSILON);
             }
             bestParameters[i].resize(nrParameters[i]) ;
         }
@@ -1610,7 +1610,7 @@ namespace interpolation
                 correspondenceTag[0][counterTag] = i;
                 correspondenceTag[1][counterTag] = j;
                 counterTag++;
-                parametersDelta[i][j] = MAXVALUE(parametersDelta[i][j], EPSILON);
+                parametersDelta[i][j] = std::max(parametersDelta[i][j], EPSILON);
             }
             bestParameters[i].resize(nrParameters[i]) ;
         }

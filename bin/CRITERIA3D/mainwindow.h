@@ -282,6 +282,8 @@
 
         void on_actionView_Snow_depth_triggered();
 
+        void on_actionView_Snow_albedo_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

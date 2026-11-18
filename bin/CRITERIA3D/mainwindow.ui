@@ -1808,7 +1808,7 @@
        <second>0</second>
        <year>1752</year>
        <month>8</month>
-       <day>14</day>
+       <day>13</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2689,6 +2689,7 @@
      <addaction name="separator"/>
      <addaction name="actionView_Snow_liquid_water_content"/>
      <addaction name="actionView_Snow_depth"/>
+     <addaction name="actionView_Snow_albedo"/>
     </widget>
     <widget class="QMenu" name="menuSolar_radiation_model">
      <property name="title">
@@ -3763,6 +3764,11 @@
   <action name="actionMonthly_fraction_of_available_water">
    <property name="text">
     <string>Monthly fraction of available water</string>
+   </property>
+  </action>
+  <action name="actionView_Snow_albedo">
+   <property name="text">
+    <string>Albedo </string>
    </property>
   </action>
  </widget>

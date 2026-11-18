@@ -1246,7 +1246,7 @@ bool Project3D::initializeSoilMoisture(int month)
 
     // [0-1] min: august  max: february
     moistureIndex = fabs(1 - (month - 2) / 6);
-    moistureIndex = MAXVALUE(moistureIndex, 0.001);
+    moistureIndex = std::max(moistureIndex, 0.001);
     moistureIndex = log(moistureIndex) / log(0.001);
 
     logInfo("Initialize soil moisture");

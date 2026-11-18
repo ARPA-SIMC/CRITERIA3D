@@ -1638,6 +1638,10 @@ void MainWindow::showSnowVariable(meteoVariable var)
         setOutputMeteoVariable(snowDepth, myProject.snowMaps.getSnowDepthMap());
         break;
 
+    case snowAlbedo:
+        setOutputMeteoVariable(snowAlbedo, myProject.snowMaps.getSnowAlbedoMap());
+        break;
+
     case snowFall:
         setOutputMeteoVariable(snowFall, myProject.snowMaps.getSnowFallMap());
         break;
@@ -1692,6 +1696,11 @@ void MainWindow::on_actionView_Snow_liquid_water_content_triggered()
 void MainWindow::on_actionView_Snow_depth_triggered()
 {
     showSnowVariable(snowDepth);
+}
+
+void MainWindow::on_actionView_Snow_albedo_triggered()
+{
+    showSnowVariable(snowAlbedo);
 }
 
 void MainWindow::on_actionView_Snow_fall_triggered()
@@ -2835,21 +2844,21 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         {
             // SUB-SURFACE
             setTemperatureScale(myProject.criteria3DMap.colorScale);
-            reverseColorScale(myProject.criteria3DMap.colorScale);
+            myProject.criteria3DMap.colorScale.reverse();
             ui->labelOutputRaster->setText("Volumetric water content [m3 m-3]");
         }
     }
-    else if (_current3DVariable == degreeOfSaturation || _current3DVariable == avgDegreeOfSaturation)
+    else if (_current3DVariable == degreeOfSaturation
+               || _current3DVariable == avgDegreeOfSaturation
+               || _current3DVariable == waterMatricPotential)
     {
         setTemperatureScale(myProject.criteria3DMap.colorScale);
-        reverseColorScale(myProject.criteria3DMap.colorScale);
-        ui->labelOutputRaster->setText("Degree of saturation [-]");
-    }
-    else if (_current3DVariable == waterMatricPotential)
-    {
-        setTemperatureScale(myProject.criteria3DMap.colorScale);
-        reverseColorScale(myProject.criteria3DMap.colorScale);
-        ui->labelOutputRaster->setText("Water matric potential [m]");
+        myProject.criteria3DMap.colorScale.reverse();
+
+        if (_current3DVariable == waterMatricPotential)
+            ui->labelOutputRaster->setText("Water matric potential [m]");
+        else
+            ui->labelOutputRaster->setText("Degree of saturation [-]");
     }
     else if (_current3DVariable == factorOfSafety || _current3DVariable == minimumFactorOfSafety)
     {
@@ -4290,7 +4299,7 @@ void MainWindow::on_actionMonthly_fraction_of_available_water_triggered()
             gis::updateMinMaxRasterGrid(&(myProject.criteria3DMap));
 
             setColorScale(airTemperature, myProject.criteria3DMap.colorScale);
-            reverseColorScale(myProject.criteria3DMap.colorScale);
+            myProject.criteria3DMap.colorScale.reverse();
             setCurrentRasterOutput(&(myProject.criteria3DMap));
             ui->labelOutputRaster->setText("fraction of available water [-]");
         }

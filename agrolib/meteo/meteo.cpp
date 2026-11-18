@@ -85,7 +85,7 @@ float computeTminHourlyWeight(int myHour)
     if (myHour >= 6 && myHour <= 14)
         return (1 - (myHour - 6) / 8.f);
     else if (myHour > 14)
-        return (1 - MINVALUE(24 - myHour + 6, 12) / 12.f);
+        return (1 - std::min(24 - myHour + 6, 12) / 12.f);
     else
         return (1 - (6 - myHour) / 12.f);
 }
@@ -369,7 +369,7 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude, double
 
     myExtraRad = dailyExtrRadiation(myLatitude, myDOY);
     if (myExtraRad > 0)
-        myTransmissivity = MINVALUE(MAXTRANSMISSIVITY, mySWGlobRad / myExtraRad);
+        myTransmissivity = std::min(MAXTRANSMISSIVITY, mySWGlobRad / myExtraRad);
     else
         myTransmissivity = 0;
 
@@ -681,6 +681,10 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale &colorScale)
             setPrecipitationScale(colorScale);
             colorScale.setHideZero(true);
             break;
+        case snowAlbedo:
+            setPrecipitationScale(colorScale);
+            colorScale.reverse();
+            break;
         case referenceEvapotranspiration: case dailyReferenceEvapotranspirationHS:
         case dailyReferenceEvapotranspirationPM: case actualEvaporation:
         case dailyWaterTableDepth:
@@ -688,7 +692,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale &colorScale)
             break;
         case dailyBIC: case monthlyBIC:
             setPrecipitationScale(colorScale);
-            reverseColorScale(colorScale);
+            colorScale.reverse();
             break;
         case globalIrradiance: case directIrradiance: case diffuseIrradiance: case reflectedIrradiance:
         case netIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
@@ -706,7 +710,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale &colorScale)
             break;
         case snowVariation:
             setAnomalyScale(colorScale);
-            reverseColorScale(colorScale);
+            colorScale.reverse();
             colorScale.setHideZero(true);
             break;
         case anomalyVar:

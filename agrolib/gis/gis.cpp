@@ -1184,7 +1184,7 @@ namespace gis
         const double dz_dx = dz / dx;
 
         // flat cell: same convention as the interior cells (slope = 0, aspect = 0)
-        if (std::abs(dz_dx) < EPSILON && std::abs(dz_dy) < EPSILON)
+        if (std::fabs(dz_dx) < EPSILON && std::fabs(dz_dy) < EPSILON)
         {
             slopeMap->value[row][col] = 0.f;
             aspectMap->value[row][col] = 0.f;
@@ -1258,7 +1258,7 @@ namespace gis
                 const double dzdy =
                     ((z7 + 2*z8 + z9) - (z1 + 2*z2 + z3)) / (8.0 * cellSize);
 
-                if (std::abs(dzdx) < EPSILON && std::abs(dzdy) < EPSILON)
+                if (std::fabs(dzdx) < EPSILON && std::fabs(dzdy) < EPSILON)
                 {
                     slopeMap->value[row][col] = 0.0;
                     aspectMap->value[row][col] = 0.0;

@@ -144,7 +144,7 @@ gis::Crit3DLatLonHeader RasterObject::getLatLonHeader() const
  */
 double RasterObject::getRasterMaxSize()
 {
-    return MAXVALUE(latLonHeader.nrRows * latLonHeader.dy, latLonHeader.nrCols * latLonHeader.dx);
+    return std::max(latLonHeader.nrRows * latLonHeader.dy, latLonHeader.nrCols * latLonHeader.dx);
 }
 
 
@@ -503,10 +503,10 @@ void RasterObject::setMapExtents()
     QPointF botLeft = view->mapToScene(QPoint(0, heightPixels));
     QPointF topRight = view->mapToScene(QPoint(widthPixels, 0));
 
-    geoMap->bottomLeft.longitude = MAXVALUE(-180, botLeft.x());
-    geoMap->bottomLeft.latitude = MAXVALUE(-84, botLeft.y());
-    geoMap->topRight.longitude = MINVALUE(180, topRight.x());
-    geoMap->topRight.latitude = MINVALUE(84, topRight.y());
+    geoMap->bottomLeft.longitude = std::max(-180., botLeft.x());
+    geoMap->bottomLeft.latitude = std::max(-84., botLeft.y());
+    geoMap->topRight.longitude = std::min(180., topRight.x());
+    geoMap->topRight.latitude = std::min(8., topRight.y());
 }
 
 

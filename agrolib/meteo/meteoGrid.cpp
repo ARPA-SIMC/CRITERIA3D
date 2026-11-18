@@ -737,10 +737,10 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
             gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
             v[3] = utmPoint;
 
-            utmLL.x = MINVALUE(v[0].x, v[1].x);
-            utmLL.y = MINVALUE(v[0].y, v[3].y);
-            utmUR.x = MAXVALUE(v[2].x, v[3].x);
-            utmUR.y = MAXVALUE(v[1].y, v[2].y);
+            utmLL.x = std::min(v[0].x, v[1].x);
+            utmLL.y = std::min(v[0].y, v[3].y);
+            utmUR.x = std::max(v[2].x, v[3].x);
+            utmUR.y = std::max(v[1].y, v[2].y);
 
             latLonHeader.llCorner.latitude = pointLatLon0.latitude;
             latLonHeader.llCorner.longitude = pointLatLon0.longitude;
@@ -859,10 +859,10 @@ void Crit3DMeteoGrid::assignCellProxyValues(unsigned row, unsigned col, gis::Cri
             gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
             v[3] = utmPoint;
 
-            utmLL.x = MINVALUE(v[0].x, v[1].x);
-            utmLL.y = MINVALUE(v[0].y, v[3].y);
-            utmUR.x = MAXVALUE(v[2].x, v[3].x);
-            utmUR.y = MAXVALUE(v[1].y, v[2].y);
+            utmLL.x = std::min(v[0].x, v[1].x);
+            utmLL.y = std::min(v[0].y, v[3].y);
+            utmUR.x = std::max(v[2].x, v[3].x);
+            utmUR.y = std::max(v[1].y, v[2].y);
 
             latLonHeader.llCorner.latitude = pointLatLon0.latitude;
             latLonHeader.llCorner.longitude = pointLatLon0.longitude;
@@ -987,10 +987,10 @@ double Crit3DMeteoGrid::computeAggrCellGlocalWeightValue(unsigned row, unsigned 
         gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
         v[3] = utmPoint;
 
-        utmLL.x = MINVALUE(v[0].x, v[1].x);
-        utmLL.y = MINVALUE(v[0].y, v[3].y);
-        utmUR.x = MAXVALUE(v[2].x, v[3].x);
-        utmUR.y = MAXVALUE(v[1].y, v[2].y);
+        utmLL.x = std::min(v[0].x, v[1].x);
+        utmLL.y = std::min(v[0].y, v[3].y);
+        utmUR.x = std::max(v[2].x, v[3].x);
+        utmUR.y = std::max(v[1].y, v[2].y);
 
         latLonHeader.llCorner.latitude = pointLatLon0.latitude;
         latLonHeader.llCorner.longitude = pointLatLon0.longitude;

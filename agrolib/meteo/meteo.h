@@ -136,7 +136,7 @@
                     referenceEvapotranspiration, dailyReferenceEvapotranspirationHS, monthlyReferenceEvapotranspirationHS, dailyReferenceEvapotranspirationPM, actualEvaporation,
                     dailyBIC, monthlyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
                     snowWaterEquivalent, snowFall, snowMelt, snowVariation, snowSurfaceTemperature, snowInternalEnergy,
-                    snowSurfaceEnergy, snowDepth, snowLiquidWaterContent, sensibleHeat, latentHeat,
+                    snowSurfaceEnergy, snowDepth, snowAlbedo, snowLiquidWaterContent, sensibleHeat, latentHeat,
                     dailyWaterTableDepth, leafAreaIndex,
                     cvResidual, noMeteoTerrain, anomalyVar, elaborationVar,
                     noMeteoVar};

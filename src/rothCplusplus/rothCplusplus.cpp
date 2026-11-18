@@ -505,7 +505,7 @@ void Crit3DRothC::decomp(int timeFact, double modifyingRate)
     const double balanceError = soilOrganicCarbon - expectedSOC;
 
     // debug stops if false
-    assert(std::abs(balanceError) < 1e-10);
+    assert(std::fabs(balanceError) < 1e-10);
 }
 
 

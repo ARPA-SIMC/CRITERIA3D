@@ -203,8 +203,8 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
     firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
     secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));
 
-    float myMin = MINVALUE(firstGrid.minimum, secondGrid.minimum);
-    float myMax = MAXVALUE(firstGrid.maximum, secondGrid.maximum);
+    float myMin = std::min(firstGrid.minimum, secondGrid.minimum);
+    float myMax = std::max(firstGrid.maximum, secondGrid.maximum);
 
     if (! gis::temporalYearlyInterpolation(firstGrid, secondGrid, myDate.year(), myMin, myMax, &tmpGrid))
     {
@@ -295,8 +295,8 @@ bool modifiedInterpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, Q
     firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first], 1, 1), 0));
     secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second], 1, 1), 0));
 
-    float myMin = MINVALUE(firstGrid.minimum, secondGrid.minimum);
-    float myMax = MAXVALUE(firstGrid.maximum, secondGrid.maximum);
+    float myMin = std::min(firstGrid.minimum, secondGrid.minimum);
+    float myMax = std::max(firstGrid.maximum, secondGrid.maximum);
 
     //interpolazione tra griglia A e B
     if (! gis::temporalYearlyInterpolation(firstGrid, secondGrid, myDate.year(), myMin, myMax, &tmpGrid))

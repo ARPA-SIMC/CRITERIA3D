@@ -965,7 +965,7 @@ void Crit3DProject::assignETreal()
                     }
 
                     myHydrallModel.soil.setRootDensity(currentCrop.roots.rootDensity);
-                    myHydrallModel.plant.setLAICanopy(MAXVALUE(0, currentLAI));
+                    myHydrallModel.plant.setLAICanopy(std::max(0.f, currentLAI));
                     myHydrallModel.plant.setLAICanopyMin(currentCrop.LAImin);
                     myHydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
 

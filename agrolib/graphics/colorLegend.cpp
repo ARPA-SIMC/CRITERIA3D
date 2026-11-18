@@ -33,7 +33,7 @@ void ColorLegend::paintEvent(QPaintEvent *event)
     int legendWidth = painter.window().width() - BLANK_DX*2;
 
     unsigned int nrStep = this->colorScale->nrColors();
-    unsigned int nrStepText = MAXVALUE(round(float(nrStep) / 4.f), 1);
+    unsigned int nrStepText = std::max(round(float(nrStep) / 4.), 1.);
 
     double dx = double(legendWidth) / double(nrStep+1);
 
