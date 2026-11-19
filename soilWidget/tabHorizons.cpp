@@ -437,37 +437,37 @@ void TabHorizons::checkComputedValues(int horizonNum)
 {
     soil::Crit3DHorizon * horizon = &(mySoil->horizon[unsigned(horizonNum)]);
 
-    if (abs(horizon->dbData.coarseFragments - horizon->coarseFragments*100) > EPSILON)
+    if (std::fabs(horizon->dbData.coarseFragments - horizon->coarseFragments*100) > EPSILON)
     {
         tableModel->item(horizonNum,1)->setBackground(Qt::yellow);
     }
 
-    if (abs(horizon->dbData.organicMatter - horizon->organicMatter*100) > EPSILON)
+    if (std::fabs(horizon->dbData.organicMatter - horizon->organicMatter*100) > EPSILON)
     {
         tableModel->item(horizonNum,2)->setBackground(Qt::yellow);
     }
 
-    if (abs(horizon->dbData.bulkDensity - horizon->bulkDensity) > EPSILON)
+    if (std::fabs(horizon->dbData.bulkDensity - horizon->bulkDensity) > EPSILON)
     {
         tableModel->item(horizonNum,3)->setBackground(Qt::yellow);
     }
 
-    if (abs(horizon->dbData.kSat - horizon->waterConductivity.kSat) > EPSILON)
+    if (std::fabs(horizon->dbData.kSat - horizon->waterConductivity.kSat) > EPSILON)
     {
         tableModel->item(horizonNum,4)->setBackground(Qt::yellow);
     }
 
-    if (abs(horizon->dbData.thetaSat - horizon->vanGenuchten.thetaS) > EPSILON)
+    if (std::fabs(horizon->dbData.thetaSat - horizon->vanGenuchten.thetaS) > EPSILON)
     {
         tableModel->item(horizonNum,5)->setBackground(Qt::yellow);
     }
 
-    if (abs(horizon->dbData.effectiveCohesion - horizon->effectiveCohesion) > EPSILON)
+    if (std::fabs(horizon->dbData.effectiveCohesion - horizon->effectiveCohesion) > EPSILON)
     {
         tableModel->item(horizonNum,11)->setBackground(Qt::yellow);
     }
 
-    if (abs(horizon->dbData.frictionAngle - horizon->frictionAngle) > EPSILON)
+    if (std::fabs(horizon->dbData.frictionAngle - horizon->frictionAngle) > EPSILON)
     {
         tableModel->item(horizonNum,12)->setBackground(Qt::yellow);
     }

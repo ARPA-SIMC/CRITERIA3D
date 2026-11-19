@@ -22,15 +22,12 @@ std::vector <std::vector<int>> computeMatrixAnalysis(Crit3DShapeHandler &shapeRe
     vectorNull.resize(nrRefShapes, 0);
     std::vector <std::vector<int>> matrix(nrRefShapes, std::vector<int>(nrValShapes, 0));
 
-    if (rasterRef.header == nullptr || rasterVal.header == nullptr)
-        return matrix;
+    const int flagRef = int(rasterRef.header.flag);
+    const int flagVal = int(rasterVal.header.flag);
 
-    const int flagRef = int(rasterRef.header->flag);
-    const int flagVal = int(rasterVal.header->flag);
-
-    for (int row = 0; row < rasterRef.header->nrRows; row++)
+    for (int row = 0; row < rasterRef.header.nrRows; row++)
     {
-        for (int col = 0; col < rasterRef.header->nrCols; col++)
+        for (int col = 0; col < rasterRef.header.nrCols; col++)
         {
             const int refIndex = int(rasterRef.value[row][col]);
             if (refIndex != flagRef && refIndex >= 0 && refIndex < static_cast<int>(nrRefShapes))
@@ -44,7 +41,7 @@ std::vector <std::vector<int>> computeMatrixAnalysis(Crit3DShapeHandler &shapeRe
                 }
 
                 int rowVal, colVal;
-                gis::getRowColFromXY(*(rasterVal.header), x, y, rowVal, colVal);
+                gis::getRowColFromXY(rasterVal.header, x, y, rowVal, colVal);
 
                 const int valIndex = int(rasterVal.value[rowVal][colVal]);
                 if (valIndex != flagVal && valIndex >= 0 && valIndex < signed(nrValShapes))
@@ -84,20 +81,16 @@ std::vector <std::vector<int>> computeMatrixAnalysisRaster(const Crit3DShapeHand
     vectorNull.resize(nrRefShapes, 0);
     std::vector <std::vector<int>> matrix(nrRefShapes, std::vector<int>(nrCategories, 0));
 
-    // check
-    if (rasterVal.header == nullptr)
-        return matrix;
-
     // create reference raster from shapefile (same header of rasterVal)
     gis::Crit3DRasterGrid rasterRef;
-    rasterRef.initializeGrid(*(rasterVal.header));
+    rasterRef.initializeGrid(rasterVal.header);
     fillRasterWithShapeIndex(rasterRef, shapeRef);
 
-    const int flagInt = int(rasterVal.header->flag);
+    const int flagInt = int(rasterVal.header.flag);
 
-    for (int row = 0; row < rasterRef.header->nrRows; row++)
+    for (int row = 0; row < rasterRef.header.nrRows; row++)
     {
-        for (int col = 0; col < rasterRef.header->nrCols; col++)
+        for (int col = 0; col < rasterRef.header.nrCols; col++)
         {
             const int refIndex = int(rasterRef.value[row][col]);
             if (refIndex != flagInt && refIndex >= 0 && refIndex < static_cast<int>(nrRefShapes))

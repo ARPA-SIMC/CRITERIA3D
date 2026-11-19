@@ -4539,29 +4539,27 @@ bool Crit3DMeteoGridDbHandler::exportHourlyDataCsv(const QList<meteoVariable> &v
 }
 
 
-
-
 bool Crit3DMeteoGridDbHandler::MeteoGridToRasterFlt(double cellSize, const gis::Crit3DGisSettings& gisSettings, gis::Crit3DRasterGrid& myGrid)
 {
     if (! gridStructure().isUTM())
     {
         // lat/lon grid
         gis::Crit3DLatLonHeader latlonHeader = gridStructure().header();
-        gis::getGeoExtentsFromLatLonHeader(gisSettings, cellSize, myGrid.header, &latlonHeader);
-        if (! myGrid.initializeGrid(NODATA))
+        gis::getUtmExtentsFromLatLonHeader(gisSettings, cellSize, myGrid.header, latlonHeader);
+        if (! myGrid.initializeGrid(myGrid.header.flag))
             return false;
 
         double utmx, utmy, lat, lon;
         int dataGridRow, dataGridCol;
         float myValue;
 
-        for (int row = 0; row < myGrid.header->nrRows; row++)
+        for (int row = 0; row < myGrid.header.nrRows; row++)
         {
-            for (int col = 0; col < myGrid.header->nrCols; col++)
+            for (int col = 0; col < myGrid.header.nrCols; col++)
             {
                 myGrid.getXY(row, col, utmx, utmy);
                 gis::getLatLonFromUtm(gisSettings, utmx, utmy, &lat, &lon);
-                gis::getRowColFromLonLat (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
+                gis::getRowColFromLonLat_zeroSouth(latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
                 if (dataGridRow < 0 || dataGridRow >= latlonHeader.nrRows || dataGridCol < 0 || dataGridCol >= latlonHeader.nrCols)
                 {
                     myValue = NODATA;

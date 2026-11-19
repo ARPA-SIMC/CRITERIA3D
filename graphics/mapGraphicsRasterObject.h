@@ -72,7 +72,7 @@
         void clear();
         void setDrawing(bool value);
         void setDrawBorders(bool value);
-        void setColorLegend(ColorLegend* colorLegendPtr);
+        void setColorLegend(ColorLegend* legendPtr);
 
         QPointF getPixel(const QPointF &geoPoint);
 

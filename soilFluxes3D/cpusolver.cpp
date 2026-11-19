@@ -220,8 +220,8 @@ namespace soilFluxes3D::v2
             {
                 const double h0 = vectorX.values[index] - nodeGrid.z[index];
                 double ratio = 0.;
-                if (std::abs(h0) > EPSILON)
-                    ratio = std::max(0., 1. - std::abs(h / h0));
+                if (std::fabs(h0) > EPSILON)
+                    ratio = std::max(0., 1. - std::fabs(h / h0));
 
                 for(u8_t j = 1; j < matrixA.numColsInRow[index]; ++j)
                 {

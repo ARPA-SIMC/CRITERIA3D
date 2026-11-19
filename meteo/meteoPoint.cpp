@@ -921,21 +921,6 @@ Crit3DDate Crit3DMeteoPoint::getMeteoPointHourlyValuesDate(int index) const
 }
 
 
-bool Crit3DMeteoPoint::getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH* &hourlyValues)
-{
-    if (obsDataH.empty())
-        return false;
-
-    const int d = obsDataH[0].date.daysTo(myDate);
-    if (d < 0 || d >= int(obsDataH.size()))
-        return false;
-
-    hourlyValues = &(obsDataH[d]);
-
-    return true;
-}
-
-
 bool Crit3DMeteoPoint::existDailyData(const Crit3DDate& myDate) const
 {
     if (obsDataD.empty())

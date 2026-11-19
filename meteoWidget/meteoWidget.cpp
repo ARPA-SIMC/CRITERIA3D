@@ -533,7 +533,7 @@ void Crit3DMeteoWidget::updateTimeRange()
             myMonthlyDateFirst.setDate(_meteoPoints[i].obsDataM[0]._year,
                                        _meteoPoints[i].obsDataM[0]._month,
                                        1);
-            myMonthlyDateLast = myMonthlyDateFirst.addMonths(_meteoPoints[i].obsDataM.size()-1);
+            myMonthlyDateLast = myMonthlyDateFirst.addMonths((int)_meteoPoints[i].obsDataM.size()-1);
         }
         // updates monthly range
         if (myMonthlyDateFirst.isValid() &&

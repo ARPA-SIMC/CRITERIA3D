@@ -81,9 +81,9 @@ void RasterObject::setDrawBorders(bool value)
     isDrawBorder = value;
 }
 
-void RasterObject::setColorLegend(ColorLegend* colorLegendPtr)
+void RasterObject::setColorLegend(ColorLegend* legendPtr)
 {
-    colorLegendPointer = colorLegendPtr;
+    colorLegendPointer = legendPtr;
 }
 
 
@@ -144,7 +144,7 @@ gis::Crit3DLatLonHeader RasterObject::getLatLonHeader() const
  */
 double RasterObject::getRasterMaxSize()
 {
-    return MAXVALUE(latLonHeader.nrRows * latLonHeader.dy, latLonHeader.nrCols * latLonHeader.dx);
+    return std::max(latLonHeader.nrRows * latLonHeader.dy, latLonHeader.nrCols * latLonHeader.dx);
 }
 
 
@@ -206,7 +206,7 @@ bool RasterObject::initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Cri
     rasterPointer = myRaster;
 
     freeIndexesMatrix();
-    gis::getGeoExtentsFromUTMHeader(gisSettings, myRaster->header, &latLonHeader);
+    gis::getGeoExtentsFromUTMHeader(gisSettings, myRaster->header, latLonHeader);
     initializeIndexesMatrix();
 
     for (int row = 0; row < latLonHeader.nrRows; row++)
@@ -216,8 +216,8 @@ bool RasterObject::initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Cri
             gis::latLonToUtmForceZone(gisSettings.utmZone, lat, lon, &x, &y);
             if (! gis::isOutOfGridXY(x, y, myRaster->header))
             {
-                gis::getRowColFromXY(*(myRaster->header), x, y, &utmRow, &utmCol);
-                if (isGrid || ! isEqual(myRaster->getValueFromRowCol(utmRow, utmCol), myRaster->header->flag))
+                gis::getRowColFromXY(myRaster->header, x, y, &utmRow, &utmCol);
+                if (isGrid || ! isEqual(myRaster->getValueFromRowCol(utmRow, utmCol), myRaster->header.flag))
                 {
                     matrix[row][col].row = utmRow;
                     matrix[row][col].col = utmCol;
@@ -345,7 +345,7 @@ float RasterObject::getValue(gis::Crit3DGeoPoint& geoPoint)
         value = gis::getValueFromUTMPoint(*rasterPointer, utmPoint);
     }
 
-    if (isEqual(value, rasterPointer->header->flag))
+    if (isEqual(value, rasterPointer->header.flag))
         return NODATA;
     else
         return value;
@@ -368,7 +368,7 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
     }
 
     // dynamic color scale
-    if (! myRaster->colorScale->isFixedRange())
+    if (! myRaster->colorScale.isFixedRange())
     {
         if (this->isLatLon)
         {
@@ -379,7 +379,7 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
         {
             // UTM raster
             gis::Crit3DRasterWindow* utmWindow = new gis::Crit3DRasterWindow();
-            gis::getUtmWindow(this->latLonHeader, *(myRaster->header), window, utmWindow, this->utmZone);
+            gis::getUtmWindow(this->latLonHeader, myRaster->header, window, utmWindow, this->utmZone);
             gis::updateColorScale(myRaster, *utmWindow);
         }
         roundColorScale(myRaster->colorScale, 4, true);
@@ -414,7 +414,7 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
                 value = myRaster->value[rowCenter][colCenter];
             else
             {
-                value = myRaster->header->flag;
+                value = myRaster->header.flag;
                 int r = matrix[rowCenter][colCenter].row;
                 if (r != int(NODATA))
                 {
@@ -425,7 +425,7 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
             }
 
             // skip NODATA values
-            if ( (!isGrid && (isEqual(value, myRaster->header->flag) || isEqual(value, NODATA)))
+            if ( (!isGrid && (isEqual(value, myRaster->header.flag) || isEqual(value, NODATA)))
                 || (isGrid && isEqual(value, NO_ACTIVE))
                 || (isGrid && !isDrawBorder && isEqual(value, NODATA)) )
                 continue;
@@ -453,7 +453,7 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
             }
             else
             {
-                myColor = myRaster->colorScale->getColor(value);
+                myColor = myRaster->colorScale.getColor(value);
                 myQColor = QColor(myColor->red, myColor->green, myColor->blue);
                 myPainter->setBrush(myQColor);
                 myPainter->fillRect(pixel[0].x(), pixel[0].y(), width, height, myPainter->brush());
@@ -503,10 +503,10 @@ void RasterObject::setMapExtents()
     QPointF botLeft = view->mapToScene(QPoint(0, heightPixels));
     QPointF topRight = view->mapToScene(QPoint(widthPixels, 0));
 
-    geoMap->bottomLeft.longitude = MAXVALUE(-180, botLeft.x());
-    geoMap->bottomLeft.latitude = MAXVALUE(-84, botLeft.y());
-    geoMap->topRight.longitude = MINVALUE(180, topRight.x());
-    geoMap->topRight.latitude = MINVALUE(84, topRight.y());
+    geoMap->bottomLeft.longitude = std::max(-180., botLeft.x());
+    geoMap->bottomLeft.latitude = std::max(-84., botLeft.y());
+    geoMap->topRight.longitude = std::min(180., topRight.x());
+    geoMap->topRight.latitude = std::min(8., topRight.y());
 }
 
 
@@ -516,7 +516,7 @@ bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
     if (! this->isGrid)
         return false;
 
-    gis::getRowColFromLonLat(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
+    gis::getRowColFromLonLat_zeroSouth(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
 
     // check boundary
     if (gis::isOutOfGridRowCol(*row, *col, this->latLonHeader))
