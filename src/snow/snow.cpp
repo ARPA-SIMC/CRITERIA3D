@@ -113,7 +113,7 @@ void Crit3DSnow::setSnowInputData(double temp, double prec, double relHum, doubl
 }
 
 
-bool Crit3DSnow::isSnowPointValid()
+bool Crit3DSnow::isSnowPointValid () const
 {
     if (   isEqual(_airT, NODATA)
         || isEqual(_prec, NODATA)
@@ -138,7 +138,8 @@ double Crit3DSnow::getSnowDepth() const
 }
 
 
-double Crit3DSnow::getSnowMelt_Freeze() const
+// it can be also negative (water holding by snow)
+double Crit3DSnow::getSnowMelt() const
 {
     if (isEqual(_waterOutflow, NODATA) || isEqual(_precRain, NODATA))
         return NODATA;
@@ -182,7 +183,7 @@ void Crit3DSnow::computeSnowFall()
 */
 void Crit3DSnow::computeSnowDensity()
 {
-    if (_snowWaterEquivalent < EPSILON)
+    if (_snowWaterEquivalent <= EPSILON)
     {
         _snowDensity = NODATA;
         return;
@@ -227,14 +228,14 @@ void Crit3DSnow::computeSnowDensity()
 */
 void Crit3DSnow::computeSnowAlbedo(double previousSWE)
 {
-    if (_snowWaterEquivalent < EPSILON)
+    if (_snowWaterEquivalent <= EPSILON)
     {
         _snowAlbedo = snowParameters.soilAlbedo;
         return;
     }
 
     // first snow on bare soil: fresh snow albedo
-    if (isEqual(_snowAlbedo, NODATA) || (previousSWE  <= 0 && _snowWaterEquivalent > 0))
+    if (isEqual(_snowAlbedo, NODATA) || (previousSWE  <= EPSILON && _snowWaterEquivalent > EPSILON))
         _snowAlbedo = SNOW_MAX_ALBEDO;
 
     double timeStep = HOUR_SECONDS / DAY_SECONDS;       // [days]
@@ -343,7 +344,7 @@ void Crit3DSnow::computeSnowBrooksModel()
 
     double heightVegetation = snowParameters.snowVegetationHeight - oldSnowDepth;               // [m]
     vegetationShadowing = std::max(std::min(heightVegetation / maxVegetationHeight, 1.), 0.);
-    solarRadTot = _globalRadiation - _beamRadiation * vegetationShadowing;
+    solarRadTot = std::max(0., _globalRadiation - _beamRadiation * vegetationShadowing);
 
     // fraction of the surface layer occupied by snow [-]
     double oldSnowFraction = std::min(oldSnowDepth, snowParameters.skinThickness) / snowParameters.skinThickness;
@@ -525,7 +526,7 @@ void Crit3DSnow::computeSnowBrooksModel()
         if (sublimation < 0)
         {
             /*! Evaporation [mm] */
-            const double maxEvaporation = previousSWE + _precSnow;
+            const double maxEvaporation = prevIceContent + _precSnow;
             if (std::fabs(sublimation) > maxEvaporation)
             {
                 sublimation = -maxEvaporation;
@@ -625,8 +626,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     }
     else
     {
-        double snowRatio = std::min(_snowDepth, snowParameters.skinThickness) / snowParameters.snowSurfaceDampingDepth;
-        surfaceEnergySnow = std::min(0., prevSurfaceEnergy + (QTotal + Qr) * snowRatio);
+        double surfaceRatio = snowParameters.skinThickness / snowParameters.snowSurfaceDampingDepth;
+        surfaceEnergySnow = std::min(0., prevSurfaceEnergy + (QTotal + Qr) * surfaceRatio);
     }
     double surfaceTempSnow = surfaceEnergySnow / (WATER_DENSITY * SNOW_SPECIFIC_HEAT * snowParameters.skinThickness);
 

@@ -143,7 +143,7 @@ void Crit3DSnowMaps::updateMapRowCol(Crit3DSnow &snowPoint, int row, int col)
     _snowDensityMap->value[row][col] = float(snowPoint.getSnowDensity());
 
     _snowFallMap->value[row][col] = float(snowPoint.getSnowFall());
-    _snowMeltMap->value[row][col] = float(snowPoint.getSnowMelt_Freeze());
+    _snowMeltMap->value[row][col] = float(snowPoint.getSnowMelt());
     _snowDepthMap->value[row][col] = float(snowPoint.getSnowDepth());
     _deltaSWEMap->value[row][col] = float(snowPoint.getDeltaSWE());
     _sensibleHeatMap->value[row][col] = float(snowPoint.getSensibleHeat());
@@ -217,7 +217,7 @@ void Crit3DSnowMaps::updateSnowModel()
             {
                 _snowDepthMap->value[row][col] = 0;
 
-                if (currentSWE > 0.)
+                if (currentSWE > EPSILON)
                 {
                     float snowDensity = _snowDensityMap->value[row][col];                   // [kg m-3]
                     if (isEqual(snowDensity, flag) || isEqual(snowDensity, NODATA)
@@ -250,7 +250,7 @@ void Crit3DSnowMaps::resetSnowModel(double skinThickness)
                 _iceContentMap->value[row][col] = initSWE;
                 _liquidWaterContentMap->value[row][col] = 0;
 
-                if (initSWE > 0)
+                if (initSWE > EPSILON)
                 {
                     // snow surface and pack cannot be above 0 °C
                     double snowSurfaceTemp = std::min(_initSnowSurfaceTemp, 0.);        // [°C]
@@ -270,7 +270,7 @@ void Crit3DSnowMaps::resetSnowModel(double skinThickness)
                     _surfaceEnergyMap->value[row][col] = float(computeSurfaceEnergySoil(_initSnowSurfaceTemp, skinThickness));
                     _internalEnergyMap->value[row][col] = float(computeInternalEnergySoil(_initSoilPackTemp, surfaceBulkDensity));
 
-                    _snowAlbedoMap->value[row][col] = 0.2f;                 // [-] bare soil;
+                    _snowAlbedoMap->value[row][col] = float(SNOW_SOIL_ALBEDO_DEFAULT);     // [-] bare soil;
                     _snowDensityMap->value[row][col] = NODATA;
                     _snowDepthMap->value[row][col] = 0.;
                 }

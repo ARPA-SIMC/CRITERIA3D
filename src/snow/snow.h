@@ -1,20 +1,18 @@
 #ifndef SNOW_H
 #define SNOW_H
 
+    #include "commonConstants.h"
+
     /*!
      * Junsei Kondo, Hiromi Yamazawa, Measurement of snow surface emissivity
     */
-    #define SNOW_EMISSIVITY 0.97                /*!<  [-] */
+    #define SNOW_EMISSIVITY 0.98                /*!<  [-] */
     #define SOIL_EMISSIVITY 0.92                /*!<  [-] soil (average) */
 
-    /*!
-     * specific gas constant of water vapor
-    */
+    /*! specific gas constant of water vapor */
     #define THERMO_WATER_VAPOR 0.4615           /*!<  [kJ kg-1 °K-1] */
 
-    /*!
-     * heat of fusion for ice at 0 °C
-    */
+    /*! heat of fusion for ice at 0 °C */
     #define LATENT_HEAT_FUSION_KJ  335.            /*!<  [kJ kg-1] */
     #define LATENT_HEAT_VAPORIZATION_KJ 2500.      /*!<  [kJ kg-1] (at 0°C) */
 
@@ -23,27 +21,34 @@
     #define DEFAULT_BULK_DENSITY 1350           /*!<  [kg m-3] */
     #define SOIL_DAMPING_DEPTH 0.3              /*!<  [m] */
 
-    // Essery R. (2007)
+    /*! Essery R. (2007) */
     #define SNOW_DENSITY_FRESH 100.             /*!<  [kg m-3] new snow */
     #define SNOW_DENSITY_MAX_DRY 300.           /*!<  [kg m-3] settled dry snow */
     #define SNOW_DENSITY_MAX_WET 450.           /*!<  [kg m-3] ripe (wet) snow */
     #define SNOW_DENSITY_DEFAULT 250.           /*!<  [kg m-3] used when previous depth is unknown */
-    #define SNOW_DENSITY_TIMESCALE 4.2          /*!<  [days] equal to 100 hours */
+    #define SNOW_DENSITY_TIMESCALE 4.17         /*!<  [days] equal to 100 hours */
 
-    // Douville et al. (1995)
+    /*!
+     * Douville et al. (1995)
+     */
     #define SNOW_MAX_ALBEDO 0.85                /*!<  [-] */
     #define SNOW_MIN_ALBEDO 0.5                 /*!<  [-] */
     #define SNOW_SOIL_ALBEDO_DEFAULT 0.2        /*!<  [-] bare soil */
 
-    #include "commonConstants.h"
 
     class Crit3DSnowParameters
     {
     public:
+        /*!
+         * surface layer thickness: snow depth in snowFraction,
+         * water equivalent in the heat capacity (about 4 times thicker snow at 250 kg m-3).
+         * The larger capacity damps the surface temperature and partially compensates for
+         * the missing conduction between surface layer and snow pack.
+         */
         double skinThickness;                   /*!<  [m] */
         double soilAlbedo;                      /*!<  [-] bare soil */
         double snowVegetationHeight;            /*!<  [m] height of vegetation */
-        double snowWaterHoldingCapacity;        /*!<  [-] percentuale di acqua libera che il manto nevoso può trattenere */
+        double snowWaterHoldingCapacity;        /*!<  [-] maximum liquid water fraction of SWE */
         double tempMaxWithSnow;                 /*!<  [°C] */
         double tempMinWithRain;                 /*!<  [°C] */
         double snowSurfaceDampingDepth;         /*!<  [m] */
@@ -66,7 +71,7 @@
         void setSnowInputData(double temp, double prec, double relHum, double windInt, double globalRad,
                               double beamRad, double transmissivity, double clearSkyTransmissivity, double waterInflow);
 
-        bool isSnowPointValid();
+        bool isSnowPointValid() const;
         void computeSnowFall();
         void computeSnowDensity();
         void computeSnowAlbedo(double previousSWE);
@@ -82,7 +87,7 @@
          *  or water lost when the pack disappears. On snow-free cells it equals rain. */
         double getWaterOutflow() const { return _waterOutflow; }
 
-        double getSnowMelt_Freeze() const;
+        double getSnowMelt() const;
         double getSnowDepth() const;
 
         double getSensibleHeat() const { return _sensibleHeat; }
@@ -144,7 +149,6 @@
         double _snowAlbedo;                 /*!<   [-] */
         double _snowDensity;                /*!<   [kg m-3] */
     };
-
 
     double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double windSpeed, double vegetativeHeight);
 
