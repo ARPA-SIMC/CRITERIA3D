@@ -42,6 +42,7 @@ Crit3DHydrallStatePlant::Crit3DHydrallStatePlant()
     understoreyNetPrimaryProduction = 0;
     understoreyBiomassFoliage = 0.08; //[kgDM m-2]
     understoreyBiomassRoot = 0.02; //[kgDM m-2]
+    internalCarbonStorage = 0; //kgC m-2
 }
 
 Crit3DHydrallWeatherDerivedVariable::Crit3DHydrallWeatherDerivedVariable()
@@ -304,6 +305,7 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
     yearlyPrec = new gis::Crit3DRasterGrid;
 
     carbonStock = new gis::Crit3DRasterGrid;
+    internalCarbonStorage = new gis::Crit3DRasterGrid;
 }
 
 void Crit3DHydrallMaps::clear()
@@ -321,6 +323,7 @@ void Crit3DHydrallMaps::clear()
     understoreyNetPrimaryProduction->clear();
     understoreyBiomassFoliage->clear();
     understoreyBiomassRoot->clear();
+    internalCarbonStorage->clear();
 
     outputC->clear();
     carbonStock->clear();
@@ -343,6 +346,7 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     understoreyNetPrimaryProduction->initializeGrid(DEM); //SAVE
     understoreyBiomassFoliage->initializeGrid(DEM); //SAVE
     understoreyBiomassRoot->initializeGrid(DEM);
+    internalCarbonStorage->initializeGrid(DEM);
 
     outputC->initializeGrid(DEM);
     carbonStock->initializeGrid(DEM);
@@ -363,6 +367,7 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
                 understoreyNetPrimaryProduction->value[i][j] = 0;
                 understoreyBiomassFoliage->value[i][j] = 0;
                 understoreyBiomassRoot->value[i][j] = 0;
+                internalCarbonStorage->value[i][j] = 0;
                 outputC->value[i][j] = 0;
                 yearlyPrec->value[i][j] = 0;
                 yearlyET0->value[i][j] = 0;
@@ -600,9 +605,9 @@ void Crit3DHydrall::setDerivedWeatherVariables(double directIrradiance, double d
     return;
 }
 
-bool Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent, double height)
+bool Crit3DHydrall::setPlantVariables(int forestIndex, double height)
 {
-    plant.myChlorophyllContent = chlorophyllContent;
+    plant.myChlorophyllContent = 500; //da tabella
     plant.height = height;
     //plant.psiLeafMinimum = psiMinimum;
     //plant.psiSoilCritical = psiCritical;
@@ -634,6 +639,7 @@ void Crit3DHydrall::setStateVariables(const Crit3DHydrallMaps &stateMap, int row
 
     statePlant.treeBiomassSapwood = stateMap.treeBiomassSapwood->value[row][col];
 
+    statePlant.internalCarbonStorage = stateMap.internalCarbonStorage->value[row][col];
     outputC = stateMap.outputC->value[row][col];
     carbonStock = stateMap.carbonStock->value[row][col];
 }
@@ -697,6 +703,7 @@ void Crit3DHydrall::saveStateVariables(Crit3DHydrallMaps &stateMap, int row, int
     stateMap.understoreyBiomassRoot->value[row][col] = (float)statePlant.understoreyBiomassRoot;
 
     stateMap.treeBiomassSapwood->value[row][col] = (float)statePlant.treeBiomassSapwood;
+    stateMap.internalCarbonStorage->value[row][col] = (float)statePlant.internalCarbonStorage;
 
     stateMap.outputC->value[row][col] = (float)outputC;
     stateMap.carbonStock->value[row][col] = (float)carbonStock;
@@ -1699,14 +1706,29 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     statePlant.understoreyBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot) / CARBONFACTOR;    //understorey growth: foliage...
     statePlant.understoreyBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot / CARBONFACTOR;         //...and roots
 
-    //outputC calculation for RothC model. necessario [t C/ha] ora in kgDM m-2
-    //natural death
-    outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
-              statePlant.treeBiomassRoot/plant.fineRootLongevity ;
+    //annual stand growth
+    if (isFirstYearSimulation)
+    {
+        annualGrossStandGrowth = statePlant.treeNetPrimaryProduction / CARBONFACTOR; //conversion? to kg DM m-2
+        internalCarbonStorage = statePlant.treeNetPrimaryProduction;
+    }
+    else
+    {
+        annualGrossStandGrowth = (internalCarbonStorage + statePlant.treeNetPrimaryProduction) / 2 / CARBONFACTOR;
+        internalCarbonStorage = (internalCarbonStorage + statePlant.treeNetPrimaryProduction) / 2;
+    }
 
-    statePlant.treeBiomassFoliage -= (statePlant.treeBiomassFoliage/plant.foliageLongevity); //todo: spostare sotto, alrtimenti questo azzera tutti i calcoli successivi
-    statePlant.treeBiomassSapwood -= (statePlant.treeBiomassSapwood/plant.sapwoodLongevity);
-    statePlant.treeBiomassRoot -= (statePlant.treeBiomassRoot/plant.fineRootLongevity);
+    //computing root/shoot ratio based on values found in [Vitullo et al. 2007] and modified to account for water scarcity
+    double alpha = 0.7;
+    double rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getYearlyPrec()/weatherVariable.getYearlyET0())+1)), plant.rootShootRatioRef);
+
+    allocationCoefficient.toFineRoots = rootShootRatio / (1 + rootShootRatio);
+    allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
+    allocationCoefficient.toSapwood = 1 - allocationCoefficient.toFineRoots - allocationCoefficient.toFoliage;
+//TODO: perché questi hanno già valori?
+    statePlant.treeBiomassFoliage = MAXVALUE(statePlant.treeBiomassFoliage + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
+    statePlant.treeBiomassRoot = MAXVALUE(statePlant.treeBiomassRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
+    statePlant.treeBiomassSapwood = MAXVALUE(statePlant.treeBiomassSapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
 
     //distributed wildfire loss
     double distributedWildfireLoss = getFirewoodLostSurfacePercentage(0.02, year); //TODO: this parameter must be able to vary based on what if scenario
@@ -1755,49 +1777,20 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     outputC += statePlant.treeBiomassRoot * woodExtraction; //dead roots become input for carbon model
     statePlant.treeBiomassRoot -= statePlant.treeBiomassRoot * woodExtraction;
 
+    //natural death
+    outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
+              statePlant.treeBiomassRoot/plant.fineRootLongevity ;
 
-    // TODO to understand what's internalCarbonStorage (STORE), afterwards the uninitialized value is used
-    //annual stand growth
-    if (isFirstYearSimulation)
-    {
-        annualGrossStandGrowth = statePlant.treeNetPrimaryProduction / CARBONFACTOR; //conversion? to kg DM m-2
-        internalCarbonStorage = 0;
-    }
-    else
-    {
-        annualGrossStandGrowth = (internalCarbonStorage + statePlant.treeNetPrimaryProduction) / 2 / CARBONFACTOR;
-        internalCarbonStorage = (internalCarbonStorage + statePlant.treeNetPrimaryProduction) / 2;
-    }
+    statePlant.treeBiomassFoliage = MAXVALUE(statePlant.treeBiomassFoliage - (statePlant.treeBiomassFoliage/plant.foliageLongevity), EPSILON);
+    statePlant.treeBiomassSapwood = MAXVALUE(statePlant.treeBiomassSapwood - (statePlant.treeBiomassSapwood/plant.sapwoodLongevity), EPSILON);
+    statePlant.treeBiomassRoot = MAXVALUE(statePlant.treeBiomassRoot - (statePlant.treeBiomassRoot/plant.fineRootLongevity), EPSILON);
 
-    //if (isFirstYearSimulation) è necessario?
 
-    //computing root/shoot ratio based on values found in [Vitullo et al. 2007] and modified to account for water scarcity
-    double alpha = 0.7;
-    double rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getYearlyPrec()/weatherVariable.getYearlyET0())+1)), plant.rootShootRatioRef);
-
-    allocationCoefficient.toFineRoots = rootShootRatio / (1 + rootShootRatio);
-    allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
-    allocationCoefficient.toSapwood = 1 - allocationCoefficient.toFineRoots - allocationCoefficient.toFoliage;
-
-    /*if (printHourlyRecords)
-    {
-        std::ofstream myFile;
-        myFile.open("outputAlloc.csv", std::ios_base::app);
-        myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","
-               << rootShootRatio <<"," << weatherVariable.getYearlyET0() << "," << weatherVariable.getYearlyPrec() <<"\n";
-        myFile.close();
-    }*/
-
-    if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1)) //todo: diviso infinito
-    {
-        statePlant.treeBiomassFoliage = MAXVALUE(statePlant.treeBiomassFoliage + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
-        statePlant.treeBiomassRoot = MAXVALUE(statePlant.treeBiomassRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
-        statePlant.treeBiomassSapwood = MAXVALUE(statePlant.treeBiomassSapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
-    }
     // TODO manca il computo del volume sia generale che incrementale vedi funzione grstand.for
 
+    //outputC calculation for RothC model. necessario [t C/ha] ora in kgDM m-2
     outputC *= CARBONFACTOR * 10;
-    //isFirstYearSimulation = false; //dovrebbe essere fuori
+
     return true;
 }
 

@@ -128,6 +128,7 @@
         double understoreyNetPrimaryProduction; //SAVE
         double understoreyBiomassFoliage; //SAVE
         double understoreyBiomassRoot; //SAVE
+        double internalCarbonStorage; //SAVE kgC m-2
     };
 
 
@@ -400,6 +401,7 @@
         gis::Crit3DRasterGrid* understoreyBiomassRoot;
         gis::Crit3DRasterGrid* outputC;
         gis::Crit3DRasterGrid* carbonStock;
+        gis::Crit3DRasterGrid* internalCarbonStorage;
 
         Crit3DHydrallMaps();
         ~Crit3DHydrallMaps();
@@ -475,7 +477,7 @@
                                  double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
 
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex, double et0);
-        bool setPlantVariables(int forestIndex, double chlorophyllContent, double height);
+        bool setPlantVariables(int forestIndex, double height);
 
         bool computeHydrallPoint();
         double getCO2(Crit3DDate myDate);

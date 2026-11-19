@@ -727,11 +727,31 @@ bool Crit3DProject::updateHydrall(const QDate &myDate)
                 return false;
             }
 
+            //forest index
+            int forestIndex = NODATA;
+            int managementIndex = NODATA;
+            const int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
+
+            if (treeCoverIndex != NODATA && treeCoverIndex > 9)
+            {
+                std::string indexString = std::to_string(treeCoverIndex);
+                if (indexString.size() >= 2)
+                {
+                    managementIndex = std::stoi(indexString.substr(indexString.size()-1, indexString.size()-1));
+                    forestIndex = (treeCoverIndex - managementIndex) / 10 - 1;
+                }
+            }
+
+            if (forestIndex == NODATA || managementIndex == NODATA)
+                return false;
+
             hydrallModel.setYear(myDate.year());
             hydrallModel.weatherVariable.setYearlyET0(hydrallMaps.yearlyET0->getValueFromRowCol(row, col));
             hydrallModel.weatherVariable.setYearlyPrec(hydrallMaps.yearlyPrec->getValueFromRowCol(row, col));
 
             hydrallModel.setStateVariables(hydrallMaps, row, col);
+            hydrallModel.setPlantVariables(forestIndex, NODATA);
+
             hydrallModel.simplifiedGrowthStand(); // TODO quit this line - temporary position to prompt check
             hydrallMaps.outputC->value[row][col] = hydrallModel.getOutputC(); //o qualcosa del genere
 
@@ -1997,9 +2017,8 @@ bool Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, 
 
     //TODO: plant height map
     hydrallMaps.plantHeight->value[row][col] = 10;   // [m]
-    double chlorophyllContent = 500;                // da tabella
 
-    if (! myHydrallModel.setPlantVariables(forestIndex, chlorophyllContent, hydrallMaps.plantHeight->value[row][col]))
+    if (! myHydrallModel.setPlantVariables(forestIndex, hydrallMaps.plantHeight->value[row][col]))
     {
         errorString = "Wrong forest index in hydrall model.";
         return false;
