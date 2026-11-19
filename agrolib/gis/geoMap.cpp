@@ -25,88 +25,23 @@
 
 
 #include "geoMap.h"
-#include <math.h>
+#include <utility>
 
 namespace gis
 {
 
-    Crit3DRasterWindow::Crit3DRasterWindow()
-    {}
-
     Crit3DRasterWindow::Crit3DRasterWindow(int row0, int col0, int row1, int col1)
     {
         if (row0 > row1)
-        {
-            int tmp = row0;
-            row0 = row1;
-            row1 = tmp;
-        }
+            std::swap(row0, row1);
 
         if (col0 > col1)
-        {
-            int tmp = col0;
-            col0 = col1;
-            col1 = tmp;
-        }
+            std::swap(col0, col1);
 
-        this->v[0].row = row0;
-        this->v[0].col = col0;
-        this->v[1].row = row1;
-        this->v[1].col = col1;
-    }
-
-    int Crit3DRasterWindow::nrRows() const
-    {
-        return (this->v[1].row - this->v[0].row + 1);
-    }
-
-    int Crit3DRasterWindow::nrCols() const
-    {
-        return (this->v[1].col - this->v[0].col + 1);
-    }
-
-
-    Crit3DUtmWindow::Crit3DUtmWindow() {}
-
-    Crit3DUtmWindow::Crit3DUtmWindow(const Crit3DUtmPoint& v0, const Crit3DUtmPoint& v1)
-    {
-        this->v0 = v0;
-        this->v1 = v1;
-    }
-
-    double Crit3DUtmWindow::width()
-    {
-        return fabs(this->v1.x - this->v0.x);
-    }
-
-    double Crit3DUtmWindow::height()
-    {
-        return fabs(this->v1.y - this->v0.y);
-    }
-
-    Crit3DPixelWindow::Crit3DPixelWindow() {}
-
-    Crit3DPixelWindow::Crit3DPixelWindow(const Crit3DPixel& v0, const Crit3DPixel& v1)
-    {
-        this->v0 = v0;
-        this->v1 = v1;
-    }
-
-    int Crit3DPixelWindow::width()
-    {
-        return abs(this->v1.x - this->v0.x);
-    }
-
-    int Crit3DPixelWindow::height()
-    {
-        return abs(this->v1.y - this->v0.y);
-    }
-
-    Crit3DGeoMap::Crit3DGeoMap()
-    {
-        this->isDrawing = false;
-        this->isChanged = false;
-        this->isSelecting = false;
+        v[0].row = row0;
+        v[0].col = col0;
+        v[1].row = row1;
+        v[1].col = col1;
     }
 
 

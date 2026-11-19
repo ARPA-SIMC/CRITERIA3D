@@ -84,6 +84,10 @@ bool writeOutputPointListCsv(const QString &csvFileName, std::vector<gis::Crit3D
 }
 
 
+/*!
+ *  it needs header
+ *  "id, latitude, longitude, height, active"
+ */
 bool importPointPropertiesCsv(const QString &csvFileName, QList<QList<QString>> &pointsProperties, QString &errorString)
 {
     errorString.clear();
@@ -142,7 +146,7 @@ bool importPointPropertiesCsv(const QString &csvFileName, QList<QList<QString>> 
         // check lat
         bool isOk = false;
         double lat = line[1].toDouble(&isOk);
-        if (!isOk || abs(lat) > 90.)
+        if (!isOk || std::fabs(lat) > 90.)
         {
             errorString += "invalid latitude. \nLine nr: " + QString::number(nrLine);
             myFile.close();
@@ -152,7 +156,7 @@ bool importPointPropertiesCsv(const QString &csvFileName, QList<QList<QString>> 
         // check lon
         isOk = false;
         double lon = line[2].toDouble(&isOk);
-        if (!isOk || abs(lon) > 180.)
+        if (!isOk || std::fabs(lon) > 180.)
         {
             errorString += "invalid longitude. \nLine nr: " + QString::number(nrLine);
             myFile.close();

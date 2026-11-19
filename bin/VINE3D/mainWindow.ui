@@ -966,7 +966,7 @@
      <string notr="true">Raster</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QSlider" name="rasterOpacitySlider">
      <property name="enabled">
@@ -1005,15 +1005,15 @@
       <number>66</number>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
     <widget class="QWidget" name="widgetColorLegendRaster" native="true">
      <property name="geometry">
       <rect>
-       <x>1</x>
+       <x>2</x>
        <y>110</y>
-       <width>258</width>
+       <width>256</width>
        <height>41</height>
       </rect>
      </property>
@@ -1591,7 +1591,7 @@
      <string notr="true">Meteo Data</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QLabel" name="labelVariable">
      <property name="geometry">
@@ -1757,7 +1757,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>12</day>
+       <day>10</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1768,7 +1768,7 @@
       </date>
      </property>
      <property name="currentSection">
-      <enum>QDateTimeEdit::YearSection</enum>
+      <enum>QDateTimeEdit::Section::YearSection</enum>
      </property>
      <property name="displayFormat">
       <string>yyyy-MM-dd</string>
@@ -1914,9 +1914,9 @@
     <widget class="QWidget" name="widgetColorLegendPoints" native="true">
      <property name="geometry">
       <rect>
-       <x>1</x>
+       <x>2</x>
        <y>30</y>
-       <width>258</width>
+       <width>255</width>
        <height>41</height>
       </rect>
      </property>

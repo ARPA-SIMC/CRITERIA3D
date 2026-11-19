@@ -85,7 +85,7 @@ float computeTminHourlyWeight(int myHour)
     if (myHour >= 6 && myHour <= 14)
         return (1 - (myHour - 6) / 8.f);
     else if (myHour > 14)
-        return (1 - MINVALUE(24 - myHour + 6, 12) / 12.f);
+        return (1 - std::min(24 - myHour + 6, 12) / 12.f);
     else
         return (1 - (6 - myHour) / 12.f);
 }
@@ -369,7 +369,7 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude, double
 
     myExtraRad = dailyExtrRadiation(myLatitude, myDOY);
     if (myExtraRad > 0)
-        myTransmissivity = MINVALUE(MAXTRANSMISSIVITY, mySWGlobRad / myExtraRad);
+        myTransmissivity = std::min(MAXTRANSMISSIVITY, mySWGlobRad / myExtraRad);
     else
         myTransmissivity = 0;
 
@@ -655,10 +655,8 @@ bool computeWindPolar(float u, float v, float* intensity, float* direction)
     return true;
 }
 
-bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
+bool setColorScale(meteoVariable variable, Crit3DColorScale &colorScale)
 {
-    if (colorScale == nullptr) return false;
-
     switch(variable)
     {
         case airTemperature: case dailyAirTemperatureAvg:
@@ -678,23 +676,23 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case thom: case dailyThomMax: case dailyThomAvg: case dailyThomHoursAbove: case dailyThomDaytime: case dailyThomNighttime:
             setRelativeHumidityScale(colorScale);
             break;
-        case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt: case snowFall:
+        case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt: case snowFall: case snowDepth:
         case precipitation: case dailyPrecipitation: case monthlyPrecipitation:
             setPrecipitationScale(colorScale);
-            colorScale->setHideZero(true);
+            colorScale.setHideZero(true);
+            break;
+        case snowAlbedo:
+            setPrecipitationScale(colorScale);
+            colorScale.reverse();
             break;
         case referenceEvapotranspiration: case dailyReferenceEvapotranspirationHS:
         case dailyReferenceEvapotranspirationPM: case actualEvaporation:
         case dailyWaterTableDepth:
             setPrecipitationScale(colorScale);
             break;
-        case snowAge:
-            setGrayScale(colorScale);
-            reverseColorScale(colorScale);
-            break;
         case dailyBIC: case monthlyBIC:
             setPrecipitationScale(colorScale);
-            reverseColorScale(colorScale);
+            colorScale.reverse();
             break;
         case globalIrradiance: case directIrradiance: case diffuseIrradiance: case reflectedIrradiance:
         case netIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
@@ -712,8 +710,8 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             break;
         case snowVariation:
             setAnomalyScale(colorScale);
-            reverseColorScale(colorScale);
-            colorScale->setHideZero(true);
+            colorScale.reverse();
+            colorScale.setHideZero(true);
             break;
         case anomalyVar:
             setAnomalyScale(colorScale);
@@ -807,7 +805,7 @@ static const std::unordered_map<meteoVariable, std::string> variableStringMap =
         {snowMelt, "Snowmelt (mm)"},
         {snowVariation, "Variation in SWE (mm)"},
         {snowLiquidWaterContent, "Snow liquid water content (mm)"},
-        {snowAge, "Snow age (days)"},
+        {snowDepth, "Snow depth (cm)"},
 
         {snowSurfaceTemperature, "Surface temperature (°C)"},
         {snowInternalEnergy, "Energy content (kJ m-2)"},

@@ -22,7 +22,18 @@
     #define SOIL_SPECIFIC_HEAT 1.4              /*!<  [KJ kg-1 °C-1] wet soil */
     #define DEFAULT_BULK_DENSITY 1350           /*!<  [kg m-3] */
     #define SOIL_DAMPING_DEPTH 0.3              /*!<  [m] */
-    #define SNOW_MINIMUM_HEIGHT 1.              /*!<  [mm] */
+
+    // Essery R. (2007)
+    #define SNOW_DENSITY_FRESH 100.             /*!<  [kg m-3] new snow */
+    #define SNOW_DENSITY_MAX_DRY 300.           /*!<  [kg m-3] settled dry snow */
+    #define SNOW_DENSITY_MAX_WET 450.           /*!<  [kg m-3] ripe (wet) snow */
+    #define SNOW_DENSITY_DEFAULT 250.           /*!<  [kg m-3] used when previous depth is unknown */
+    #define SNOW_DENSITY_TIMESCALE 4.2          /*!<  [days] equal to 100 hours */
+
+    // Douville et al. (1995)
+    #define SNOW_MAX_ALBEDO 0.85                /*!<  [-] */
+    #define SNOW_MIN_ALBEDO 0.5                 /*!<  [-] */
+    #define SNOW_SOIL_ALBEDO_DEFAULT 0.2        /*!<  [-] bare soil */
 
     #include "commonConstants.h"
 
@@ -53,46 +64,53 @@
         void initializeSnow();
 
         void setSnowInputData(double temp, double prec, double relHum, double windInt, double globalRad,
-                          double beamRad, double transmissivity, double clearSkyTransmissivity, double waterContent);
+                              double beamRad, double transmissivity, double clearSkyTransmissivity, double waterInflow);
 
         bool isSnowPointValid();
         void computeSnowFall();
+        void computeSnowDensity();
+        void computeSnowAlbedo(double previousSWE);
+
         void computeSnowBrooksModel();
 
-        double getSnowFall() { return _precSnow; }
-        double getDeltaSWE() { return _deltaSWE; }
-        double getRainFall() { return _precRain; }
-        double getEvaporation() { return _evaporation; }
+        double getSnowFall() const { return _precSnow; }
+        double getDeltaSWE() const { return _deltaSWE; }
+        double getRainFall() const { return _precRain; }
+        double getEvaporation() const { return _evaporation; }
 
         /*! water that is not retained by the pack [mm]: liquid excess over holding capacity,
-         *  or water lost when the pack disappears. On snow-free cells it equals rain + surface water. */
-        double getWaterOutflow() { return _waterOutflow; }
+         *  or water lost when the pack disappears. On snow-free cells it equals rain. */
+        double getWaterOutflow() const { return _waterOutflow; }
 
-        double getSnowMelt() { return _snowMelt; }
+        double getSnowMelt_Freeze() const;
+        double getSnowDepth() const;
 
-        double getSensibleHeat() { return _sensibleHeat; }
-        double getLatentHeat() { return _latentHeat; }
+        double getSensibleHeat() const { return _sensibleHeat; }
+        double getLatentHeat() const { return _latentHeat; }
 
-        double getSnowWaterEquivalent() { return _snowWaterEquivalent; }
+        double getSnowWaterEquivalent() const { return _snowWaterEquivalent; }
         void setSnowWaterEquivalent(double value) { _snowWaterEquivalent = value; }
 
-        double getIceContent() { return _iceContent; }
+        double getIceContent() const{ return _iceContent; }
         void setIceContent(double value) { _iceContent = value; }
 
-        double getLiquidWaterContent() { return _liquidWaterContent; }
+        double getLiquidWaterContent() const { return _liquidWaterContent; }
         void setLiquidWaterContent(double value) { _liquidWaterContent = value; }
 
-        double getInternalEnergy() { return _internalEnergy; }
+        double getInternalEnergy() const { return _internalEnergy; }
         void setInternalEnergy(double value) { _internalEnergy = value; }
 
-        double getSurfaceEnergy() { return _surfaceEnergy; }
+        double getSurfaceEnergy() const { return _surfaceEnergy; }
         void setSurfaceEnergy(double value) { _surfaceEnergy = value; }
 
-        double getSnowSurfaceTemp() { return _surfaceTemp; }
-        void setSnowSurfaceTemp(float value) { _surfaceTemp = double(value); }
+        double getSnowSurfaceTemp() const { return _surfaceTemp; }
+        void setSnowSurfaceTemp(double value) { _surfaceTemp = value; }
 
-        double getAgeOfSnow() { return _ageOfSnow; }
-        void setAgeOfSnow(float value) { _ageOfSnow = double(value); }
+        double getSnowAlbedo() const { return _snowAlbedo; }
+        void setSnowAlbedo(double value) { _snowAlbedo = value; }
+
+        double getSnowDensity() const { return _snowDensity; }
+        void setSnowDensity(double value) { _snowDensity = value; }
 
     private:
         // input
@@ -104,7 +122,7 @@
         double _airT;                       /*!<   [°C] */
         double _airRH;                      /*!<   [%] */
         double _windInt;                    /*!<   [m/s] */
-        double _surfaceWaterContent;        /*!<   [mm] */
+        double _waterInflow;                /*!<   [mm] surface water entered laterally in the last hour */
 
         // output
         double _evaporation;                /*!<   [mm] */
@@ -112,7 +130,7 @@
         double _precSnow;                   /*!<   [mm] */
         double _deltaSWE;                   /*!<   [mm] */
         double _waterOutflow;               /*!<   [mm] */
-        double _snowMelt;                   /*!<   [mm] */
+        double _snowDepth;                  /*!<   [m]  */
         double _sensibleHeat;               /*!<   [kJ m-2] */
         double _latentHeat;                 /*!<   [kJ m-2] */
 
@@ -123,14 +141,15 @@
         double _internalEnergy;             /*!<   [kJ m-2] */
         double _surfaceEnergy;              /*!<   [kJ m-2] */
         double _surfaceTemp;                /*!<   [°C] */
-        double _ageOfSnow;                  /*!<   [days] */
+        double _snowAlbedo;                 /*!<   [-] */
+        double _snowDensity;                /*!<   [kg m-3] */
     };
 
 
     double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double windSpeed, double vegetativeHeight);
 
-    double computeInternalEnergy(double soilTemperature,int bulkDensity, double swe);
-    double computeInternalEnergySoil(double soilTemperature, int bulkDensity);
+    double computeInternalEnergy(double soilTemperature, double bulkDensity, double swe);
+    double computeInternalEnergySoil(double soilTemperature, double bulkDensity);
 
     double computeSurfaceEnergySnow(double surfaceTemperature, double skinThickness);
     double computeSurfaceEnergySoil(double surfaceTemperature, double skinThickness);

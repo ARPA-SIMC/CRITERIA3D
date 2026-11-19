@@ -597,7 +597,7 @@ namespace root
 
         // normalize root density
         if (rootDensitySumSubset > EPSILON &&
-            std::abs(rootDensitySumSubset - rootDensitySum) > EPSILON)
+            std::fabs(rootDensitySumSubset - rootDensitySum) > EPSILON)
         {
             double ratio = rootDensitySum / rootDensitySumSubset;
 

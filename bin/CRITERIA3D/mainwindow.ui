@@ -931,7 +931,7 @@
       <number>75</number>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
     <widget class="QWidget" name="colorScaleInputRaster" native="true">
@@ -1321,7 +1321,7 @@
       <number>75</number>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
     <widget class="QWidget" name="colorScaleOutputRaster" native="true">
@@ -1808,7 +1808,7 @@
        <second>0</second>
        <year>1752</year>
        <month>8</month>
-       <day>15</day>
+       <day>12</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1819,7 +1819,7 @@
       </date>
      </property>
      <property name="currentSection">
-      <enum>QDateTimeEdit::YearSection</enum>
+      <enum>QDateTimeEdit::Section::YearSection</enum>
      </property>
      <property name="displayFormat">
       <string>yyyy-MM-dd</string>
@@ -2356,7 +2356,7 @@
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
+      <enum>Qt::LayoutDirection::LeftToRight</enum>
      </property>
      <property name="text">
       <string>Layer</string>
@@ -2398,7 +2398,7 @@
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
+      <enum>Qt::LayoutDirection::LeftToRight</enum>
      </property>
      <property name="text">
       <string>Time</string>
@@ -2688,7 +2688,8 @@
      <addaction name="actionView_Snow_latent_heat"/>
      <addaction name="separator"/>
      <addaction name="actionView_Snow_liquid_water_content"/>
-     <addaction name="actionView_Snow_age"/>
+     <addaction name="actionView_Snow_depth"/>
+     <addaction name="actionView_Snow_albedo"/>
     </widget>
     <widget class="QMenu" name="menuSolar_radiation_model">
      <property name="title">
@@ -3204,14 +3205,14 @@
     <string>Liquid water content</string>
    </property>
   </action>
-  <action name="actionView_Snow_age">
+  <action name="actionView_Snow_depth">
    <property name="text">
-    <string>Age of snow (days)</string>
+    <string>Snow depth (m)</string>
    </property>
   </action>
   <action name="actionView_Snowmelt">
    <property name="text">
-    <string>Snowmelt (hourly)</string>
+    <string>Snow melt/freeze (hourly)</string>
    </property>
   </action>
   <action name="actionRadiation_run_model">
@@ -3763,6 +3764,11 @@
   <action name="actionMonthly_fraction_of_available_water">
    <property name="text">
     <string>Monthly fraction of available water</string>
+   </property>
+  </action>
+  <action name="actionView_Snow_albedo">
+   <property name="text">
+    <string>Albedo </string>
    </property>
   </action>
  </widget>

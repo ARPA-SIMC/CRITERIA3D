@@ -35,12 +35,11 @@ MainWindow::MainWindow(QWidget *parent) :
     this->mapScene = new MapGraphicsScene(this);
     this->mapView = new MapGraphicsView(mapScene, this->ui->widgetMap);
 
-    this->rasterLegend = new ColorLegend(this->ui->widgetColorLegendRaster);
+    this->rasterLegend = new ColorLegend(myProject.DEM.colorScale, this->ui->widgetColorLegendRaster);
     this->rasterLegend->resize(this->ui->widgetColorLegendRaster->size());
 
-    this->meteoPointsLegend = new ColorLegend(this->ui->widgetColorLegendPoints);
+    this->meteoPointsLegend = new ColorLegend(myProject.meteoPointsColorScale, this->ui->widgetColorLegendPoints);
     this->meteoPointsLegend->resize(this->ui->widgetColorLegendPoints->size());
-    this->meteoPointsLegend->colorScale = myProject.meteoPointsColorScale;
 
     this->currentPointsVisualization = showNone;
     // show menu
@@ -438,7 +437,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                     meteoPointList[i]->setVisible(true);
             }
 
-            myProject.meteoPointsColorScale->setRange(NODATA, NODATA);
+            myProject.meteoPointsColorScale.setRange(NODATA, NODATA);
             meteoPointsLegend->update();
             break;
         }
@@ -458,7 +457,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                 float minimum, maximum;
                 myProject.getMeteoPointsRange(minimum, maximum, true);
 
-                myProject.meteoPointsColorScale->setRange(minimum, maximum);
+                myProject.meteoPointsColorScale.setRange(minimum, maximum);
             }
 
             roundColorScale(myProject.meteoPointsColorScale, 4, true);
@@ -472,7 +471,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                     if (myProject.meteoPoints[i].quality == quality::accepted)
                     {
                         meteoPointList[i]->setRadius(5);
-                        myColor = myProject.meteoPointsColorScale->getColor(myProject.meteoPoints[i].currentValue);
+                        myColor = myProject.meteoPointsColorScale.getColor(myProject.meteoPoints[i].currentValue);
                         meteoPointList[i]->setFillColor(QColor(myColor->red, myColor->green, myColor->blue));
                         meteoPointList[i]->setOpacity(1.0);
                     }

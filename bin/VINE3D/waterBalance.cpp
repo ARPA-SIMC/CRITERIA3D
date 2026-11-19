@@ -127,7 +127,7 @@ std::vector<double> getCriteria3DVarProfile(Vine3DProject* myProject, int row, i
     {
         long nodeIndex = myProject->indexMap.at(layerIndex).value[row][col];
 
-        if (nodeIndex != myProject->indexMap.at(layerIndex).header->flag)
+        if (nodeIndex != myProject->indexMap.at(layerIndex).header.flag)
         {
              varProfile[layerIndex] = getCriteria3DVar(myVar, nodeIndex);
         }
@@ -143,11 +143,11 @@ bool setCriteria3DVarMap(int myLayerIndex, Vine3DProject* myProject, criteria3DV
 {
     long nodeIndex;
 
-    for (int row = 0; row < myProject->indexMap.at(myLayerIndex).header->nrRows; row++)
-        for (int col = 0; col < myProject->indexMap.at(myLayerIndex).header->nrCols; col++)
+    for (int row = 0; row < myProject->indexMap.at(myLayerIndex).header.nrRows; row++)
+        for (int col = 0; col < myProject->indexMap.at(myLayerIndex).header.nrCols; col++)
         {
             nodeIndex = myProject->indexMap.at(myLayerIndex).value[row][col];
-            if (nodeIndex != myProject->indexMap.at(myLayerIndex).header->flag)
+            if (nodeIndex != myProject->indexMap.at(myLayerIndex).header.flag)
             {
                 if (! setCriteria3DVar(myVar, nodeIndex, myCriteria3DMap->value[row][col])) return false;
             }
@@ -163,23 +163,23 @@ bool getCriteria3DVarMap(Vine3DProject* myProject, criteria3DVariable myVar,
     long nodeIndex;
     double myValue;
 
-    criteria3DMap->initializeGrid(*(myProject->indexMap.at(layerIndex).header));
+    criteria3DMap->initializeGrid(myProject->indexMap.at(layerIndex).header);
 
-    for (int row = 0; row < myProject->indexMap.at(layerIndex).header->nrRows; row++)
-        for (int col = 0; col < myProject->indexMap.at(layerIndex).header->nrCols; col++)
+    for (int row = 0; row < myProject->indexMap.at(layerIndex).header.nrRows; row++)
+        for (int col = 0; col < myProject->indexMap.at(layerIndex).header.nrCols; col++)
         {
             nodeIndex = myProject->indexMap.at(layerIndex).value[row][col];
-            if (nodeIndex != myProject->indexMap.at(layerIndex).header->flag)
+            if (nodeIndex != myProject->indexMap.at(layerIndex).header.flag)
             {
                 myValue = getCriteria3DVar(myVar, nodeIndex);
 
                 if (myValue == NODATA)
-                    criteria3DMap->value[row][col] = criteria3DMap->header->flag;
+                    criteria3DMap->value[row][col] = criteria3DMap->header.flag;
                 else
                     criteria3DMap->value[row][col] = myValue;
             }
             else
-                criteria3DMap->value[row][col] = criteria3DMap->header->flag;
+                criteria3DMap->value[row][col] = criteria3DMap->header.flag;
         }
 
     return true;
@@ -196,12 +196,12 @@ bool getSoilSurfaceMoisture(Vine3DProject* myProject, gis::Crit3DRasterGrid* out
 
     lastLayer = myProject->getSoilLayerIndex(lowerDepth);
 
-    for (int row = 0; row < myProject->indexMap.at(0).header->nrRows; row++)
-        for (int col = 0; col < myProject->indexMap.at(0).header->nrCols; col++)
+    for (int row = 0; row < myProject->indexMap.at(0).header.nrRows; row++)
+        for (int col = 0; col < myProject->indexMap.at(0).header.nrCols; col++)
         {
-            outputMap->value[row][col] = outputMap->header->flag;
+            outputMap->value[row][col] = outputMap->header.flag;
 
-            if (int(myProject->indexMap.at(0).value[row][col]) != int(myProject->indexMap.at(0).header->flag))
+            if (int(myProject->indexMap.at(0).value[row][col]) != int(myProject->indexMap.at(0).header.flag))
             {
                 for (layer = 0; layer <= lastLayer; layer++)
                 {
@@ -215,7 +215,7 @@ bool getSoilSurfaceMoisture(Vine3DProject* myProject, gis::Crit3DRasterGrid* out
                     }
                     else
                     {
-                        if (int(myProject->indexMap.at(size_t(layer)).value[row][col]) != int(myProject->indexMap.at(size_t(layer)).header->flag))
+                        if (int(myProject->indexMap.at(size_t(layer)).value[row][col]) != int(myProject->indexMap.at(size_t(layer)).header.flag))
                         {
                             waterContent = soilFluxes3D::getNodeWaterContent(nodeIndex);                    // [m^3 m^-3]
                             sumWater += waterContent * myProject->layerThickness.at(size_t(layer));
@@ -263,12 +263,12 @@ bool getCriteria3DIntegrationMap(Vine3DProject* myProject, criteria3DVariable my
     double thickCoeff, sumCoeff;
     int soilIndex;
 
-    for (int row = 0; row < myProject->indexMap.at(0).header->nrRows; row++)
-        for (int col = 0; col < myProject->indexMap.at(0).header->nrCols; col++)
+    for (int row = 0; row < myProject->indexMap.at(0).header.nrRows; row++)
+        for (int col = 0; col < myProject->indexMap.at(0).header.nrCols; col++)
         {
-            criteria3DMap->value[row][col] = criteria3DMap->header->flag;
+            criteria3DMap->value[row][col] = criteria3DMap->header.flag;
 
-            if (myProject->indexMap.at(0).value[row][col] != myProject->indexMap.at(0).header->flag)
+            if (myProject->indexMap.at(0).value[row][col] != myProject->indexMap.at(0).header.flag)
             {
                 sumValues = 0.0;
                 sumCoeff = 0.0;
@@ -280,7 +280,7 @@ bool getCriteria3DIntegrationMap(Vine3DProject* myProject, criteria3DVariable my
                     for (int i = firstIndex; i <= lastIndex; i++)
                     {
                         nodeIndex = myProject->indexMap.at(i).value[row][col];
-                        if (nodeIndex != long(myProject->indexMap.at(size_t(i)).header->flag))
+                        if (nodeIndex != long(myProject->indexMap.at(size_t(i)).header.flag))
                         {
                             myValue = getCriteria3DVar(myVar, nodeIndex);
 
@@ -328,7 +328,7 @@ bool saveWaterBalanceOutput(Vine3DProject* myProject, QDate myDate, criteria3DVa
                             double upperDepth, double lowerDepth)
 {
     gis::Crit3DRasterGrid* myMap = new gis::Crit3DRasterGrid();
-    myMap->initializeGrid(*(myProject->indexMap.at(0).header));
+    myMap->initializeGrid(myProject->indexMap.at(0).header);
 
     if (myVar == soilSurfaceMoisture)
     {
@@ -391,7 +391,7 @@ bool saveWaterBalanceState(Vine3DProject* myProject, QDate myDate, QString state
 {
     gis::Crit3DRasterGrid* myMap;
     myMap = new gis::Crit3DRasterGrid();
-    myMap->initializeGrid(*(myProject->indexMap.at(0).header));
+    myMap->initializeGrid(myProject->indexMap.at(0).header);
 
     QString myPrefix = getDailyPrefixFromVar(myDate, myVar);
 

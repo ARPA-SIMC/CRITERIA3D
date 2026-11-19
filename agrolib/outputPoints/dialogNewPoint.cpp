@@ -118,7 +118,7 @@ void DialogNewPoint::setlatLon(double myLat, double myLon)
     gis::getUtmFromLatLon(gisSettings.utmZone, latLonPoint, &utmPoint);
 
     float demValue = gis::getValueFromXY(*DEMpointer, utmPoint.x, utmPoint.y);
-    if (! isEqual(demValue, DEMpointer->header->flag))
+    if (! isEqual(demValue, DEMpointer->header.flag))
     {
         height.setText(QString::number(demValue));
     }
@@ -166,7 +166,7 @@ void DialogNewPoint::getHeightFromDEM()
         demValue = gis::getValueFromXY(*DEMpointer, utmx.text().toDouble(), utmy.text().toDouble());
     }
 
-    if (! isEqual(demValue, DEMpointer->header->flag))
+    if (! isEqual(demValue, DEMpointer->header.flag))
     {
         height.setText(QString::number(demValue));
     }
@@ -267,7 +267,7 @@ void DialogNewPoint::done(int res)
             demValue = gis::getValueFromXY(*DEMpointer, utmx.text().toDouble(), utmy.text().toDouble());
         }
 
-        if (! isEqual(demValue, DEMpointer->header->flag))
+        if (! isEqual(demValue, DEMpointer->header.flag))
         {
             if (pointHeight < (demValue - 0.5) || pointHeight > (demValue + 2.0))
             {

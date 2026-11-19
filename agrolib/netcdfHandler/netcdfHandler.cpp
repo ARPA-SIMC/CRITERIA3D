@@ -233,7 +233,7 @@ bool NetCDFHandler::isPointInside(gis::Crit3DGeoPoint geoPoint)
     {
         gis::Crit3DUtmPoint utmPoint;
         gis::getUtmFromLatLon(utmZone, geoPoint, &utmPoint);
-        return utmPoint.isInsideGrid(*(dataGrid.header));
+        return utmPoint.isInsideGrid(dataGrid.header);
     }
 }
 
@@ -617,15 +617,15 @@ bool NetCDFHandler::readProperties(string fileName)
             latLonHeader.flag = NODATA;
 
             // raster header
-            dataGrid.header->nrRows = latLonHeader.nrRows;
-            dataGrid.header->nrCols = latLonHeader.nrCols;
-            dataGrid.header->flag = latLonHeader.flag;
-            dataGrid.header->llCorner.y = latLonHeader.llCorner.latitude;
-            dataGrid.header->llCorner.x = latLonHeader.llCorner.longitude;
+            dataGrid.header.nrRows = latLonHeader.nrRows;
+            dataGrid.header.nrCols = latLonHeader.nrCols;
+            dataGrid.header.flag = latLonHeader.flag;
+            dataGrid.header.llCorner.y = latLonHeader.llCorner.latitude;
+            dataGrid.header.llCorner.x = latLonHeader.llCorner.longitude;
 
             // avg value (not used)
-            dataGrid.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
-            dataGrid.header->invCellSize = 1.0 / dataGrid.header->cellSize;
+            dataGrid.header.cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
+            dataGrid.header.invCellSize = 1.0 / dataGrid.header.cellSize;
             dataGrid.initializeGrid(0);
         }
     }
@@ -652,27 +652,27 @@ bool NetCDFHandler::readProperties(string fileName)
             if (! isEqual(x[1]-x[0], y[1]-y[0]))
                 metadata << "\nWarning! dx != dy" << endl;
 
-            dataGrid.header->cellSize = x[1]-x[0];
-            dataGrid.header->invCellSize = 1.0 / dataGrid.header->cellSize;
+            dataGrid.header.cellSize = x[1]-x[0];
+            dataGrid.header.invCellSize = 1.0 / dataGrid.header.cellSize;
 
-            dataGrid.header->llCorner.x = x[0];
+            dataGrid.header.llCorner.x = x[0];
 
             isYincreasing = (y[1] > y[0]);
             if (isYincreasing)
             {
-                dataGrid.header->llCorner.y = y[0];
+                dataGrid.header.llCorner.y = y[0];
             }
             else
             {
-                dataGrid.header->llCorner.y = y[nrY-1];
+                dataGrid.header.llCorner.y = y[nrY-1];
             }
 
-            dataGrid.header->llCorner.x -= dataGrid.header->cellSize * 0.5;
-            dataGrid.header->llCorner.y -= dataGrid.header->cellSize * 0.5;
+            dataGrid.header.llCorner.x -= dataGrid.header.cellSize * 0.5;
+            dataGrid.header.llCorner.y -= dataGrid.header.cellSize * 0.5;
 
-            dataGrid.header->nrCols = nrX;
-            dataGrid.header->nrRows = nrY;
-            dataGrid.header->flag = NODATA;
+            dataGrid.header.nrCols = nrX;
+            dataGrid.header.nrRows = nrY;
+            dataGrid.header.flag = NODATA;
             dataGrid.initializeGrid(0);
         }
         else
@@ -774,7 +774,7 @@ bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Cr
     {
         gis::Crit3DUtmPoint utmPoint;
         gis::getUtmFromLatLon(utmZone, geoPoint, &utmPoint);
-        gis::getRowColFromXY(*(dataGrid.header), utmPoint, &row, &col);
+        gis::getRowColFromXY(dataGrid.header, utmPoint, &row, &col);
         row = (nrY -1) - row;
     }
 
@@ -1164,7 +1164,7 @@ bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid &dataGrid)
     const size_t nLon = size_t(nrLon);
     std::vector<float> var(nLat * nLon);
 
-    const float flag = dataGrid.header->flag;
+    const float flag = dataGrid.header.flag;
 
     for (size_t row = 0; row < nLat; row++)
     {
@@ -1299,8 +1299,8 @@ bool NetCDFHandler::extractVariableMap_old(int idVar, const Crit3DTime& myTime, 
     }
     else
     {
-        const int nrRows = dataGrid.header->nrRows;
-        const int nrCols = dataGrid.header->nrCols;
+        const int nrRows = dataGrid.header.nrRows;
+        const int nrCols = dataGrid.header.nrCols;
 
         for (int row = 0; row < nrRows; row++)
         {
@@ -1381,17 +1381,17 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime &myTime, std:
     size_t* index = new size_t[3];
     index[indexTimeDim] = size_t(timeIndex);
 
-    for (int row = 0; row < dataGrid.header->nrRows; row++)
+    for (int row = 0; row < dataGrid.header.nrRows; row++)
     {
         if (isYincreasing)
             index[indexYLonDim] = size_t((nrLat-1) - row);
         else
             index[indexYLonDim] = size_t(row);
 
-        for (int col = 0; col < dataGrid.header->nrCols; col++)
+        for (int col = 0; col < dataGrid.header.nrCols; col++)
         {
             index[indexXLatDim] = size_t(col);
-            float value = dataGrid.header->flag;
+            float value = dataGrid.header.flag;
 
             if (currentVar.type == NC_DOUBLE)
             {

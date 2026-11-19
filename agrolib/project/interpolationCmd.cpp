@@ -190,20 +190,21 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
         return false;
     }
 
-    firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
-    secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));
-
     // use first as reference if different resolution when resampling
     if (! gis::compareGrids(firstGrid, secondGrid))
     {
-        tmpGrid = secondGrid;
-        secondGrid.clear();
+        gis::Crit3DRasterGrid tmpGrid;
+        if (! tmpGrid.copyGrid(secondGrid))
+            return false;
+
         gis::resampleGrid(tmpGrid, &secondGrid, firstGrid.header, aggrAverage, 0);
-        tmpGrid.initializeGrid();
     }
 
-    float myMin = MINVALUE(firstGrid.minimum, secondGrid.minimum);
-    float myMax = MAXVALUE(firstGrid.maximum, secondGrid.maximum);
+    firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
+    secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));
+
+    float myMin = std::min(firstGrid.minimum, secondGrid.minimum);
+    float myMax = std::max(firstGrid.maximum, secondGrid.maximum);
 
     if (! gis::temporalYearlyInterpolation(firstGrid, secondGrid, myDate.year(), myMin, myMax, &tmpGrid))
     {
@@ -281,20 +282,21 @@ bool modifiedInterpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, Q
         return false;
     }
 
-    firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
-    secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));
-
     // use first as reference if different resolution when resampling
     if (! gis::compareGrids(firstGrid, secondGrid))
     {
-        tmpGrid = secondGrid;
-        secondGrid.clear();
+        gis::Crit3DRasterGrid tmpGrid;
+        if (! tmpGrid.copyGrid(secondGrid))
+            return false;
+
         gis::resampleGrid(tmpGrid, &secondGrid, firstGrid.header, aggrAverage, 0);
-        tmpGrid.initializeGrid();
     }
 
-    float myMin = MINVALUE(firstGrid.minimum, secondGrid.minimum);
-    float myMax = MAXVALUE(firstGrid.maximum, secondGrid.maximum);
+    firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first], 1, 1), 0));
+    secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second], 1, 1), 0));
+
+    float myMin = std::min(firstGrid.minimum, secondGrid.minimum);
+    float myMax = std::max(firstGrid.maximum, secondGrid.maximum);
 
     //interpolazione tra griglia A e B
     if (! gis::temporalYearlyInterpolation(firstGrid, secondGrid, myDate.year(), myMin, myMax, &tmpGrid))
@@ -339,7 +341,7 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings &interpolationSettings, co
                         return false;
                     }
 
-                    interpolationSettings.getProxy(i)->setGrid(gridOut);
+                    interpolationSettings.getProxy(i)->setGrid(gridOut, false);
                     return true;
                 }
 
@@ -370,15 +372,15 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &dataPoints,
     std::vector<double> proxyValues(interpolationSettings.getProxyNr());
 
     #pragma omp parallel for if (isParallelComputing) firstprivate(proxyValues)
-    for (long row = 0; row < outputGrid->header->nrRows ; row++)
+    for (long row = 0; row < outputGrid->header.nrRows ; row++)
     {
-        for (long col = 0; col < outputGrid->header->nrCols; col++)
+        for (long col = 0; col < outputGrid->header.nrCols; col++)
         {
             float z = raster.value[row][col];
-            if (! isEqual(z, outputGrid->header->flag))
+            if (! isEqual(z, outputGrid->header.flag))
             {
                 float x, y;
-                gis::getUtmXYFromRowColSinglePrecision(*(outputGrid->header), row, col, &x, &y);
+                gis::getUtmXYFromRowColSinglePrecision(outputGrid->header, row, col, &x, &y);
 
                 if (getUseDetrendingVar(variable))
                 {
@@ -412,15 +414,15 @@ bool topographicIndex(const gis::Crit3DRasterGrid& DEM, std::vector <float> wind
 
     for (auto width : windowWidths)
     {
-        cellNr = round(width / DEM.header->cellSize);
+        cellNr = round(width / DEM.header.cellSize);
 
-        for (int row = 0; row < outGrid.header->nrRows ; row++)
+        for (int row = 0; row < outGrid.header.nrRows ; row++)
         {
-            for (int col = 0; col < outGrid.header->nrCols; col++)
+            for (int col = 0; col < outGrid.header.nrCols; col++)
             {
 
                 z = DEM.value[row][col];
-                if (! isEqual(z, DEM.header->flag))
+                if (! isEqual(z, DEM.header.flag))
                 {
                     r1 = row - cellNr;
                     r2 = row + cellNr;
@@ -440,7 +442,7 @@ bool topographicIndex(const gis::Crit3DRasterGrid& DEM, std::vector <float> wind
                             {
                                 value = DEM.value[windowRow][windowCol];
 
-                                if (! isEqual(value, DEM.header->flag))
+                                if (! isEqual(value, DEM.header.flag))
                                 {
                                     if (windowRow != row && windowCol != col)
                                     {
@@ -467,7 +469,7 @@ bool topographicIndex(const gis::Crit3DRasterGrid& DEM, std::vector <float> wind
 
                     if (weightSum > 0)
                     {
-                        if (isEqual(outGrid.value[row][col], outGrid.header->flag))
+                        if (isEqual(outGrid.value[row][col], outGrid.header.flag))
                             outGrid.value[row][col] = (lowerSum - higherSum - equalSum * 0.5) / weightSum;
                         else
                             outGrid.value[row][col] += (lowerSum - higherSum - equalSum * 0.5) / weightSum;

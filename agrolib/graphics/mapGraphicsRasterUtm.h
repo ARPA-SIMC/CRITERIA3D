@@ -64,8 +64,12 @@
         bool initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Crit3DGisSettings& gisSettings);
 
         void setDrawing(bool value) {_isDrawing = value;}
-        void setColorLegend(ColorLegend* colorLegendPtr) { _colorLegendPointer = colorLegendPtr; }
-        void setRaster(gis::Crit3DRasterGrid* rasterPtr) { _rasterPointer = rasterPtr; }
+
+        void setColorLegend(ColorLegend* legendPtr)
+        { _colorLegendPointer = legendPtr; }
+
+        void setRaster(gis::Crit3DRasterGrid* rasterPtr)
+        { _rasterPointer = rasterPtr; }
 
         gis::Crit3DRasterGrid* getRasterPointer() { return _rasterPointer; }
 

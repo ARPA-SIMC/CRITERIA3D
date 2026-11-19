@@ -40,7 +40,7 @@
         std::vector< std::vector<GeoBounds>> geoBounds;
         std::vector< std::vector<LatLonPoint>> geoPoints;
 
-        std::vector<float> values;
+        std::vector<double> values;
         std::vector<std::string> categories;
 
         bool _isDrawing;
@@ -79,11 +79,10 @@
 
         ~MapGraphicsShapeObject()
         {
-            delete colorScale;
             delete geoMap;
         }
 
-        Crit3DColorScale* colorScale;
+        Crit3DColorScale colorScale;
 
         void updateCenter();
         void clear();

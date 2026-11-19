@@ -37,7 +37,6 @@ Project::Project()
     // TODO remove pointers
     meteoSettings = new Crit3DMeteoSettings();
     quality = new Crit3DQuality();
-    meteoPointsColorScale = new Crit3DColorScale();
     meteoGridDbHandler = nullptr;
 
     _appPath = "";
@@ -125,7 +124,7 @@ void Project::clearProject()
     if (logFile.is_open()) logFile.close();
     if (dataFile.is_open()) dataFile.close();
 
-    meteoPointsColorScale->setRange(NODATA, NODATA);
+    meteoPointsColorScale.setRange(NODATA, NODATA);
 
     delete parametersSettings;
     delete projectSettings;
@@ -170,13 +169,13 @@ void Project::clearProxyDEM()
     if (index != NODATA)
     {
         proxyHeight = interpolationSettings.getProxy(unsigned(index));
-        proxyHeight->setGrid(nullptr);
+        proxyHeight->setGrid(nullptr, false);
     }
 
     if (indexQuality != NODATA)
     {
         proxyHeight = qualityInterpolationSettings.getProxy(unsigned(indexQuality));
-        proxyHeight->setGrid(nullptr);
+        proxyHeight->setGrid(nullptr, false);
     }
 }
 
@@ -199,7 +198,7 @@ bool Project::setProxyDEM()
 
         // if no alternative grid is defined, use DEM as elevation proxy
         if (currentProxyHeight->getGridName().empty())
-            currentProxyHeight->setGrid(&DEM);
+            currentProxyHeight->setGrid(&DEM, true);
     }
 
     if (indexQuality != NODATA)
@@ -208,7 +207,7 @@ bool Project::setProxyDEM()
 
         // if no alternative grid is defined, use DEM as elevation proxy
         if (currentProxyHeight->getGridName().empty())
-            currentProxyHeight->setGrid(&DEM);
+            currentProxyHeight->setGrid(&DEM, true);
     }
 
     return true;
@@ -1108,9 +1107,9 @@ bool Project::loadDEM(const QString &fileName)
     logInfo("Digital Elevation Model = " + completeFileName);
 
     // check nodata
-    if (! isEqual(DEM.header->flag, NODATA))
+    if (! isEqual(DEM.header.flag, NODATA))
     {
-        QString infoStr = "WARNING: " + QString::number(DEM.header->flag) + " is not a valid NODATA value for DEM!";
+        QString infoStr = "WARNING: " + QString::number(DEM.header.flag) + " is not a valid NODATA value for DEM!";
         infoStr += " It will be converted in: " + QString::number(NODATA);
         logInfo(infoStr);
         gis::convertFlagToNodata(DEM);
@@ -1759,7 +1758,7 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
 
     if (count == 0)
     {
-        errorString = "No Data Available";
+        errorString = "No daily data.";
         return false;
     }
     else
@@ -1837,7 +1836,7 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
 
     if (count == 0)
     {
-        errorString = "No Data Available";
+        errorString = "No hourly data.";
         return false;
     }
 
@@ -1847,6 +1846,8 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
 
 bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &lastDate, bool showInfo)
 {
+    errorString = "";
+
     if (! meteoGridDbHandler->tableMonthly().exists)
         return false;
 
@@ -1984,7 +1985,7 @@ void Project::checkMeteoPointsDEM()
     {
         const float value = gis::getValueFromXY(DEM, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y);
 
-        meteoPoints[i].isInsideDem = (! isEqual(value, DEM.header->flag));
+        meteoPoints[i].isInsideDem = (! isEqual(value, DEM.header.flag));
     }
 }
 
@@ -2076,7 +2077,7 @@ bool Project::readProxyValues()
             errorString = "Error in proxy grid: " + QString::fromStdString(proxy->getGridName());
             return false;
         }
-        float flag = proxyGrid->header->flag;
+        float flag = proxyGrid->header.flag;
 
         for (size_t i = 0; i < nrPoints; i++)
         {
@@ -2164,7 +2165,7 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
             else
             {
                 myValue = gis::getValueFromXY(*proxyGrid, myPoint->point.utm.x, myPoint->point.utm.y);
-                if (! isEqual(myValue, proxyGrid->header->flag))
+                if (! isEqual(myValue, proxyGrid->header.flag))
                     myPoint->proxyValues[i] = myValue;
             }
         }
@@ -2187,10 +2188,11 @@ bool Project::loadProxyGrids()
         QString fileName = QString::fromStdString(myProxy->getGridName());
         fileName = getCompleteFileName(fileName, PATH_GEO);
 
-        if (! myGrid->isLoaded && fileName != "")
+        if ((!myGrid || !myGrid->isLoaded) && ! fileName.isEmpty())
         {
             gis::Crit3DRasterGrid* proxyGrid = new gis::Crit3DRasterGrid;
             std::string myError;
+
             //resampling on DEM must be done only when interpolating on DEM or on grid with upscale from DEM option activated
             /*if (DEM.isLoaded && gis::readEsriGridFlt(fileName.toStdString(), &proxyGrid, myError))
             {
@@ -2207,8 +2209,7 @@ bool Project::loadProxyGrids()
 
             if (gis::readEsriGridFlt(fileName.toStdString(), proxyGrid, myError))
             {
-                //cambiare
-                myProxy->setGrid(proxyGrid);
+                myProxy->setGrid(proxyGrid, false);
             }
             else
             {
@@ -2315,15 +2316,17 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         if (showInfo && (i % infoStep == 0))
             updateProgressBar(int(i));
 
-        if (!meteoPoints[i].active)
+        if (! meteoPoints[i].active)
             continue;
 
-        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
-                                            || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
-                                       : true;
+        bool hasData = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
+                                    || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
+                                    : true;
+        if (! hasData)
+            continue;
 
-        if (isSelected && ! writeTopographicDistanceMap(int(i), DEM, mapsFolder))
-                return false;
+        if (! writeTopographicDistanceMap(int(i), DEM, mapsFolder))
+            return false;
     }
 
     if(showInfo)
@@ -2354,7 +2357,7 @@ bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRaste
     std::string fileName;
     gis::Crit3DRasterGrid myMap;
 
-    if (gis::topographicDistanceMap(meteoPoints[pointIndex].point, demMap, &myMap))
+    if (gis::computeTopographicDistanceMap(meteoPoints[pointIndex].point, demMap, &myMap))
     {
         fileName = pathTd.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[pointIndex].id;
         if (! gis::writeEsriGrid(fileName, &myMap, myError))
@@ -2363,6 +2366,7 @@ bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRaste
             return false;
         }
     }
+
     return true;
 }
 
@@ -2393,21 +2397,20 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 
     for (size_t i = 0; i < meteoPoints.size(); i++)
     {
-        if (showInfo && (i % infoStep == 0))
-                updateProgressBar(int(i));
+        if (showInfo && (i % infoStep) == 0)
+            updateProgressBar(int(i));
 
-        if (!meteoPoints[i].active)
+        if (! meteoPoints[i].active)
             continue;
 
-        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
-                                          || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
-                                       : true;
-
-        if(!isSelected)
+        bool hasData = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
+                                        || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
+                                        : true;
+        if(! hasData)
             continue;
 
         fileName = mapsFolder.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[i].id;
-        if (!QFile::exists(QString::fromStdString(fileName + ".flt")))
+        if (! QFile::exists(QString::fromStdString(fileName + ".flt")))
         {
             if (! writeTopographicDistanceMap(int(i), DEM, mapsFolder))
                 return false;
@@ -2455,13 +2458,13 @@ bool Project::writeGlocalWeightsMaps(float windowWidth)
     for (int i = 0; i < zoneGrid->maximum; i++)
         zoneWeightMaps[i].initializeGrid(*zoneGrid);
 
-    int cellNr = round(windowWidth / zoneGrid->header->cellSize);
+    int cellNr = round(windowWidth / zoneGrid->header.cellSize);
 
-    for (int zoneRow = 0; zoneRow < zoneGrid->header->nrRows; zoneRow++)
+    for (int zoneRow = 0; zoneRow < zoneGrid->header.nrRows; zoneRow++)
     {
-        for (int zoneCol = 0; zoneCol < zoneGrid->header->nrCols; zoneCol++)
+        for (int zoneCol = 0; zoneCol < zoneGrid->header.nrCols; zoneCol++)
         {
-            if (isEqual(zoneGrid->value[zoneRow][zoneCol], zoneGrid->header->flag))
+            if (isEqual(zoneGrid->value[zoneRow][zoneCol], zoneGrid->header.flag))
                 continue;
 
             int cellCount = 0;
@@ -2483,7 +2486,7 @@ bool Project::writeGlocalWeightsMaps(float windowWidth)
 
                     int i = zoneGrid->value[windowRow][windowCol];
 
-                    if (isEqual(i, zoneGrid->header->flag))
+                    if (isEqual(i, zoneGrid->header.flag))
                         continue;
 
                     float cellDelta = gis::computeDistance(windowRow, windowCol, zoneRow, zoneCol);
@@ -2643,8 +2646,8 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
 
     if (!isGrid)
     {
-        nrCols = DEM.header->nrCols;
-        nrRows = DEM.header->nrRows;
+        nrCols = DEM.header.nrCols;
+        nrRows = DEM.header.nrRows;
     }
     else
     {
@@ -2808,13 +2811,13 @@ bool Project::groupCellsInArea(std::vector<int> &areaPoints, int index, bool isG
 
     if (!isGrid)
     {
-        nrCols = DEM.header->nrCols;
+        nrCols = DEM.header.nrCols;
 
-        for (int i = 0; i < DEM.header->nrRows; i++)
+        for (int i = 0; i < DEM.header.nrRows; i++)
         {
-            for (int j = 0; j < DEM.header->nrCols; j++)
+            for (int j = 0; j < DEM.header.nrCols; j++)
             {
-                if (isEqual(DEM.getValueFromRowCol(i,j), DEM.header->flag))
+                if (isEqual(DEM.getValueFromRowCol(i,j), DEM.header.flag))
                     continue;
 
                 gis::getUtmXYFromRowCol(DEM.header, i, j, &myX, &myY);
@@ -2890,14 +2893,14 @@ void Project::passGridTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteo
         {
             if (meteoGridDbHandler->meteoGrid()->gridStructure().isUTM())
             {
-                gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
-                                     meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, &row, &col);
+                gis::getRowColFromLonLat_zeroSouth(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
+                                                    meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, &row, &col);
             }
             else
             {
                 gis::getLatLonFromUtm(gisSettings, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, &lat, &lon);
-                gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
-                                         lon, lat, &row, &col);
+                gis::getRowColFromLonLat_zeroSouth(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
+                                                    lon, lat, &row, &col);
             }
 
             if (! gis::isOutOfGridRowCol(row, col, meteoGridDbHandler->meteoGrid()->gridStructure().header()))
@@ -3233,7 +3236,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
     }
     else
     {
-        gis::Crit3DRasterHeader myHeader = *(DEM.header);
+        gis::Crit3DRasterHeader myHeader = DEM.header;
         myRaster->initializeGrid(myHeader);
 
         if(! setMultipleDetrendingHeightTemperatureRange(interpolationSettings))
@@ -3324,7 +3327,7 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
     }
     else
     {
-        gis::Crit3DRasterHeader myHeader = *(DEM.header);
+        gis::Crit3DRasterHeader myHeader = DEM.header;
         myRaster->initializeGrid(myHeader);
 
         if(! setMultipleDetrendingHeightTemperatureRange(interpolationSettings))
@@ -3368,8 +3371,8 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                 if (!isOk)
                     break;   // early skip if already failed
 
-                int row = int(areaCells[cellIndex] / DEM.header->nrCols);
-                int col = int(areaCells[cellIndex]) % DEM.header->nrCols;
+                int row = int(areaCells[cellIndex] / DEM.header.nrCols);
+                int col = int(areaCells[cellIndex]) % DEM.header.nrCols;
 
                 float z = DEM.value[row][col];
 
@@ -3691,7 +3694,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         if (proxyIndex < meteoGridProxies.size())
                         {
                             float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
-                            if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
+                            if (proxyValue != meteoGridProxies[proxyIndex]->header.flag)
                                 proxyValues[i] = double(proxyValue);
                         }
 
@@ -3815,7 +3818,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         /*if (proxyIndex < meteoGridProxies.size())
                         {
                             float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
-                            if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
+                            if (proxyValue != meteoGridProxies[proxyIndex]->header.flag)
                                 proxyValues[i] = double(proxyValue);
                             else
                             {
@@ -3889,7 +3892,7 @@ float Project::meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeI
     float dataConsistency = 0.0;
     for (size_t i = 0; i < meteoPoints.size(); i++)
     {
-        dataConsistency = MAXVALUE(dataConsistency, meteoPoints[i].obsDataConsistencyH(myVar, timeIni, timeFin));
+        dataConsistency = std::max(dataConsistency, meteoPoints[i].obsDataConsistencyH(myVar, timeIni, timeFin));
     }
 
     return dataConsistency;
@@ -5542,9 +5545,9 @@ bool Project::exportMeteoGridToCsv(QString fileName)
 
     QTextStream out(&myFile);
 
-    for (int row = 0; row < meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header->nrRows; row++)
+    for (int row = 0; row < meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header.nrRows; row++)
     {
-        for (int col = 0; col < meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header->nrCols; col++)
+        for (int col = 0; col < meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header.nrCols; col++)
         {
             float value = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.value[row][col];
 
@@ -5571,12 +5574,12 @@ int Project::computeDefaultCellSizeFromMeteoGrid(float resolutionRatio)
 {
     if (meteoGridDbHandler->gridStructure().isUTM())
     {
-        return meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header->cellSize;
+        return meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header.cellSize;
     }
 
     // lat lon grid
     gis::Crit3DLatLonHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
-    int cellSize = gis::getGeoCellSizeFromLatLonHeader(gisSettings, &latlonHeader);
+    int cellSize = gis::getUtmCellSizeFromLatLonHeader(gisSettings, latlonHeader);
 
     cellSize *= resolutionRatio;
 
@@ -6182,7 +6185,7 @@ bool Project::waterTableComputeSingleWell(int indexWell)
 
     for (size_t i = 0; i < linkedMeteoPoint.obsDataD.size(); ++i)
     {
-        Crit3DDate myDate = linkedMeteoPoint.getFirstDailyData().addDays(i);
+        Crit3DDate myDate = linkedMeteoPoint.getFirstDailyData().addDays(long(i));
         const float Tmin = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         const float Tmax = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMax);
         const float prec = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyPrecipitation);
@@ -6253,7 +6256,7 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtm
                     minimumDistance = myDistance;
                     assignNearestId = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id;
                     nearestRow = row;
-                    nearestRow = col;
+                    nearestCol = col;
                     isMeteoPointFound = true;
                 }
             }
@@ -6403,15 +6406,15 @@ bool Project::assignAltitudeToAggregationPoints()
         float zoneNr = idList[0].toFloat();
 
         std::vector<float> values;
-        for (int row = 0; row < aggregationRaster->header->nrRows; row++)
+        for (int row = 0; row < aggregationRaster->header.nrRows; row++)
         {
-            for (int col = 0; col < aggregationRaster->header->nrCols; col++)
+            for (int col = 0; col < aggregationRaster->header.nrCols; col++)
             {
                 if (!isEqual(aggregationRaster->value[row][col], zoneNr))
                     continue;
 
                 float z = aggregationDEM->value[row][col];
-                if (isEqual(z, aggregationDEM->header->flag))
+                if (isEqual(z, aggregationDEM->header.flag))
                     continue;
 
                 values.push_back(z);
@@ -6446,7 +6449,7 @@ bool Project::assignAltitudeToMeteoPoints(double boundarySize)
         return false;
     }
 
-    int stepCells = floor(boundarySize / DEM.header->cellSize * 0.5);
+    int stepCells = floor(boundarySize / DEM.header.cellSize * 0.5);
     int row, col;
     std::vector<float> values;
     QSqlDatabase meteoPointsDb = meteoPointsDbHandler->getDb();
@@ -6465,7 +6468,7 @@ bool Project::assignAltitudeToMeteoPoints(double boundarySize)
             for (int c = col - stepCells; c <= col + stepCells; c++)
             {
                 float z = DEM.getValueFromRowCol(r, c);
-                if (! isEqual(z, DEM.header->flag))
+                if (! isEqual(z, DEM.header.flag))
                 {
                     values.push_back(z);
                 }

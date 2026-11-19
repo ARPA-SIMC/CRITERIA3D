@@ -237,7 +237,7 @@ bool setStatePlantfromMap(long row, long col , Vine3DProject* myProject)
     myProject->statePlant.statePheno.forceStateVegetativeSeason = double(myProject->statePlantMaps->forceStateVegetativeSeasonMap->value[row][col]);
     myProject->statePlant.statePheno.degreeDaysFromFirstMarch = double(myProject->statePlantMaps->degreeDaysFromFirstMarchMap->value[row][col]);
 
-    if (isEqual(myProject->statePlantMaps->degreeDaysAtFruitSetMap->value[row][col], myProject->statePlantMaps->degreeDaysAtFruitSetMap->header->flag))
+    if (isEqual(myProject->statePlantMaps->degreeDaysAtFruitSetMap->value[row][col], myProject->statePlantMaps->degreeDaysAtFruitSetMap->header.flag))
         myProject->statePlant.statePheno.degreeDaysAtFruitSet = NODATA;
     else
         myProject->statePlant.statePheno.degreeDaysAtFruitSet = double(myProject->statePlantMaps->degreeDaysAtFruitSetMap->value[row][col]);
@@ -276,12 +276,12 @@ bool getStatePlantToMap(long row,long col, Vine3DProject* myProject, TstatePlant
     if (myProject->statePlantMaps->stageMap->value[row][col] >= veraison)
         myProject->outputPlantMaps->wineYieldMap->value[row][col] = float(myProject->statePlantMaps->fruitBiomassMap->value[row][col] * 240.0);
     else
-        myProject->outputPlantMaps->wineYieldMap->value[row][col] = float(myProject->outputPlantMaps->wineYieldMap->header->flag);
+        myProject->outputPlantMaps->wineYieldMap->value[row][col] = float(myProject->outputPlantMaps->wineYieldMap->header.flag);
 
     //delta brix
-    myProject->outputPlantMaps->deltaBrixMap->value[row][col] = float(myProject->outputPlantMaps->deltaBrixMap->header->flag);
-    if (! isEqual(myProject->outputPlantMaps->brixMaximumMap->value[row][col], myProject->outputPlantMaps->brixMaximumMap->header->flag) &&
-        ! isEqual(myProject->outputPlantMaps->brixBerryMap->value[row][col], myProject->outputPlantMaps->brixBerryMap->header->flag))
+    myProject->outputPlantMaps->deltaBrixMap->value[row][col] = float(myProject->outputPlantMaps->deltaBrixMap->header.flag);
+    if (! isEqual(myProject->outputPlantMaps->brixMaximumMap->value[row][col], myProject->outputPlantMaps->brixMaximumMap->header.flag) &&
+        ! isEqual(myProject->outputPlantMaps->brixBerryMap->value[row][col], myProject->outputPlantMaps->brixBerryMap->header.flag))
         myProject->outputPlantMaps->deltaBrixMap->value[row][col] = MAXVALUE(myProject->outputPlantMaps->brixMaximumMap->value[row][col] - myProject->outputPlantMaps->brixBerryMap->value[row][col],0);
 
     return(true);
@@ -323,15 +323,15 @@ bool savePlantOutput(Vine3DProject* myProject, plantVariable myVar,
 
     outputMap.initializeGrid(*myMap);
 
-    for (long row = 0; row < myMap->header->nrRows ; row++)
-        for (long col = 0; col < myMap->header->nrCols; col++)
+    for (long row = 0; row < myMap->header.nrRows ; row++)
+        for (long col = 0; col < myMap->header.nrCols; col++)
         {
             outputMap.value[row][col] = myMap->value[row][col];
             if (isMasked)
             {
                 if ((! myProject->isVineyard(row,col))
                     || (myProject->statePlantMaps->stageMap->value[row][col] == NOT_INITIALIZED_VINE))
-                    outputMap.value[row][col] = outputMap.header->flag;
+                    outputMap.value[row][col] = outputMap.header.flag;
             }
 
         }
@@ -381,13 +381,13 @@ bool updateThermalSum(Vine3DProject* myProject, QDate myDate)
     myProject->logInfo("\nUpdate thermal sum...");
     firstMarch.setDate(myDate.year(),3,1);
     fifteenNovember.setDate(myDate.year(),11,15);
-    flag = myProject->statePlantMaps->degreeDaysFromFirstMarchMap->header->flag;
+    flag = myProject->statePlantMaps->degreeDaysFromFirstMarchMap->header.flag;
 
-    for (long row = 0; row < myProject->DEM.header->nrRows ; row++)
+    for (long row = 0; row < myProject->DEM.header.nrRows ; row++)
     {
-        for (long col = 0; col < myProject->DEM.header->nrCols; col++)
+        for (long col = 0; col < myProject->DEM.header.nrCols; col++)
         {
-            if (myProject->DEM.value[row][col] != myProject->DEM.header->flag)
+            if (myProject->DEM.value[row][col] != myProject->DEM.header.flag)
             {
                 phenoPhase = myProject->statePlantMaps->stageMap->value[row][col];
                 isFruitSet = (phenoPhase >= fruitSet);

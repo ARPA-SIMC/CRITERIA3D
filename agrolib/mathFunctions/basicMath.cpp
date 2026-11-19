@@ -432,7 +432,7 @@
                 {
                     double delta = list[i + 1] - list[i];
 
-                    if (std::abs(delta) < 1e-12)
+                    if (std::fabs(delta) < 1e-12)
                         return float(rank * 100.0);
 
                     rank += (value - list[i]) / delta / double(n);

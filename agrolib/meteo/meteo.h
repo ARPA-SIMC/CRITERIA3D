@@ -136,7 +136,7 @@
                     referenceEvapotranspiration, dailyReferenceEvapotranspirationHS, monthlyReferenceEvapotranspirationHS, dailyReferenceEvapotranspirationPM, actualEvaporation,
                     dailyBIC, monthlyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
                     snowWaterEquivalent, snowFall, snowMelt, snowVariation, snowSurfaceTemperature, snowInternalEnergy,
-                    snowSurfaceEnergy, snowAge, snowLiquidWaterContent, sensibleHeat, latentHeat,
+                    snowSurfaceEnergy, snowDepth, snowAlbedo, snowLiquidWaterContent, sensibleHeat, latentHeat,
                     dailyWaterTableDepth, leafAreaIndex,
                     cvResidual, noMeteoTerrain, anomalyVar, elaborationVar,
                     noMeteoVar};
@@ -393,7 +393,7 @@
 
     float computeThomIndex(float temp, float relHum);
 
-    bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale);
+    bool setColorScale(meteoVariable variable, Crit3DColorScale &colorScale);
 
     frequencyType getVarFrequency(meteoVariable myVar);
 

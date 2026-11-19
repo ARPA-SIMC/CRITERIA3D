@@ -502,14 +502,14 @@ bool Vine3DProject::setModelCasesMap()
     }
 
     // update landUseMap (assume header soilMap = header landUseMap)
-    for (int row = 0; row < landUseMap.header->nrRows; row++)
+    for (int row = 0; row < landUseMap.header.nrRows; row++)
     {
-        for (int col = 0; col < landUseMap.header->nrCols; col++)
+        for (int col = 0; col < landUseMap.header.nrCols; col++)
         {
             float caseId = landUseMap.value[row][col];
-            if (! isEqual(caseId, landUseMap.header->flag) )
+            if (! isEqual(caseId, landUseMap.header.flag) )
             {
-                landUseMap.value[row][col] = landUseMap.header->flag;
+                landUseMap.value[row][col] = landUseMap.header.flag;
                 int soilIndex = getSoilIndex(row, col);
                 if (soilIndex != NODATA)
                 {
@@ -1396,7 +1396,7 @@ int Vine3DProject::getModelCaseIndex(int row, int col)
     if (gis::isOutOfGridRowCol(row, col, landUseMap))
         return NODATA;
 
-    if (isEqual(landUseMap.value[row][col], landUseMap.header->flag))
+    if (isEqual(landUseMap.value[row][col], landUseMap.header.flag))
         return NODATA;
 
     return int(landUseMap.value[row][col]);
@@ -1447,22 +1447,22 @@ bool Vine3DProject::computeVine3DWaterSinkSource()
     for (unsigned long i = 0; i < nrNodes; i++)
         waterSinkSource.at(size_t(i)) = 0.0;
 
-    double area = DEM.header->cellSize * DEM.header->cellSize;
+    double area = DEM.header.cellSize * DEM.header.cellSize;
 
     //precipitation - irrigation
-    for (long row = 0; row < indexMap.at(0).header->nrRows; row++)
+    for (long row = 0; row < indexMap.at(0).header.nrRows; row++)
     {
-        for (long col = 0; col < indexMap.at(0).header->nrCols; col++)
+        for (long col = 0; col < indexMap.at(0).header.nrCols; col++)
         {
             surfaceIndex = long(indexMap.at(0).value[row][col]);
-            if (surfaceIndex != long(indexMap.at(0).header->flag))
+            if (surfaceIndex != long(indexMap.at(0).header.flag))
             {
                 waterSource = 0.0;
                 prec = double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]);
-                if (int(prec) != int(hourlyMeteoMaps->mapHourlyPrec->header->flag)) waterSource += prec;
+                if (int(prec) != int(hourlyMeteoMaps->mapHourlyPrec->header.flag)) waterSource += prec;
 
                 double irr = double(vine3DMapsH->mapHourlyIrrigation->value[row][col]);
-                if (int(irr) != int(vine3DMapsH->mapHourlyIrrigation->header->flag)) waterSource += irr;
+                if (int(irr) != int(vine3DMapsH->mapHourlyIrrigation->header.flag)) waterSource += irr;
 
                 if (waterSource > 0.0)
                 {
@@ -1475,12 +1475,12 @@ bool Vine3DProject::computeVine3DWaterSinkSource()
     }
 
     //Evaporation
-    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    for (int row = 0; row < indexMap.at(0).header.nrRows; row++)
     {
-        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        for (int col = 0; col < indexMap.at(0).header.nrCols; col++)
         {
             surfaceIndex = long(indexMap.at(0).value[row][col]);
-            if (surfaceIndex != long(indexMap.at(0).header->flag))
+            if (surfaceIndex != long(indexMap.at(0).header.flag))
             {
                 int caseIndex = getModelCaseIndex(row, col);
                 if (caseIndex != NODATA)
@@ -1503,15 +1503,15 @@ bool Vine3DProject::computeVine3DWaterSinkSource()
     //crop transpiration
     for (unsigned int layerIndex=1; layerIndex < nrLayers; layerIndex++)
     {
-        for (long row = 0; row < indexMap.at(size_t(layerIndex)).header->nrRows; row++)
+        for (long row = 0; row < indexMap.at(size_t(layerIndex)).header.nrRows; row++)
         {
-            for (long col = 0; col < indexMap.at(size_t(layerIndex)).header->nrCols; col++)
+            for (long col = 0; col < indexMap.at(size_t(layerIndex)).header.nrCols; col++)
             {
                 nodeIndex = long(indexMap.at(size_t(layerIndex)).value[row][col]);
-                if (nodeIndex != long(indexMap.at(size_t(layerIndex)).header->flag))
+                if (nodeIndex != long(indexMap.at(size_t(layerIndex)).header.flag))
                 {
                     transp = double(outputPlantMaps->transpirationLayerMaps[layerIndex]->value[row][col]);
-                    if (int(transp) != int(outputPlantMaps->transpirationLayerMaps[layerIndex]->header->flag))
+                    if (int(transp) != int(outputPlantMaps->transpirationLayerMaps[layerIndex]->header.flag))
                     {
                         flow = area * (transp / 1000.0);                            //[m^3/h]
                         totalTranspiration += flow;
@@ -1580,13 +1580,13 @@ bool Vine3DProject::getRootZoneAWCmap(gis::Crit3DRasterGrid* outputMap)
     if (outputMap == nullptr)
         return false;
 
-    for (int row = 0; row < outputMap->header->nrRows; row++)
-        for (int col = 0; col < outputMap->header->nrCols; col++)
+    for (int row = 0; row < outputMap->header.nrRows; row++)
+        for (int col = 0; col < outputMap->header.nrCols; col++)
         {
             //initialize
-            outputMap->value[row][col] = outputMap->header->flag;
+            outputMap->value[row][col] = outputMap->header.flag;
 
-            if (indexMap.at(0).value[row][col] != indexMap.at(0).header->flag)
+            if (indexMap.at(0).value[row][col] != indexMap.at(0).header.flag)
             {
                 double sumAWC = 0.0;
                 const int soilIndex = getSoilIndex(row, col);
@@ -1598,7 +1598,7 @@ bool Vine3DProject::getRootZoneAWCmap(gis::Crit3DRasterGrid* outputMap)
                     {
                         const long nodeIndex = indexMap.at(layer).value[row][col];
 
-                        if (nodeIndex != indexMap.at(layer).header->flag)
+                        if (nodeIndex != indexMap.at(layer).header.flag)
                         {
                             if (grapevine.getRootDensity(&(modelCases[caseIndex]), layer) > 0.0)
                             {
@@ -1638,11 +1638,11 @@ void Vine3DProject::updateWaterBalanceMaps()
     double flow, flow_mm;
     double area;
 
-    area = pow(outputWaterBalanceMaps->bottomDrainageMap->header->cellSize, 2);
+    area = pow(outputWaterBalanceMaps->bottomDrainageMap->header.cellSize, 2);
 
-    for (row = 0; row < outputWaterBalanceMaps->bottomDrainageMap->header->nrRows; row++)
-        for (col = 0; col < outputWaterBalanceMaps->bottomDrainageMap->header->nrCols; col++)
-            if (! isEqual(indexMap.at(0).value[row][col], indexMap.at(0).header->flag))
+    for (row = 0; row < outputWaterBalanceMaps->bottomDrainageMap->header.nrRows; row++)
+        for (col = 0; col < outputWaterBalanceMaps->bottomDrainageMap->header.nrCols; col++)
+            if (! isEqual(indexMap.at(0).value[row][col], indexMap.at(0).header.flag))
             {
                 soilIndex = getSoilIndex(row,col);
                 layer = 1;

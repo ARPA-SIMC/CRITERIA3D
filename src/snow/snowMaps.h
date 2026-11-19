@@ -19,6 +19,7 @@
         void clear();
         void initializeSnowMaps(const gis::Crit3DRasterGrid &dtm, double skinThickness);
         void resetSnowModel(double skinThickness);
+        void updateSnowModel();
 
         void updateMapRowCol(Crit3DSnow &snowPoint, int row, int col);
         void flagMapRowCol(int row, int col);
@@ -33,10 +34,12 @@
         gis::Crit3DRasterGrid* getInternalEnergyMap() { return _internalEnergyMap; }
         gis::Crit3DRasterGrid* getSurfaceEnergyMap() { return _surfaceEnergyMap; }
         gis::Crit3DRasterGrid* getSnowSurfaceTempMap() { return _snowSurfaceTempMap; }
-        gis::Crit3DRasterGrid* getAgeOfSnowMap() { return _ageOfSnowMap; }
+        gis::Crit3DRasterGrid* getSnowAlbedoMap() { return _snowAlbedoMap; }
+        gis::Crit3DRasterGrid* getSnowDensityMap() { return _snowDensityMap; }
 
         gis::Crit3DRasterGrid* getSnowFallMap() {return _snowFallMap;}
         gis::Crit3DRasterGrid* getSnowMeltMap() {return _snowMeltMap;}
+        gis::Crit3DRasterGrid* getSnowDepthMap() {return _snowDepthMap;}
         gis::Crit3DRasterGrid* getDeltaSWEMap() {return _deltaSWEMap;}
         gis::Crit3DRasterGrid* getSensibleHeatMap() {return _sensibleHeatMap;}
         gis::Crit3DRasterGrid* getLatentHeatMap() {return _latentHeatMap;}
@@ -48,10 +51,12 @@
         gis::Crit3DRasterGrid* _internalEnergyMap;
         gis::Crit3DRasterGrid* _surfaceEnergyMap;
         gis::Crit3DRasterGrid* _snowSurfaceTempMap;
-        gis::Crit3DRasterGrid* _ageOfSnowMap;
+        gis::Crit3DRasterGrid* _snowAlbedoMap;
+        gis::Crit3DRasterGrid* _snowDensityMap;
 
         gis::Crit3DRasterGrid* _snowFallMap;
         gis::Crit3DRasterGrid* _snowMeltMap;
+        gis::Crit3DRasterGrid* _snowDepthMap;
         gis::Crit3DRasterGrid* _deltaSWEMap;
         gis::Crit3DRasterGrid* _sensibleHeatMap;
         gis::Crit3DRasterGrid* _latentHeatMap;
